@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <html lang="en">
+    <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../css/vendor/font-awesome-4.2.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/vendor/jquery-ui-1.11.2.custom/jquery-ui.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/app.css">
+    <link rel="stylesheet" type="text/css" href="../css/vendor/alertifyjs/alertify.core.css">
+    <link rel="stylesheet" type="text/css" href="../css/vendor/alertifyjs/alertify.default.css">
+  </head>
+  <body>
+    <header>
+      <div id="Logo" class="HeaderItem FloatedLeft">
+        Video-Sync <span class="red">VS</span>
+      </div>
+      <div id="Search" class="HeaderItem FloatedLeft">
+        <input class="searchInput" data-l10n-id="search" placeholder="Search..."/>
+      </div>
+      <div id="WindowButtons" class="HeaderItem FloatedRight">
+        <span class="Btn Close fa fa-times-circle" data-l10n-id="hint_close_window" title></span>
+        <span class="Btn Expand fa fa-plus-circle" data-l10n-id="hint_expand_window" title></span>
+        <span class="Btn Minimize fa fa-minus-circle" data-l10n-id="hint_minimize_window" title></span>
+      </div>
+    </header>
+    <div id="video-container">
+      <div class="ExpandButton">
+        <i class="fa fa-arrows-alt" data-l10n-id="hint_full_screen" title></i>
+      </div>
+      <video id="video_player" width="200" height="200" class="video-js"></video>
+    </div>
+  <footer id="PlayerContainer">
+    <div class="cover">
+      <div id="LoadingOverlay"></div>
+    </div>
+    <div class="info">
+      <div class="info-text">
+        <span class="track-info">
+          <span class="action">
+            <i class="backward fa fa-backward" data-l10n-id="hint_previous_song" title></i>
+          </span>
+          <span class="action">
+            <i class="pause fa fa-pause" data-l10n-id="hint_pause" title></i>
+            <i class="play fa fa-play" data-l10n-id="hint_play" title></i>
+          </span>
+          <span class="action">
+            <i class="forward fa fa-forward" data-l10n-id="hint_next_song" title></i>
+          </span>
+          <span class="currentHolder">
+            <span class="artist"></span> <span class="title"></span>
+          </span>
+          <span class="action FloatedRight MarginedLeft6">
+            <i class="related fa fa-plus" data-l10n-id="hint_related" title></i>
+          </span>
+          <span class="action FloatedRight">
+            <i class="repeat fa fa-repeat" data-l10n-id="hint_repeat" title></i>
+          </span>
+          <span class="action FloatedRight">
+            <i class="random fa fa-random" data-l10n-id="hint_shuffle" title></i>
+          </span>
+        </span>
+        <span class="video-info"></span>
+      </div>
+      <div class="controls">
+        <div class="current-time">0:00</div>
+        <div class="progress-bg-container">
+          <div class="mouse-time"></div>
+          <div class="progress-bg">
+            <div class="progress-current"></div>
+            <div class="loading-progress"></div>
+          </div>
+        </div>
+        <div class="duration">0:00</div>
+        <div class="volume-icon">
+          <i class="fa fa-volume-up"></i>
+        </div>
+        <div class="volume-bg-container">
+          <div class="volume-bg">
+            <div class="volume-current"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+  </body>
+  <script>
+    var gulp = require('../../../opt/node_modules/gulp');
+    gulp.task('reload', function () {
+      if (location) location.reload();
+    });
+
+    gulp.watch('**/*', ['reload']);
+  </script>
+  <script src="../js/app.js"></script>
+  <script src="../js/vendor/jquery-2.1.1.min.js"></script>
+  <script src="../js/vendor/video-js/video.js"></script>
+  <script src="../js/vendor/alertifyjs/alertify.min.js"></script>
+</html>
