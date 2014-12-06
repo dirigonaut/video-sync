@@ -1,0 +1,28 @@
+@import compass/css3
+@import compass/reset
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,300,700)
+
+=font-smoothing($val: antialiased)
+    -webkit-font-smoothing: $val
+    -moz-font-smoothing: $val
+    -ms-font-smoothing: $val
+    -o-font-smoothing: $val
+
+.clear
+    clear: both
+
+.FloatedLeft
+    float: left !important
+
+.FloatedRight
+    float: right !important
+
+.blackScreen
+    background: rgba(0,0,0,0.8)
+    width: 100%
+    height: 100%
+    position: absolute
+    z-index: 1002
+
+@import _header
+@import _player
