@@ -16,7 +16,7 @@ Start Compass (SASS)
 
 ```
 #!bash
-
+source ~/.bash_profile
 compass watch
 ```
 Start coffee
