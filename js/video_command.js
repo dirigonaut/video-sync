@@ -10,7 +10,7 @@ function video_command(command, priority, timestamp) {
 
 video_command.prototype.run = function(socket, status) {
 	socket.emit("state", this.to_json, function(socket, status){
-		self.executed(socket);
+		self.executed(socket, status);
 	});
 };
 
