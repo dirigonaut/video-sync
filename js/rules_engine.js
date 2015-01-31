@@ -16,7 +16,7 @@ rules_engine.prototype.process_rules = function(socket, data, player_manager){
 		}
 		
 		for (var rule in this.rules) {
-			rule.process_rule(data, player, this.player_manager)
+			rule.process_rule(data, player, player_manager)
 		}
 	}
 };
