@@ -1,19 +1,19 @@
 var command = require('./video_command');
 
-var play_sync(){
+function play_sync_rule(){
 	this.priority = 1;
 	this.time_disparity = 1.00;
-}
+};
 
-play_sync.process_rule = function(socket, data, manager)
+play_sync_rule.prototype.process_rule = function(socket, data, manager)
 	var issuer = manager.get_player(socket.id);
 	var others = manager.get_players_with_status("SYNC_PAUSE");
 
-	var vetted = {}
-    if (data.is_time_stamp_message){
+	var vetted = [];
+    if (data.timestamp != ""){
 		for (player in others){
-			if parseFloat(issuer.player_time) > parseFloat(player.player_time) &&
-				Math.abs(parseFloat(player.player_time) - parseFloat(issuer.player_time)){
+			if (parseFloat(issuer.timestamp) > parseFloat(player.timestamp) &&
+			Math.abs(parseFloat(player.timestamp) - parseFloat(issuer.timestamp))){
 				vetted.push(player);
 			}
 		}
@@ -23,4 +23,6 @@ play_sync.process_rule = function(socket, data, manager)
 		var video_command = new command("PLAY", this.priority, "");
 		video_command.run(player.id);
 	}
-}
+};
+
+module.exports = play_sync_rule;

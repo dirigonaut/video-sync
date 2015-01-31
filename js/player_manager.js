@@ -5,8 +5,8 @@ function player_manager (){
 };
 
 player_manager.prototype.init = function() {
-	this.prototype.players = {};
-}
+	this.prototype.players = new Map();
+};
 
 player_manager.prototype.create_player = function(socket){
     var new_player = new player(socket);
@@ -18,11 +18,11 @@ player_manager.prototype.get_player = function(id){
 };
 
 player_manager.prototype.remove_player = function(id){
-    this.players.delete(id); 
+    this.players.delete(id);
 };
 
 player_manager.prototype.get_other_players = function(id){
-    var temp = {};
+    var temp = [];
     for (var p in this.players) {
         if(p.id != socket.id){ 
             temp.push(p);
@@ -33,7 +33,7 @@ player_manager.prototype.get_other_players = function(id){
 };
 
 player_manager.prototype.get_players_with = function(status){
-    var temp = {};
+    var temp = [];
     for (var p in this.players) {
         if(p.status == status){ 
             temp.push(p);
@@ -44,7 +44,7 @@ player_manager.prototype.get_players_with = function(status){
 };
 
 player_manager.prototype.get_players_without = function(status){
-    var temp = {};
+    var temp = [];
     for (var p in this.players) {
         if(p.status != status){ 
             temp.push(p);

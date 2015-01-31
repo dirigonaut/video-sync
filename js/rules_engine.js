@@ -1,22 +1,22 @@
-var PM = require('./player_manager');
+var rule_1 		= require('./request_pause_play_rule');
+var rule_2 		= require('./pause_sync_rule');
+var rule_3 		= require('./play_sync_rule');
 
-var rules_engine = function(){ 
-	this.player_manager = new PM();
-	this.command_manager = null;
-	this.rules = {};
+function rules_engine(){ 
+	this.rules = [new rule_1(), new rule_2(), new rule_3()];
 };
 	
-rules_engine.prototype.process_state = function(socket, data){
+rules_engine.prototype.process_rules = function(socket, data, player_manager){
 	
-	var player = this.player_manager.get_player(socket.id);
+	var player = player_manager.get_player(socket.id);
 	
 	if(player !== undefined && player !== null){
-		if (message.time_stamp != "0:00"){
-			player.player_time = message.time_stamp;
+		if (data.time_stamp != "0:00"){
+			player.timestamp = data.timestamp;
 		}
 		
 		for (var rule in this.rules) {
-			this.rule.process_rule(message, player, this.player_manager)
+			rule.process_rule(data, player, this.player_manager)
 		}
 	}
 };
