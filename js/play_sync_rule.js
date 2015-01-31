@@ -12,8 +12,8 @@ play_sync_rule.prototype.process_rule = function(socket, data, manager)
 	var vetted = [];
     if (data.timestamp != ""){
 		for (player in others){
-			if (parseFloat(issuer.timestamp) > parseFloat(player.timestamp) &&
-			Math.abs(parseFloat(player.timestamp) - parseFloat(issuer.timestamp))){
+			if (Math.abs(parseFloat(issuer.timestamp) - parseFloat(player.timestamp)) < this.time_disparity
+			&& parseFloat(issuer.timestamp) > parseFloat(player.timestamp)) {
 				vetted.push(player);
 			}
 		}
