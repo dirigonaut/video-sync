@@ -1,11 +1,11 @@
 var app 			= require('http').createServer(handler)
 var io 				= require('socket.io')(app);
 var fs 				= require('fs');
-var r_engine 		= require('./rules_engine');
-var p_manager 		= require('./player_manager');
+//var r_engine 		= require('./rules_engine');
+//var p_manager 		= require('./player_manager');
 
-var player_manager	= new p_manager();
-var rules_engine 	= new r_engine();
+//var player_manager	= new p_manager();
+//var rules_engine 	= new r_engine();
 
 app.listen(8080);
 
@@ -23,10 +23,11 @@ function handler (req, res) {
 }
 
 io.on('connection', function (socket) {
-	player_manager.create_player(socket);
+	console.log("socket has connected");
+	//player_manager.create_player(socket);
 	
 	socket.on('state', function (data) {
-		rules_engine.process_rules(data, socket, player_manager);
+		//rules_engine.process_rules(data, socket, player_manager);
 	});
   
 	socket.on('admin', function (data) {

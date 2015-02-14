@@ -82,17 +82,22 @@
   </footer>
   </body>
   <script>
-    var gulp = require('../../../opt/node_modules/gulp');
-    gulp.task('reload', function () {
-      if (location) location.reload();
-    });
+//    var gulp = require('node_modules/gulp');
+//   gulp.task('reload', function () {
+//      if (location) location.reload();
+//    });
 
-    gulp.watch('**/*', ['reload']);
+//    gulp.watch('**/*', ['reload']);
   </script>
+  <script src="http://localhost:8080/socket.io/socket.io.js"></script>
   <script src="../js/vendor/jquery-2.1.1.min.js"></script>
   <script src="../js/vendor/video-js/video.js"></script>
+  <script src="../js/client_socket_test.js"></script>
   <script src="../js/main.js"></script>
   <script>
     videojs.options.flash.swf = "../js/vendor/video-js/video-js.swf"
+  </script>
+  <script>
+	  var test = new client_socket_test();
   </script>
 </html>
