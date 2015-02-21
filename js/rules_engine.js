@@ -3,7 +3,7 @@ var rule_2 		= require('./pause_sync_rule');
 var rule_3 		= require('./play_sync_rule');
 
 function rules_engine(){ 
-	this.rules = [new rule_1()];
+	this.rules = [new rule_1(), new rule_2(), new rule_3()];
 	this.debug = true;
 };
 	
@@ -20,7 +20,9 @@ rules_engine.prototype.process_rules = function(data, socket, player_manager){
 		if(this.debug){console.log("Running rules.");};
 		
 		for (var rule in this.rules) {
-			this.rules[rule].process_rule(data, socket, player_manager);
+			if(this.rules[rule].process_rule(data, socket, player_manager)){
+				break;
+			}
 		}
 	}
 };

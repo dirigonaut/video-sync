@@ -6,8 +6,11 @@ function pause_sync_rule(){
 };
 
 pause_sync_rule.prototype.process_rule = function(data, socket, manager){
+	var triggered = false;
+	
 	if(this.debug){console.log("Entering pause_sync_rule.");};
-	if(data.command == null){
+	
+	if(data.timestamp && data.timestamp !== ""){
 		var issuer = manager.get_player(socket.id);
 		var others = manager.get_other_players(socket.id);
 
@@ -21,12 +24,16 @@ pause_sync_rule.prototype.process_rule = function(data, socket, manager){
 		}
 		
 		if(this.debug){console.log("Total vetted players: " + vetted.length);};
+		
+		triggered = vetted.length > 0 ? true : false;
 
 		for (var player in vetted){
-			var video_command = new command("SYNC_PAUSE", "");
-			video_command.run(vetted[player].id);
+			var video_command = new command("sync_pause", "");
+			video_command.run(vetted[player].socket);
 		}
 	}
+	
+	return triggered;
 };
 
 module.exports = pause_sync_rule;
