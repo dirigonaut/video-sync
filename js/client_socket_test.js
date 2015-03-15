@@ -34,3 +34,11 @@ client_socket_test.prototype.timestamp_all = function(time) {
 		this.timestamp(time, i);
 	}
 };
+
+client_socket_test.prototype.add_smtp_server = function(user, pass, host) {
+	sockets[0].emit("smtp", {"smtp_user": user, "smtp_pass": pass, "smtp_host": host})
+};
+
+client_socket_test.prototype.send_invitation = function(subject, text, recipients) {
+	sockets[0].emit("email", {"subject": subject, "message": text, "recipients": recipients})
+};

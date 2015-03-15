@@ -11,5 +11,8 @@
   },
   "scripts": {
     "start": "nodewebkit"
+  },
+  "dependencies" : { 
+    "emailjs" : ">=0.3.13"
   }
 }
