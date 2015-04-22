@@ -12,7 +12,9 @@
   "scripts": {
     "start": "nodewebkit"
   },
-  "dependencies" : { 
-    "emailjs" : ">=0.3.13"
+  "dependencies": {
+    "emailjs": ">=0.3.13",
+    "nedb": "^1.1.1",
+    "validator": "^3.38.0"
   }
 }
