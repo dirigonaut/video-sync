@@ -1,68 +1,80 @@
 var email   = require("emailjs");
+var db_utils = require("../nedb/database_utils");
 
-function smtp_service(){ 
-	this.server = null;
-	
-	this.user = null;
-	this.pass = null;
-	this.smtp = null;
-};
-	
-smtp_service.prototype.add_smtp_service = function(smtp_creds){
-	this.user = smtp_creds.smtp_user;
-	this.pass = smtp_creds.smtp_pass;
-	this.smtp = smtp_creds.smtp_host;
-};
+var db 			= new db_utils();
+var server 		= null;
+var smtp 		= null;
+var message 	= null;
+var instance 	= null;
 
-smtp_service.prototype.get_smtp_service = function(){
-	//Get actual values from db once attached
-	return {"smpt_user" : this.user, "smpt_pass" : this.pass, "smpt_host" : this.smtp};
-};
-
-smtp_service.prototype.get_all_smtp_services = function(){
-};
-
-smtp_service.prototype.change_smtp_service = function(smtp_id){
-	//Make database call to switch primarty service
-};
-
-smtp_service.prototype.start_server = function(creds){
-	if(true){
-		this.server = 	email.server.connect({
-			user:		creds.smpt_user,
-			password:	creds.smpt_pass,
-			host:		creds.smpt_host,
-			ssl:		true
-		});
-	} else {
-		this.server = 	email.server.connect({
-			user:		creds.smpt_user,
-			password:	creds.smpt_pass,
-			host:		creds.smpt_host,
-			tls: 		{ciphers: "SSLv3"}
-		});
+function smtp_service(){
+	if(instance == null){
+		instance = this;
 	}
-	console.log("Email server started:" + this.server);
+};
+
+smtp_service.prototype.initialize = function() {
+	console.log("Initializing...");
+	if(smtp == null){
+		console.log("Get smtp creds");
+		db.get_smtp(instance.set_smtp);
+	}
+	else{
+		instance.start_server();
+		instance.send_invitation();
+	}
+}; 
+
+smtp_service.prototype.start_server = function(){
+	console.log("Initiating server start.");
+	
+	if(server == null){
+		if(true){
+			server = 	email.server.connect({
+				user:		smtp.user,
+				password:	smtp.pass,
+				host:		smtp.host,
+				ssl:		true
+			});
+		} else {
+			server = 	email.server.connect({
+				user:		smtp.user,
+				password:	smtp.pass,
+				host:		smtp.host,
+				tls: 		{ciphers: "SSLv3"}
+			});
+		}
+		console.log("Email server started");
+	}
 };
 
 smtp_service.prototype.stop_server = function(){
 	//Stop the email server
 };
 
-smtp_service.prototype.send_invitation = function(message){
-	this.start_server(this.get_smtp_service());
-	
-	for (var i in message.recipients) {
-		var email = {
-			from: 		this.user,
-			to:			message.recipients[i],
-			subject: 	message.subject,
-			text: 		message.message
-		};
+smtp_service.prototype.set_smtp = function(results){
+	smtp = results[0];
+	console.log("Set smtp creds");
+	instance.initialize();
+}
+smtp_service.prototype.set_message = function(data){
+	message = data;
+}
+smtp_service.prototype.send_invitation = function(){
+	console.log("Building messages to send.");
+	if(server != null && message != null){	
+		for (var i in message.recipients) {
+			var email = {
+				from: 		smtp.user,
+				to:			message.recipients[i],
+				subject: 	message.subject,
+				text: 		message.message
+			};
 		
-		console.log("Sending message: " + email + " to " + message.recipients[i]);
-		
-		this.server.send(email, function(err, response) { console.log(err || message); } );
+			console.log("Sending message");
+			
+			server.send(email, function(err, response) { console.log(err, response); });
+		}
 	}
 };
 

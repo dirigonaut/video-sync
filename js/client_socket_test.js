@@ -13,6 +13,10 @@ function client_socket_test() {
 		console.log(data.id + " recived: " + data.command);
 		callback(data.id, data.command);});
 		
+		socket.on('all-smtp', function (data){
+			console.log(data);
+		});
+		
 		sockets.push(socket);
 	}
 };
@@ -36,9 +40,25 @@ client_socket_test.prototype.timestamp_all = function(time) {
 };
 
 client_socket_test.prototype.add_smtp_server = function(user, pass, host) {
-	sockets[0].emit("smtp", {"smtp_user": user, "smtp_pass": pass, "smtp_host": host})
+	sockets[0].emit("db-add", {"user": user, "pass": pass, "host": host, "primary" : true})
+};
+
+client_socket_test.prototype.get_smtp = function() {
+	sockets[0].emit("db-smpt-get", {})
 };
 
 client_socket_test.prototype.send_invitation = function(subject, text, recipients) {
-	sockets[0].emit("email", {"subject": subject, "message": text, "recipients": recipients})
+	sockets[0].emit("send-email", {"subject": subject, "message": text, "recipients": recipients})
+};
+
+client_socket_test.prototype.add_contact = function(email, handle) {
+	sockets[0].emit("db-add", {"email": email, "handle": handle})
+};
+
+client_socket_test.prototype.get_contacts = function() {
+	sockets[0].emit("db-get-contacts", {})
+};
+
+client_socket_test.prototype.delete_contact = function(email) {
+	sockets[0].emit("db-delete-contact", {"email": email})
 };
