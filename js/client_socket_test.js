@@ -11,7 +11,7 @@ function client_socket_test() {
 		
 		socket.on('state', function (data , callback) {
 		console.log(data.id + " recived: " + data.command);
-		callback(data.id, data.command);});
+		callback({"id" : data.id, "command" : data.command});});
 		
 		socket.on('all-smtp', function (data){
 			console.log(data);
@@ -40,7 +40,7 @@ client_socket_test.prototype.timestamp_all = function(time) {
 };
 
 client_socket_test.prototype.add_smtp_server = function(user, pass, host) {
-	sockets[0].emit("db-add", {"user": user, "pass": pass, "host": host, "primary" : true})
+	sockets[0].emit("db-add-smtp", {"user": user, "pass": pass, "host": host, "primary" : true})
 };
 
 client_socket_test.prototype.get_smtp = function() {
@@ -52,7 +52,7 @@ client_socket_test.prototype.send_invitation = function(subject, text, recipient
 };
 
 client_socket_test.prototype.add_contact = function(email, handle) {
-	sockets[0].emit("db-add", {"email": email, "handle": handle})
+	sockets[0].emit("db-add-contact", {"email": email, "handle": handle})
 };
 
 client_socket_test.prototype.get_contacts = function() {
