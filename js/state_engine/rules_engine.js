@@ -12,15 +12,15 @@ rules_engine.prototype.process_rules = function(data, socket, player_manager){
 	if(this.debug){console.log("Player: " + socket.id);};
 	
 	if(player !== undefined && player !== null){
-		if (data.timestamp != ""){
+		if (data.timestamp != NaN){
 			if(this.debug){console.log("Timestamp update");};
 			player.timestamp = data.timestamp;
 		}
 		
 		if(this.debug){console.log("Running rules.");};
 		
-		for (var rule in this.rules) {
-			if(this.rules[rule].process_rule(data, socket, player_manager)){
+		for (var i in this.rules) {
+			if(this.rules[i].process_rule(data, socket, player_manager)){
 				break;
 			}
 		}

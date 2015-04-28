@@ -1,15 +1,18 @@
 var app 			= require('http').createServer(handler);
 var io 				= require('socket.io')(app);
 var fs 				= require('fs');
+
 var r_engine 		= require('./state_engine/rules_engine');
 var p_manager 		= require('./state_engine/player_manager');
 var s_service		= require('./smtp_service/smtp_service');
-var database		= require("./nedb/database_utils");
+var database		= require('./nedb/database_utils');
+var validate		= require('./input_validator');
 
 var rules_engine 	= new r_engine();
 var player_manager	= new p_manager();
 var smtp_service	= new s_service();
 var db_util 		= new database();
+var val_util		= new validate();
 
 app.listen(8080);
 
@@ -31,8 +34,8 @@ io.on('connection', function (socket) {
 	player_manager.create_player(socket);
 	
 	socket.on('state', function (data) {
-		console.log(data);
-		rules_engine.process_rules(data, socket, player_manager);
+		console.log("raw: ", data, "clean: ", val_util.check_state(data));
+		rules_engine.process_rules(val_util.check_state(data), socket, player_manager);
 	});
 	
 	socket.on('admin', function (data) {
@@ -40,10 +43,16 @@ io.on('connection', function (socket) {
 		console.log(data);
 	});
 	
-	socket.on('db-add', function (data) {
-		console.log('db-add');
-		console.log(data);
-		db_util.add_entry(data);
+	socket.on('db-add-contact', function (data) {
+		console.log('db-add-contact');
+		console.log("raw: ", data, "clean: ", val_util.check_contact(data));
+		db_util.add_entry(val_util.check_contact(data));
+	});
+	
+	socket.on('db-add-smtp', function (data) {
+		console.log('db-add-smtp');
+		console.log("raw: ", data, "clean: ", val_util.check_smtp(data));
+		db_util.add_entry(val_util.check_smtp(data));
 	});
 	
 	socket.on('db-smpt-get', function (data) {
@@ -64,14 +73,14 @@ io.on('connection', function (socket) {
 	
 	socket.on('db-delete-contact', function (data) {
 		console.log('db-delete-contact');
-		console.log(data);
-		db_util.delete_contact(data);
+		console.log("raw: ", data, "clean: ", val_util.check_contact(data));
+		db_util.delete_contact(val_util.check_contact(data));
 	});
   
 	socket.on('send-email', function (data) {
 		console.log('send-email');
-		console.log(data);
-		smtp_service.set_message(data);
+		console.log("raw: ", data, "clean: ", val_util.check_email(data));
+		smtp_service.set_message(val_util.check_email(data));
 		smtp_service.initialize();
 	});
 });
