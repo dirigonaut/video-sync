@@ -1,22 +1,22 @@
 var sockets = new Array();
 
 function client_socket_test() {
-	
+
 	var serverUrl = "http://localhost:8080";
 	this.number_of_sockets = 4;
-	
+
 	for(var i = 0; i < this.number_of_sockets; ++i){
 		var socket = io.connect(serverUrl, {
 		'force new connection': true});
-		
+
 		socket.on('state', function (data , callback) {
 		console.log(data.id + " recived: " + data.command);
 		callback({"id" : data.id, "command" : data.command});});
-		
+
 		socket.on('all-smtp', function (data){
 			console.log(data);
 		});
-		
+
 		sockets.push(socket);
 	}
 };
@@ -40,7 +40,7 @@ client_socket_test.prototype.timestamp_all = function(time) {
 };
 
 client_socket_test.prototype.add_smtp_server = function(user, pass, host) {
-	sockets[0].emit("db-add-smtp", {"user": user, "pass": pass, "host": host, "primary" : true})
+	sockets[0].emit("db-add-smtp", {"user": user, "pass": pass, "host": host})
 };
 
 client_socket_test.prototype.get_smtp = function() {
