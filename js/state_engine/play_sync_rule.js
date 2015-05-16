@@ -5,14 +5,14 @@ function play_sync_rule(){
 	this.debug 			= true;
 };
 
-play_sync_rule.prototype.process_rule = function(data, socket, manager){
+play_sync_rule.prototype.process_rule = function(request, player_manager){
 	var triggered = false;
-	
+
 	if(this.debug){console.log("Entering play_sync_rule.");};
-	
-	if(data.timestamp && data.timestamp !== ""){
-		var issuer = manager.get_player(socket.id);
-		var others = manager.get_players_without("play");
+
+	if(request.data.timestamp && request.data.timestamp !== ""){
+		var issuer = player_manager.get_player(request.socket.id);
+		var others = player_manager.get_players_without("play");
 
 		var vetted = [];
 		for (var player in others){
@@ -21,9 +21,9 @@ play_sync_rule.prototype.process_rule = function(data, socket, manager){
 				vetted.push(others[player]);
 			}
 		}
-		
+
 		if(this.debug){console.log("Total vetted players: " + vetted.length);};
-		
+
 		triggered = vetted.length > 0 ? true : false;
 
 		for (var player in vetted){
@@ -31,7 +31,7 @@ play_sync_rule.prototype.process_rule = function(data, socket, manager){
 			video_command.run(vetted[player].socket);
 		}
 	}
-	
+
 	return triggered;
 };
 
