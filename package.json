@@ -10,12 +10,12 @@
     "height": 600
   },
   "scripts": {
-    "start": "nw"
+    "start": "nodewebkit"
   },
   "dependencies": {
-    "emailjs": ">=0.3.13",
+    "emailjs": "^0.3.13",
     "nedb": "^1.1.1",
-    "nw": "^0.12.1",
+    "nodewebkit": "^0.11.6",
     "socket.io": "^1.3.5",
     "validator": "^3.38.0"
   }

@@ -10,7 +10,7 @@ function database_utils(){
 };
 
 database_utils.prototype.add_entry = function(request){
-	if(this.debug){console.log("database", request.data);}
+	console.log("database", request.data)
 
 	db.insert(request.data, function(err, newDoc){
 		request.socket.emit("added-entry", newDoc);
