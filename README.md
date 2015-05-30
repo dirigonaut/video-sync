@@ -14,7 +14,7 @@ This README would normally document whatever steps are necessary to get your app
 Install npm
 
 ```
-sudo apt-get npm node
+sudo apt-get install npm node
 ```
 Install dependencies
 
