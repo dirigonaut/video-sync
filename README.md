@@ -10,21 +10,16 @@ This README would normally document whatever steps are necessary to get your app
 
 ### How do I get set up? ###
 
-* Summary of set up
-
-Start Compass (SASS)
-
-```
-#!bash
-source ~/.bash_profile
-compass watch
-```
-Start coffee
+#### Set Up
+Install npm
 
 ```
-#!bash
+sudo apt-get npm
+```
+Install dependencies
 
-coffee --watch --output js/ coffee/
+```
+npm update
 ```
 Start nodewebkit
 
