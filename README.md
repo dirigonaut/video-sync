@@ -11,10 +11,13 @@ This README would normally document whatever steps are necessary to get your app
 ### How do I get set up? ###
 
 #### Set Up
-Install npm
+Install nodejs and npm from https://nodejs.org/
 
 ```
-sudo apt-get install npm node
+./configure
+make
+sudo make install
+sudo npm install npm -g
 ```
 Install dependencies
 
