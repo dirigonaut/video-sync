@@ -28,7 +28,8 @@ authenticate.prototype.smtp_auth_token = function(request) {
   var token = self.generate_auth_token();
 
   smtp.build_and_send_auth_message(token, request.data);
-  db.add_entry({"token" : token, "session_socket" : request.socket.id, "session_user" : request.data.email});
+  request.data = {"token" : token, "session_socket" : request.socket.id, "session_user" : request.data[0]}
+  db.add_entry(request);
 };
 
 authenticate.prototype.auth_user = function(request) {

@@ -16,9 +16,9 @@ var db_util 		    = new database();
 var val_util		    = new validate();
 var auth_util       = new authenticate();
 
-app.listen(8080);
-
 var admin = null;
+
+app.listen(8080);
 
 function handler (req, res) {
   fs.readFile(__dirname + '/index.html',

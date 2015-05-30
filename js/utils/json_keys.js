@@ -20,7 +20,8 @@ const json_keys = {
 
 	//Authentication constants
 	"INVITEES"		: "invitees",
-	"TOKEN"				: "token"
+	"TOKEN"				: "token",
+	"SESS_USER"		: "session_user"
 };
 
 module.exports = json_keys;
