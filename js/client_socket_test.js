@@ -68,9 +68,9 @@ client_socket_test.prototype.delete_contact = function(email) {
 };
 
 client_socket_test.prototype.request_token = function(email) {
-	sockets[1].emit("auth-token", {"token": "", "email": email});
+	sockets[1].emit("auth-token", {"email": email, "token": ""});
 };
 
-client_socket_test.prototype.submit_token = function(token, email) {
-	sockets[1].emit("auth-user", {"token": token, "email": email});
+client_socket_test.prototype.submit_token = function(email, token) {
+	sockets[1].emit("auth-user", {"email": email, "token": token});
 };
