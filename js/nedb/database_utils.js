@@ -39,10 +39,11 @@ database_utils.prototype.get_all_contacts = function(request){
 database_utils.prototype.get_auth_token = function(request, callback){
 	db.find({ token: request.data.token }, function (err, docs) {
 		if(docs.email != request.data[json_keys.EMAIL]){
-			db.remove({ token: request.data.token }, function (err, removed_count) {
-				console.log("Removed: " + removed_count);
+			db.remove({ email: request.data.email}, {multi: true}, function (err, removed_count) {
+				if(removed_count > 0){
+					callback(request);
+				}
 			});
-			callback(request);
 		}
 	});
 };
