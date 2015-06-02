@@ -51,7 +51,9 @@ io.on('connection', function (socket) {
   //Auth Events
   socket.on('auth-token', function (data) {
     console.log('auth-token');
-    auth_util.send_user_tolken(build_request(socket, val_util.check_user(data)));
+    if(player_manager.get_player(socket.id) == null){
+      auth_util.send_user_tolken(build_request(socket, val_util.check_user(data)));
+    }
   });
 
   socket.on('auth-user', function (data) {
