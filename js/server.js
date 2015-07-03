@@ -1,5 +1,6 @@
 var app 			      = require('http').createServer(handler);
 var io 				      = require('socket.io')(app);
+var ss              = require('socket.io-stream');
 var fs 				      = require('fs');
 
 var r_engine 		    = require('./state_engine/rules_engine');
@@ -8,6 +9,7 @@ var s_service		    = require('./smtp_service/smtp_service');
 var database		    = require('./nedb/database_utils');
 var validate		    = require('./utils/input_validator');
 var authenticate    = require('./authentication/authenticate');
+var video_encoder   = require('./utils/video_converter');
 
 var rules_engine 	  = new r_engine();
 var player_manager	= new p_manager();
@@ -15,12 +17,14 @@ var smtp_service	  = new s_service();
 var db_util 		    = new database();
 var val_util		    = new validate();
 var auth_util       = new authenticate();
+var video_util      = new video_encoder();
 
 var admin = null;
 
 app.listen(8080);
 
 function handler (req, res) {
+  console.log("req: " + req);
   fs.readFile(__dirname + '/index.html',
   function (err, data) {
     if (err) {
@@ -48,17 +52,11 @@ io.on('connection', function (socket) {
     }
   }
 
-  var readStream = fs.createReadStream("/home/slacker/Downloads/BigBuckBunny_320x180.mp4");
-
-  //Video Stream
-  socket.on('video-stream-req', function(reg)
-  {
-    console.log(req);
-
-    readStream.addListener('data', function(data)
-    {
-      socket.emit('VS', data);
-    });
+  //Video Events
+  ss(socket).on('video-stream', function(stream) {
+    console.log('video-stream');
+    var path = "/home/sabo-san/Downloads/video.mp4"
+    fs.createReadStream(path).pipe(stream);
   });
 
   //Auth Events
