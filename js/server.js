@@ -1,7 +1,9 @@
 var app 			      = require('http').createServer(handler);
 var io 				      = require('socket.io')(app);
-var ss              = require('socket.io-stream');
+var ss                                = require('socket.io-stream');
 var fs 				      = require('fs');
+var path                              = require('path');
+var static                            = require('node-static');
 
 var r_engine 		    = require('./state_engine/rules_engine');
 var p_manager 	    = require('./state_engine/player_manager');
@@ -23,18 +25,16 @@ var admin = null;
 
 app.listen(8080);
 
+var fileServer = new static.Server('',{
+    cache: 3600,
+    gzip: true
+} );
+
 function handler (req, res) {
   console.log("req: " + req);
-  fs.readFile(__dirname + '/index.html',
-  function (err, data) {
-    if (err) {
-      res.writeHead(500);
-      return res.end('Error loading index.html');
-    }
-
-    res.writeHead(200);
-    res.end(data);
-  });
+  req.addListener('end', function() {
+    fileServer.serve( req, res );
+  }).resume();
 }
 
 function build_request(socket, data){
@@ -55,7 +55,7 @@ io.on('connection', function (socket) {
   //Video Events
   ss(socket).on('video-stream', function(stream) {
     console.log('video-stream');
-    var path = "/home/sabo-san/Downloads/video.mp4"
+    var path = "/home/slacker/Downloads/video.mp4"
     fs.createReadStream(path).pipe(stream);
   });
 
