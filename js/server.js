@@ -48,6 +48,19 @@ io.on('connection', function (socket) {
     }
   }
 
+  var readStream = fs.createReadStream("/home/slacker/Downloads/BigBuckBunny_320x180.mp4");
+
+  //Video Stream
+  socket.on('video-stream-req', function(reg)
+  {
+    console.log(req);
+
+    readStream.addListener('data', function(data)
+    {
+      socket.emit('VS', data);
+    });
+  });
+
   //Auth Events
   socket.on('auth-token', function (data) {
     console.log('auth-token');
