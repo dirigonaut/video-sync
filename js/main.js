@@ -11,8 +11,9 @@ $(window).load(function(){
   }
   chooseFile('#fileDialog');
 
-  var isStarted = server_start();
-  
+  var video_server = new server();
+  var isStarted = video_server.server_start();
+
   if (isStarted)
   {
     $.get("client.html",function(data){
