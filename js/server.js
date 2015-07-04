@@ -37,10 +37,7 @@ function build_request(socket, data){
   return {"socket" : socket, "data" : data};
 }
 
-function server () {};
-
-server.prototype.server_start = function () {
-  console.log("Initializing: ");
+function server_start () {
   if(app == null){
     file_server = new static.Server('',{
         cache: 0,
@@ -61,11 +58,15 @@ server.prototype.server_start = function () {
 
     app.listen(8080);
 
-    this.socket_setup();
+    socket_setup();
+
+    return true;
   }
+
+  return false;
 };
 
-server.prototype.socket_setup = function () {
+function socket_setup () {
   io.on('connection', function (socket) {
     console.log("socket has connected: " + socket.id);
     if(!socket.auth){
@@ -186,4 +187,4 @@ server.prototype.socket_setup = function () {
   });
 }
 
-module.exports = server;
+module.exports = server_start;
