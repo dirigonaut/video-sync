@@ -16,7 +16,7 @@ $(window).load(function(){
 
   if (isStarted)
   {
-    $.get("client.html",function(data){
+    $.get("http://localhost:8080/html/client.html",function(data){
       $("#client-container").append(data);
     });
   }
