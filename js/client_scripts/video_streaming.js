@@ -1,5 +1,3 @@
-var ss = require('socket.io-stream');
-
 var socket = io.connect('http://localhost:8080');
 
 window.URL = window.URL || window.webkitURL;
@@ -15,7 +13,7 @@ var queue = [];
 video.src = window.URL.createObjectURL(mediaSource);
 
 function video_streaming(){
-  video.play();
+  //video.play();
 
   mediaSource.addEventListener('sourceopen', function(event) {
     buffer = mediaSource.addSourceBuffer('video/webm; codecs="vorbis,vp8"');
