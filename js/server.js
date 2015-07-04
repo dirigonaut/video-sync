@@ -37,9 +37,11 @@ function build_request(socket, data){
   return {"socket" : socket, "data" : data};
 }
 
-function server_start (){
+function server () {};
+
+server.prototype.server_start = function () {
   console.log("Initializing: ");
-  if(app != null){
+  if(app == null){
     file_server = new static.Server('',{
         cache: 0,
         gzip: true
@@ -63,7 +65,7 @@ function server_start (){
   }
 };
 
-function socket_setup () {
+server.prototype.socket_setup = function () {
   io.on('connection', function (socket) {
     console.log("socket has connected: " + socket.id);
     if(!socket.auth){
@@ -184,4 +186,4 @@ function socket_setup () {
   });
 }
 
-module.exports = server_start;
+module.exports = server;

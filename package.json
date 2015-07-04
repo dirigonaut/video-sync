@@ -2,7 +2,7 @@
   "name": "Video-Sync",
   "version": "0.0.1",
   "main": "html/index.html",
-  "node-main": "js/server.js",
+  "node-main": "js/nw_server_handle.js",
   "window": {
     "toolbar": true,
     "frame": true,
