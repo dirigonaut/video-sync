@@ -1,9 +1,8 @@
 var app 			      = require('http').createServer(handler);
 var io 				      = require('socket.io')(app);
-var ss                                = require('socket.io-stream');
 var fs 				      = require('fs');
-var path                              = require('path');
-var static                            = require('node-static');
+var path            = require('path');
+var static          = require('node-static');
 
 var r_engine 		    = require('./state_engine/rules_engine');
 var p_manager 	    = require('./state_engine/player_manager');
@@ -53,10 +52,14 @@ io.on('connection', function (socket) {
   }
 
   //Video Events
-  ss(socket).on('video-stream', function(stream) {
+  socket.on('video-stream', function() {
     console.log('video-stream');
-    var path = "/home/slacker/Downloads/video.mp4"
-    fs.createReadStream(path).pipe(stream);
+    var path = "/home/sabo-san/Downloads/video.webm"
+    var readStream = fs.createReadStream(path);
+
+    readStream.on('data', function(data) {
+      socket.emit('video-packet', data);
+    });
   });
 
   //Auth Events

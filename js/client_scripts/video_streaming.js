@@ -1,26 +1,44 @@
 var ss = require('socket.io-stream');
 
-var mediaSource;
-var video;
+var socket = io.connect('http://localhost:8080');
+
+window.URL = window.URL || window.webkitURL;
+window.MediaSource = window.MediaSource || window.WebKitMediaSource;
+
+var mediaSource = new MediaSource();
+var buffer;
+
+var video = document.getElementById('shared_video');
+
+var queue = [];
+
+video.src = window.URL.createObjectURL(mediaSource);
 
 function video_streaming(){
-  window.URL = window.URL || window.webkitURL;
-  window.MediaSource = window.MediaSource || window.WebKitMediaSource;
-
-  video = document.getElementById('shared_video');
-
-  mediaSource = new MediaSource();
-  video.src = window.URL.createObjectURL(mediaSource);
+  video.play();
 
   mediaSource.addEventListener('sourceopen', function(event) {
-    console.log(mediaSource.readyState);
+    buffer = mediaSource.addSourceBuffer('video/webm; codecs="vorbis,vp8"');
 
-    var sourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.64001E"');
-    var socket = io.connect('http://localhost:8080');
-    var stream = ss.createStream();
+    buffer.addEventListener('error', function(e) { console.log('error: ' + mediaSource.readyState); });
+    buffer.addEventListener('abort', function(e) { console.log('abort: ' + mediaSource.readyState); });
 
-    ss(socket).emit('video-stream', stream);
+    buffer.addEventListener('update', function() {
+      if (queue.length > 0 && !buffer.updating) {
+        buffer.appendBuffer(queue.shift());
+      }
+    });
+  }, false);
 
-    //stream.pipe(sourceBuffer);
-  })
-};
+  socket.emit('video-stream', "");
+}
+
+socket.on("video-packet", function(data) {
+  if(typeof data !== 'string'){
+    if (buffer.updating || queue.length > 0) {
+      queue.push(data);
+    } else {
+      buffer.appendBuffer(data);
+    }
+  }
+});
