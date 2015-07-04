@@ -13,7 +13,7 @@ var queue = [];
 video.src = window.URL.createObjectURL(mediaSource);
 
 function video_streaming(){
-  //video.play();
+  video.play();
 
   mediaSource.addEventListener('sourceopen', function(event) {
     buffer = mediaSource.addSourceBuffer('video/webm; codecs="vorbis,vp8"');
