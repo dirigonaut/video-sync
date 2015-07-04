@@ -10,8 +10,4 @@ $(window).load(function(){
     });
   }
   chooseFile('#fileDialog');
-
-//  videojs("shared_video", {}, function(){
-//
-//  });
 });
