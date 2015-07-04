@@ -81,7 +81,7 @@ function socket_setup () {
     //Video Events
     socket.on('video-stream', function() {
       console.log('video-stream');
-      var path = "/home/sabo-san/Downloads/video.webm"
+      var path = "/home/slacker/Downloads/video.webm"
       var readStream = fs.createReadStream(path);
 
       readStream.on('data', function(data) {
