@@ -10,4 +10,13 @@ $(window).load(function(){
     });
   }
   chooseFile('#fileDialog');
+
+  var isStarted = server_start();
+  
+  if (isStarted)
+  {
+    $.get("client.html",function(data){
+      $("#client-container").append(data);
+    });
+  }
 });
