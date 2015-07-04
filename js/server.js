@@ -4,13 +4,13 @@ var fs 				      = require('fs');
 var path            = require('path');
 var static          = require('node-static');
 
-var r_engine 		    = require('./state_engine/rules_engine');
-var p_manager 	    = require('./state_engine/player_manager');
-var s_service		    = require('./smtp_service/smtp_service');
-var database		    = require('./nedb/database_utils');
-var validate		    = require('./utils/input_validator');
-var authenticate    = require('./authentication/authenticate');
-var video_encoder   = require('./utils/video_converter');
+var r_engine 		    = require('../js/state_engine/rules_engine');
+var p_manager 	    = require('../js/state_engine/player_manager');
+var s_service		    = require('../js/smtp_service/smtp_service');
+var database		    = require('../js/nedb/database_utils');
+var validate		    = require('../js/utils/input_validator');
+var authenticate    = require('../js/authentication/authenticate');
+var video_encoder   = require('../js/utils/video_converter');
 
 var app = null;
 var io;
@@ -37,7 +37,9 @@ function build_request(socket, data){
   return {"socket" : socket, "data" : data};
 }
 
-function server_start () {
+function server () {};
+
+server.prototype.server_start = function () {
   if(app == null){
     file_server = new static.Server('',{
         cache: 0,
@@ -58,7 +60,7 @@ function server_start () {
 
     app.listen(8080);
 
-    socket_setup();
+    this.socket_setup();
 
     return true;
   }
@@ -66,7 +68,7 @@ function server_start () {
   return false;
 };
 
-function socket_setup () {
+server.prototype.socket_setup = function () {
   io.on('connection', function (socket) {
     console.log("socket has connected: " + socket.id);
     if(!socket.auth){
@@ -186,5 +188,3 @@ function socket_setup () {
     }, 300000);
   });
 }
-
-module.exports = server_start;
