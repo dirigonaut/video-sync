@@ -81,8 +81,8 @@
   </footer>
   </body>
   <script>
-    global.require('socket.io');
-  </script> 
+    var io = require('socket.io-client');
+  </script>
   <script src="../js/vendor/jquery-2.1.1.min.js"></script>
   <script src="../js/vendor/video-js/video.js"></script>
   <script src="../js/client_scripts/client_socket_test.js"></script>
@@ -92,8 +92,8 @@
     videojs.options.flash.swf = "../js/vendor/video-js/video-js.swf"
   </script>
   <script>
-    //var video_buffer = new video_streaming();
-	  var test = new client_socket_test();
+    var video_buffer = new video_streaming();
+	  //var test = new client_socket_test();
   </script>
   <script>
   </script>
