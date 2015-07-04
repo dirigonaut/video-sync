@@ -41,7 +41,7 @@ function server_start (){
   console.log("Initializing: ");
   if(app != null){
     file_server = new static.Server('',{
-        cache: 3600,
+        cache: 0,
         gzip: true
     });
 

@@ -80,8 +80,9 @@
     </div>
   </footer>
   </body>
-  <script src="http://localhost:8080/socket.io/socket.io.js"></script>
-  <script src="http://localhost:8080/socket.io/socket.io-streaming.js"></script>
+  <script>
+    global.require('socket.io');
+  </script> 
   <script src="../js/vendor/jquery-2.1.1.min.js"></script>
   <script src="../js/vendor/video-js/video.js"></script>
   <script src="../js/client_scripts/client_socket_test.js"></script>
