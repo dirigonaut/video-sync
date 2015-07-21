@@ -3,16 +3,16 @@ var socket = io.connect('http://localhost:8080');
 window.URL = window.URL || window.webkitURL;
 window.MediaSource = window.MediaSource || window.WebKitMediaSource;
 
-var mediaSource = new MediaSource();
+var mediaSource;
 var buffer;
 
+var queue = [];
 var video = document.getElementById('shared_video');
 
-var queue = [];
-
-video.src = window.URL.createObjectURL(mediaSource);
-
 function video_streaming(){
+  mediaSource = new MediaSource();
+  video.src = window.URL.createObjectURL(mediaSource);
+
   video.play();
 
   mediaSource.addEventListener('sourceopen', function(event) {
@@ -26,12 +26,14 @@ function video_streaming(){
         buffer.appendBuffer(queue.shift());
       }
     });
-  }, false);
 
-  socket.emit('video-stream', "");
+    socket.emit('video-stream', "");
+  }, false);
 }
 
 socket.on("video-packet", function(data) {
+  console.log("Got video packet.");
+  console.log(buffer);
   if(typeof data !== 'string'){
     if (buffer.updating || queue.length > 0) {
       queue.push(data);
