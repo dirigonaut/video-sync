@@ -37,9 +37,8 @@ function build_request(socket, data){
   return {"socket" : socket, "data" : data};
 }
 
-function server () {};
 
-server.prototype.server_start = function () {
+function server_start () {
   if(app == null){
     file_server = new static.Server('',{
         cache: 0,
@@ -60,7 +59,7 @@ server.prototype.server_start = function () {
 
     app.listen(8080);
 
-    this.socket_setup();
+    socket_setup();
 
     return true;
   }
@@ -68,7 +67,7 @@ server.prototype.server_start = function () {
   return false;
 };
 
-server.prototype.socket_setup = function () {
+function socket_setup () {
   io.on('connection', function (socket) {
     console.log("socket has connected: " + socket.id);
     if(!socket.auth){
@@ -83,7 +82,7 @@ server.prototype.socket_setup = function () {
     //Video Events
     socket.on('video-stream', function() {
       console.log('video-stream');
-      var path = "/home/slacker/Downloads/video.webm"
+      var path = "/home/sabo-san/Downloads/video.webm"
       var readStream = fs.createReadStream(path);
 
       readStream.on('data', function(data) {

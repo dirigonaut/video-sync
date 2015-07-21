@@ -21,6 +21,10 @@ function client_socket_test() {
 	}
 };
 
+client_socket_test.prototype.get_sockets = function() {
+	return sockets;
+};
+
 client_socket_test.prototype.play = function() {
 	sockets[0].emit("state", {"command":"play","timestamp":""});
 };
