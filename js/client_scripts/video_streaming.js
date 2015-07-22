@@ -9,6 +9,8 @@ var buffer;
 var queue = [];
 var video = document.getElementById('shared_video');
 
+var end_of_stream = false;
+
 function video_streaming(){
   media_source = new MediaSource();
   video.src = window.URL.createObjectURL(media_source);
@@ -24,6 +26,8 @@ function video_streaming(){
     buffer.addEventListener('update', function() {
       if (queue.length > 0 && !buffer.updating) {
         buffer.appendBuffer(queue.shift());
+      } else if(end_of_stream){
+        media_source.endOfStream();
       }
     });
 
@@ -35,11 +39,19 @@ function video_streaming(){
   media_source.addEventListener('sourceclose', function(e) { console.log('sourceclose: ' + media_source.readyState); });
 }
 
-socket.on("video-packet", function(e) {
-  var data = new Uint8Array(e);
-  if (buffer.updating || queue.length > 0) {
-    queue.push(data);
+socket.on("video-packet", function(data) {
+  if(data){
+    var chunk = new Uint8Array(data);
+    if (buffer.updating || queue.length > 0) {
+      queue.push(chunk);
+    } else {
+      buffer.appendBuffer(chunk);
+    }
   } else {
-    buffer.appendBuffer(data);
+    if (!buffer.updating || queue.length == 0) {
+      media_source.endOfStream();
+    } else {
+      end_of_stream = true;
+    }
   }
 });

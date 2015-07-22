@@ -83,10 +83,10 @@ function socket_setup () {
     socket.on('video-stream', function() {
       console.log('video-stream');
       var path = "/home/sabo-san/Downloads/video.webm"
-      var readStream = fs.createReadStream(path);
+      var read_stream = fs.createReadStream(path);
 
-      readStream.on('data', function(data) {
-        socket.emit('video-packet', data);
+      read_stream.on('readable', function() {
+        socket.emit('video-packet', read_stream.read());
       });
     });
 
