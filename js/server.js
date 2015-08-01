@@ -82,7 +82,7 @@ function socket_setup () {
     //Video Events
     socket.on('video-stream', function() {
       console.log('video-stream');
-      var path = "/home/sabo-san/Downloads/video.webm"
+      var path = "/home/sabo-san/Downloads/small.webm"
       var read_stream = fs.createReadStream(path);
 
       read_stream.on('readable', function() {
