@@ -2,7 +2,7 @@ var player = require('./player');
 
 var players = new Map();
 
-function player_manager (){ 
+function player_manager (){
 	this.debug = true;
 };
 
@@ -31,7 +31,6 @@ player_manager.prototype.get_other_players = function(id){
             temp.push(players.get(p));
         }
     }
-    
     return temp;
 };
 
@@ -42,7 +41,6 @@ player_manager.prototype.get_players_with = function(status){
             temp.push(players.get(p));
         }
     }
-    
     return temp;
 };
 
@@ -53,7 +51,6 @@ player_manager.prototype.get_players_without = function(status){
             temp.push(players.get(p));
         }
     }
-    
     return temp;
 };
 

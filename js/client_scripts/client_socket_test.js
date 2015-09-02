@@ -78,3 +78,11 @@ client_socket_test.prototype.request_token = function(email) {
 client_socket_test.prototype.submit_token = function(email, token) {
 	sockets[1].emit("auth-user", {"email": email, "token": token});
 };
+
+client_socket_test.prototype.load_video = function(path) {
+	sockets[0].emit('video-stream-load', {"path": "/home/sabo-san/Downloads/small.webm", "start": "", "end": "", "encoding": "webm"});
+};
+
+client_socket_test.prototype.encode_video = function(path) {
+	sockets[0].emit('video-stream-encode', {"path": "/home/sabo-san/Downloads/small.webm", "start": "", "end": "", "encoding": "webm"});
+};
