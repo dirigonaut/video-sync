@@ -1,6 +1,6 @@
 var db_utils        = require('../nedb/database_utils');
 var s_service       = require('../smtp_service/smtp_service');
-var p_manager       = require('../state_engine/player_manager');
+var p_manager       = require('../player/player_manager');
 
 var db 			        = new db_utils();
 var smtp            = new s_service();

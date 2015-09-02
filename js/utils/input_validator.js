@@ -15,7 +15,7 @@ input_validator.prototype.check_state = function(input) {
 	return clean;
 };
 
-input_validator.prototype.check_callback = function(input) {3
+input_validator.prototype.check_callback = function(input) {
 	var clean = {};
 
 	clean[json_keys.ID] 			= validator.toString(input[json_keys.ID]);
@@ -93,6 +93,12 @@ input_validator.prototype.log_data_cleaning = function(dirty_data, dirty_data){
 	if(this.debug){
 		console.log("dirty: ", dirty_data, "clean: ", dirty_data);
 	}
-}
+};
+
+input_validator.prototype.check_video_info = function(input){
+	//TODO fill out logic for sterilizing data
+	return input;
+};
+
 
 module.exports = input_validator;

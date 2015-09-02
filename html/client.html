@@ -77,11 +77,13 @@
   </script>
   <script src="../js/vendor/jquery-2.1.1.min.js"></script>
   <script src="../js/vendor/video-js/video.js"></script>
-  <script src="../js/client_scripts/client_socket_test.js"></script>
-  <script src="../js/client_scripts/video_streaming.js"></script>
+  <script src="../js/client_scripts/client_socket.js"></script>
+  <script src="../js/client_scripts/client_video.js"></script>
   <script>
     videojs.options.flash.swf = "../js/vendor/video-js/video-js.swf"
   </script>
   <script>
-    var video_buffer = video_streaming();
+    var client_socket = new client_socket();
+    var client_video = new client_video();
+    client_socket.initialize(client_video);
   </script>

@@ -1,4 +1,4 @@
-var p_manager = require('./player_manager');
+var p_manager = require('../player/player_manager');
 var validate	= require('../utils/input_validator');
 var	json_keys  = require('../utils/json_keys');
 

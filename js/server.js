@@ -1,16 +1,15 @@
 var http 			      = require('http')
 var socket_io	      = require('socket.io');
-var fs 				      = require('fs');
 var path            = require('path');
 var static          = require('node-static');
 
 var r_engine 		    = require('../js/state_engine/rules_engine');
-var p_manager 	    = require('../js/state_engine/player_manager');
+var p_manager 	    = require('../js/player/player_manager');
 var s_service		    = require('../js/smtp_service/smtp_service');
 var database		    = require('../js/nedb/database_utils');
 var validate		    = require('../js/utils/input_validator');
 var authenticate    = require('../js/authentication/authenticate');
-var video_encoder   = require('../js/utils/video_converter');
+var video_stream    = require('../js/utils/video_stream');
 
 var app = null;
 var io;
@@ -21,8 +20,8 @@ var smtp_service;
 var db_util;
 var val_util;
 var auth_util;
-var video_util;
 var file_server;
+var video_handler;
 
 var admin = null;
 
@@ -36,7 +35,6 @@ function handler (req, res) {
 function build_request(socket, data){
   return {"socket" : socket, "data" : data};
 }
-
 
 function server_start () {
   if(app == null){
@@ -54,7 +52,7 @@ function server_start () {
     db_util 		    = new database();
     val_util		    = new validate();
     auth_util       = new authenticate();
-    video_util      = new video_encoder();
+    video_handler   = new video_stream();
     admin           = null;
 
     app.listen(8080);
@@ -71,23 +69,33 @@ function socket_setup () {
   io.on('connection', function (socket) {
     console.log("socket has connected: " + socket.id);
     if(!socket.auth){
-      if(socket.handshake.address == "127.0.0.1" && admin == null){
+      if(socket.handshake.address == "::ffff:127.0.0.1" && admin == null){
         socket.auth = true;
         admin = socket;
       } else {
         socket.auth = false;
       }
-    }
+    };
 
     //Video Events
-    socket.on('video-stream', function() {
-      console.log('video-stream');
-      var path = "/home/sabo-san/Downloads/small.webm"
-      var read_stream = fs.createReadStream(path);
+    //data = [path, start, end, [encoding_options]]
+    socket.on('video-stream-load', function(data) {
+      console.log('video-stream-load');
+      video_handler.load_video(val_util.check_video_info(data));
+      //Put a call to the player manager to get the full list of sockets to broadcast to
+      socket.emit('video-ready');
+    });
 
-      read_stream.on('readable', function() {
-        socket.emit('video-packet', read_stream.read());
-      });
+    socket.on('video-stream-encode', function(data) {
+      console.log('video-stream-encode');
+      video_handler.encode(val_util.check_video_info(data));
+      //Put a call to the player manager to get the full list of sockets to broadcast to
+      socket.emit('video-encoded');
+    });
+
+    socket.on('video-stream', function(data) {
+      console.log('video-stream');
+      video_handler.stream(socket);
     });
 
     //Auth Events
