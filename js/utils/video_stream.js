@@ -5,10 +5,22 @@ var fs 			= require('fs');
 function webm(command) {
   command
   .format('webm')
+  .videoBitrate('1024k')
   .videoCodec('libvpx')
   .size('720x?')
-  .audioChannels(2)
+  .audioBitrate('128k')
   .audioCodec('libvorbis');
+}
+
+function find_codec(codec){
+  switch(codec) {
+      case "webm":
+        console.log("Using webm codec.");
+        return webm;
+      default:
+      console.log("Using default codec.");
+        return webm;
+  }
 }
 
 function swap_file_type(path, file_type){
@@ -16,8 +28,7 @@ function swap_file_type(path, file_type){
 }
 
 var path;
-var start;
-var end;
+var start_time;
 var encoding;
 
 function video_stream(){
@@ -26,17 +37,18 @@ function video_stream(){
 
 video_stream.prototype.load_video = function(data) {
 	path = data.path;
-  start = data.start;
-  end = data.end;
+  start_time = data.start;
   encoding = data.encoding;
 };
 
 video_stream.prototype.encode = function(data) {
-  var new_path = swap_file_type(data.path, "webm");
+  var new_path = swap_file_type(data.path, data.encoding);
 
-  console.log("Hold on to your butts.");
 	new ffmpeg(data.path)
-  .preset(webm)
+  .preset(find_codec(data.encoding))
+  .on('start', function(commandLine){
+    console.log("Hold on to your butts: " + commandLine);
+  })
   .on('end', function() {
     console.log('file has been converted succesfully');
   })
@@ -49,12 +61,22 @@ video_stream.prototype.encode = function(data) {
   .save(new_path);
 };
 
-video_stream.prototype.stream = function(socket) {
-	var read_stream = fs.createReadStream(path);
+video_stream.prototype.stream = function(socket, player) {
+  ffmpeg.ffprobe(path, function(err, metadata) {
+    if(metadata){
+      var read_stream = fs.createReadStream(path, {start:start_time, end:metadata.format.size});
 
-	read_stream.on('readable', function() {
-		socket.emit('video-packet', read_stream.read());
-	});
+      read_stream.on('readable', function() {
+        socket.emit('video-packet', read_stream.read());
+      });
+      read_stream.on('error', function(e) {
+        console.log("Error: " +e);;
+      });
+      read_stream.on('close', function(e) {
+        console.log("Closed: " +e);;
+      });
+    }
+  });
 };
 
 video_stream.prototype.encode_stream = function(socket, codec, start, end) {
