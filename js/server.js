@@ -67,7 +67,7 @@ function server_start () {
 
 function socket_setup () {
   io.on('connection', function (socket) {
-    console.log("socket has connected: " + socket.id);
+    console.log("socket has connected: " + socket.id + " ip:" + socket.handshake.address);
     if(!socket.auth){
       if(socket.handshake.address == "::ffff:127.0.0.1" && admin == null){
         socket.auth = true;
@@ -78,7 +78,7 @@ function socket_setup () {
     };
 
     //Video Events
-    //data = [path, start, end, [encoding_options]]
+    //data = [path, start, [encoding_options]]
     socket.on('video-stream-load', function(data) {
       console.log('video-stream-load');
       video_handler.load_video(val_util.check_video_info(data));
@@ -95,7 +95,7 @@ function socket_setup () {
 
     socket.on('video-stream', function(data) {
       console.log('video-stream');
-      video_handler.stream(socket);
+      video_handler.stream(socket, player_manager.get_player(socket.id));
     });
 
     //Auth Events

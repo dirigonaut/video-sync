@@ -58,8 +58,8 @@ client_socket.prototype.submit_token = function(email, token) {
 	socket.emit("auth-user", {"email": email, "token": token});
 };
 
-client_socket.prototype.load_video = function(path) {
-	socket.emit('video-stream-load', {"path": "/home/sabo-san/Downloads/video.webm", "start": "", "end": "", "encoding": "webm"});
+client_socket.prototype.load_video = function(start) {
+	socket.emit('video-stream-load', {"path": "/home/sabo-san/Downloads/video.webm", "start": start, "encoding": "webm"});
 };
 
 client_socket.prototype.encode_video = function(path) {
