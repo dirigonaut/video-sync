@@ -9,7 +9,8 @@ var s_service		    = require('../js/smtp_service/smtp_service');
 var database		    = require('../js/nedb/database_utils');
 var validate		    = require('../js/utils/input_validator');
 var authenticate    = require('../js/authentication/authenticate');
-var video_stream    = require('../js/utils/video_stream');
+var video_streamer  = require('../js/video/video_stream');
+var video_encoder   = require('../js/video/video_encoder');
 
 var app = null;
 var io;
@@ -21,7 +22,9 @@ var db_util;
 var val_util;
 var auth_util;
 var file_server;
-var video_handler;
+var streamer;
+var encoder;
+
 
 var admin = null;
 
@@ -52,7 +55,8 @@ function server_start () {
     db_util 		    = new database();
     val_util		    = new validate();
     auth_util       = new authenticate();
-    video_handler   = new video_stream();
+    streamer        = new video_streamer();
+    encoder         = new video_encoder();
     admin           = null;
 
     app.listen(8080);
@@ -79,23 +83,23 @@ function socket_setup () {
 
     //Video Events
     //data = [path, start, [encoding_options]]
-    socket.on('video-stream-load', function(data) {
-      console.log('video-stream-load');
-      video_handler.load_video(val_util.check_video_info(data));
+    socket.on('video-load', function(data) {
+      console.log('video-load');
+      video_streamer.load_video(val_util.check_video_info(data));
       //Put a call to the player manager to get the full list of sockets to broadcast to
       socket.emit('video-ready');
     });
 
-    socket.on('video-stream-encode', function(data) {
-      console.log('video-stream-encode');
-      video_handler.encode(val_util.check_video_info(data));
+    socket.on('video-encode', function(data) {
+      console.log('video-encode');
+      encoder.encode(val_util.check_video_info(data));
       //Put a call to the player manager to get the full list of sockets to broadcast to
-      socket.emit('video-encoded');
+      //socket.emit('video-encoded');
     });
 
     socket.on('video-stream', function(data) {
       console.log('video-stream');
-      video_handler.stream(socket, player_manager.get_player(socket.id));
+      video_streamer.stream(socket, player_manager.get_player(socket.id));
     });
 
     //Auth Events
@@ -183,6 +187,10 @@ function socket_setup () {
         console.log('admin');
         console.log(data);
       }
+    });
+
+    socket.on('error', function (data) {
+      console.log(data);
     });
 
     setTimeout(function(){

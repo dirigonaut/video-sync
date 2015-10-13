@@ -96,7 +96,7 @@ input_validator.prototype.log_data_cleaning = function(dirty_data, dirty_data){
 };
 
 input_validator.prototype.check_video_info = function(input){
-	//TODO fill out logic for sterilizing data
+	console.log(input);
 	return input;
 };
 
