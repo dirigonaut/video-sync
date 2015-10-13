@@ -1,4 +1,4 @@
-var command = require('./video_command');
+var command = require('./state_command');
 
 function request_pause_play_rule(){
     this.debug 		= true;
@@ -20,12 +20,12 @@ request_pause_play_rule.prototype.process_rule = function(request, player_manage
 		}
 
 		if(this.debug){console.log("Total vetted players: " + vetted.length);};
-		
+
 		triggered = vetted.length > 0 ? true : false;
 
 		for (var player in vetted){
-			var video_command = new command(request.data.command, "");
-			video_command.run(vetted[player].socket);
+			var state_command = new command(request.data.command, "");
+      state_command.run(vetted[player].socket);
 		}
 	}
 

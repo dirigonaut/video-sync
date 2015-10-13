@@ -18,7 +18,8 @@ function client_video(){
 
   media_source.addEventListener('sourceopen',         media_source_callback, false);
   media_source.addEventListener('webkitsourceopen',   media_source_callback, false);
-  media_source.addEventListener('webkitsourceended',  media_source_state,    false);
+  media_source.addEventListener('webkitsourceended',  object_state,    false);
+  media_source.addEventListener('sourceended',        object_state,    false);
 };
 
 client_video.prototype.handle_video_packet = function(data){
@@ -30,7 +31,8 @@ client_video.prototype.handle_video_packet = function(data){
       buffer.appendBuffer(new Uint8Array(data));
     }
   } else {
-    if (!buffer.updating || queue.length == 0) {
+    if (media_source.readyState == "open" && !buffer.updating && queue.length == 0) {
+      console.log("Closing media_source.");
       media_source.endOfStream();
     } else if(queue.length == 0){
       close_stream = true;
@@ -38,28 +40,31 @@ client_video.prototype.handle_video_packet = function(data){
   }
 };
 
-function media_source_state(e){
-  console.log('media_source state: ' + e.readyState);
+function object_state(e){
+  console.log(e.target + " ready state : " + e.readyState);
+  console.log(e);
 };
 
 function media_source_callback(e) {
   if(!buffer){
     console.log("Creating Buffer.");
     buffer = media_source.addSourceBuffer('video/webm; codecs="vp8,vorbis"');
+    //buffer = media_source.addSourceBuffer('video/mp4; codecs="avc1.64000d,mp4a.40.2"');
 
-    buffer.addEventListener('error',       function(e)  { console.log('error: '       + media_source.readyState); console.log(e);});
-    buffer.addEventListener('abort',       function(e)  { console.log('abort: '       + media_source.readyState); console.log(e);});
-    //buffer.addEventListener('updatestart', function(e)  { console.log('updatestart: ' + media_source.readyState); console.log(e);});
-    //buffer.addEventListener('update',      function(e)  { console.log('update: '      + media_source.readyState); console.log(e);});
-    //buffer.addEventListener('updateend',   function(e)  { console.log('updateend: '   + media_source.readyState); console.log(e);});
+    buffer.addEventListener('error',  object_state);
+    buffer.addEventListener('abort',  object_state);
+    buffer.addEventListener('update', on_buffer_update);
+  }
+};
 
-    buffer.addEventListener('update', function(e) {
-      if (queue.length > 0 && media_source.readyState == "open" && !buffer.updating) {
-        console.log("Appending from the queue.");
-        buffer.appendBuffer(queue.shift());
-      } else if(!buffer.updating || close_stream){
-        media_source.endOfStream();
-      }
-    });
+function on_buffer_update(e){
+  if(!buffer.updating){
+    if (queue.length > 0) {
+      console.log("Appending from the queue.");
+      buffer.appendBuffer(queue.shift());
+    } else if(close_stream){
+      console.log("Closing media_source.");
+      //media_source.endOfStream();
+    }
   }
 };

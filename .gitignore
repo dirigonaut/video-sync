@@ -1,1 +1,5 @@
+.sass-cache/
+coffee/
 node_modules/
+database
+test.txt

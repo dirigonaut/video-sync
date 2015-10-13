@@ -1,4 +1,4 @@
-var command = require('./video_command');
+var command = require('./state_command');
 
 function pause_sync_rule(){
 	this.time_disparity = 2.00;
@@ -28,8 +28,8 @@ pause_sync_rule.prototype.process_rule = function(request, player_manager){
 		triggered = vetted.length > 0 ? true : false;
 
 		for (var player in vetted){
-			var video_command = new command("sync_pause", "");
-			video_command.run(vetted[player].socket);
+			var state_command = new command("sync_pause", "");
+			state_command.run(vetted[player].socket);
 		}
 	}
 

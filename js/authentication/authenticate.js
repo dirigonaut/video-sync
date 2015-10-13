@@ -6,11 +6,12 @@ var db 			        = new db_utils();
 var smtp            = new s_service();
 var player_manager	= new p_manager();
 
-var self = null;
+function gen_token(){
+  return Math.random().toString(36).slice(-8).concat(Math.random().toString(36).slice(-8));
+}
 
 function authenticate(){
   this.debug = true;
-  self = this;
 };
 
 authenticate.prototype.send_user_tolken = function(request) {
@@ -18,14 +19,9 @@ authenticate.prototype.send_user_tolken = function(request) {
   db.get_invitee(request, this.smtp_auth_token);
 };
 
-authenticate.prototype.generate_auth_token = function() {
-  if(this.debug){console.log("Constructing auth token");}
-  return Math.random().toString(36).slice(-8).concat(Math.random().toString(36).slice(-8));
-};
-
 authenticate.prototype.smtp_auth_token = function(request) {
   console.log("User found, constructing and sending token initiating");
-  var token = self.generate_auth_token();
+  var token = gen_token();
 
   smtp.build_and_send_auth_message(token, request.data);
   request.data = {"email" : request.data[0].email, "token" : token}
