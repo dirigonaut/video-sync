@@ -1,8 +1,9 @@
 function ffmpeg_factory(){ }
 
 function gen_new_path(path, size, mime){
-  var parsed_path = path.split(".");
-  return path.substr(0, path.length - parsed_path[parsed_path.length-1].length) + "_" + size + "_" + "." + mime;
+  var path_array = path.split(".");
+  var parsed_path = path.substr(0, path.length - path_array[path_array.length-1].length)
+  return parsed_path + "_" + size + "_" + "." + mime;
 };
 
 ffmpeg_factory.type_enum = {
