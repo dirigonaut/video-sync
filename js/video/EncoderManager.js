@@ -1,20 +1,20 @@
-var encode_command = require('./encode_command');
+var EncodeProcess = require('./EncodeProcess');
 
 var command_queue = new Array();
 
-function video_encoder(){
+function EncoderManager(){
 	this.debug = true;
 }
 
-video_encoder.prototype.encode = function(ffmpeg_commands) {
-	for(var i in ffmpeg_commands){
-		command_queue.push(new encode_command(ffmpeg_commands[i], encode_next));
+EncoderManager.prototype.encode = function(commands) {
+	for(var i in commands){
+		command_queue.push(new EncodeProcess(commands[i], encode_next));
 	}
 
 	command_queue.shift().run_command();
 };
 
-module.exports = video_encoder;
+module.exports = EncoderManager;
 
 function encode_next() {
 	console.log("Get next encoding");
