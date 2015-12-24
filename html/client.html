@@ -73,34 +73,31 @@
     </div>
   </footer>
   <script>
-    var io = require('socket.io-client');
-    var ffmpeg_factory = require('../js/client_scripts/ffmpeg_factory.js');
+    var commandFactory = require('../js/client_scripts/EncoderCommandFactory.js');
+    var requestFactory = require('../js/client_scripts/ClientRequestFactory.js');
+    //var ClientStream = require('../js/client_scripts/ClientStream.js');
+    var ClientSocket = require('../js/client_scripts/ClientSocket.js');
+    var ClientVideo = require('../js/client_scripts/ClientVideo.js');
+    var ClientFileBuffer  = require('../js/client_scripts/ClientFileBuffer.js');
   </script>
   <script src="../js/vendor/jquery-2.1.1.min.js"></script>
   <script src="../js/vendor/video-js/video.js"></script>
-  <script src="../js/client_scripts/client_socket.js"></script>
-  <script src="../js/client_scripts/client_video.js"></script>
+  <script src="../js/client_scripts/ClientStream.js"></script>
   <script>
     videojs.options.flash.swf = "../js/vendor/video-js/video-js.swf"
   </script>
   <script>
-    var client_socket = new client_socket();
-    var client_video = new client_video();
-    client_socket.initialize(client_video);
+    var clientSocket = new ClientSocket();
+    var clientStream = new ClientStream(document.getElementById('shared_video'));
+    clientSocket.initialize(clientStream);
 
     var test = function(){
       var commands = [];
-      commands.push(ffmpeg_factory.build_ffmpeg_request("/home/sabo-san/Development/video-sync-2.0/html/video.mov", "webm", '640x360', 1, ""));
-      commands.push(ffmpeg_factory.build_ffmpeg_request("/home/sabo-san/Development/video-sync-2.0/html/video.mov", "webm", '128k', 2, ""));
+      commands.push(commandFactory.build_ffmpeg_request("/home/sabo-san/Development/video-sync-2.0/html/video.mov", "720", "1"));
+      commands.push(commandFactory.build_ffmpeg_request("/home/sabo-san/Development/video-sync-2.0/html/video.mov", "128k", "2"));
+      commands.push(commandFactory.get_manifest_command(commands, "/home/sabo-san/Development/video-sync-2.0/html/video.mpd"));
 
-      var ffmpeg_commands = [];
+      ClientSocket.sendRequest('video-encode', commands);
 
-      for(var i in commands){
-        ffmpeg_commands.push(commands[i].input);
-      }
-
-      ffmpeg_commands.push(ffmpeg_factory.add_manifest(commands, "/home/sabo-san/Development/video-sync-2.0/html/video.mpd", "webm_dash_manifest"));
-
-      client_socket.encode_video(ffmpeg_commands);
     };
   </script>

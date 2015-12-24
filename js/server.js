@@ -9,8 +9,8 @@ var s_service		    = require('../js/smtp_service/smtp_service');
 var database		    = require('../js/nedb/database_utils');
 var validate		    = require('../js/utils/input_validator');
 var authenticate    = require('../js/authentication/authenticate');
-var video_streamer  = require('../js/video/video_stream');
-var video_encoder   = require('../js/video/video_encoder');
+var VideoStream     = require('../js/video/VideoStream');
+var EncoderManager  = require('../js/video/EncoderManager');
 
 var app = null;
 var io;
@@ -22,8 +22,7 @@ var db_util;
 var val_util;
 var auth_util;
 var file_server;
-var streamer;
-var encoder;
+var encoderManager;
 
 
 var admin = null;
@@ -55,8 +54,7 @@ function server_start () {
     db_util 		    = new database();
     val_util		    = new validate();
     auth_util       = new authenticate();
-    streamer        = new video_streamer();
-    encoder         = new video_encoder();
+    encoderManager  = new EncoderManager();
     admin           = null;
 
     app.listen(8080);
@@ -85,21 +83,19 @@ function socket_setup () {
     //data = [path, start, [encoding_options]]
     socket.on('video-load', function(data) {
       console.log('video-load');
-      video_streamer.load_video(val_util.check_video_info(data));
-      //Put a call to the player manager to get the full list of sockets to broadcast to
-      socket.emit('video-ready');
+      VideoStream.readFile(build_request(socket, val_util.check_video_info(data)));
     });
 
     socket.on('video-encode', function(data) {
       console.log('video-encode');
-      encoder.encode(val_util.check_video_info(data));
+      encoderManager.encode(val_util.check_video_info(data));
       //Put a call to the player manager to get the full list of sockets to broadcast to
       //socket.emit('video-encoded');
     });
 
     socket.on('video-stream', function(data) {
       console.log('video-stream');
-      video_streamer.stream(socket, player_manager.get_player(socket.id));
+      VideoStream.readVideoMetaData(build_request(socket, val_util.check_video_info(data)));
     });
 
     //Auth Events
