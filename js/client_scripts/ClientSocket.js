@@ -33,6 +33,12 @@ socket.on('video-ready', function(data){
   socket.emit('video-stream', "");
 });
 
+socket.on('video-metadata', function(data){
+  console.log('video-metadata');
+	console.log(data);
+	clientStream.bufferMetadata(data);
+});
+
 socket.on('video-segment', function(data){
   console.log('video-segment');
 	console.log(data);

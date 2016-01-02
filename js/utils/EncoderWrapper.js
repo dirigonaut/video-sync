@@ -12,11 +12,11 @@ function EncoderWrapper(options) {
       var options = self.options.split(" -");
       var lastIndex = options.length-1;
 
-      var keyless = self._getTailKeylessValues(options[lastIndex]);
+      var keyless = self._getTailKeylessPathValues(options[lastIndex]);
       options[lastIndex] = options[lastIndex].substr(0, options[lastIndex].length - keyless.length-1);
 
-      options.forEach(function(item){
-        args = args.concat(self._getKeyValuePair(item.split(" ")));
+      options.forEach(function(pair){
+        args = args.concat(self._getKeyValuePair(pair));
       });
 
       args = args.concat(keyless.split(" "));
@@ -25,35 +25,36 @@ function EncoderWrapper(options) {
       return args;
     }
 
-    self._getKeyValuePair = function(command) {
+    self._getKeyValuePair = function(pair) {
       var keyValuePair = [];
-      var key = command.shift().trim();
+      var command = pair.split(" ");
+      var key = command.shift();
       var value = "";
 
-      if(key != ""){
+      if(key !== null && key.trim() !== ""){
         key = "-" + key;
-        if(command.length > 1){
-            value += command[1];
-        } else {
-          value = command.toString() || null;
-        }
-
         keyValuePair.push(key);
 
-        if(value != null){
-          keyValuePair.push(value);
-        }
+        command.forEach(function(item){
+          value += value.length>1 ? " " + item : item;
+        });
+      }
+
+      if(value !== null && value.trim() !== ""){
+        keyValuePair.push(value);
       }
 
       return keyValuePair;
     }
 
-    self._getTailKeylessValues = function(command) {
+    self._getTailKeylessPathValues = function(command) {
       var keylessValues = "";
       var parms = command.split(" ");
 
       for(var x = 2; x < parms.length; ++x) {
-        keylessValues += keylessValues == "" ? parms[x] : " " + parms[x];
+        if(parms[x].charAt(0) === "/") {
+          keylessValues += keylessValues == "" ? parms[x] : " " + parms[x];
+        }
       }
 
       return keylessValues;
@@ -118,9 +119,7 @@ function EncoderWrapper(options) {
         var proc = null;
         console.log(subProcess)
         if(subProcess === "ffmpeg"){
-            console.log("2")
           proc = spawn("ffmpeg", self._construct_options());
-            console.log("3");
 
           // `self.proc` is the exposed EventEmitter, so we need to pass
           // events and data from the actual process to it.

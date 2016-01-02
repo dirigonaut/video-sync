@@ -2,6 +2,7 @@ var videoElement = null;
 
 function ClientVideo(video){
   videoElement = video;
+  this.chunkLength = 0;
 }
 
 ClientVideo.prototype.addEventToVideo = function(event, callback) {
@@ -18,6 +19,10 @@ ClientVideo.prototype.play = function() {
 
 ClientVideo.prototype.getVideoElement = function() {
   return videoElement;
+}
+
+ClientVideo.prototype.setChunkLength = function(length) {
+  this.chunkLength = length;
 }
 
 module.exports = ClientVideo;

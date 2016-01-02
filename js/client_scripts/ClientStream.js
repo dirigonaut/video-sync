@@ -15,6 +15,8 @@ var closeStream;
 
 var self;
 
+var index = 0;
+
 function ClientStream(videoElement){
   mediaSource = null;
   videoBuffer = null;
@@ -35,11 +37,13 @@ function ClientStream(videoElement){
 };
 
 ClientStream.prototype.startStream = function() {
+  console.log("startStream");
   console.log(clientVideo);
   clientVideo.play();
 };
 
 ClientStream.prototype.loadMpd = function() {
+  console.log("loadMpd");
   var parser = new DOMParser();
   mpdData = parser.parseFromString(fileBuffer.getBuffer().toString(), "text/xml", 0);
   console.log(mpdData.querySelectorAll("BaseURL")[0].textContent.toString());
@@ -50,6 +54,7 @@ ClientStream.prototype.loadMpd = function() {
 };
 
 ClientStream.prototype.initializeVideo = function (){
+  console.log("initializeVideo");
   mediaSource = new MediaSource();
   clientVideo.getVideoElement().src = window.URL.createObjectURL(mediaSource);
 
@@ -59,13 +64,21 @@ ClientStream.prototype.initializeVideo = function (){
   mediaSource.addEventListener('webkitsourceended',  objectState,         false);
 };
 
-ClientStream.prototype.requestSegment = function (url, timeSpan){
+ClientStream.prototype.requestVideoData = function (url, spec){
+  console.log("requestSegment");
+
   //Still want this to have a callback referencing bufferSegment
-  ClientSocket.sendRequest("video-stream",
-    requestFactory.buildVideoSegmentRequest(url, timeSpan));
+  if(hasInitSeg) {
+    ClientSocket.sendRequest("video-segment",
+      requestFactory.buildVideoTimestampRequest(url, spec));
+  } else {
+    ClientSocket.sendRequest("video-init",
+      requestFactory.buildVideoRangeRequest(url, spec));
+  }
 };
 
 ClientStream.prototype.bufferSegment = function (data){
+  console.log("bufferSegment");
   if(data !== null){
     if (videoBuffer.updating || mediaSource.readyState != "open" || queue.length > 0) {
       queue.push(new Uint8Array(data));
@@ -73,18 +86,19 @@ ClientStream.prototype.bufferSegment = function (data){
       console.log("Direct buffer append.")
       videoBuffer.appendBuffer(new Uint8Array(data));
     }
-    self.isReadyForNextSegment();
   } else {
-    if (mediaSource.readyState == "open" && !videoBuffer.updating && queue.length == 0) {
+     if (mediaSource.readyState == "open" && !videoBuffer.updating && queue.length == 0) {
       console.log("Closing mediaSource.");
       mediaSource.endOfStream();
     } else if(mediaSource.readyState == "open" && queue.length == 0){
-      closeStream = true;
+      //console.log("closeStream = true");
+      //closeStream = true;
     }
   }
 };
 
 ClientStream.prototype.printSeg = function(data) {
+  console.log("printSeg");
   if(data){
     var parser = new DOMParser();
     var buffer = new Buffer(data);
@@ -92,34 +106,47 @@ ClientStream.prototype.printSeg = function(data) {
   }
 };
 
+ClientStream.prototype.bufferMetadata = function (data){
+  console.log("bufferMetadata");
+  if(data != null) {
+    //console.log(data);
+  }
+};
+
 ClientStream.prototype.bufferFile = function (data){
+  console.log("bufferFile");
   if(data != null) {
     fileBuffer.pushData(data);
   }
 };
 
-ClientStream.prototype.isReadyForNextSegment = function () {
-  var range = null;
-  var baseUrl = mpdData.querySelectorAll("BaseURL")[0].textContent.toString();
-  if(hasInitSeg){
-    //TODO
-    range = null;
-  } else {
-    var base = mpdData.querySelectorAll("Initialization")[0];
-    range = base.getAttribute("range");
-    hasInitSeg = true;
-  }
+ClientStream.prototype.initialize = function () {
+  var segRange = base.querySelectorAll("Initialization");
+  segRange = segRange[0].attributes.getNamedItem("range").value
+
+  console.log("Init range: " + range);
 
   if(range !== null){
-    this.requestSegment(baseUrl, range);
+    this.requestVideoData(baseUrl, segRange);
+    hasInitSeg = true;
   }
 };
 
-ClientStream.prototype.calculateVideoSegmentLength = function () {
-  //get range from mpdData
-  var vidDur = range.split("-");
-  return (((vidDur[1] - vidDur[0]) * 8))
-}
+ClientStream.prototype.requestSegment = function (timestamp) {
+  console.log("isReadyForNextSegment");
+  var baseUrl = mpdData.querySelectorAll("BaseURL")[0].textContent.toString();
+  console.log(baseUrl)
+
+  if(hasInitSeg){
+    var timestamp = this.getRequestedTime(base);
+
+    if(range !== null){
+      this.requestVideoData(baseUrl, timestamp);
+    } else {
+      mediaSource.endOfStream();
+    }
+  }
+};
 
 function objectState(e){
   console.log(e.target + " ready state : " + e.readyState);
@@ -127,6 +154,7 @@ function objectState(e){
 };
 
 function mediaSourceCallback(e) {
+  console.log("mediaSourceCallback");
   if(videoBuffer === null){
     console.log("Creating Buffer.");
     //videoBuffer = mediaSource.addSourceBuffer('video/webm; codecs="vp8,vorbis"');
@@ -141,6 +169,7 @@ function mediaSourceCallback(e) {
 };
 
 function onBufferUpdate(e){
+  console.log("onBufferUpdate");
   if(!videoBuffer.updating){
     if (queue.length > 0) {
       console.log("Appending from the queue.");
@@ -154,7 +183,16 @@ function onBufferUpdate(e){
 
 function onPlay() {
   //Make request for mpd file with client_socket
+  console.log("onPlay");
   ClientSocket.sendRequest('video-load',
-    requestFactory.buildMpdFileRequest("/home/sabo-san/Development/video-sync-2.0/html/video.mpd"));
+    requestFactory.buildMpdFileRequest("/home/sabo-san/Development/video-sync-2/html/video.mpd"));
+    clientVideo.removeEventFromVideo("play", onPlay, false);
+};
+
+function onTimeUpdate() {
+  console.log("onTimeUpdate");
+  if(clientVideo.getVideoElement)
+  ClientSocket.sendRequest('video-load',
+    requestFactory.buildMpdFileRequest("/home/sabo-san/Development/video-sync-2/html/video.mpd"));
     clientVideo.removeEventFromVideo("play", onPlay, false);
 };
