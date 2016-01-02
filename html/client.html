@@ -93,11 +93,12 @@
 
     var test = function(){
       var commands = [];
-      commands.push(commandFactory.build_ffmpeg_request("/home/sabo-san/Development/video-sync-2.0/html/video.mov", "720", "1"));
-      commands.push(commandFactory.build_ffmpeg_request("/home/sabo-san/Development/video-sync-2.0/html/video.mov", "128k", "2"));
-      commands.push(commandFactory.get_manifest_command(commands, "/home/sabo-san/Development/video-sync-2.0/html/video.mpd"));
+      commands.push(commandFactory.build_ffmpeg_request("/home/sabo-san/Development/video-sync-2/html/video.mov", "640x360", "1"));
+      commands.push(commandFactory.build_ffmpeg_request("/home/sabo-san/Development/video-sync-2/html/video.mov", "128k", "2"));
+      commands.push(commandFactory.get_ffmpeg_manifest_command(commands, "/home/sabo-san/Development/video-sync-2/html/video.mpd"));
 
       ClientSocket.sendRequest('video-encode', commands);
 
     };
+
   </script>

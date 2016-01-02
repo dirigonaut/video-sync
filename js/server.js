@@ -80,22 +80,24 @@ function socket_setup () {
     };
 
     //Video Events
-    //data = [path, start, [encoding_options]]
-    socket.on('video-load', function(data) {
-      console.log('video-load');
-      VideoStream.readFile(build_request(socket, val_util.check_video_info(data)));
-    });
-
     socket.on('video-encode', function(data) {
       console.log('video-encode');
       encoderManager.encode(val_util.check_video_info(data));
-      //Put a call to the player manager to get the full list of sockets to broadcast to
-      //socket.emit('video-encoded');
+    });
+
+    socket.on('video-init', function(data) {
+      console.log('video-init');
+      VideoStream.seek(build_request(socket, val_util.check_video_info(data)));
     });
 
     socket.on('video-stream', function(data) {
       console.log('video-stream');
-      VideoStream.readVideoMetaData(build_request(socket, val_util.check_video_info(data)));
+      VideoStream.stream(build_request(socket, val_util.check_video_info(data)));
+    });
+
+    socket.on('video-load', function(data) {
+      console.log('video-load');
+      VideoStream.readFile(build_request(socket, val_util.check_video_info(data)));
     });
 
     //Auth Events

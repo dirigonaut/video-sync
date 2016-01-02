@@ -12,6 +12,7 @@
     "start": "nw"
   },
   "dependencies": {
+    "ebml": "^2.1.0",
     "emailjs": "^0.3.13",
     "nedb": "^1.1.1",
     "node-static": "^0.7.6",
