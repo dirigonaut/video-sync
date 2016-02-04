@@ -1,79 +1,69 @@
 var fs   = require('fs');
-var ebml = require('ebml');
+const EventEmitter  = require('events');
 
-var segmentMeta = null;
+const eventEmitter = new EventEmitter();
 
-function VideoStream(){
-};
+var queue   = null;
+var index   = 0;
 
-VideoStream.initialize = function() {
-  segmentMeta = null;
-}
+eventEmitter.on('clearedItem', function() {
+  if(queue) {
+    index++;
+
+    if(index >= queue.length) {
+      queue   = null;
+      index   = 0;
+    }
+  }
+});
+
+function VideoStream(){};
 
 //Adjust to take requests with manifest file included
-VideoStream.loadMeta = function(request) {
-  var options     = {start: parseInt(request.data.start), end: parseInt(request.data.end)};
-  var readStream  = fs.createReadStream("/home/sabo-san/Development/video-sync-2/html/" + request.data.path);
-  var decoder     = new ebml.Decoder();
-
-  decoder.on('data', function(chunk) {
-      // parse and populate to segmentMeta
-      console.log(chunk);
-  });
+VideoStream.read = function(request, path, options, callback) {
+  console.log("server-loadMeta");
+  var readStream  = fs.createReadStream(path, options);
+  var blob = null;
 
   readStream.on('readable', function() {
-    decoder.write(readStream.read(), request);
+    readStream.pipe(blob);
   });
   readStream.on('error', function(e) {
     console.log("Server: Error: " + e);
   });
   readStream.on('close', function() {
     console.log("Server: Finished reading stream");
+    callback(request, blob);
+    eventEmitter.emit('clearedItem');
   });
 };
 
-VideoStream.readRange = function(request) {
-  var options     = {start: parseInt(request.data.start), end: parseInt(request.data.end)};
-  var readStream  = fs.createReadStream("/home/sabo-san/Development/video-sync-2/html/" + request.data.path);
+VideoStream.queuedRead = function(request, readConfigs, callback) {
+  if(queue == null){
+    gueue = readConfigs;
 
-  readStream.on('readable', function() {
-    request.socket.emit('video-segment', readStream.read());
-  });
-  readStream.on('error', function(e) {
-    console.log("Server: Error: " + e);
-  });
-  readStream.on('close', function() {
-    console.log("Server: Finished reading stream");
-  });
-};
-
-VideoStream.readSegment = function(request) {
-  var range       = VideoStream.getSegmentRange(request.data.seekTime);
-  var options     = {start: parseInt(range.start), end: parseInt(range.end)};
-  var readStream  = fs.createReadStream("/home/sabo-san/Development/video-sync-2/html/" + request.data.path);
-
-  readStream.on('readable', function() {
-    request.socket.emit('video-segment', readStream.read());
-  });
-  readStream.on('error', function(e) {
-    console.log("Server: Error: " + e);
-  });
-  readStream.on('close', function() {
-    console.log("Server: Finished reading stream");
-  });
-};
-
-VideoStream.getSegmentRange = function(timestamp) {
-  var segRange = null;
-
-  segmentMeta.forEach(function(segment) {
-    if(segment.timestamp < timestamp) {
-      segRange = segment.range;
+    for(var readConfig in readConfigs) {
+      VideoStream.read(request, readConfig.path, readConfig.options, readConfig.callback);
     }
-  });
-
-  return segRange
+  }
 }
+
+VideoStream.readChunk = function(request) {
+  console.log("server-readChunk");
+  var options     = {start: parseInt(request.data.segment.start), end: parseInt(request.data.segment.end)};
+  var readStream  = fs.createReadStream(request.data.path, options);
+
+  readStream.on('readable', function() {
+    request.socket.emit('file-segment', readStream.read());
+  });
+  readStream.on('error', function(e) {
+    console.log("Server: Error: " + e);
+  });
+  readStream.on('close', function() {
+    request.socket.emit('video-segment');
+    console.log("Server: Finished reading stream");
+  });
+};
 
 VideoStream.readFile = function(request, stream) {
 	var readStream = fs.createReadStream(request.data.path);

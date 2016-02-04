@@ -1,19 +1,9 @@
 function ClientRequestFactory() {};
 
-ClientRequestFactory.buildVideoRangeRequest = function(path, range) {
-	var request = new Object();
-	var range = range.split("-");
-  request.path = path;
-  request.start = range[0];
-  request.end = range[1];
-
-  return request;
-};
-
-ClientRequestFactory.buildVideoTimestampRequest = function(path, timestamp) {
+ClientRequestFactory.buildVideoRequest = function(path, segment) {
 	var request = new Object();
   request.path = path;
-  request.timestamp = timestamp;
+  request.segment = segment;
 
   return request;
 };
@@ -24,6 +14,5 @@ ClientRequestFactory.buildMpdFileRequest = function(path) {
 
 	return request;
 };
-
 
 module.exports = ClientRequestFactory;

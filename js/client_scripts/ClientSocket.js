@@ -33,20 +33,20 @@ socket.on('video-ready', function(data){
   socket.emit('video-stream', "");
 });
 
-socket.on('video-metadata', function(data){
-  console.log('video-metadata');
-	console.log(data);
-	clientStream.bufferMetadata(data);
+socket.on('video-meta', function(data){
+  console.log('video-meta');
+	clientStream.loadSegmentInfo(data);
 });
 
 socket.on('video-segment', function(data){
   console.log('video-segment');
-	console.log(data);
-	clientStream.bufferSegment(data);
+	clientStream.bufferInter();
 });
 
 socket.on('file-segment', function(data){
   console.log('file-segment');
+	if(data != null) {
+	console.log(data.length);}
 	clientStream.bufferFile(data);
 });
 
