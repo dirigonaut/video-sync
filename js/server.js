@@ -85,18 +85,18 @@ function socket_setup () {
       encoderManager.encode(val_util.check_video_info(data));
     });
 
-    socket.on('video-init', function(data) {
-      console.log('video-init');
-      VideoStream.seek(build_request(socket, val_util.check_video_info(data)));
+    socket.on('video-meta', function(data) {
+      console.log('video-meta');
+      VideoStream.loadMeta(build_request(socket, val_util.check_video_info(data)));
     });
 
-    socket.on('video-stream', function(data) {
-      console.log('video-stream');
-      VideoStream.stream(build_request(socket, val_util.check_video_info(data)));
+    socket.on('video-chunk', function(data) {
+      console.log('video-chunk');
+      VideoStream.readChunk(build_request(socket, val_util.check_video_info(data)));
     });
 
-    socket.on('video-load', function(data) {
-      console.log('video-load');
+    socket.on('video-file', function(data) {
+      console.log('video-file');
       VideoStream.readFile(build_request(socket, val_util.check_video_info(data)));
     });
 

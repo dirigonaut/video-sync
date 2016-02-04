@@ -79,26 +79,28 @@
     var ClientSocket = require('../js/client_scripts/ClientSocket.js');
     var ClientVideo = require('../js/client_scripts/ClientVideo.js');
     var ClientFileBuffer  = require('../js/client_scripts/ClientFileBuffer.js');
+    var ebml = require('ebml');
   </script>
   <script src="../js/vendor/jquery-2.1.1.min.js"></script>
   <script src="../js/vendor/video-js/video.js"></script>
-  <script src="../js/client_scripts/ClientStream.js"></script>
+  <script src="../js/client_scripts/ClientVideoBuffer.js"></script>
   <script>
     videojs.options.flash.swf = "../js/vendor/video-js/video-js.swf"
   </script>
   <script>
+    var path = "/home/sabo-san/Development/video-sync-2.0/html/";
     var clientSocket = new ClientSocket();
-    var clientStream = new ClientStream(document.getElementById('shared_video'));
-    clientSocket.initialize(clientStream);
+    var clientVideo = new ClientVideo(document.getElementById('shared_video'));
+    var clientVideoBuffer = new ClientVideoBuffer(clientVideo);
+    clientSocket.initialize(clientVideoBuffer);
 
     var test = function(){
       var commands = [];
-      commands.push(commandFactory.build_ffmpeg_request("/home/sabo-san/Development/video-sync-2/html/video.mov", "640x360", "1"));
-      commands.push(commandFactory.build_ffmpeg_request("/home/sabo-san/Development/video-sync-2/html/video.mov", "128k", "2"));
-      commands.push(commandFactory.get_ffmpeg_manifest_command(commands, "/home/sabo-san/Development/video-sync-2/html/video.mpd"));
+      commands.push(commandFactory.build_ffmpeg_request(path + "video.mov", "640x360", "1"));
+      commands.push(commandFactory.build_ffmpeg_request(path + "video.mov", "128k", "2"));
+      commands.push(commandFactory.get_ffmpeg_manifest_command(commands, path + "video.mpd"));
 
       ClientSocket.sendRequest('video-encode', commands);
-
     };
 
   </script>
