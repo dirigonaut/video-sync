@@ -1,90 +1,122 @@
-var   VideoStream   = require('../js/video/VideoStream');
-const EventEmitter  = require('events');
+var DOMParser     = require('xmldom').DOMParser;
+var Ebml          = require('ebml');
 
-const eventEmitter = new EventEmitter();
+var VideoStream   = require('./VideoStream');
+var Manifest   = require('./Manifest');
 
-var webmMetaData = null;
-var length = 0;
-var index = 0;
+var self;
 
-eventEmitter.on('parsed', function(request) {
-  index++;
-  if(index >= length) {
-    request.socket.emit('webm', webmMetaData);
-  }
-});
-
-function WebmMetaData(){
-  webmMetaData  = null;
-  length        = 0;
-  index         = 0;
+function WebmMetaData() {
+  self = this;
 };
 
 //Load the mpd file into memory
-WebmMetaData.prototype.mpdToJsonMeta = function(request) {
-  if(webmMetaData == null){
-    VideoStream.read(request, request.data.path, WebmMetaData._parseMpd, null);
-  } else {
-    request.socket.emit('webm', webmMetaData);
+WebmMetaData.prototype.generateMetaData = function(request) {
+  console.log("WebmMetaData.generateMetaData");
+  var buffer = [];
+
+  var readConfig = VideoStream.streamConfig(request.data.path, function(data) {
+      buffer.push(data);
+  });
+
+  readConfig.onFinish = function() {
+    self._parseMpd(request, Buffer.concat(buffer), readConfig.path);
   }
+
+  VideoStream.read(readConfig);
 };
 
-WebmMetaData._parseMpd = function(request, blob) {
-  var DOMParser = new DOMParser();
-  var mpd = DOMParser.toJson(blob);
+WebmMetaData.prototype._parseMpd = function(request, blob, path) {
+  console.log("WebmMetaData._parseMpd");
+  var mpd = new DOMParser().parseFromString(blob.toString(), "text/xml");
+  var period = mpd.documentElement.getElementsByTagName('Period');
+  var elements = period.item(0).childNodes;
   var initSegments = new Map();
 
-  for(var set in mpd.getAllInstances('AdaptionSet')){
-    var path = set.getName();
-    var initRange = set.getInitRange();
-    initSegments.set(path, initRange);
+  var adaptSets = [];
+  for(var i in elements){
+    if(elements[i].tagName == 'AdaptationSet') {
+      adaptSets.push(elements[i]);
+    }
   }
 
-  WebmMetaData._loadSegments(request, initSegments);
-};
+  var segments = []
+  for(var i in adaptSets) {
+    var segment = new Object();
+    segment.baseUrl   = adaptSets[i].getElementsByTagName('BaseURL').item(0).childNodes.item(0).data;
+    segment.type      = adaptSets[i].getAttribute('mimeType');
+    segment.initRange = adaptSets[i].getElementsByTagName('Initialization').item(0).getAttribute('range');
 
-//Loads the mpd and retreives the InitSegment
-WebmMetaData._loadSegments = function(request, initSegments) {
-  var readConfigs = [];
-  length = 0;
-
-  for(var x = 0; x < initSegments.length; ++x) {
-    var readConfig = new Object();
-    readConfig.path = initSegments.keyAt(x);
-    readConfig.options = {start: parseInt(initSegments[x].start), end: parseInt(initSegments[x].end)};
-    readConfig.callback = WebmMetaData._parseMeta;
-
-    readConfigs.add(readConfig);
-    length++;
+    segments.push(segment);
   }
 
-  VideoStream.queuedRead(request, readConfigs, null);
+  self._getClusters(request, segments);
 };
 
-WebmMetaData._parseMeta = function(request, blob) {
-  var metaObject = new Object();
-  var decoder = new ebml.Decoder();
+WebmMetaData.prototype._getClusters = function(request, segments) {
+  console.log("WebmMetaData._getClusters");
 
-  decoder.on('data', function(segment) {
-    WebmMetaData._ebmlToJson(metaObject, segment);
-    console.log("we are decoding a segment")
+  var metaRequests = [];
+  for(var i in segments) {
+    var metaRequest = new Object();
+
+    var splitPath = request.data.path.split('/');
+    var dirPath = request.data.path.replace(splitPath[splitPath.length - 1], '');
+
+    var readConfig = VideoStream.streamConfig(dirPath + segments[i].baseUrl, self._parseEBML)
+
+    metaRequest.manifest = new Manifest(readConfig.path, segments[i].initRange.split('-'));
+    metaRequest.readConfig = readConfig;
+    metaRequests.push(metaRequest);
+  }
+
+  var stream = new VideoStream();
+
+  stream.on('end', function(manifest) {
+    self._saveMetaData(request, metaRequests);
   });
 
-  decoder.on('finish', function(segment) {
-    console.log('---------finished decoder');
-    decoder.uncork();
-    webmMetaData.add(metaObject);
-    eventEmitter.emit('parsed', request);
-  });
-
-  decoder.cork();
-  decoder.write(blob);
-  decoder.end();
+  stream.queuedDecode(metaRequests);
 };
 
-WebmMetaData._ebmlToJson = function(object, data) {
-  var json = data.jsonify();
-  object.add(json);
+WebmMetaData.prototype._parseEBML = function(manifest, data) {
+  //console.log("WebmMetaData._parseCue");
+  var tagType = data[0];
+  var tagData = data[1];
+
+  if(tagType == "start") {
+    if(tagData.name == 'Cluster') {
+      var cluster = Manifest.cluster();
+      cluster.start = tagData.start;
+      cluster.end = tagData.end;
+      Manifest.addCluster(manifest, cluster);
+    }
+  } else if(tagType == "tag") {
+    if(tagData.name == 'Timecode') {
+      var cluster = Manifest.getCluster(manifest, tagData.start);
+      cluster.time = tagData.data.readUIntBE(0, tagData.data.length);
+    }
+  }
+
+  return true;
+};
+
+WebmMetaData.prototype._saveMetaData = function(request, metaRequests) {
+  console.log("WebmMetaData._saveMetaData");
+  var metaData = [];
+
+  for(var i in metaRequests) {
+    metaData.push(Manifest.flattenManifest(metaRequests[i].manifest));
+  }
+
+  var splitPath = request.data.path.split('/');
+  var dirPath = request.data.path.replace(splitPath[splitPath.length - 1], '');
+
+  var writeConfig = VideoStream.streamConfig(dirPath + "webmMeta.json", null, function() {
+      request.socket.emit("file-generated");
+  });
+
+  VideoStream.write(writeConfig, JSON.stringify(metaData));
 };
 
 module.exports = WebmMetaData;

@@ -73,34 +73,45 @@
     </div>
   </footer>
   <script>
-    var commandFactory = require('../js/client_scripts/EncoderCommandFactory.js');
-    var requestFactory = require('../js/client_scripts/ClientRequestFactory.js');
-    //var ClientStream = require('../js/client_scripts/ClientStream.js');
+    var CommandFactory = require('../js/client_scripts/EncoderCommandFactory.js');
+    var RequestFactory = require('../js/client_scripts/ClientRequestFactory.js');
+    var ClientVideoBuffer = require('../js/client_scripts/ClientVideoBuffer.js');
     var ClientSocket = require('../js/client_scripts/ClientSocket.js');
     var ClientVideo = require('../js/client_scripts/ClientVideo.js');
-    var ClientFileBuffer  = require('../js/client_scripts/ClientFileBuffer.js');
-    var ebml = require('ebml');
   </script>
   <script src="../js/vendor/jquery-2.1.1.min.js"></script>
   <script src="../js/vendor/video-js/video.js"></script>
-  <script src="../js/client_scripts/ClientVideoBuffer.js"></script>
+  <script src="../js/client_scripts/ClientUtils.js"></script>
   <script>
     videojs.options.flash.swf = "../js/vendor/video-js/video-js.swf"
   </script>
   <script>
-    var path = "/home/sabo-san/Development/video-sync-2.0/html/";
+    window.URL = window.URL || window.webkitURL;
+    window.MediaSource = window.MediaSource || window.WebKitMediaSource;
+
+    var path = "/home/sabo-san/Development/video-sync-2/html/";
     var clientSocket = new ClientSocket();
     var clientVideo = new ClientVideo(document.getElementById('shared_video'));
-    var clientVideoBuffer = new ClientVideoBuffer(clientVideo);
-    clientSocket.initialize(clientVideoBuffer);
+    var clientVideoBuffer = new ClientVideoBuffer();
 
-    var test = function(){
+    console.log(clientVideoBuffer);
+    clientVideoBuffer.initialize(clientVideo, window, new ClientUtils());
+    clientSocket.initialize(clientVideoBuffer, clientVideo);
+    clientVideo.initialize(path);
+
+    var encode = function(){
       var commands = [];
-      commands.push(commandFactory.build_ffmpeg_request(path + "video.mov", "640x360", "1"));
-      commands.push(commandFactory.build_ffmpeg_request(path + "video.mov", "128k", "2"));
-      commands.push(commandFactory.get_ffmpeg_manifest_command(commands, path + "video.mpd"));
+      commands.push(CommandFactory.build_ffmpeg_request(path + "video.mov", "640x360", "1"));
+      commands.push(CommandFactory.build_ffmpeg_request(path + "video.mov", "128k", "2"));
+      commands.push(CommandFactory.get_ffmpeg_manifest_command(commands, path + "video.mpd"));
 
       ClientSocket.sendRequest('video-encode', commands);
     };
+
+    var genJson = function() {
+      var object = new Object();
+      object.path = path + "video.mpd";
+      ClientSocket.sendRequest('video-meta', object);
+    }
 
   </script>
