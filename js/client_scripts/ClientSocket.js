@@ -3,12 +3,14 @@ var io = require('socket.io-client');
 var serverUrl = "http://localhost:8080";
 var socket		= io.connect(serverUrl, {'force new connection': true});
 
-var clientStream = null;
+var clientVideoBuffer = null;
+var clientVideo = null;
 
-function ClientSocket() {};
+function ClientSocket() {}
 
-ClientSocket.prototype.initialize = function(stream) {
-	clientStream = stream;
+ClientSocket.prototype.initialize = function(videoBuffer, video) {
+	clientVideoBuffer = videoBuffer;
+	clientVideo = video;
 };
 
 ClientSocket.sendRequest = function(event, request) {
@@ -33,24 +35,34 @@ socket.on('video-ready', function(data){
   socket.emit('video-stream', "");
 });
 
-socket.on('video-meta', function(data){
-  console.log('video-meta');
-	clientStream.loadSegmentInfo(data);
+socket.on('video-webm', function(data){
+  console.log('video-webm');
+	clientVideo.setMetaData(data);
+});
+
+socket.on('video-types', function(data){
+  console.log('video-types');
+	clientVideo.setVideoTypes(data);
 });
 
 socket.on('video-segment', function(data){
-  console.log('video-segment');
-	clientStream.bufferInter();
+  console.log('ClientSocket on video-segment');
+	if(data != null) {console.log(data.length);}
+	clientVideoBuffer.bufferSegment(data);
+});
+
+socket.on('segment-end', function(data){
+  console.log('ClientSocket on segment-end');
+	clientVideoBuffer.closeStream();
 });
 
 socket.on('file-segment', function(data){
   console.log('file-segment');
-	if(data != null) {
-	console.log(data.length);}
-	clientStream.bufferFile(data);
+	if(data != null) {console.log(data.length);}
+	clientVideoBuffer.bufferMetaFile(data);
 });
 
-socket.on('load_file', function(){
-  console.log('load_file');
-	clientStream.loadMpd();
+socket.on('file-end', function(){
+  console.log('file-end');
+	clientVideoBuffer.setMetaData();
 });

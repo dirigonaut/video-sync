@@ -1,6 +1,7 @@
 function ClientRequestFactory() {};
 
-ClientRequestFactory.buildVideoRequest = function(path, segment) {
+ClientRequestFactory.buildVideoSegmentRequest = function(path, segment) {
+	console.log('ClientRequestFactory.buildVideoSegmentRequest');
 	var request = new Object();
   request.path = path;
   request.segment = segment;
@@ -8,10 +9,10 @@ ClientRequestFactory.buildVideoRequest = function(path, segment) {
   return request;
 };
 
-ClientRequestFactory.buildMpdFileRequest = function(path) {
+ClientRequestFactory.buildVideoMetaDataRequest = function(path, type) {
+	console.log('ClientRequestFactory.buildVideoMetaDataRequest');
 	var request = new Object();
 	request.path = path;
-
 	return request;
 };
 

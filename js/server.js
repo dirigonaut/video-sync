@@ -11,6 +11,7 @@ var validate		    = require('../js/utils/input_validator');
 var authenticate    = require('../js/authentication/authenticate');
 var VideoStream     = require('../js/video/VideoStream');
 var EncoderManager  = require('../js/video/EncoderManager');
+var WebmMetaData    = require('../js/video/WebmMetaData');
 
 var app = null;
 var io;
@@ -23,7 +24,6 @@ var val_util;
 var auth_util;
 var file_server;
 var encoderManager;
-
 
 var admin = null;
 
@@ -87,17 +87,57 @@ function socket_setup () {
 
     socket.on('video-meta', function(data) {
       console.log('video-meta');
-      VideoStream.loadMeta(build_request(socket, val_util.check_video_info(data)));
+      var meta = new WebmMetaData();
+      meta.generateMetaData(build_request(socket, val_util.check_video_info(data)));
     });
 
-    socket.on('video-chunk', function(data) {
-      console.log('video-chunk');
-      VideoStream.readChunk(build_request(socket, val_util.check_video_info(data)));
+    socket.on('get-file', function(data) {
+      console.log('get-file');
+      var request = build_request(socket, val_util.check_video_info(data));
+
+      var readConfig = VideoStream.streamConfig(request.data.path, function(data) {
+          request.socket.emit("file-segment", data);
+      });
+
+      if(request.data.options) {
+        readConfig.options = request.data.options;
+      }
+
+      readConfig.onFinish = function() {
+        request.socket.emit("file-end");
+      };
+
+      VideoStream.read(readConfig);
     });
 
-    socket.on('video-file', function(data) {
-      console.log('video-file');
-      VideoStream.readFile(build_request(socket, val_util.check_video_info(data)));
+    socket.on('get-segment', function(data) {
+      console.log('get-segment');
+      var request = build_request(socket, val_util.check_video_info(data));
+
+      var readConfig = VideoStream.streamConfig(request.data.path, function(data) {
+          request.socket.emit("video-segment", data);
+      });
+
+      if(request.data.segment) {
+        var options = {"start": parseInt(request.data.segment[0]), "end": parseInt(request.data.segment[1])};
+        readConfig.options = options;
+      }
+
+      readConfig.onFinish = function() {
+        request.socket.emit("segment-end");
+      };
+
+      VideoStream.read(readConfig);
+    });
+
+    socket.on('video-types', function(data) {
+      console.log('video-types');
+      var request = build_request(socket, val_util.check_video_info(data));
+      var readConfig = VideoStream.streamConfig(request.data.path, function(data){
+        request.socket.emit('video-types', data);
+      });
+
+      VideoStream.readDir(readConfig);
     });
 
     //Auth Events

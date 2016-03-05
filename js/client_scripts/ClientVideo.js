@@ -1,115 +1,157 @@
+const EventEmitter  = require('events');
+var log             = require('loglevel');
+
+var ClientSocket    = require('../client_scripts/ClientSocket.js');
+var RequestFactory  = require('../client_scripts/ClientRequestFactory.js');
+
+const emitter = new EventEmitter();
+
+var self;
+
 function ClientVideo(video) {
+  log.info('ClientVideo');
   this.videoElement  = video;
+
+  this.webmMpdPath   = null;
   this.webmJson      = null;
-  this.mp4Mpd        = null;
+
   this.selectedType  = 'webm';
-  this.videoPath     = null;
+  this.selectedVideo = null;
   this.audioPath     = null;
+  this.baseDir       = null;
+  this.step          = 6;
+
+  this.requestSegment = null;
+  this.currentIndex = 0;
+
+  self = this;
 }
 
-ClientVideo.prototype.addEventToVideo = function(event, callback) {
-  this.videoElement.addEventListener(event, callback, false);
+ClientVideo.prototype.initialize = function(basePath) {
+  log.info('ClientVideo.initialize');
+  this.baseDir = basePath;
+  this.videoElement.addEventListener('play', onPlay, false);
+
+  ClientSocket.sendRequest('video-types',
+    RequestFactory.buildVideoMetaDataRequest(basePath, null));
 };
 
-ClientVideo.prototype.removeEventFromVideo = function(event, callback) {
-  this.videoElement.removeEventListener(event, callback, false);
+ClientVideo.prototype.addMetaLoadedEvent = function(callback) {
+  log.info('ClientVideo.addMetaLoadedEvent');
+  emitter.once('meta-loaded', callback);
+};
+
+ClientVideo.prototype.addSegmentRequestCallback = function(callback) {
+  log.info('ClientVideo.addSegmentRequestCallback');
+  this.requestSegment = callback;
+};
+
+ClientVideo.prototype.addOnProgress = function() {
+  log.info('ClientVideo.addOnProgress');
+  this.videoElement.addEventListener('timeupdate', onProgress, false);
 };
 
 ClientVideo.prototype.getVideoElement = function() {
   return this.videoElement;
 };
 
-ClientVideo.prototype.getSelectedType = function() {
-  return this.selectedType;
+ClientVideo.prototype.setMetaData = function(webmJson) {
+  log.info('ClientVideo.setMetaData');
+  this.webmJson = JSON.parse(webmJson);
+  this.selectedVideo = this.webmJson[0];
+
+  emitter.emit('meta-loaded');
+  this.videoElement.addEventListener('onTimeUpdate', onProgress, false);
 };
 
-ClientVideo.prototype.setSelectedType = function(selectedType) {
-  this.selectedType = selectedType;
-};
-
-ClientVideo.prototype.loadVideoMeta = function() {
-  if(this.setSelectedType == 'webm') {
-    this._loadWebmJson();
-  } else if(this.setSelectedType == 'mp4') {
-    this._loadMp4Mpd();
+ClientVideo.prototype.setVideoTypes = function(response) {
+  log.info('ClientVideo.setVideoTypes');
+  for(var i in response) {
+    if(response[i].type == "webm") {
+      this.webmMpdPath = response[i].path;
+    }
   }
 };
 
-ClientVideo.prototype._loadMp4Mpd = function() {
-  ClientSocket.sendRequest("video-mp4",
-    requestFactory.buildVideoRequest(url, segment));
-};
-
-ClientVideo.prototype._loadWebmJson = function() {
-  ClientSocket.sendRequest("video-webm",
-    requestFactory.buildVideoRequest(url, segment));
-};
-
-ClientVideo.prototype.setWebmJson = function(webmJson) {
-  this.webmJson = webmJson;
-};
-
-ClientVideo.prototype.setMp4Mpd = function(mp4Mpd) {
-  this.mp4Mpd = mp4Mpd;
-};
-
-ClientVideo.prototype.getSegment = function(timeStamp) {
-  var segRange = null;
-
-  if(selectedType == 'webm') {
-    segRange = this._getWebmSegment(timeStamp);
-  } else if(selectedType = 'mp4') {
-    segRange = this._getMp4Segment(timeStamp);
-  }
-
-  return segRange;
-};
-
-ClientVideo.prototype._getWebmSegment = function(timeStamp) {
-  //console.log(this.segments);
-  var segment = new Object();
-  segment.start = 377;
-  segment.end = 411017;
-  return segment;
-  /*return this.segments.get((videoElement.currentTime + this.chunkLength) -
-      (videoElement.currentTime % this.chunkLength));*/
-};
-
-ClientVideo.prototype._getMp4Segment = function(timeStamp) {
-
+ClientVideo.prototype.addPath = function(segRange) {
+  log.info('ClientVideo.addPath');
+  return [self.selectedVideo.path, segRange];
 };
 
 ClientVideo.prototype.getInitSegment = function() {
+  log.info('ClientVideo.getInitSegment');
   var segRange = null;
 
-  if(selectedType == 'webm') {
-    segRange = this._getWebmInitSegment();
-  } else if(selectedType = 'mp4') {
-    segRange = this._getMp4InitSegment();
+  if(this.selectedType == 'webm') {
+    segRange = this.webmJson[0].init;
   }
 
-  return segRange;
+  return this.addPath(segRange);
 };
 
-ClientVideo.prototype._getWebmInitSegment = function() {
-  var baseUrl = mpdData.querySelectorAll("BaseURL")[0].textContent.toString();
-  var init = mpdData.querySelectorAll("Initialization")[0];
+ClientVideo.prototype.getSegment = function(timestamp, setBuf) {
+  log.info('ClientVideo.getSegment');
+  var segRange = null;
 
-  if(init !== null){
-    var range = init.attributes.getNamedItem("range").value;
-    range = range.split("-");
+  if(this.selectedType == 'webm') {
+    segRange = this._getWebmSegment(timestamp, setBuf);
+  }
 
-    if(range !== null){
-      var segment = new Object();
-      segment.start = range[0];
-      segment.end = range[1] -1;
+  return this.addPath(segRange);
+};
+
+ClientVideo.prototype.getNextSegment = function(setBuf) {
+  log.info('ClientVideo.getNextSegment');
+  var segRange = null;
+  var curTime = this.videoElement.currentTime;
+
+  if(this.selectedType == 'webm') {
+    segRange = this._getWebmSegment(this.webmJson[0].clusters[parseInt(this.currentIndex) + 1].time/1000, setBuf);
+  }
+
+  return this.addPath(segRange);
+};
+
+ClientVideo.prototype._getWebmSegment = function(timestamp, setBuf) {
+  log.info('ClientVideo._getWebmSegment');
+  var clusters = this.webmJson[0].clusters;
+  var cluster = null;
+
+  for(var i in clusters) {
+    if(clusters[i].time == timestamp * 1000) {
+      clusters[i].buffered = setBuf;
+      cluster = [clusters[i].start, clusters[i].end - 1];
+      this.currentIndex = i;
+      break;
+    } else if(clusters[i].time > timestamp * 1000) {
+      clusters[i - 1].buffered = setBuf;
+      cluster = [clusters[i-1].start, clusters[i-1].end - 1];
+      this.currentIndex = i - 1;
+      break;
     }
   }
 
-  return [path + base, segment];
+  return cluster;
 };
 
-ClientVideo.prototype._getMp4InitSegment = function() {
-
-};
 module.exports = ClientVideo;
+
+function onPlay() {
+  console.log("ClientVideo.onPlay");
+  ClientSocket.sendRequest('get-file',
+    RequestFactory.buildVideoMetaDataRequest(self.webmMpdPath));
+
+    self.videoElement.removeEventListener('play', onPlay, false);
+}
+
+function onProgress() {
+  if(self.currentIndex < self.selectedVideo.clusters.length - 1){
+    var nextCluster = self.selectedVideo.clusters[Math.floor(parseInt(self.currentIndex) + 1)];
+    if((nextCluster.time - (self.step/2 * 1000) < self.videoElement.currentTime * 1000) && nextCluster.buffered == undefined){
+      console.log("ClientVideo.onProgress - requesting next segment");
+      self.requestSegment();
+    }
+  } else {
+    self.videoElement.removeEventListener('play', onProgress, false);
+  }
+}

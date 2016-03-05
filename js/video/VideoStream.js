@@ -1,83 +1,120 @@
-var fs   = require('fs');
-const EventEmitter  = require('events');
+var Fs   = require('fs');
+var Ebml = require('ebml');
 
-const eventEmitter = new EventEmitter();
+const util = require('util');
+const EventEmitter = require('events');
 
-var queue   = null;
-var index   = 0;
+function VideoStream(){
+  EventEmitter.call(this);
+};
 
-eventEmitter.on('clearedItem', function() {
-  if(queue) {
-    index++;
+util.inherits(VideoStream, EventEmitter);
 
-    if(index >= queue.length) {
-      queue   = null;
-      index   = 0;
+VideoStream.prototype.queuedDecode = function(metaRequests) {
+  console.log("VideoStream.queuedDecode");
+  var emitter = this;
+  var counter = new EventEmitter();
+  counter.queue = metaRequests.length - 1;
+
+  counter.on('processed', function(manifest) {
+    if(this.queue > 0) {
+      --this.queue;
+    } else {
+      emitter.emit('end', manifest);
     }
-  }
-});
+  });
 
-function VideoStream(){};
+  for(var i in metaRequests) {
+    this.readAndDecode( metaRequests[i].readConfig, metaRequests[i].manifest, counter);
+  }
+};
 
 //Adjust to take requests with manifest file included
-VideoStream.read = function(request, path, options, callback) {
-  console.log("server-loadMeta");
-  var readStream  = fs.createReadStream(path, options);
-  var blob = null;
+VideoStream.prototype.readAndDecode = function(readConfig, manifest, counter) {
+  console.log("VideoStream.readAndDecode");
+  var readStream  = Fs.createReadStream(readConfig.path, readConfig.options);
+  var decoder     = new Ebml.Decoder();
 
-  readStream.on('readable', function() {
-    readStream.pipe(blob);
+  readStream.on('data', function(data) {
+    decoder.write(data);
   });
   readStream.on('error', function(e) {
-    console.log("Server: Error: " + e);
+    console.log("VideoStream.readAndDecode, Server: Error: " + e);
   });
-  readStream.on('close', function() {
-    console.log("Server: Finished reading stream");
-    callback(request, blob);
-    eventEmitter.emit('clearedItem');
+  readStream.on('end', function() {
+    console.log("VideoStream.readAndDecode, Server: Finished reading stream");
+    counter.emit('processed', manifest);
+  });
+
+  decoder.on('data', function(data) {
+    readConfig.callback(manifest, data);
   });
 };
 
-VideoStream.queuedRead = function(request, readConfigs, callback) {
-  if(queue == null){
-    gueue = readConfigs;
+VideoStream.read = function(readConfig) {
+  console.log('VideoStream.read');
+  var readStream  = Fs.createReadStream(readConfig.path, readConfig.options);
 
-    for(var readConfig in readConfigs) {
-      VideoStream.read(request, readConfig.path, readConfig.options, readConfig.callback);
+  readStream.on('close', function() {
+    console.log("VideoStream.read, Server: Finished reading.");
+    if(readConfig.onFinish) {
+      readConfig.onFinish();
     }
-  }
-}
-
-VideoStream.readChunk = function(request) {
-  console.log("server-readChunk");
-  var options     = {start: parseInt(request.data.segment.start), end: parseInt(request.data.segment.end)};
-  var readStream  = fs.createReadStream(request.data.path, options);
-
-  readStream.on('readable', function() {
-    request.socket.emit('file-segment', readStream.read());
-  });
-  readStream.on('error', function(e) {
-    console.log("Server: Error: " + e);
-  });
-  readStream.on('close', function() {
-    request.socket.emit('video-segment');
-    console.log("Server: Finished reading stream");
+	});
+  readStream.on('data', function(chunk) {
+    readConfig.callback(chunk);
   });
 };
 
-VideoStream.readFile = function(request, stream) {
-	var readStream = fs.createReadStream(request.data.path);
+VideoStream.write = function(writeConfig, data) {
+  console.log('VideoStream.write');
+	var writeStream = Fs.createWriteStream(writeConfig.path, writeConfig.options);
 
-  readStream.on('readable', function() {
-    request.socket.emit('file-segment', readStream.read());
+  writeStream.on('error', function(e) {
+		console.log("VideoStream.write, Server: Error: " + e);
+	});
+  writeStream.on('close', function() {
+		console.log("VideoStream.write, Server: Finished writing file");
+    if(readConfig.onFinish) {
+      writeConfig.onFinish();
+    }
+	});
+
+  writeStream.write(data);
+};
+
+VideoStream.readDir = function(readConfig) {
+  console.log('VideoStream.readDir');
+  Fs.readdir(readConfig.path, function (err, files) {
+    if (err) {
+      console.log(err);
+    }
+
+    var mpdFiles = [];
+    for(var x = 0; x < files.length; ++x) {
+      var splitPath = files[x].split(".");
+      var extension = splitPath[splitPath.length - 1];
+      if(extension == "json") {
+        var file = new Object();
+        file.path = readConfig.path + files[x];
+        file.type = 'webm';
+        mpdFiles.push(file);
+      }
+    }
+
+    readConfig.callback(mpdFiles);
   });
-	readStream.on('error', function(e) {
-		console.log("Server: Error: " + e);
-	});
-  readStream.on('close', function() {
-    request.socket.emit('load_file');
-		console.log("Server: Finished reading file");
-	});
+};
+
+VideoStream.streamConfig = function(path, callback) {
+  console.log('VideoStream.streamConfig');
+  var streamConfig = new Object();
+  streamConfig.path = path;
+  streamConfig.options = null;
+  streamConfig.callback = callback;
+  streamConfig.onFinish = null;
+
+  return streamConfig;
 };
 
 module.exports = VideoStream;
