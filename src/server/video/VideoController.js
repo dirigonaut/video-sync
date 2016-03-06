@@ -1,76 +1,67 @@
-var VideoStream     = require('../../src/server/video/VideoStream');
-var EncoderManager  = require('../../src/server/video/EncoderManager');
-var WebmMetaData    = require('../../src/server/video/WebmMetaData');
+var VideoStream     = require('./VideoStream');
+var EncoderManager  = require('./EncoderManager');
+var WebmMetaData    = require('./WebmMetaData');
 
-var videoIO = null;
+function VideoController(socket, build_request, val_util) {
+  socket.on('video-encode', function(data) {
+    console.log('video-encode');
+    encoderManager.encode(val_util.check_video_info(data));
+  });
 
-function VideoController(io) {
-  videoIO = io.of("/video");
-}
+  socket.on('video-meta', function(data) {
+    console.log('video-meta');
+    var meta = new WebmMetaData();
+    meta.generateMetaData(build_request(socket, val_util.check_video_info(data)));
+  });
 
-VideoController.prototype.initialize = function() {
-  videoIO.on('connection', function (socket) {
+  socket.on('get-file', function(data) {
+    console.log('get-file');
+    var request = build_request(socket, val_util.check_video_info(data));
 
-    socket.on('video-encode', function(data) {
-      console.log('video-encode');
-      encoderManager.encode(val_util.check_video_info(data));
+    var readConfig = VideoStream.streamConfig(request.data.path, function(data) {
+        request.socket.emit("file-segment", data);
     });
 
-    socket.on('video-meta', function(data) {
-      console.log('video-meta');
-      var meta = new WebmMetaData();
-      meta.generateMetaData(build_request(socket, val_util.check_video_info(data)));
+    if(request.data.options) {
+      readConfig.options = request.data.options;
+    }
+
+    readConfig.onFinish = function() {
+      request.socket.emit("file-end");
+    };
+
+    VideoStream.read(readConfig);
+  });
+
+  socket.on('get-segment', function(data) {
+    console.log('get-segment');
+    var request = build_request(socket, val_util.check_video_info(data));
+
+    var readConfig = VideoStream.streamConfig(request.data.path, function(data) {
+        request.socket.emit("video-segment", data);
     });
 
-    socket.on('get-file', function(data) {
-      console.log('get-file');
-      var request = build_request(socket, val_util.check_video_info(data));
+    if(request.data.segment) {
+      var options = {"start": parseInt(request.data.segment[0]), "end": parseInt(request.data.segment[1])};
+      readConfig.options = options;
+    }
 
-      var readConfig = VideoStream.streamConfig(request.data.path, function(data) {
-          request.socket.emit("file-segment", data);
-      });
+    readConfig.onFinish = function() {
+      request.socket.emit("segment-end");
+    };
 
-      if(request.data.options) {
-        readConfig.options = request.data.options;
-      }
+    VideoStream.read(readConfig);
+  });
 
-      readConfig.onFinish = function() {
-        request.socket.emit("file-end");
-      };
-
-      VideoStream.read(readConfig);
+  socket.on('video-types', function(data) {
+    console.log('video-types');
+    var request = build_request(socket, val_util.check_video_info(data));
+    var readConfig = VideoStream.streamConfig(request.data.path, function(data){
+      request.socket.emit('video-types', data);
     });
 
-    socket.on('get-segment', function(data) {
-      console.log('get-segment');
-      var request = build_request(socket, val_util.check_video_info(data));
-
-      var readConfig = VideoStream.streamConfig(request.data.path, function(data) {
-          request.socket.emit("video-segment", data);
-      });
-
-      if(request.data.segment) {
-        var options = {"start": parseInt(request.data.segment[0]), "end": parseInt(request.data.segment[1])};
-        readConfig.options = options;
-      }
-
-      readConfig.onFinish = function() {
-        request.socket.emit("segment-end");
-      };
-
-      VideoStream.read(readConfig);
-    });
-
-    socket.on('video-types', function(data) {
-      console.log('video-types');
-      var request = build_request(socket, val_util.check_video_info(data));
-      var readConfig = VideoStream.streamConfig(request.data.path, function(data){
-        request.socket.emit('video-types', data);
-      });
-
-      VideoStream.readDir(readConfig);
-    });
-  }
+    VideoStream.readDir(readConfig);
+  });
 }
 
 module.exports = VideoController;
