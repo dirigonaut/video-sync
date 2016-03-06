@@ -79,7 +79,7 @@ ClientVideoBuffer.prototype.bufferSegment = function(data) {
     console.log("Init segment has been received.");
     hasInitSeg = true;
 
-    var requestDetails = clientVideo.getSegment(7, true);
+    var requestDetails = clientVideo.getSegment(0, true);
     ClientVideoBuffer.requestVideoData(requestDetails[0], requestDetails[1]);
 
     clientVideo.addOnProgress();
