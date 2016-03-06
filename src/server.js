@@ -9,9 +9,7 @@ var s_service		    = require('../../src/server/utils/smtp_service/smtp_service')
 var database		    = require('../../src/server/utils/database/database_utils');
 var validate		    = require('../../src/server/utils/input_validator');
 var authenticate    = require('../../src/server/utils/authentication/authenticate');
-var VideoStream     = require('../../src/server/video/VideoStream');
-var EncoderManager  = require('../../src/server/video/EncoderManager');
-var WebmMetaData    = require('../../src/server/video/WebmMetaData');
+var VideoController = require('../../src/server/video/VideoController');
 
 var app = null;
 var io;
@@ -22,8 +20,6 @@ var smtp_service;
 var db_util;
 var val_util;
 var auth_util;
-var file_server;
-var encoderManager;
 
 var admin = null;
 
@@ -54,7 +50,6 @@ function server_start () {
     db_util 		    = new database();
     val_util		    = new validate();
     auth_util       = new authenticate();
-    encoderManager  = new EncoderManager();
     admin           = null;
 
     app.listen(8080);
@@ -79,74 +74,7 @@ function socket_setup () {
       }
     };
 
-    //Video Events
-    socket.on('video-encode', function(data) {
-      console.log('video-encode');
-      encoderManager.encode(val_util.check_video_info(data));
-    });
-
-    socket.on('video-meta', function(data) {
-      console.log('video-meta');
-      var meta = new WebmMetaData();
-      meta.generateMetaData(build_request(socket, val_util.check_video_info(data)));
-    });
-
-    socket.on('get-file', function(data) {
-      console.log('get-file');
-      var request = build_request(socket, val_util.check_video_info(data));
-
-      var readConfig = VideoStream.streamConfig(request.data.path, function(data) {
-          request.socket.emit("file-segment", data);
-      });
-
-      if(request.data.options) {
-        readConfig.options = request.data.options;
-      }
-
-      readConfig.onFinish = function() {
-        request.socket.emit("file-end");
-      };
-
-      VideoStream.read(readConfig);
-    });
-
-    socket.on('get-segment', function(data) {
-      console.log('get-segment');
-      var request = build_request(socket, val_util.check_video_info(data));
-
-      var readConfig = VideoStream.streamConfig(request.data.path, function(data) {
-          request.socket.emit("video-segment", data);
-      });
-
-      if(request.data.segment) {
-        var options = {"start": parseInt(request.data.segment[0]), "end": parseInt(request.data.segment[1])};
-        readConfig.options = options;
-      }
-
-      readConfig.onFinish = function() {
-        request.socket.emit("segment-end");
-      };
-
-      VideoStream.read(readConfig);
-    });
-
-    socket.on('video-types', function(data) {
-      console.log('video-types');
-      var request = build_request(socket, val_util.check_video_info(data));
-      var readConfig = VideoStream.streamConfig(request.data.path, function(data){
-        request.socket.emit('video-types', data);
-      });
-
-      VideoStream.readDir(readConfig);
-    });
-
-    //Auth Events
-    socket.on('auth-token', function (data) {
-      console.log('auth-token');
-      if(player_manager.get_player(socket.id) == null){
-        auth_util.send_user_tolken(build_request(socket, val_util.check_user(data)));
-      }
-    });
+    new VideoController(socket, build_request, val_util);
 
     socket.on('auth-user', function (data) {
       console.log('auth-user');
