@@ -1,7 +1,7 @@
 var DOMParser     = require('xmldom').DOMParser;
 var Ebml          = require('ebml');
 
-var VideoStream   = require('./VideoStream');
+var VideoStream   = require('../VideoStream');
 var Manifest   = require('./Manifest');
 
 var self;
