@@ -1,6 +1,6 @@
 var VideoStream     = require('./VideoStream');
-var EncoderManager  = require('./EncoderManager');
-var WebmMetaData    = require('./WebmMetaData');
+var EncoderManager  = require('./encoding/EncoderManager');
+var WebmMetaData    = require('./meta/WebmMetaData');
 
 function VideoController(socket, build_request, val_util) {
   socket.on('video-encode', function(data) {
