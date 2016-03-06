@@ -1,5 +1,6 @@
 .sass-cache/
 coffee/
 node_modules/
-database
-test.txt
+static/media
+static/data
+database_inst
