@@ -1,7 +1,7 @@
 {
   "name": "Video-Sync",
   "version": "0.0.1",
-  "main": "html/admin.html",
+  "main": "static/html/admin.html",
   "window": {
     "toolbar": true,
     "frame": true,
