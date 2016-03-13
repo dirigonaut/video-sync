@@ -25,7 +25,7 @@ VideoStream.prototype.queuedDecode = function(metaRequests) {
   });
 
   for(var i in metaRequests) {
-    this.readAndDecode( metaRequests[i].readConfig, metaRequests[i].manifest, counter);
+    this.readAndDecode(metaRequests[i].readConfig, metaRequests[i].manifest, counter);
   }
 };
 
@@ -102,7 +102,9 @@ VideoStream.readDir = function(readConfig) {
       }
     }
 
-    readConfig.callback(mpdFiles);
+    for(x in mpdFiles){
+      readConfig.callback(mpdFiles[x]);
+    }
   });
 };
 

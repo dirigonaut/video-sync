@@ -1,5 +1,7 @@
 var io = require('socket.io-client');
 
+var FileBuffer = require('../video/FileBuffer');
+
 var serverUrl = "http://localhost:8080";
 var socket		= io.connect(serverUrl, {'force new connection': true});
 
@@ -21,48 +23,53 @@ ClientSocket.sendRequest = function(event, request) {
 module.exports = ClientSocket;
 
 //Socket On
-socket.on('state', function (data , callback) {
-	console.log(data.id + " recived: " + data.command);
-	callback({"id" : data.id, "command" : data.command});
+socket.on('state', function (response , callback) {
+	console.log(response.id + " recived: " + response.command);
+	callback({"id" : response.id, "command" : response.command});
 });
 
-socket.on('all-smtp', function (data){
-	console.log(data);
+socket.on('all-smtp', function (response){
+	console.log(response);
 });
 
-socket.on('video-ready', function(data){
+socket.on('video-ready', function(response){
   console.log('video-ready');
   socket.emit('video-stream', "");
 });
 
-socket.on('video-webm', function(data){
+socket.on('video-webm', function(response){
   console.log('video-webm');
-	clientVideo.setMetaData(data);
+	clientVideo.setMetaresponse(response);
 });
 
-socket.on('video-types', function(data){
+socket.on('video-types', function(response){
   console.log('video-types');
-	clientVideo.setVideoTypes(data);
+	clientVideo.setVideoTypes(response);
 });
 
-socket.on('video-segment', function(data){
-  console.log('ClientSocket on video-segment');
-	if(data != null) {console.log(data.length);}
-	clientVideoBuffer.bufferSegment(data);
+socket.on('video-segment', function(response){
+	clientVideoBuffer.bufferSegment(response);
 });
 
-socket.on('segment-end', function(data){
+socket.on('segment-end', function(response){
   console.log('ClientSocket on segment-end');
 	clientVideoBuffer.closeStream();
 });
 
-socket.on('file-segment', function(data){
-  console.log('file-segment');
-	if(data != null) {console.log(data.length);}
-	clientVideoBuffer.bufferMetaFile(data);
+socket.on('file-register-response', function(response, callback){
+  console.log('file-register-response');
+	var fileBuffer = new FileBuffer();
+	fileBuffer.registerResponse(response.requestId, response.header, callback);
 });
 
-socket.on('file-end', function(){
+socket.on('file-segment', function(response){
+  console.log('file-segment');
+	var fileBuffer = new FileBuffer();
+	fileBuffer.onData(response.bufferId, response.data);
+});
+
+socket.on('file-end', function(response){
   console.log('file-end');
-	clientVideoBuffer.setMetaData();
+	var fileBuffer = new FileBuffer();
+	fileBuffer.onFinish(response.bufferId);
 });

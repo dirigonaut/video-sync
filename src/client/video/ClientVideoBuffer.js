@@ -1,7 +1,6 @@
 var DOMParser         = require('xmldom').DOMParser;
 var log               = require('loglevel');
 
-var ClientFileBuffer  = require('./ClientFileBuffer.js');
 var ClientSocket      = require('../socket/ClientSocket.js');
 var RequestFactory    = require('../socket/ClientRequestFactory.js');
 
@@ -11,7 +10,6 @@ var videoBuffer;
 
 var queue;
 var clientVideo;
-var fileBuffer;
 
 var utils;
 
@@ -24,7 +22,7 @@ function ClientVideoBuffer(){}
 
 ClientVideoBuffer.prototype.initialize = function (video, window, clientUtils) {
   log.setDefaultLevel(0);
-  log.info('ClientVideoBuffer.initializeMediaSource');
+  log.info('ClientVideoBuffer.initialize');
 
   windowSrc   = window;
   mediaSource = null;
@@ -34,15 +32,24 @@ ClientVideoBuffer.prototype.initialize = function (video, window, clientUtils) {
   clientVideo = video;
   hasInitSeg  = false;
 
-  fileBuffer  = new ClientFileBuffer();
   utils       = clientUtils;
 
   closeStream = false;
 
   self        = this;
 
-  clientVideo.addMetaLoadedEvent(ClientVideoBuffer.initializeMediaSource);
-  clientVideo.addSegmentRequestCallback(ClientVideoBuffer.requestSegment);
+  clientVideo.on('get-init', function(){
+    ClientVideoBuffer.initializeMediaSource();
+  });
+
+  clientVideo.on('get-next', function(){
+    ClientVideoBuffer.requestVideoData(clientVideo.getActiveMetaData().getNextSegment());
+  });
+
+  clientVideo.on('get-segment', function(){
+    console.log("we are seeking");
+    ClientVideoBuffer.requestVideoData(clientVideo.getActiveMetaData().getSegment(clientVideo.getVideoElement.currentTime));
+  });
 }
 
 ClientVideoBuffer.initializeMediaSource = function() {
@@ -56,22 +63,16 @@ ClientVideoBuffer.initializeMediaSource = function() {
   mediaSource.addEventListener('webkitsourceended',  objectState,         false);
 };
 
-ClientVideoBuffer.requestVideoData = function(url, segment) {
+ClientVideoBuffer.requestVideoData = function(requestDetails) {
   log.info('ClientVideoBuffer.requestVideoData');
-  console.log(segment);
   ClientSocket.sendRequest("get-segment",
-    RequestFactory.buildVideoSegmentRequest(url, segment));
+    RequestFactory.buildVideoSegmentRequest(requestDetails[0], requestDetails[1]));
 };
 
 ClientVideoBuffer.prototype.bufferSegment = function(data) {
-  log.info('ClientVideoBuffer.bufferSegment');
-
   if (videoBuffer.updating || mediaSource.readyState != "open" || queue.length > 0) {
-    console.log("Adding to the queue.");
     queue.push(new Uint8Array(data));
   } else {
-    console.log("Direct buffer append.");
-    console.log("mediaSource ready state: " + mediaSource.readyState);
     videoBuffer.appendBuffer(new Uint8Array(data));
   }
 
@@ -79,10 +80,8 @@ ClientVideoBuffer.prototype.bufferSegment = function(data) {
     console.log("Init segment has been received.");
     hasInitSeg = true;
 
-    var requestDetails = clientVideo.getSegment(0, true);
-    ClientVideoBuffer.requestVideoData(requestDetails[0], requestDetails[1]);
-
-    clientVideo.addOnProgress();
+    ClientVideoBuffer.requestVideoData(clientVideo.getActiveMetaData().getSegment(0));
+    clientVideo.addVideoEvents();
   }
 };
 
@@ -94,26 +93,6 @@ ClientVideoBuffer.prototype.closeStream = function() {
     mediaSource.endOfStream();
   }*/
 }
-
-ClientVideoBuffer.prototype.bufferMetaFile = function(data) {
-  log.info('ClientVideoBuffer.bufferMetaFile');
-  if(data != null) {
-    fileBuffer.pushData(data);
-  }
-};
-
-ClientVideoBuffer.prototype.setMetaData = function() {
-  log.info('ClientVideoBuffer.setMetaData');
-  var parser = new DOMParser();
-  clientVideo.setMetaData(fileBuffer.getBuffer().toString());
-  fileBuffer.clearBuffer();
-};
-
-ClientVideoBuffer.requestSegment = function () {
-  log.info('ClientVideoBuffer.requestSegment');
-  var requestDetails = clientVideo.getNextSegment(true);
-  ClientVideoBuffer.requestVideoData(requestDetails[0], requestDetails[1]);
-};
 
 module.exports = ClientVideoBuffer;
 
@@ -133,20 +112,15 @@ function mediaSourceCallback(e) {
     videoBuffer.addEventListener('abort',  objectState);
     videoBuffer.addEventListener('update', onBufferUpdate);
 
-    var initRequestDetails = clientVideo.getInitSegment();
-    ClientVideoBuffer.requestVideoData(initRequestDetails[0], initRequestDetails[1]);
+    ClientVideoBuffer.requestVideoData(clientVideo.getActiveMetaData().getInit());
   }
 };
 
 function onBufferUpdate(e) {
-  log.info("ClientVideoBuffer's onBufferUpdate");
   if(!videoBuffer.updating){
     if (queue.length > 0) {
-      console.log("Appending from the queue.");
-      console.log("mediaSource ready state: " + mediaSource.readyState);
       videoBuffer.appendBuffer(queue.shift());
     } else if(closeStream){
-      console.log("Closing mediaSource.");
       mediaSource.endOfStream();
     }
   }

@@ -97,9 +97,9 @@
     var clientVideoBuffer = new ClientVideoBuffer();
 
     console.log(clientVideoBuffer);
-    clientVideoBuffer.initialize(clientVideo, window, new ClientUtils());
     clientSocket.initialize(clientVideoBuffer, clientVideo);
-    clientVideo.initialize(path);
+    clientVideo.initialize();
+    clientVideoBuffer.initialize(clientVideo, window, new ClientUtils());
 
     var encode = function(){
       var commands = [];
