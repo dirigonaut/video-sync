@@ -28,7 +28,7 @@ EncoderCommandFactory.get_ffmpeg_commands = function(source, destination, scale,
     command.type        = EncoderCommandFactory.type_enum.AUDIO;
   }
 
-  command.process = "ffmpeg";
+  command.process = "webm";
   return command;
 }
 
@@ -61,7 +61,7 @@ EncoderCommandFactory.get_ffmpeg_manifest_command = function(command_queue, outp
   }
 
   command.input = ' -y' + input + ' -c ' + 'copy' + maps + ' -f webm_dash_manifest -adaptation_sets ' + 'id=0,streams=' + video_streams + ' id=1,streams=' + audio_streams + ' ' + output
-  command.process = "ffmpeg";
+  command.process = "webm";
   return command;
 };
 

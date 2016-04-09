@@ -1,8 +1,9 @@
 function ClientRequestFactory() {};
 
-ClientRequestFactory.buildVideoSegmentRequest = function(path, segment) {
+ClientRequestFactory.buildVideoSegmentRequest = function(typeId, path, segment) {
 	console.log('ClientRequestFactory.buildVideoSegmentRequest');
 	var request = new Object();
+	request.typeId = typeId;
   request.path = path;
   request.segment = segment;
 

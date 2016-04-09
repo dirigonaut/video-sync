@@ -75,6 +75,7 @@ function socket_setup () {
     };
 
     new VideoController(socket, build_request, val_util);
+    socket.emit('connected');
 
     socket.on('auth-user', function (data) {
       console.log('auth-user');

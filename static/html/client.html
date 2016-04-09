@@ -75,11 +75,11 @@
   </footer>
   <script>
     var CommandFactory = require('../../src/client/video/EncoderCommandFactory.js');
-    var ClientVideoBuffer = require('../../src/client/video/ClientVideoBuffer.js');
-    var ClientVideo = require('../../src/client/video/ClientVideo.js');
+    var PlayerController = require('../../src/client/video/PlayerController.js');
 
     var RequestFactory = require('../../src/client/socket/ClientRequestFactory.js');
     var ClientSocket = require('../../src/client/socket/ClientSocket.js');
+    var FileBuffer = require('../../src/client/video/FileBuffer.js');
   </script>
   <script src="../../static/resources/jquery-2.1.1.min.js"></script>
   <script src="../../static/resources/video-js/video.js"></script>
@@ -92,14 +92,13 @@
     window.MediaSource = window.MediaSource || window.WebKitMediaSource;
 
     var path = "/home/sabo-san/Development/video-sync-2/static/media/";
-    var clientSocket = new ClientSocket();
-    var clientVideo = new ClientVideo(document.getElementById('shared_video'));
-    var clientVideoBuffer = new ClientVideoBuffer();
+    var fileBuffer = new FileBuffer();
+    var playerController = new PlayerController(fileBuffer);
 
-    console.log(clientVideoBuffer);
-    clientSocket.initialize(clientVideoBuffer, clientVideo);
-    clientVideo.initialize();
-    clientVideoBuffer.initialize(clientVideo, window, new ClientUtils());
+    var clientSocket = new ClientSocket(function(){
+      playerController.initializeVideo(document.getElementById('shared_video'), new MediaSource(), window);
+      clientSocket.initialize(playerController, fileBuffer);
+    });
 
     var encode = function(){
       var commands = [];
