@@ -4,9 +4,28 @@ var WebmMetaData    = require('./meta/WebmMetaData');
 var Session         = require('../utils/Session');
 
 function VideoController(socket, build_request, val_util) {
+  console.log("Attaching VideoController");
+
   socket.on('video-encode', function(data) {
     console.log('video-encode');
-    encoderManager.encode(val_util.check_video_info(data));
+
+    var genWebmMeta = function (path) {
+      var meta = new WebmMetaData();
+      meta.on('finished', function() {
+        socket.emit('video-encoded');
+      });
+
+      meta.generateMetaData(path);
+    };
+
+    var encoderManager = new EncoderManager(val_util.check_video_info(data));
+    encoderManager.on('webm', function(path) {
+      genWebmMeta(path);
+    }).on('finished', function(path) {
+      socket.emit('video-encoded');
+    });
+
+    encoderManager.encode();
   });
 
   socket.on('video-meta', function(data) {
@@ -42,14 +61,21 @@ function VideoController(socket, build_request, val_util) {
   socket.on('get-segment', function(data) {
     console.log('get-segment');
     var data = val_util.check_video_info(data);
+    var typeId = data.typeId;
 
     var readConfig = VideoStream.streamConfig(data.path, function(data) {
-      socket.emit("video-segment", data);
+      var segment = new Object();
+      segment.typeId = typeId;
+      segment.data = data;
+
+      socket.emit("segment-chunk", segment);
     });
 
     if(data.segment) {
       var options = {"start": parseInt(data.segment[0]), "end": parseInt(data.segment[1])};
       readConfig.options = options;
+    } else {
+      console.log("No segment options passed in.");
     }
 
     readConfig.onFinish = function() {
