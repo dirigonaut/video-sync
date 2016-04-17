@@ -17,24 +17,29 @@ function SourceBuffer(enum_type, clientVideo){
     requestVideoData(clientVideo.getActiveMetaData().getInit(self.type));
   });
 
-  clientVideo.on('get-next', function(typeId) {
+  clientVideo.on('get-next', function(typeId, timestamp) {
     if(typeId == self.type) {
-      console.log("get-next " + typeId);
-      requestVideoData(clientVideo.getActiveMetaData().getNextSegment(self.type));
+      if(!isTimeRangeBuffered(timestamp)) {
+        requestVideoData(clientVideo.getActiveMetaData().getNextSegment(self.type));
+      }
     }
   });
 
   clientVideo.on('get-segment', function(typeId, timestamp) {
     if(typeId == self.type) {
-      console.log("get-segment " + self.type);
-      requestVideoData(clientVideo.getActiveMetaData().getSegment(self.type, timestamp, 0));
+      if(!isTimeRangeBuffered(timestamp)) {
+        requestVideoData(clientVideo.getActiveMetaData().getSegment(self.type, timestamp));
+      }
     }
   });
 
-  var requestVideoData = function(requestDetails) {
-    log.info('SourceBuffer.requestVideoData');
-    ClientSocket.sendRequest("get-segment",
-      RequestFactory.buildVideoSegmentRequest(self.type, requestDetails[0], requestDetails[1]));
+  self.setSourceBufferCallback = function(spec) {
+    return function(e) {
+      self.sourceBuffer = clientVideo.getMediaSource().addSourceBuffer(spec);
+      self.sourceBuffer.addEventListener('error',  self.objectState);
+      self.sourceBuffer.addEventListener('abort',  self.objectState);
+      self.sourceBuffer.addEventListener('update', self.getOnBufferUpdate());
+    };
   };
 
   self.bufferSegment = function(data) {
@@ -47,8 +52,7 @@ function SourceBuffer(enum_type, clientVideo){
     if(!self.hasInitSeg) {
       console.log("Init segment has been received.");
       self.hasInitSeg = true;
-
-      requestVideoData(clientVideo.getActiveMetaData().getSegment(self.type, 0, 1));
+      requestVideoData(clientVideo.getActiveMetaData().getSegment(self.type, 0));
     }
   };
 
@@ -66,6 +70,28 @@ function SourceBuffer(enum_type, clientVideo){
     log.info("SourceBuffer's objectState");
     console.log(e);
   };
+
+  var requestVideoData = function(requestDetails) {
+    log.info('SourceBuffer.requestVideoData');
+    ClientSocket.sendRequest("get-segment",
+      RequestFactory.buildVideoSegmentRequest(self.type, requestDetails[0], requestDetails[1]));
+  };
+
+  var isTimeRangeBuffered = function(timestamp) {
+    var buffered = false;
+    var timeRanges = self.sourceBuffer.buffered;
+
+    for(var i = 0; i < timeRanges.length; ++i) {
+      if(timeRanges.start(i) * 1000 > timestamp) {
+        break;
+      } else if (timeRanges.end(i) * 1000 > timestamp) {
+        buffered = true;
+        break;
+      }
+    }
+
+    return buffered;
+  }
 
   return self;
 }

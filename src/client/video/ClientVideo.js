@@ -72,10 +72,12 @@ ClientVideo.prototype.setActiveMetaData = function(metaKey) {
 
 ClientVideo.prototype.onProgress = function(typeId) {
   var progress = function() {
+    var selectedMedia = self.videoMetas.get(self.selectedMeta);
     if(!self.videoElement.paused) {
-      if(self.videoMetas.get(self.selectedMeta).isLastSegment(typeId)){
-        if(self.videoMetas.get(self.selectedMeta).isReadyForNextSegment(typeId, self.videoElement.currentTime)){
-          self.emit("get-next", typeId);
+      if(selectedMedia.isLastSegment(typeId)){
+        if(selectedMedia.isReadyForNextSegment(typeId, self.videoElement.currentTime)){
+          console.log("ClientVideo.onProgress - isReady");
+          self.emit("get-next", typeId, (self.videoElement.currentTime * 1000) + selectedMedia.getActiveMeta(typeId).timeStep);
         }
       } else {
         console.log("ClientVideo.onProgress - end of segments");
@@ -89,10 +91,18 @@ ClientVideo.prototype.onProgress = function(typeId) {
 
 ClientVideo.prototype.onSeek = function(typeId) {
   var seek = function() {
+    var selectedMedia = self.videoMetas.get(self.selectedMeta);
+    selectedMedia.updateActiveMeta(typeId, selectedMedia.getSegmentIndex(typeId, self.videoElement.currentTime * 1000));
+
+    self.videoElement.pause(true);
     self.emit("get-segment", typeId, self.videoElement.currentTime * 1000);
   };
 
   return seek;
+};
+
+ClientVideo.prototype.onSeeked = function() {
+  self.videoElement.pause = false;
 };
 
 module.exports = ClientVideo;
