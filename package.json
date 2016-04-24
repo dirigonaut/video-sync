@@ -12,6 +12,7 @@
     "start": "nw"
   },
   "dependencies": {
+    "browserify": "^13.0.0",
     "ebml": "^2.1.0",
     "emailjs": "^0.3.13",
     "loglevel": "^1.4.0",
@@ -22,6 +23,7 @@
     "socket.io-client": "^1.3.5",
     "split": "^1.0.0",
     "validator": "^3.38.0",
+    "watchify": "^3.7.0",
     "xmldom": "^0.1.19"
   }
 }

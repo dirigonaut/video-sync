@@ -13,12 +13,11 @@ function ClientVideo(video, mediaSource, window) {
   log.setDefaultLevel(0);
   if(self == null) {
     log.info('ClientVideo');
+    video.src = window.URL.createObjectURL(mediaSource);
+
     this.mediaSource      = mediaSource;
-
     this.window           = window;
-
     this.videoElement     = video;
-    this.videoElement.src = this.window.URL.createObjectURL(this.mediaSource);
 
     this.videoMetas       = null;
     this.selectedMeta     = "webm";

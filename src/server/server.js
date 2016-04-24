@@ -2,14 +2,17 @@ var http 			      = require('http')
 var socket_io	      = require('socket.io');
 var path            = require('path');
 var static          = require('node-static');
+var browserify      = require('browserify');
+var watchify        = require('watchify');
+var fs              = require('fs');
 
-var r_engine 		    = require('../../src/server/state/state_engine/rules_engine');
-var p_manager 	    = require('../../src/server/state/player/player_manager');
-var s_service		    = require('../../src/server/utils/smtp_service/smtp_service');
-var database		    = require('../../src/server/utils/database/database_utils');
-var validate		    = require('../../src/server/utils/input_validator');
-var authenticate    = require('../../src/server/utils/authentication/authenticate');
-var VideoController = require('../../src/server/video/VideoController');
+var r_engine 		    = require('./state/state_engine/rules_engine');
+var p_manager 	    = require('./state/player/player_manager');
+var s_service		    = require('./utils/smtp_service/smtp_service');
+var database		    = require('./utils/database/database_utils');
+var validate		    = require('./utils/input_validator');
+var authenticate    = require('./utils/authentication/authenticate');
+var VideoController = require('./video/VideoController');
 
 var app = null;
 var io;
@@ -23,8 +26,23 @@ var auth_util;
 
 var admin = null;
 
+var b = browserify({
+  entries: ['src/client/client.js'],
+  standalone: 'Client',
+  cache: {},
+  packageCache: {},
+  plugin: [watchify]
+});
+
+b.on('update', bundle);
+bundle();
+
+function bundle() {
+  b.bundle().pipe(fs.createWriteStream('static/resources/bundle.js'));
+}
+
 function handler (req, res) {
-  console.log("req: " + req);
+  console.log(req);
   req.addListener('end', function() {
     file_server.serve( req, res );
   }).resume();
@@ -34,7 +52,7 @@ function build_request(socket, data){
   return {"socket" : socket, "data" : data};
 }
 
-function server_start () {
+function Server(callback) {
   if(app == null){
     file_server = new static.Server('',{
         cache: 0,
@@ -55,12 +73,11 @@ function server_start () {
     app.listen(8080);
 
     socket_setup();
-
-    return true;
+    callback();
   }
-
-  return false;
 };
+
+module.exports = Server;
 
 function socket_setup () {
   io.on('connection', function (socket) {
@@ -73,6 +90,7 @@ function socket_setup () {
         socket.auth = false;
       }
     };
+    socket.auth = true;
 
     new VideoController(socket, build_request, val_util);
     socket.emit('connected');

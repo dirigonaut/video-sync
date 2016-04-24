@@ -2,7 +2,7 @@ var details = null;
 
 function Preferences() {
   details = new Object();
-  details.exportDir = "/home/sabo-san/Development/video-sync-2/static/media/";
+  details.exportDir = "/home/sabo-kun/repo/video-sync-2/static/media/";
 }
 
 Preferences.prototype.initialize = function() {
