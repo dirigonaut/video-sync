@@ -50,7 +50,13 @@ FileBuffer.prototype.registerResponse = function(requestId, header, callback) {
 FileBuffer.prototype.onData = function(bufferId, data) {
   log.info('FileBuffer.onData');
   var buffer = buffers.get(bufferId);
-  buffer.data.push(data);
+
+  if(data instanceof Buffer) {
+    buffer.data.push(data);
+  } else {
+    var buff = new Buffer(data);
+    buffer.data.push(buff);
+  }
 };
 
 FileBuffer.prototype.onFinish = function(bufferId) {

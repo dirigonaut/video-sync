@@ -4,3 +4,4 @@ node_modules/
 static/media
 static/data
 database_inst
+static/resources/bundle.js

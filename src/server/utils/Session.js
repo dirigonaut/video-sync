@@ -2,7 +2,7 @@ var details = null;
 
 function Session() {
   details = new Object();
-  details.baseDir = "/home/sabo-san/Development/video-sync-2/static/media/bunny/";
+  details.baseDir = "/home/sabo-kun/repo/video-sync-2/static/media/bunny/";
 }
 
 Session.prototype.initialize = function(sessionId) {
