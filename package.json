@@ -3,10 +3,12 @@
   "version": "0.0.1",
   "main": "static/html/admin.html",
   "window": {
+    "title": "Video-Sync",
+    "fullscreen": false,
     "toolbar": true,
     "frame": true,
-    "width": 2400,
-    "height": 1800
+    "width": 800,
+    "height": 600
   },
   "scripts": {
     "start": "nw"

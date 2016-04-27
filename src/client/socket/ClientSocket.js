@@ -16,7 +16,7 @@ function ClientSocket(callback, flag) {
 	socket = io.connect(serverUrl, {'force new connection': true});
 	socket.on('connected', function() {
 		registerEvents();
-		callback()
+		callback();
 	});
 }
 

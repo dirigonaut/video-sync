@@ -4,15 +4,15 @@ const EventEmitter  = require('events');
 var log             = require('loglevel');
 var ClientSocket    = require('../socket/ClientSocket.js');
 var WebmMeta        = require('./WebmMeta.js');
-var RequestFactory  = require('../socket/ClientRequestFactory.js');
+var RequestFactory  = require('../utils/RequestFactory.js');
 var SourceBuffer    = require('./SourceBuffer.js');
 
 var self = null;
 
-function ClientVideo(video, mediaSource, window) {
+function VideoSingleton(video, mediaSource, window) {
   log.setDefaultLevel(0);
   if(self == null) {
-    log.info('ClientVideo');
+    log.info('VideoSingleton');
     video.src = window.URL.createObjectURL(mediaSource);
 
     this.mediaSource      = mediaSource;
@@ -26,60 +26,60 @@ function ClientVideo(video, mediaSource, window) {
   }
 }
 
-util.inherits(ClientVideo, EventEmitter);
+util.inherits(VideoSingleton, EventEmitter);
 
-ClientVideo.prototype.initialize = function(fileBuffer) {
-  log.info('ClientVideo.initialize');
+VideoSingleton.prototype.initialize = function(fileBuffer) {
+  log.info('VideoSingleton.initialize');
   self.videoElement.addEventListener('play', onPlay, false);
   self.videoMetas = new Map();
 
   ClientSocket.sendRequest('get-meta-files', fileBuffer.registerRequest(self.addMetaData));
 };
 
-ClientVideo.prototype.addMediaSourceEvent = function(event, callback) {
+VideoSingleton.prototype.addMediaSourceEvent = function(event, callback) {
   self.mediaSource.addEventListener(event, callback, false);
 };
 
-ClientVideo.prototype.addVideoEvent = function(event, callback) {
-  log.info('ClientVideo.addOnProgress');
+VideoSingleton.prototype.addVideoEvent = function(event, callback) {
+  log.info('VideoSingleton.addOnProgress');
   self.videoElement.addEventListener(event, callback, false);
   //self.videoElement.addEventListener('waiting', onSeek, false);
 };
 
-ClientVideo.prototype.getVideoElement = function() {
+VideoSingleton.prototype.getVideoElement = function() {
   return self.videoElement;
 };
 
-ClientVideo.prototype.getMediaSource = function() {
+VideoSingleton.prototype.getMediaSource = function() {
   return self.mediaSource;
 };
 
-ClientVideo.prototype.addMetaData = function(header, binaryFile) {
-  log.info('ClientVideo.addMetaData');
+VideoSingleton.prototype.addMetaData = function(header, binaryFile) {
+  log.info('VideoSingleton.addMetaData');
   if(header.type == "webm") {
     self.videoMetas.set(header.type, new WebmMeta(JSON.parse(binaryFile.toString())));
   }
 };
 
-ClientVideo.prototype.getActiveMetaData = function() {
+VideoSingleton.prototype.getActiveMetaData = function() {
   return self.videoMetas.get(self.selectedMeta);
 };
 
-ClientVideo.prototype.setActiveMetaData = function(metaKey) {
+VideoSingleton.prototype.setActiveMetaData = function(metaKey) {
   self.selectedMeta = metaKey;
 };
 
-ClientVideo.prototype.onProgress = function(typeId) {
+VideoSingleton.prototype.onProgress = function(typeId) {
   var progress = function() {
     var selectedMedia = self.videoMetas.get(self.selectedMeta);
     if(!self.videoElement.paused) {
       if(selectedMedia.isLastSegment(typeId)){
         if(selectedMedia.isReadyForNextSegment(typeId, self.videoElement.currentTime)){
-          console.log("ClientVideo.onProgress - isReady");
+          console.log("VideoSingleton.onProgress - isReady");
           self.emit("get-next", typeId, (self.videoElement.currentTime * 1000) + selectedMedia.getActiveMeta(typeId).timeStep);
         }
       } else {
-        console.log("ClientVideo.onProgress - end of segments");
+        console.log("VideoSingleton.onProgress - end of segments");
         self.videoElement.removeEventListener('timeupdate', progress, false);
       }
     }
@@ -88,7 +88,7 @@ ClientVideo.prototype.onProgress = function(typeId) {
   return progress;
 };
 
-ClientVideo.prototype.onSeek = function(typeId) {
+VideoSingleton.prototype.onSeek = function(typeId) {
   var seek = function() {
     var selectedMedia = self.videoMetas.get(self.selectedMeta);
     selectedMedia.updateActiveMeta(typeId, selectedMedia.getSegmentIndex(typeId, self.videoElement.currentTime * 1000));
@@ -100,14 +100,14 @@ ClientVideo.prototype.onSeek = function(typeId) {
   return seek;
 };
 
-ClientVideo.prototype.onSeeked = function() {
+VideoSingleton.prototype.onSeeked = function() {
   self.videoElement.pause = false;
 };
 
-module.exports = ClientVideo;
+module.exports = VideoSingleton;
 
 function onPlay() {
-  console.log("ClientVideo.onPlay");
+  console.log("VideoSingleton.onPlay");
   self.emit("get-init");
   self.videoElement.removeEventListener('play', onPlay, false);
 }

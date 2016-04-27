@@ -1,18 +1,18 @@
-var CommandFactory = require('./video/EncoderCommandFactory');
-var PlayerController = require('./video/PlayerController');
+var CommandFactory = require('./utils/EncoderCommandFactory');
+var MediaController = require('./video/MediaController');
 
-var RequestFactory = require('./socket/ClientRequestFactory');
+var RequestFactory = require('./utils/RequestFactory');
 var ClientSocket = require('./socket/ClientSocket');
-var FileBuffer = require('./video/FileBuffer');
+var FileBuffer = require('./utils/FileBuffer');
 
 function Client(video, mediaSource, window, flag) {
   var path = "/home/sabo-kun/repo/video-sync-2/static/media/";
   var fileBuffer = new FileBuffer();
-  var playerController = new PlayerController(fileBuffer);
+  var mediaController = new MediaController(fileBuffer);
 
   var clientSocket = new ClientSocket(function(){
-    playerController.initializeVideo(video, mediaSource, window);
-    clientSocket.initialize(playerController, fileBuffer);
+    mediaController.initializeVideo(video, mediaSource, window);
+    clientSocket.initialize(mediaController, fileBuffer);
   }, flag);
 }
 
