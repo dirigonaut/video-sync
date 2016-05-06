@@ -1,8 +1,8 @@
 var details = null;
 
-function Session() {
+function Session(path) {
   details = new Object();
-  details.baseDir = "/home/sabo-kun/repo/video-sync-2/static/media/bunny/";
+  details.baseDir = path;
 }
 
 Session.prototype.initialize = function(sessionId) {
