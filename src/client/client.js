@@ -1,16 +1,16 @@
 var CommandFactory = require('./utils/EncoderCommandFactory');
 var MediaController = require('./video/MediaController');
-
 var RequestFactory = require('./utils/RequestFactory');
 var ClientSocket = require('./socket/ClientSocket');
 var FileBuffer = require('./utils/FileBuffer');
 
+var path = "/home/sabo-san/Development/video-sync-2.0/static/media/";
+
 function Client(video, mediaSource, window, flag) {
-  var path = "/home/sabo-kun/repo/video-sync-2/static/media/";
   var fileBuffer = new FileBuffer();
   var mediaController = new MediaController(fileBuffer);
 
-  var clientSocket = new ClientSocket(function(){
+  var clientSocket = new ClientSocket(function(path){
     mediaController.initializeVideo(video, mediaSource, window);
     clientSocket.initialize(mediaController, fileBuffer);
   }, flag);
@@ -24,5 +24,17 @@ Client.prototype.encode = function() {
 
   ClientSocket.sendRequest('video-encode', commands);
 };
+
+Client.prototype.getClientSocket = function() {
+  return ClientSocket;
+}
+
+Client.prototype.getRequestFactory = function() {
+  return RequestFactory;
+}
+
+Client.prototype.getCommandFactory = function() {
+  return CommandFactory;
+}
 
 module.exports = Client;

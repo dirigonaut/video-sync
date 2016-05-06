@@ -36,7 +36,7 @@ function VideoController(socket, build_request, val_util) {
 
   socket.on('get-meta-files', function(requestId) {
     console.log('get-meta-files');
-    var session = new Session();
+    var session = new Session("./static/media/bunny/");
 
     var readConfig = VideoStream.streamConfig(session.getDetails().baseDir, function(file){
       var header = new Object();
