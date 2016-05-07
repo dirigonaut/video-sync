@@ -1,8 +1,9 @@
 function EncoderCommandFactory(){ }
 
-function gen_new_path(path, scale){
-  var parsed_path = path.split(".");
-  return path.substr(0, path.length - parsed_path[parsed_path.length-1].length-1) + "_" + scale + ".webm";
+function gen_new_name(path, scale){
+  var parsed_path = path.split("/");
+  var parsed_file = parsed_path[parsed_path.length -1].split(".");
+  return parsed_file[0] + "_" + scale + ".webm";
 };
 
 EncoderCommandFactory.type_enum = {
@@ -11,20 +12,20 @@ EncoderCommandFactory.type_enum = {
   AUDIO : 2
 };
 
-EncoderCommandFactory.build_ffmpeg_request = function(source, scale, type){
-  return EncoderCommandFactory.get_ffmpeg_commands(source, gen_new_path(source, scale), scale, type)
+EncoderCommandFactory.build_ffmpeg_request = function(source, dir, scale, type) {
+    return EncoderCommandFactory.get_ffmpeg_commands(source, gen_new_name(source, scale), scale, type, dir)
 };
 
-EncoderCommandFactory.get_ffmpeg_commands = function(source, destination, scale, type){
+EncoderCommandFactory.get_ffmpeg_commands = function(source, name, scale, type, dir){
   var command = new Object();
 
   if(type == EncoderCommandFactory.type_enum.VIDEO){
-    command.input       = EncoderCommandFactory.get_video_webm_ffmpeg_command(source, destination, scale);
-    command.destination = destination;
+    command.input       = EncoderCommandFactory.get_video_webm_ffmpeg_command(source, dir + name, scale);
+    command.destination = dir + name;
     command.type        = EncoderCommandFactory.type_enum.VIDEO;
   } else if (type == EncoderCommandFactory.type_enum.AUDIO){
-    command.input       = EncoderCommandFactory.get_audio_webm_ffmpeg_command(source, destination, scale);
-    command.destination = destination;
+    command.input       = EncoderCommandFactory.get_audio_webm_ffmpeg_command(source,  dir + name, scale);
+    command.destination = dir + name;
     command.type        = EncoderCommandFactory.type_enum.AUDIO;
   }
 

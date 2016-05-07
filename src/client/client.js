@@ -4,7 +4,9 @@ var RequestFactory = require('./utils/RequestFactory');
 var ClientSocket = require('./socket/ClientSocket');
 var FileBuffer = require('./utils/FileBuffer');
 
-var path = "/home/sabo-san/Development/video-sync-2.0/static/media/";
+var base = "/home/sabo-san/Development/video-sync-2.0";
+var input = "/static/media/";
+var output = "/static/media/bunny/";
 
 function Client(video, mediaSource, window, flag) {
   var fileBuffer = new FileBuffer();
@@ -18,9 +20,9 @@ function Client(video, mediaSource, window, flag) {
 
 Client.prototype.encode = function() {
   var commands = [];
-  commands.push(CommandFactory.build_ffmpeg_request(path + "bunny.mov", "640x360", "1"));
-  commands.push(CommandFactory.build_ffmpeg_request(path + "bunny.mov", "128k", "2"));
-  commands.push(CommandFactory.get_ffmpeg_manifest_command(commands, path + "bunny.mpd"));
+  commands.push(CommandFactory.build_ffmpeg_request(base + input + "bunny.mov", base + output, "640x360", "1"));
+  commands.push(CommandFactory.build_ffmpeg_request(base + input + "bunny.mov", base + output, "128k", "2"));
+  commands.push(CommandFactory.get_ffmpeg_manifest_command(commands, base + output + "bunny.mpd"));
 
   ClientSocket.sendRequest('video-encode', commands);
 };

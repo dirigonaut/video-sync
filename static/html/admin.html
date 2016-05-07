@@ -24,12 +24,12 @@
     <div id="messenger">
     </div>
     <script type="text/javascript" src="../resources/jquery-1.9.1.min.js"></script>
-    <script type="text/javascript" src="../resources/gui.js"></script>
     <script type="text/javascript" src="../resources/video-js/video.js"></script>
     <script type="text/javascript" src="../resources/bootstrap/js/bootstrap.min.js"></script>
     <script>
       $(function(){
         $("#control_container").load("menu/controls.html");
+        $.getScript("../resources/gui.js");
       });
 
       var client = null;
