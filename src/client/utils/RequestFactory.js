@@ -17,4 +17,11 @@ RequestFactory.buildVideoMetaDataRequest = function(path, type) {
 	return request;
 };
 
+RequestFactory.buildPlayRequest = function() {
+	console.log("RequestFactory.buildPlayRequest");
+	var request = new Object();
+	request.state = "play";
+	return request;
+}
+
 module.exports = RequestFactory;

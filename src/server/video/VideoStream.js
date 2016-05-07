@@ -108,26 +108,6 @@ VideoStream.readDir = function(readConfig) {
   });
 };
 
-VideoStream.createDir = function(path, mask, callback) {
-  if (typeof mask == 'function') {
-      callback = mask;
-      mask = 0777;
-  }
-
-  Fs.mkdir(path, mask, function(err) {
-      if (err) {
-        if (err.code == 'EEXIST'){
-          callback(null);
-        }
-        else{
-          callback(err);
-        }
-      } else {
-        callback(null);
-      }
-  });
-}
-
 VideoStream.streamConfig = function(path, callback) {
   console.log('VideoStream.streamConfig');
   var streamConfig = new Object();
