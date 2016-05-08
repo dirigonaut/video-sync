@@ -4,7 +4,7 @@ var RequestFactory = require('./utils/RequestFactory');
 var ClientSocket = require('./socket/ClientSocket');
 var FileBuffer = require('./utils/FileBuffer');
 
-var base = "/home/sabo-san/Development/video-sync-2.0";
+var base = "/home/sabo-kun/repo/video-sync-2";
 var input = "/static/media/";
 var output = "/static/media/bunny/";
 

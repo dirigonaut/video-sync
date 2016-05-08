@@ -69,6 +69,14 @@ VideoSingleton.prototype.setActiveMetaData = function(metaKey) {
   self.selectedMeta = metaKey;
 };
 
+VideoSingleton.prototype.play = function() {
+  self.videoElement.play();
+};
+
+VideoSingleton.prototype.pause = function() {
+  self.videoElement.pause();
+};
+
 VideoSingleton.prototype.onProgress = function(typeId) {
   var progress = function() {
     var selectedMedia = self.videoMetas.get(self.selectedMeta);

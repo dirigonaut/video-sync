@@ -1,17 +1,18 @@
 <html>
   <head>
-    <link rel="stylesheet" type="text/css" href="../css/jquery-ui-1.11.2.custom/jquery-ui.min.css">
+    <link rel="stylesheet" type="text/css" href="../resources/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../resources/video-js/video-js.css">
-    <link rel="stylesheet" type="text/css" href="../css/app.css">
+    <link rel="stylesheet" type="text/css" href="../css/gui.css">
 
-    <script type="text/javascript" src="../resources/bundle.js"></script>
-    <script type="text/javascript" src="../resources/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="../resources/jquery-1.9.1.min.js"></script>
     <script type="text/javascript" src="../resources/video-js/video.js"></script>
+    <script type="text/javascript" src="../resources/bundle.js"></script>
+    <script type="text/javascript" src="../resources/bootstrap/js/bootstrap.min.js"></script>
   </head>
   <body>
     <div id="media_container">
       <div id="video_container">
-        <video id="video" autoplay width="100%" height="100%" class="video-js" controls preload="auto"></video>
+        <video id="video" autoplay width="100%" height="100%" class="video-js" preload="auto"></video>
       </div>
       <div id="path_container">
       </div>
@@ -23,10 +24,17 @@
     <div id="messenger">
     </div>
     <script>
+      $(function(){
+        $("#control_container").load("menu/controls.html");
+        $.getScript("../resources/gui.js");
+      });
+
+      var client;
+
       window.onload = function() {
         window.URL = window.URL || window.webkitURL;
         window.MediaSource = window.MediaSource || window.WebKitMediaSource
-        var client = new Client(document.getElementById('video'), new MediaSource(), window, true);
+        client = new Client(document.getElementById('video'), new MediaSource(), window, true);
       };
     </script>
   </body>
