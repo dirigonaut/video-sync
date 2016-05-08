@@ -1,7 +1,7 @@
 var io = require('socket.io-client');
 
 var fileBuffer;
-var playerController;
+var mediaController;
 
 var serverUrl;
 var socket;
@@ -26,8 +26,8 @@ ClientSocket.sendRequest = function(event, request) {
 	socket.emit(event, request);
 };
 
-ClientSocket.prototype.initialize = function(pController, fBuffer) {
-	playerController = pController;
+ClientSocket.prototype.initialize = function(mController, fBuffer) {
+	mediaController = mController;
 	fileBuffer = fBuffer;
 }
 
@@ -61,6 +61,16 @@ function registerEvents() {
 
 	socket.on('segment-chunk', function(response){
 		console.log('segment-chunk');
-		playerController.bufferSegment(response);
+		mediaController.bufferSegment(response);
+	});
+
+	socket.on('state-play', function() {
+		console.log("state-play");
+		mediaController.getVideoSingleton().play();
+	});
+
+	socket.on('state-pause', function() {
+		console.log("state-pause");
+		mediaController.getVideoSingleton().pause();
 	});
 }

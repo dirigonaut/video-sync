@@ -13,6 +13,7 @@ var database		    = require('./utils/database/database_utils');
 var validate		    = require('./utils/input_validator');
 var authenticate    = require('./utils/authentication/authenticate');
 var VideoController = require('./video/VideoController');
+var StateController = require('./state/StateController');
 
 var app = null;
 var io;
@@ -92,21 +93,14 @@ function socket_setup () {
     };
     socket.auth = true;
 
-    new VideoController(socket, build_request, val_util);
+    new VideoController(socket, val_util);
+    new StateController(io, socket, val_util);
     socket.emit('connected');
 
     socket.on('auth-user', function (data) {
       console.log('auth-user');
       auth_util.auth_user(build_request(socket, val_util.check_user(data)));
     });
-
-    //State Events
-  	socket.on('state', function (data) {
-      if(socket.auth){
-        console.log('state');
-    		rules_engine.process_rules(build_request(socket, val_util.check_state(data)), player_manager);
-      }
-  	});
 
     //Database Events
   	socket.on('db-add-contact', function (data) {

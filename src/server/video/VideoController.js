@@ -3,7 +3,7 @@ var EncoderManager  = require('./encoding/EncoderManager');
 var WebmMetaData    = require('./meta/WebmMetaData');
 var Session         = require('../utils/Session');
 
-function VideoController(socket, build_request, val_util) {
+function VideoController(socket, val_util) {
   console.log("Attaching VideoController");
 
   socket.on('video-encode', function(data) {
@@ -26,12 +26,6 @@ function VideoController(socket, build_request, val_util) {
     });
 
     encoderManager.encode();
-  });
-
-  socket.on('video-meta', function(data) {
-    console.log('video-meta');
-    var meta = new WebmMetaData();
-    meta.generateMetaData(build_request(socket, val_util.check_video_info(data)));
   });
 
   socket.on('get-meta-files', function(requestId) {
