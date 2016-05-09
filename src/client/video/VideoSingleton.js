@@ -77,6 +77,10 @@ VideoSingleton.prototype.pause = function() {
   self.videoElement.pause();
 };
 
+VideoSingleton.prototype.mute = function(muted) {
+  self.videoElement.muted = muted;
+};
+
 VideoSingleton.prototype.onProgress = function(typeId) {
   var progress = function() {
     var selectedMedia = self.videoMetas.get(self.selectedMeta);

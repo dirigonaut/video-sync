@@ -7,6 +7,16 @@ $('#btnPlay').click(function(){
   }
 });
 
+$('#btnMute').click(function(){
+  if ($('#video')[0].muted) {
+    $('.glyphicon-volume-off').attr('class', 'glyphicon glyphicon-volume-up');
+    $("video").prop('muted', false);
+  } else {
+    $('.glyphicon-volume-up').attr('class', 'glyphicon glyphicon-volume-off');
+    $("video").prop('muted', true);
+  }
+});
+
 $("video").on("pause", function (e) {
   $('.glyphicon-pause').attr('class', 'glyphicon glyphicon-play');
 });
