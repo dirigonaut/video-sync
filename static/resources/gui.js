@@ -24,3 +24,7 @@ $("video").on("pause", function (e) {
 $("video").on("play", function (e) {
   $('.glyphicon-play').attr('class', 'glyphicon glyphicon-pause');
 });
+
+$("video").on("timeupdate", function (e) {
+  $('#seek-bar').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
+});
