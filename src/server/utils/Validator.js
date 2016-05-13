@@ -1,31 +1,31 @@
 var validator 		= require('validator');
-var	json_keys			= require('./json_keys');
+var	json_keys			= require('./JsonKeys');
 
-function input_validator(){
+function Validator(){
 	this.debug = true;
 };
 
-input_validator.prototype.check_state = function(input) {
+Validator.prototype.sterilizeState = function(input) {
 	var clean = {};
 
-	clean[json_keys.COMMAND] 		= this.check_command(input[json_keys.COMMAND]);
+	clean[json_keys.COMMAND] 		= this.sterilizeCommand(input[json_keys.COMMAND]);
 	clean[json_keys.TIMESTAMP] 	= validator.toFloat(input[json_keys.TIMESTAMP]);
 
-	this.log_data_cleaning(input, clean);
+	this.logDataCleaning(input, clean);
 	return clean;
 };
 
-input_validator.prototype.check_callback = function(input) {
+Validator.prototype.sterilizeCallback = function(input) {
 	var clean = {};
 
 	clean[json_keys.ID] 			= validator.toString(input[json_keys.ID]);
-	clean[json_keys.COMMAND] 	= this.check_command(input[json_keys.COMMAND]);
+	clean[json_keys.COMMAND] 	= this.sterilizeCommand(input[json_keys.COMMAND]);
 
-	this.log_data_cleaning(input, clean);
+	this.logDataCleaning(input, clean);
 	return clean;
 };
 
-input_validator.prototype.check_command = function(input) {
+Validator.prototype.sterilizeCommand = function(input) {
 	var command = validator.toString(input);
 
 	if(validator.equals(command, "play")){
@@ -39,66 +39,66 @@ input_validator.prototype.check_command = function(input) {
 	}
 };
 
-input_validator.prototype.check_smtp = function(input) {
+Validator.prototype.sterilizeSmtp = function(input) {
 	var clean = {};
 
 	clean[json_keys.SMTP_USER] = validator.toString(input[json_keys.SMTP_USER]);
 	clean[json_keys.SMTP_PASS] = validator.toString(input[json_keys.SMTP_PASS]);
 	clean[json_keys.SMTP_HOST] = validator.toString(input[json_keys.SMTP_HOST]);
 
-	this.log_data_cleaning(input, clean);
+	this.logDataCleaning(input, clean);
 	return clean;
 };
 
-input_validator.prototype.check_contact = function(input) {
+Validator.prototype.sterilizeContact = function(input) {
 	var clean = {};
 
 	clean[json_keys.EMAIL] 	= input[json_keys.EMAIL]; //TODO normalizing takes out periods find new way
 	clean[json_keys.HANDLE] = validator.toString(input[json_keys.HANDLE]);
 
-	this.log_data_cleaning(input, clean);
+	this.logDataCleaning(input, clean);
 	return clean;
 };
 
-input_validator.prototype.check_email = function(input) {
+Validator.prototype.sterilizeEmail = function(input) {
 	var clean = {};
 	var recipients = new Array();
 
 	for (var key in input[json_keys.RECIPIENTS]){
-		recipients[key] = (this.check_contact(input[json_keys.RECIPIENTS][key]));
+		recipients[key] = (this.sterilize_contact(input[json_keys.RECIPIENTS][key]));
 	}
 
 	clean[json_keys.SUBJECT] 		= validator.toString(input[json_keys.SUBJECT]);
 	clean[json_keys.MESSAGE] 		= validator.toString(input[json_keys.MESSAGE]);
 	clean[json_keys.RECIPIENTS] = recipients;
 
-	this.log_data_cleaning(input, clean);
+	this.logDataCleaning(input, clean);
 	return clean;
 };
 
-input_validator.prototype.check_user = function(input) {
+Validator.prototype.sterilizeUser = function(input) {
 	var clean = {};
 
 	clean[json_keys.EMAIL] 	= input[json_keys.EMAIL]; //TODO normalizing takes out periods find new way
 	clean[json_keys.TOKEN] 	= validator.toString(input[json_keys.TOKEN]);
 
-	this.log_data_cleaning(input, clean);
+	this.logDataCleaning(input, clean);
 	return clean;
 };
 
-input_validator.prototype.check_config = function(input) {
+Validator.prototype.sterilizeConfig = function(input) {
 };
 
-input_validator.prototype.log_data_cleaning = function(dirty_data, dirty_data){
+Validator.prototype.logDataCleaning = function(dirty_data, dirty_data){
 	if(this.debug){
 		console.log("dirty: ", dirty_data, "clean: ", dirty_data);
 	}
 };
 
-input_validator.prototype.check_video_info = function(input){
+Validator.prototype.sterilizeVideoInfo = function(input){
 	console.log(input);
 	return input;
 };
 
 
-module.exports = input_validator;
+module.exports = Validator;

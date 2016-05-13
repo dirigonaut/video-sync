@@ -1,4 +1,4 @@
-var player = require('./player');
+var player = require('./Player');
 
 var players = new Map();
 

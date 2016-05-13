@@ -1,47 +1,33 @@
-var http 			      = require('http')
-var socket_io	      = require('socket.io');
-var path            = require('path');
-var static          = require('node-static');
+var http 			         = require('http')
+var socketIO	         = require('socket.io');
 
+var FileHandler        = require('./utils/FileHandler');
 var Bundler 		       = require('./utils/Bundler');
 var Validator		       = require('./utils/Validator');
-var Authenticate       = require('./utils/authentication/Authenticate');
+var Authenticator      = require('./authentication/Authenticator');
 
 var VideoController    = require('./video/VideoController');
 var StateController    = require('./state/StateController');
-var DatabaseController = require('./utils/database/DatabaseController');
+var SmtpController     = require('./smtp/SmtpController');
+var DatabaseController = require('./database/DatabaseController');
 
-var app = null;
-var io;
-
-var val_util;
-var auth_util;
-
+var app   = null;
+var io    = null;
 var admin = null;
 
-function handler (req, res) {
-  console.log(req);
-  req.addListener('end', function() {
-    file_server.serve( req, res );
-  }).resume();
-}
+var validator;
+var authenticator;
 
 function Server(callback) {
   if(app == null){
-    file_server = new static.Server('',{
-        cache: 0,
-        gzip: true
-    });
-
     new Bundler();
 
-    app             = new http.createServer(handler);
-    io              = new socket_io(app);
+    fileHandler     = new FileHandler();
+    app             = new http.createServer(fileHandler.handler());
+    io              = new socketIO(app);
 
-
-
-    val_util		    = new validate();
-    auth_util       = new authenticate();
+    validator		    = new Validator();
+    authenticator   = new Authenticator();
     admin           = null;
 
     app.listen(8080);
@@ -59,20 +45,25 @@ function initialize () {
       if(socket.handshake.address == "::ffff:127.0.0.1" && admin == null){
         socket.auth = true;
         admin = socket;
+
+        new VideoController(io, socket);
+        new StateController(io, socket);
+        new SmtpController(io, socket);
+        new DatabaseController(io, socket);
       } else {
         socket.auth = false;
       }
     };
     socket.auth = true;
 
-    new VideoController(socket, val_util);
-    new StateController(io, socket, val_util);
-    new DatabaseController(io, socket, val_util);
-    socket.emit('connected');
+    new VideoController(io, socket);
+    new StateController(io, socket);
+    new SmtpController(io, socket);
+    new DatabaseController(io, socket);
 
     socket.on('auth-user', function (data) {
       console.log('auth-user');
-      auth_util.auth_user(socket, val_util.check_user(dat)));
+      authorizor.authorizeUser(socket, validator.sterilizeUser(data));
     });
 
     socket.on('error', function (data) {

@@ -2,8 +2,15 @@ var VideoStream     = require('./VideoStream');
 var EncoderManager  = require('./encoding/EncoderManager');
 var WebmMetaData    = require('./meta/WebmMetaData');
 var Session         = require('../utils/Session');
+var Validator       = require('../utils/Validator');
 
-function VideoController(socket, val_util) {
+var validator       = new Validator();
+
+function VideoController(io, socket) {
+  initialize(io, socket);
+}
+
+function initialize(io, socket) {
   console.log("Attaching VideoController");
 
   socket.on('video-encode', function(data) {
@@ -18,7 +25,7 @@ function VideoController(socket, val_util) {
       meta.generateMetaData(path);
     };
 
-    var encoderManager = new EncoderManager(val_util.check_video_info(data));
+    var encoderManager = new EncoderManager(validator.sterilizeVideoInfo(data));
     encoderManager.on('webm', function(path) {
       genWebmMeta(path);
     }).on('finished', function(path) {
@@ -36,7 +43,7 @@ function VideoController(socket, val_util) {
       var header = new Object();
       header.type = file.type;
 
-      socket.emit("file-register-response", {requestId: requestId, header: header}, function(bufferId) {
+      socket.emit("file-register-response", {requestId: validator.sterilizeVideoInfo(requestId), header: header}, function(bufferId) {
         var readConfig = VideoStream.streamConfig(file.path, function(data) {
           socket.emit("file-segment", {bufferId: bufferId, data: data});
         });
@@ -54,7 +61,7 @@ function VideoController(socket, val_util) {
 
   socket.on('get-segment', function(data) {
     console.log('get-segment');
-    var data = val_util.check_video_info(data);
+    var data = validator.sterilizeVideoInfo(data);
     var typeId = data.typeId;
 
     var readConfig = VideoStream.streamConfig(data.path, function(data) {
