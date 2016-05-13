@@ -8,13 +8,13 @@ var server 			= null;
 var smtp_creds	= null;
 var instance 		= null;
 
-function smtp_service(){
+function Smtp(){
 	if(instance == null){
 		instance = this;
 	}
 };
 
-smtp_service.prototype.initialize = function(request) {
+Smtp.prototype.initialize = function(request) {
 	console.log("Initializing...");
 	if(instance.smtp_creds == null || !smtp_creds.user.localeCompare(request.data[json_keys.SMTP_USER])){
 		console.log("Get smtp creds");
@@ -23,14 +23,14 @@ smtp_service.prototype.initialize = function(request) {
 	}
 };
 
-smtp_service.prototype.set_smtp = function(request, results){
+Smtp.prototype.set_smtp = function(request, results){
 	smtp = results[0];
 	console.log("Set smtp creds: ");
 	console.log(smtp);
 	instance.start_server(request);
 };
 
-smtp_service.prototype.start_server = function(request){
+Smtp.prototype.start_server = function(request){
 	console.log("Initiating email creds.");
 
 	if(instance.server == null){
@@ -54,7 +54,7 @@ smtp_service.prototype.start_server = function(request){
 	}
 };
 
-smtp_service.prototype.build_and_send_invitations = function(request){
+Smtp.prototype.build_and_send_invitations = function(request){
 	var message = request.data;
 	//TODO add server url to message
 	this.send_email(message);
@@ -64,12 +64,12 @@ smtp_service.prototype.build_and_send_invitations = function(request){
 };
 
 //TODO clean up to use request wrapper
-smtp_service.prototype.build_and_send_auth_message = function(auth_token, recipient){
+Smtp.prototype.build_and_send_auth_message = function(auth_token, recipient){
 	var auth_message = {"subject" : "authentication token", "message" : "Here is your token: " + auth_token, "recipients" : recipient }
 	this.send_email(auth_message);
 };
 
-smtp_service.prototype.send_email = function(data){
+Smtp.prototype.send_email = function(data){
 	console.log("Building messages to send.");
 	if(server != null && data != null){
 		for (var key in data[json_keys.RECIPIENTS]) {
@@ -87,4 +87,4 @@ smtp_service.prototype.send_email = function(data){
 	}
 };
 
-module.exports = smtp_service;
+module.exports = Smtp;

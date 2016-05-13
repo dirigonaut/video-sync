@@ -1,6 +1,13 @@
-//var VideoStream     = require('./VideoStream');
+var PlayerManager = require('./player/PlayerManager');
+
+var playerManager = new PlayerManager();
 
 function StateController(io, socket, val_util) {
+
+  initialize(io, socket);
+}
+
+function initialize(io, socket) {
   console.log("Attaching StateController");
 
   socket.on('state-req-play', function(data) {

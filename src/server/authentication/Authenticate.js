@@ -1,8 +1,8 @@
-var db_utils        = require('../database/database_utils');
+var NeDatabase      = require('../database/NeDatabase');
 var s_service       = require('../smtp_service/smtp_service');
 var p_manager       = require('../../state/player/player_manager');
 
-var db 			        = new db_utils();
+var database			  = new NeDatabase();
 var smtp            = new s_service();
 var player_manager	= new p_manager();
 
