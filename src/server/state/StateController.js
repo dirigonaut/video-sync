@@ -1,9 +1,10 @@
 var PlayerManager = require('./player/PlayerManager');
+var Validator     = require('../utils/Validator');
 
 var playerManager = new PlayerManager();
+var validator     = new Validator();
 
-function StateController(io, socket, val_util) {
-
+function StateController(io, socket) {
   initialize(io, socket);
 }
 

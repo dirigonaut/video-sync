@@ -1,6 +1,6 @@
 var email   		= require("emailjs");
-var db_utils 		= require("../database/database_utils");
-var	json_keys		= require('../json_keys');
+var db_utils 		= require("../database/NeDatabase");
+var	json_keys		= require('../utils/JsonKeys');
 
 var db 					= new db_utils();
 

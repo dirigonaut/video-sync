@@ -12,6 +12,10 @@ var b = browserify({
 
 function Bundler() {
   b.on('update', bundle);
+  bundle();
+}
+
+function bundle() {
   b.bundle().pipe(fs.createWriteStream('static/resources/bundle.js'));
 }
 
