@@ -1,5 +1,5 @@
 node_modules/
 static/media
 static/data
-database
+data/
 static/resources/bundle.js

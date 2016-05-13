@@ -1,4 +1,4 @@
-function player(socket){
+function Player(socket){
     this.id 		    = socket.id;
     this.socket	  	= socket;
     this.status 	  = "NONE";
@@ -6,4 +6,4 @@ function player(socket){
     this.stream     = null;
 };
 
-module.exports = player;
+module.exports = Player;
