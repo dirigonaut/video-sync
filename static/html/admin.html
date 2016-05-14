@@ -41,14 +41,14 @@
         window.URL = window.URL || window.webkitURL;
         window.MediaSource = window.MediaSource || window.WebKitMediaSource;
 
-        var Server = require('../../src/server/server.js');
-        var Client = require('../../src/client/client.js');
+        var Server = require('../../src/server/Server.js');
+        var Client = require('../../src/client/Client.js');
 
-        var start_client = function() {
+        var startClient = function() {
           client = new Client(document.getElementById('video'), new MediaSource(), window, false);
         }
 
-        server = new Server(start_client);
+        server = new Server(startClient);
       };
     </script>
   </body>
