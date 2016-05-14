@@ -9,6 +9,7 @@ var input = "/static/media/";
 var output = "/static/media/bunny/";
 
 function Client(video, mediaSource, window, flag) {
+  console.log("Client");
   var fileBuffer = new FileBuffer();
   var mediaController = new MediaController(fileBuffer);
 
