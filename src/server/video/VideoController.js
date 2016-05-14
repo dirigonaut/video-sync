@@ -5,6 +5,7 @@ var Session         = require('../utils/Session');
 var Validator       = require('../utils/Validator');
 
 var validator       = new Validator();
+var session         = new Session();
 
 function VideoController(io, socket) {
   initialize(io, socket);
@@ -37,14 +38,13 @@ function initialize(io, socket) {
 
   socket.on('get-meta-files', function(requestId) {
     console.log('get-meta-files');
-    var session = new Session("./static/media/bunny/");
 
-    var readConfig = VideoStream.streamConfig(session.getDetails().baseDir, function(file){
+    var readConfig = VideoStream.createStreamConfig(session.getMediaPath(), function(file){
       var header = new Object();
       header.type = file.type;
 
       socket.emit("file-register-response", {requestId: validator.sterilizeVideoInfo(requestId), header: header}, function(bufferId) {
-        var readConfig = VideoStream.streamConfig(file.path, function(data) {
+        var readConfig = VideoStream.createStreamConfig(file.path, function(data) {
           socket.emit("file-segment", {bufferId: bufferId, data: data});
         });
 
@@ -64,7 +64,7 @@ function initialize(io, socket) {
     var data = validator.sterilizeVideoInfo(data);
     var typeId = data.typeId;
 
-    var readConfig = VideoStream.streamConfig(data.path, function(data) {
+    var readConfig = VideoStream.createStreamConfig(data.path, function(data) {
       var segment = new Object();
       segment.typeId = typeId;
       segment.data = data;

@@ -47,7 +47,7 @@ function WebmMetaData() {
     for(var i in segments) {
       var metaRequest = new Object();
       console.log(dirPath + segments[i].baseUrl);
-      var readConfig = VideoStream.streamConfig(dirPath + segments[i].baseUrl, self._parseEBML)
+      var readConfig = VideoStream.createStreamConfig(dirPath + segments[i].baseUrl, self._parseEBML)
 
       metaRequest.manifest = new Manifest(readConfig.path, segments[i].initRange.split('-'));
       metaRequest.readConfig = readConfig;
@@ -93,7 +93,7 @@ function WebmMetaData() {
       metaData.push(Manifest.flattenManifest(metaRequests[i].manifest));
     }
 
-    var writeConfig = VideoStream.streamConfig(dirPath + "webmMeta.json", null, function() {
+    var writeConfig = VideoStream.createStreamConfig(dirPath + "webmMeta.json", null, function() {
         self.emit('finished');
     });
 
@@ -109,7 +109,7 @@ function WebmMetaData() {
     console.log("WebmMetaData.generateMetaData");
     var buffer = [];
 
-    var readConfig = VideoStream.streamConfig(path, function(data) {
+    var readConfig = VideoStream.createStreamConfig(path, function(data) {
         buffer.push(data);
     });
 

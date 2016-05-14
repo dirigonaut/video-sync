@@ -108,7 +108,7 @@ VideoStream.readDir = function(readConfig) {
   });
 };
 
-VideoStream.streamConfig = function(path, callback) {
+VideoStream.createStreamConfig = function(path, callback) {
   console.log('VideoStream.streamConfig');
   var streamConfig = new Object();
   streamConfig.path = path;
