@@ -1,33 +1,37 @@
-var email   		= require("emailjs");
-var db_utils 		= require("../database/NeDatabase");
-var	json_keys		= require('../utils/JsonKeys');
+var NodeMailer	= require("nodemailer");
+var NeDatabase	= require("../database/NeDatabase");
+var	JsonKeys		= require('../utils/JsonKeys');
 
-var db 					= new db_utils();
-
-var server 			= null;
-var smtp_creds	= null;
-var instance 		= null;
+var database 		= new NeDatabase();
 
 function Smtp(){
-	if(instance == null){
-		instance = this;
-	}
+
 };
 
-Smtp.prototype.initialize = function(request) {
-	console.log("Initializing...");
-	if(instance.smtp_creds == null || !smtp_creds.user.localeCompare(request.data[json_keys.SMTP_USER])){
-		console.log("Get smtp creds");
-		instance.server = null;
-		db.get_smtp(request, instance.set_smtp);
+Smtp.prototype.initialize = function(data) {
+
+	var loadOptions = function() {
+
 	}
+
+	database.loadSmtp(data, loadOptions);
 };
 
-Smtp.prototype.set_smtp = function(request, results){
-	smtp = results[0];
-	console.log("Set smtp creds: ");
-	console.log(smtp);
-	instance.start_server(request);
+Smtp.prototype.sendInvitations = function() {
+
+	var sendSmtp = function(emailJson) {
+
+	}
+
+	session
+};
+
+Smtp.prototype.sendToken = function() {
+
+};
+
+Smtp.prototype.close = function() {
+
 };
 
 Smtp.prototype.start_server = function(request){
