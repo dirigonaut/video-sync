@@ -8,6 +8,12 @@ function StateController(io, socket) {
   initialize(io, socket);
 }
 
+StateController.prototype.getPlayerManager = function() {
+  return playerManager;
+};
+
+module.exports = StateController;
+
 function initialize(io, socket) {
   console.log("Attaching StateController");
 
@@ -21,5 +27,3 @@ function initialize(io, socket) {
     io.emit('state-pause');
   });
 }
-
-module.exports = StateController;

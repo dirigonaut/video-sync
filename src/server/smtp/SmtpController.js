@@ -1,8 +1,10 @@
 var Smtp      = require('./Smtp');
+var Session   = require('../utils/Session');
 var Validator = require('../utils/Validator');
 
 var smtp      = new Smtp();
 var validator = new Validator();
+var session   = new Session();
 
 function SmtpController(io, socket) {
   initialize(io, socket);
@@ -11,18 +13,15 @@ function SmtpController(io, socket) {
 function initialize(io, socket) {
   console.log("Attaching SmtpController");
 
-  //Smtp Events
-  socket.on('smtp-init', function (data) {
-    if(socket.auth){
-      console.log('smtp-init-creds');
-      smtp.initialize(validator.sterilizeSmtp(data));
-    }
-  });
-
-  socket.on('smtp-invite', function (data) {
-    if(socket.auth){
+  socket.on('smtp-invite', function() {
+    if(session.isAdmin(socket.id) && session.getActiveSession() != null){
       console.log('smtp-invite');
-      smtp.build_and_send_invitations(validator.sterilizeEmail(data));
+
+      var sendInvitations = function(address) {
+        smtp.sendMail(session.getActiveSession().mailOptions);
+      };
+
+      smtp.initializeTransport(session.getActiveSession().smtp, sendInvitations);
     }
   });
 }

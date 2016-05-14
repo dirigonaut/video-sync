@@ -1,94 +1,79 @@
 var NodeMailer	= require("nodemailer");
 var NeDatabase	= require("../database/NeDatabase");
-var	JsonKeys		= require('../utils/JsonKeys');
 
-var database 		= new NeDatabase();
+var database 			= new NeDatabase();
+var smtpTransport = null;
 
 function Smtp(){
 
 };
 
-Smtp.prototype.initialize = function(data) {
+Smtp.prototype.initializeTransport = function(address, callback) {
+	console.log("Smtp.initializeTransport");
+	if(!isTransportInitialized() || address != smtpTransport.auth.user) {
+		this.closeTrasporter();
 
-	var loadOptions = function() {
+		var loadSmtpOptions = function(data) {
+			if(data.type == "SMTP") {
+				smtpTransport = nodemailer.createTransport("SMTP",{
+						service: data.service,
+						auth: {
+								user: data.address,
+								pass: data.pass
+						}
+				});
+			} else {
+				smtpTransport = nodemailer.createTransport("direct", {
+					debug: true
+				});
+			}
 
-	}
-
-	database.loadSmtp(data, loadOptions);
-};
-
-Smtp.prototype.sendInvitations = function() {
-
-	var sendSmtp = function(emailJson) {
-
-	}
-
-	session
-};
-
-Smtp.prototype.sendToken = function() {
-
-};
-
-Smtp.prototype.close = function() {
-
-};
-
-Smtp.prototype.start_server = function(request){
-	console.log("Initiating email creds.");
-
-	if(instance.server == null){
-		if(true){
-			server = 		email.server.connect({
-				user:			smtp[json_keys.SMTP_USER],
-				password:	smtp[json_keys.SMTP_PASS],
-				host:			smtp[json_keys.SMTP_HOST],
-				ssl:			true
-			});
-		} else {
-			server = 		email.server.connect({
-				user:			smtp[json_keys.SMTP_USER],
-				password:	smtp[json_keys.SMTP_PASS],
-				host:			smtp[json_keys.SMTP_HOST],
-				tls: 			{ciphers: "SSLv3"}
-			});
+			callback(data.address);
 		}
-		console.log("Email cred setup complete");
-		request.socket.emit("smtp-initialized", null);
+
+		database.readSmtp(address, loadSmtpOptions);
 	}
+	callback();
 };
 
-Smtp.prototype.build_and_send_invitations = function(request){
-	var message = request.data;
-	//TODO add server url to message
-	this.send_email(message);
-	var invitee_list = {"invitees" : request.data[json_keys.RECIPIENTS]};
-	request.data = invitee_list;
-	db.add_entry(request);
+Smtp.prototype.createMailOptions = function(from, to, subject, text, html) {
+	console.log("Smtp.createMailOptions");
+	var mailOptions 		= new Object();
+
+	mailOptions.from 		= from;
+	mailOptions.to 			= to;
+	mailOptions.subject	= subject;
+	mailOptions.text 		= text;
+	mailOptions.html 		= html;
+
+	return mailOptions;
 };
 
-//TODO clean up to use request wrapper
-Smtp.prototype.build_and_send_auth_message = function(auth_token, recipient){
-	var auth_message = {"subject" : "authentication token", "message" : "Here is your token: " + auth_token, "recipients" : recipient }
-	this.send_email(auth_message);
+Smtp.prototype.sendMail = function(mailOptions) {
+	console.log("Smtp.sendMail");
+	if(isTransportInitialized()) {
+		smtpTransport.sendMail(mailOptions, function(error, response) {
+		    if(error) {
+		        console.log(error);
+		    } else {
+		    		console.log("Message sent: " + response.message);
+		    }
+		});
+		return true;
+	}
+	return false;
 };
 
-Smtp.prototype.send_email = function(data){
-	console.log("Building messages to send.");
-	if(server != null && data != null){
-		for (var key in data[json_keys.RECIPIENTS]) {
-			var email = {
-				from: 		smtp[json_keys.SMTP_USER],
-				to:				data[json_keys.RECIPIENTS][key][json_keys.EMAIL],
-				subject: 	data[json_keys.SUBJECT],
-				text: 		data[json_keys.MESSAGE]
-			};
-
-			console.log("Sending message");
-
-			server.send(email, function(err, response) { console.log(err, response); });
-		}
+Smtp.prototype.closeTrasporter = function() {
+	if(isTransportInitialized()) {
+		console.log("Smtp.closeTrasporter");
+		smtpTransport.close();
+		smtpTransport = null;
 	}
 };
 
 module.exports = Smtp;
+
+var isTransportInitialized = function() {
+	return smtpTransport != null;
+}

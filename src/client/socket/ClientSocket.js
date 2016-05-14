@@ -12,9 +12,15 @@ function ClientSocket(callback, flag) {
 	} else {
 		serverUrl = "http://localhost:8080";
 	}
+	
 	console.log(serverUrl);
 	socket = io.connect(serverUrl, {'force new connection': true});
+
 	socket.on('connected', function() {
+		//Logic for pop up menu to get log in creds.
+	});
+
+	socket.on('authenticated', function() {
 		registerEvents();
 		callback();
 	});
