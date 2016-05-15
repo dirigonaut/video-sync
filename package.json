@@ -17,7 +17,7 @@
     "browserify": "^13.0.0",
     "ebml": "^2.1.0",
     "loglevel": "^1.4.0",
-    "nedb": "^1.1.1",
+    "nedb": "^1.8.0",
     "node-static": "^0.7.6",
     "nodemailer": "^2.4.1",
     "nw": "^0.12.2",

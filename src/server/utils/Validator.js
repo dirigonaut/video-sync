@@ -53,7 +53,7 @@ Validator.prototype.sterilizeSmtp = function(input) {
 Validator.prototype.sterilizeContact = function(input) {
 	var clean = {};
 
-	clean[json_keys.EMAIL] 	= input[json_keys.EMAIL]; //TODO normalizing takes out periods find new way
+	clean[json_keys.ADDRESS] 	= input[json_keys.ADDRESS]; //TODO normalizing takes out periods find new way
 	clean[json_keys.HANDLE] = validator.toString(input[json_keys.HANDLE]);
 
 	this.logDataCleaning(input, clean);
@@ -79,7 +79,7 @@ Validator.prototype.sterilizeEmail = function(input) {
 Validator.prototype.sterilizeUser = function(input) {
 	var clean = {};
 
-	clean[json_keys.EMAIL] 	= input[json_keys.EMAIL]; //TODO normalizing takes out periods find new way
+	clean[json_keys.ADDRESS] 	= input[json_keys.ADDRESS]; //TODO normalizing takes out periods find new way
 	clean[json_keys.TOKEN] 	= validator.toString(input[json_keys.TOKEN]);
 
 	this.logDataCleaning(input, clean);

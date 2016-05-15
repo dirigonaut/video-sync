@@ -74,7 +74,7 @@ function SourceBuffer(enum_type, video){
   var requestVideoData = function(requestDetails) {
     log.info('SourceBuffer.requestVideoData');
     ClientSocket.sendRequest("get-segment",
-      RequestFactory.buildVideoSegmentRequest(self.type, requestDetails[0], requestDetails[1]));
+      new RequestFactory().buildVideoSegmentRequest(self.type, requestDetails[0], requestDetails[1]));
   };
 
   var isTimeRangeBuffered = function(timestamp) {

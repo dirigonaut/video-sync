@@ -6,7 +6,6 @@ RequestFactory.prototype.buildVideoSegmentRequest = function(typeId, path, segme
 	request.typeId	= typeId;
   request.path		= path;
   request.segment	= segment;
-
   return request;
 };
 
@@ -24,17 +23,17 @@ RequestFactory.prototype.buildPlayRequest = function() {
 	return request;
 };
 
-RequestFactory.prototype.buildCreateSmtpRequest = function(type, host, address, password) {
+RequestFactory.prototype.builSmtpRequest = function(type, host, address, password) {
 	console.log("RequestFactory.buildCreateContactRequest");
 	var request	= new Object();
-	request.type			= handle;
+	request.type			= type;
 	request.host			= host;
 	request.address		= address;
 	request.password	= password;
 	return request;
 };
 
-RequestFactory.prototype.buildCreateContactRequest = function(handle, address) {
+RequestFactory.prototype.buildContactRequest = function(handle, address) {
 	console.log("RequestFactory.buildCreateContactRequest");
 	var request = new Object();
 	request.handle	= handle;
@@ -42,7 +41,7 @@ RequestFactory.prototype.buildCreateContactRequest = function(handle, address) {
 	return request;
 };
 
-RequestFactory.prototype.buildCreateSessionRequest = function(title, smtp, invitees, mailOptions) {
+RequestFactory.prototype.buildSessionRequest = function(title, smtp, invitees, mailOptions) {
 	console.log("RequestFactory.buildCreateSessionRequest");
 	var request = new Object();
 	request.title        = title;
@@ -60,34 +59,6 @@ RequestFactory.prototype.buildMailOptionsRequest = function(from, to, subject, t
 	request.subject	= subject;
 	request.text 		= text;
 	request.html 		= html;
-	return request;
-};
-
-RequestFactory.prototype.buildCreateSmtpRequest = function(type, host, address, password) {
-	console.log("RequestFactory.buildCreateContactRequest");
-	var request	= new Object();
-	request.type			= handle;
-	request.host			= host;
-	request.address		= address;
-	request.password	= password;
-	return request;
-};
-
-RequestFactory.prototype.buildCreateContactRequest = function(handle, address) {
-	console.log("RequestFactory.buildCreateContactRequest");
-	var request = new Object();
-	request.handle	= handle;
-	request.address	= address;
-	return request;
-};
-
-RequestFactory.prototype.buildCreateSessionRequest = function(title, smtp, invitees, mailOptions) {
-	console.log("RequestFactory.buildCreateSessionRequest");
-	var request = new Object();
-	request.title        = title;
-  request.smtp         = smtp;
-  request.invitees     = invitees;
-  request.mailOptions  = mailOptions;
 	return request;
 };
 
