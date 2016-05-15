@@ -29,6 +29,12 @@ $("video").on("timeupdate", function (e) {
   $('#seek-bar').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
 });
 
+//Location Events --------------------------------------------------------------
+$('#btnSessionMedia').click(function() {
+    var media = $('#locationBar').val();
+    client.getClientSocket().sendRequest("admin-set-media", media);
+});
+
 //Session Events --------------------------------------------------------------
 $('#createSession').click(function createSession() {
   var from    = $('#sessionAddress').val();
@@ -60,7 +66,7 @@ $('#createContact').click(function createContact() {
     client.getRequestFactory().buildContactRequest(handle, address));
 });
 
-$('#createSmtp').click(function() {
+$('#createSmtp').click(function createSmtp() {
   var type      = $('#smtpType').val();
   var host      = $('#smtpHost').val();
   var address   = $('#smtpAddress').val();
@@ -70,16 +76,30 @@ $('#createSmtp').click(function() {
     client.getRequestFactory().buildSmtpRequest(type, host, address, password));
 });
 
-$('#readContacts').click(function() {
+$('#readContacts').click(function readContacts() {
   client.getClientSocket().sendRequest("db-read-contacts");
 });
 
-$('#readSmtps').click(function() {
+$('#readSmtps').click(function readSmtps() {
   client.getClientSocket().sendRequest("db-read-smtps");
 });
 
 //Encode Events ---------------------------------------------------------------
+$('#createEncoding').click(function createEncoding() {
+  var input     = $('#encodeInput').val();
+  var output    = $('#encodeOutput').val();
+  var vQuality  = $('#encodeVideoQuality').val();
+  var aQuality  = $('#encodeAudioQuality').val();
 
+  var commands = [];
+  var factory = client.getCommandFactory();
+
+  commands.push(factory.build_ffmpeg_request(input , output, vQuality, "1"));
+  commands.push(factory.build_ffmpeg_request(input, output, aQuality, "2"));
+  commands.push(factory.get_ffmpeg_manifest_command(commands, output + "bunny.mpd"));
+
+  client.getClientSocket().sendRequest('video-encode', commands);
+});
 
 //Side Events -----------------------------------------------------------------
 $('#btnSession').click(function() {

@@ -23,13 +23,13 @@ RequestFactory.prototype.buildPlayRequest = function() {
 	return request;
 };
 
-RequestFactory.prototype.builSmtpRequest = function(type, host, address, password) {
+RequestFactory.prototype.buildSmtpRequest = function(type, host, address, password) {
 	console.log("RequestFactory.buildCreateContactRequest");
 	var request	= new Object();
-	request.type			= type;
-	request.host			= host;
-	request.address		= address;
-	request.password	= password;
+	request.smtpType			= type;
+	request.smtpHost			= host;
+	request.smtpAddress		= address;
+	request.smtpPassword	= password;
 	return request;
 };
 

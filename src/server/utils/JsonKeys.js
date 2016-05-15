@@ -5,9 +5,11 @@ const json_keys = {
 	"ID" 					: "id",
 
 	//Smtp setup messages constants
-	"SMTP_USER"		: "smtp_user",
-	"SMTP_PASS"		: "smtp_pass",
-	"SMTP_HOST"		: "smtp_host",
+	"SMTP_TYPE"				: "smtpType",
+	"SMTP_HOST"				: "smtpHost",
+	"SMTP_ADDRESS"		: "smtpAddress",
+	"SMTP_PASSWORD"		: "smtpPassword",
+
 
 	//Contact message constants
 	"ADDRESS"			: "address",
@@ -20,7 +22,7 @@ const json_keys = {
 
 	//Authentication constants
 	"INVITEES"		: "invitees",
-	"TOKEN"				: "token",
+	"TOKEN"				: "token"
 };
 
 module.exports = json_keys;

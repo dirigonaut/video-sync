@@ -12,7 +12,6 @@ function Manifest(path, init) {
 }
 
 Manifest.cluster = function() {
-  console.log('Manifest.cluster');
   var cluster = new Object();
   cluster.start = null;
   cluster.end = null;
@@ -22,7 +21,6 @@ Manifest.cluster = function() {
 };
 
 Manifest.addCluster = function(manifest, cluster) {
-  console.log('Manifest.addCluster');
   var linkedCluster = new LinkedCluster();
   linkedCluster.cluster = cluster;
 
@@ -38,7 +36,6 @@ Manifest.addCluster = function(manifest, cluster) {
 };
 
 Manifest.getCluster = function(manifest, position) {
-  console.log('Manifest.getCluster');
   var cluster = null;
 
   for(var pointer = manifest.linkedClusters.next; pointer; pointer = pointer.next) {
