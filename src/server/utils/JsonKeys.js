@@ -10,7 +10,7 @@ const json_keys = {
 	"SMTP_HOST"		: "smtp_host",
 
 	//Contact message constants
-	"EMAIL"				: "email",
+	"ADDRESS"			: "address",
 	"HANDLE"			: "handle",
 
 	//Email message constants

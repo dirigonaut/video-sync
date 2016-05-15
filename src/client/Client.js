@@ -33,7 +33,7 @@ Client.prototype.getClientSocket = function() {
 }
 
 Client.prototype.getRequestFactory = function() {
-  return RequestFactory;
+  return new RequestFactory();
 }
 
 Client.prototype.getCommandFactory = function() {

@@ -11,31 +11,39 @@
   </head>
   <body>
     <div id="media_container" class="media">
-      <div id="location_container" class="location">
-      </div>
-      <div id="side_container" class="side">
-      </div>
       <div id="video_container" class= "video">
+        <div id="location_container" class="location">
+        </div>
         <video id="video" class="video_element"></video>
+        <div id="side_container" class="side">
+        </div>
+        <div id="control_container" class="controls">
+        </div>
       </div>
-      <div id="control_container" class="control">
+      <div id="messenger" class="messenger">
+        <div id="sessionOverlay"></div>
+        <div id="smtpOverlay"></div>
+        <div id="encodeOverlay"></div>
       </div>
-    </div>
-    <div id="messenger">
     </div>
     <script type="text/javascript" src="../resources/jquery-1.9.1.min.js"></script>
     <script type="text/javascript" src="../resources/video-js/video.js"></script>
     <script type="text/javascript" src="../resources/bootstrap/js/bootstrap.min.js"></script>
     <script>
-      $(function(){
+    var client = null;
+    var server = null;
+
+      var loadGui = function(){
         $("#control_container").load("menu/controls.html");
         $("#location_container").load("menu/location.html");
         $("#side_container").load("menu/side.html");
-        $.getScript("../resources/gui.js");
-      });
 
-      var client = null;
-      var server = null;
+        $("#sessionOverlay").load("menu/overlays/session.html");
+        $("#smtpOverlay").load("menu/overlays/smtp.html");
+        $("#encodeOverlay").load("menu/overlays/encode.html");
+
+        $.getScript("../resources/gui.js");
+      }
 
       window.onload = function() {
         window.URL = window.URL || window.webkitURL;
@@ -46,6 +54,7 @@
 
         var startClient = function() {
           client = new Client(document.getElementById('video'), new MediaSource(), window, false);
+          loadGui();
         }
 
         server = new Server(startClient);

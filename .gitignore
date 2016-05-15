@@ -1,5 +1,4 @@
 node_modules/
 static/media
-static/data
-data/
+database_inst
 static/resources/bundle.js
