@@ -24,7 +24,7 @@ var authenticator;
 
 function Server(callback) {
   if(app == null){
-    ns  = new NodeStatic.Server('', {cache: 0, gzip: true});
+    ns  = new NodeStatic.Server('./static/', {cache: 0, gzip: true});
     app = new Http.createServer(handler);
     io  = new SocketIO(app);
 

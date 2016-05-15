@@ -42,9 +42,10 @@ Validator.prototype.sterilizeCommand = function(input) {
 Validator.prototype.sterilizeSmtp = function(input) {
 	var clean = {};
 
-	clean[json_keys.SMTP_USER] = validator.toString(input[json_keys.SMTP_USER]);
-	clean[json_keys.SMTP_PASS] = validator.toString(input[json_keys.SMTP_PASS]);
-	clean[json_keys.SMTP_HOST] = validator.toString(input[json_keys.SMTP_HOST]);
+	clean[json_keys.SMTP_TYPE]			= validator.toString(input[json_keys.SMTP_TYPE]);
+	clean[json_keys.SMTP_HOST]			= validator.toString(input[json_keys.SMTP_HOST]);
+	clean[json_keys.SMTP_ADDRESS]		= validator.toString(input[json_keys.SMTP_ADDRESS]);
+	clean[json_keys.SMTP_PASSWORD]	= validator.toString(input[json_keys.SMTP_PASSWORD]);
 
 	this.logDataCleaning(input, clean);
 	return clean;
@@ -60,20 +61,13 @@ Validator.prototype.sterilizeContact = function(input) {
 	return clean;
 };
 
-Validator.prototype.sterilizeEmail = function(input) {
+Validator.prototype.sterilizeSession = function(input) {
 	var clean = {};
 	var recipients = new Array();
 
-	for (var key in input[json_keys.RECIPIENTS]){
-		recipients[key] = (this.sterilize_contact(input[json_keys.RECIPIENTS][key]));
-	}
-
-	clean[json_keys.SUBJECT] 		= validator.toString(input[json_keys.SUBJECT]);
-	clean[json_keys.MESSAGE] 		= validator.toString(input[json_keys.MESSAGE]);
-	clean[json_keys.RECIPIENTS] = recipients;
 
 	this.logDataCleaning(input, clean);
-	return clean;
+	return input;
 };
 
 Validator.prototype.sterilizeUser = function(input) {
@@ -84,9 +78,6 @@ Validator.prototype.sterilizeUser = function(input) {
 
 	this.logDataCleaning(input, clean);
 	return clean;
-};
-
-Validator.prototype.sterilizeConfig = function(input) {
 };
 
 Validator.prototype.logDataCleaning = function(dirty_data, dirty_data){

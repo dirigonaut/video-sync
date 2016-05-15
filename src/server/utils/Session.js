@@ -13,11 +13,10 @@ Session.prototype.createSession = function(id) {
   var newSession = new Object();
 
   newSession.id           = id;
-  newSession.title        = title;
+  newSession.title        = null;
   newSession.smtp         = null;
   newSession.invitees     = [];
   newSession.mailOptions  = null;
-  newSession.mediaPath    = null;
 
   return newSession;
 }
