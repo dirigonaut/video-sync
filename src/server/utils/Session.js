@@ -13,6 +13,7 @@ Session.prototype.createSession = function(id) {
   var newSession = new Object();
 
   newSession.id           = id;
+  newSession.title        = title;
   newSession.smtp         = null;
   newSession.invitees     = [];
   newSession.mailOptions  = null;

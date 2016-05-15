@@ -13,7 +13,7 @@ Authenticator.prototype.requestToken = function(id, address, callback) {
 
   for(var x in invitees) {
     if(invitees[x] == address) {
-      var token = createToken(address);
+      var token = createToken(id, address);
       database.createToken(token, callback);
     }
   }
@@ -32,7 +32,7 @@ Authenticator.prototype.validateToken = function(id, address, userToken, callbac
 
   for(var x in invitees) {
     if(invitees[x] == address) {
-      database.loadToken(id, token, authorize);
+      database.loadToken(id, authorize);
     }
   }
 };
