@@ -9,6 +9,7 @@ var Validator     = require('./utils/Validator');
 var NeDatabase    = require('./database/NeDatabase');
 var Authenticator = require('./authentication/Authenticator');
 
+var AdminController     = require('./administration/AdminController');
 var VideoController     = require('./video/VideoController');
 var StateController     = require('./state/StateController');
 var SmtpController      = require('./smtp/SmtpController');
@@ -108,6 +109,10 @@ function userAuthorized(socket) {
   state.getPlayerManager().createPlayer(socket);
 
   socket.emit('authenticated');
+
+  if(session.getActiveSession() != null && session.getActiveSession().getMediaPath().length > 0) {
+    socket.emit('media-ready');
+  }
 }
 
 function isAdministrator(socket) {
@@ -116,6 +121,7 @@ function isAdministrator(socket) {
       session.setAdminId(socket.id);
       session.setMediaPath("./static/media/bunny/");
 
+      new AdminController(io, socket);
       new SmtpController(io, socket);
       new DatabaseController(io, socket);
 

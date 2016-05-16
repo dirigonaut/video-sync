@@ -41,7 +41,7 @@ NeDatabase.prototype.readAllContacts = function(callback){
 };
 
 NeDatabase.prototype.readSession = function(id, callback){
-	var query = { sessionProfile: id };
+	var query = { _id: id };
 	readJson(query, callback);
 };
 
@@ -105,6 +105,7 @@ function createJson(json, callback) {
 	console.log("createJson", json);
 
 	db.insert(json, function(err, newDoc){
+		console.log(newDocs);
 		if(callback) {
 			callback(newDoc);
 		}
@@ -115,6 +116,7 @@ function readJson(query, callback) {
 	console.log("readJson", query);
 
 	db.find(query, function(err, docs){
+		console.log(docs);
 		if(callback) {
 			callback(docs);
 		}
@@ -125,6 +127,7 @@ function updateJson(query, json, callback) {
 	console.log("updateJson", query);
 
 	db.update(query, json, function(err, docs){
+		console.log(docs);
 		if(callback) {
 			callback(docs);
 		}
@@ -135,6 +138,7 @@ function deleteJson(query, options, callback) {
 	console.log("removeJson", query);
 
 	db.remove(query, options, function (err, removed) {
+		console.log(removed);
 		if(callback) {
 			callback(removed);
 		}

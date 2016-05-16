@@ -73,7 +73,7 @@ function SourceBuffer(enum_type, video){
 
   var requestVideoData = function(requestDetails) {
     log.info('SourceBuffer.requestVideoData');
-    ClientSocket.sendRequest("get-segment",
+    new ClientSocket().sendRequest("get-segment",
       new RequestFactory().buildVideoSegmentRequest(self.type, requestDetails[0], requestDetails[1]));
   };
 

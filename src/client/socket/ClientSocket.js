@@ -6,13 +6,16 @@ var mediaController;
 var serverUrl;
 var socket;
 
-function ClientSocket(callback, flag) {
+function ClientSocket() {
+}
+
+ClientSocket.prototype.connect = function(callback, flag) {
 	if(flag) {
 		serverUrl = "http://192.168.1.147:8080";
 	} else {
 		serverUrl = "http://localhost:8080";
 	}
-	
+
 	console.log(serverUrl);
 	socket = io.connect(serverUrl, {'force new connection': true});
 
@@ -24,12 +27,16 @@ function ClientSocket(callback, flag) {
 		registerEvents();
 		callback();
 	});
-}
+};
 
-ClientSocket.sendRequest = function(event, request) {
+ClientSocket.prototype.sendRequest = function(event, request) {
 	console.log(event);
 	console.log(request);
 	socket.emit(event, request);
+};
+
+ClientSocket.prototype.setEvent = function(event, callback) {
+	socket.on(event, callback);
 };
 
 ClientSocket.prototype.initialize = function(mController, fBuffer) {
