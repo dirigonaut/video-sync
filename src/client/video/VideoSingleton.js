@@ -33,7 +33,7 @@ VideoSingleton.prototype.initialize = function(fileBuffer) {
   self.videoElement.addEventListener('play', onPlay, false);
   self.videoMetas = new Map();
 
-  ClientSocket.sendRequest('get-meta-files', fileBuffer.registerRequest(self.addMetaData));
+  new ClientSocket().sendRequest('get-meta-files', fileBuffer.registerRequest(self.addMetaData));
 };
 
 VideoSingleton.prototype.addMediaSourceEvent = function(event, callback) {

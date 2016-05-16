@@ -17,6 +17,10 @@ $('#btnMute').click(function() {
   }
 });
 
+$('#btnFullScreen').click(function() {
+  $('#video')[0].webkitRequestFullScreen();
+});
+
 $("video").on("pause", function (e) {
   $('.glyphicon-pause').attr('class', 'glyphicon glyphicon-play');
 });
@@ -45,16 +49,26 @@ $('#createSession').click(function createSession() {
 
   var mailOptions = client.getRequestFactory().buildMailOptionsRequest(from, to, subject, text, html);
 
+  var id        = $('#sessionId').val();
   var title     = $('#sessionTitle').val();
   var address   = $('#sessionAddress').val();
   var invitees  = $('#sessionInvitees').val();
 
   client.getClientSocket().sendRequest("db-create-session",
-    client.getRequestFactory().buildSessionRequest(title, address, invitees, mailOptions));
+    client.getRequestFactory().buildSessionRequest(id, title, address, invitees, mailOptions));
 });
 
 $('#readSessions').click(function readSessions() {
   client.getClientSocket().sendRequest("db-read-sessions");
+});
+
+$('#setSession').click(function setSession() {
+  var sessionId = $('#sessionId').val();
+  client.getClientSocket().sendRequest("admin-load-session", sessionId);
+});
+
+$('#sendInvitation').click(function readSessions() {
+  client.getClientSocket().sendRequest("smtp-invite");
 });
 
 //Smtp Events -----------------------------------------------------------------

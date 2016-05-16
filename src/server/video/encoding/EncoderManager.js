@@ -13,7 +13,7 @@ function EncoderManager(data){
 	self.commands = [];
 	self.postProcess = [];
 
-	for(var i = 0; i < data.length; ++i){
+	for(var i in data.length){
 		switch (data[i].process) {
 			case "webm" :
 				var ffmpeg = new Ffmpeg(Command(data[i].input));

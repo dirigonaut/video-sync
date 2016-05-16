@@ -9,21 +9,10 @@ function Session() {
 
 }
 
-Session.prototype.createSession = function(id) {
-  var newSession = new Object();
-
-  newSession.id           = id;
-  newSession.title        = null;
-  newSession.smtp         = null;
-  newSession.invitees     = [];
-  newSession.mailOptions  = null;
-
-  return newSession;
-}
-
 Session.prototype.loadSession = function(id) {
   var setSession = function(session) {
-    activeSession = session;
+    activeSession = session[0];
+    console.log(activeSession);
   }
 
   database.readSession(id, setSession);

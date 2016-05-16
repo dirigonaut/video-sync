@@ -4,19 +4,28 @@ var RequestFactory = require('./utils/RequestFactory');
 var ClientSocket = require('./socket/ClientSocket');
 var FileBuffer = require('./utils/FileBuffer');
 
+var clientSocket;
+
 function Client(video, mediaSource, window, flag) {
   console.log("Client");
   var fileBuffer = new FileBuffer();
   var mediaController = new MediaController(fileBuffer);
 
-  var clientSocket = new ClientSocket(function(path){
-    mediaController.initializeVideo(video, mediaSource, window);
+  clientSocket = new ClientSocket();
+
+  clientSocket.connect(function(path){
     clientSocket.initialize(mediaController, fileBuffer);
   }, flag);
+
+  var initMedia = function() {
+    mediaController.initializeVideo(video, mediaSource, window);
+  };
+
+  clientSocket.setEvent("media-ready", initMedia);
 }
 
 Client.prototype.getClientSocket = function() {
-  return ClientSocket;
+  return clientSocket;
 }
 
 Client.prototype.getRequestFactory = function() {

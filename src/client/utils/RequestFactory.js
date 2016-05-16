@@ -41,9 +41,10 @@ RequestFactory.prototype.buildContactRequest = function(handle, address) {
 	return request;
 };
 
-RequestFactory.prototype.buildSessionRequest = function(title, smtp, invitees, mailOptions) {
+RequestFactory.prototype.buildSessionRequest = function(_id, title, smtp, invitees, mailOptions) {
 	console.log("RequestFactory.buildCreateSessionRequest");
 	var request = new Object();
+	request._id					 = _id;
 	request.title        = title;
   request.smtp         = smtp;
   request.invitees     = invitees;
