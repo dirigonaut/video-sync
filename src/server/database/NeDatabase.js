@@ -105,7 +105,7 @@ function createJson(json, callback) {
 	console.log("createJson", json);
 
 	db.insert(json, function(err, newDoc){
-		console.log(newDocs);
+		console.log(newDoc);
 		if(callback) {
 			callback(newDoc);
 		}

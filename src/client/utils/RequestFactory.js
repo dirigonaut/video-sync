@@ -63,4 +63,12 @@ RequestFactory.prototype.buildMailOptionsRequest = function(from, to, subject, t
 	return request;
 };
 
+RequestFactory.prototype.buildLoginRequest = function(user, pass) {
+	console.log("RequestFactory.buildCreateSessionRequest");
+	var request = new Object();
+	request.user	= user;
+	request.pass	= pass;
+	return request;
+};
+
 module.exports = RequestFactory;
