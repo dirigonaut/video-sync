@@ -3,7 +3,7 @@ var watchify        = require('watchify');
 var fs              = require('fs');
 
 var b = browserify({
-  entries: ['src/client/client.js'],
+  entries: ['src/client/Client.js'],
   standalone: 'Client',
   cache: {},
   packageCache: {},

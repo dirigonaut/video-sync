@@ -133,3 +133,16 @@ $('#btnEncode').click(function() {
   $('#smtpOverlay').hide();
   $('#encodeOverlay').show();
 });
+
+//Login Events -----------------------------------------------------------------
+$('#submitCreds').click(function readContacts() {
+  var user     = $('#loginUser').val();
+  var token    = $('#loginToken').val();
+
+  console.log(user + " " + token);
+  if(token.length > 0) {
+    client.getClientSocket().sendRequest('auth-validate-token', client.getRequestFactory().buildLoginRequest(user, token));
+  } else {
+    client.getClientSocket().sendRequest('auth-get-token', client.getRequestFactory().buildLoginRequest(user, token));
+  }
+});

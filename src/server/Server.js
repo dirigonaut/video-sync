@@ -25,7 +25,7 @@ var authenticator;
 
 function Server(callback) {
   if(app == null){
-    ns  = new NodeStatic.Server('./static/', {cache: 0, gzip: true});
+    ns  = new NodeStatic.Server('./static', {cache: 0, gzip: true});
     app = new Http.createServer(handler);
     io  = new SocketIO(app);
 
@@ -96,7 +96,7 @@ function initialize() {
 function handler(request, response) {
   console.log(request);
   request.addListener('end', function() {
-    fileServer.serve(request, response);
+    ns.serve(request, response);
   }).resume();
 }
 

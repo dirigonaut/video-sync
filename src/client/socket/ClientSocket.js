@@ -19,10 +19,6 @@ ClientSocket.prototype.connect = function(callback, flag) {
 	console.log(serverUrl);
 	socket = io.connect(serverUrl, {'force new connection': true});
 
-	socket.on('connected', function() {
-		//Logic for pop up menu to get log in creds.
-	});
-
 	socket.on('authenticated', function() {
 		registerEvents();
 		callback();

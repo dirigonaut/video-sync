@@ -10,22 +10,19 @@
     <script type="text/javascript" src="../resources/bootstrap/js/bootstrap.min.js"></script>
   </head>
   <body>
-    <div id="media_container">
-      <div id="video_container">
-        <video id="video" autoplay width="100%" height="100%" class="video-js" preload="auto"></video>
+    <div id="media_container" class="media">
+      <div id="video_container" class= "video">
+        <video id="video" class="video_element"></video>
+        <div id="control_container" class="controls">
+        </div>
       </div>
-      <div id="path_container">
+      <div id="messenger" class="messenger">
       </div>
-      <div id="control_container">
-      </div>
-      <div id="side_container">
-      </div>
-    </div>
-    <div id="messenger">
     </div>
     <script>
       $(function(){
         $("#control_container").load("menu/controls.html");
+        $("#messenger").load("menu/overlays/login.html");
         $.getScript("../resources/gui.js");
       });
 
@@ -34,7 +31,7 @@
       window.onload = function() {
         window.URL = window.URL || window.webkitURL;
         window.MediaSource = window.MediaSource || window.WebKitMediaSource
-        client = new Client(document.getElementById('video'), new MediaSource(), window, true);
+        client = new Client(document.getElementById('video'), new MediaSource, window, true);
       };
     </script>
   </body>
