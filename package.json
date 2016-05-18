@@ -1,7 +1,7 @@
 {
   "name": "Video-Sync",
   "version": "0.0.1",
-  "main": "static/html/admin.html",
+  "main": "admin.html",
   "window": {
     "title": "Video-Sync",
     "fullscreen": false,

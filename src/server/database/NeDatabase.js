@@ -1,7 +1,7 @@
 var Datastore 	= require('nedb');
 var	JsonKeys		= require('../utils/JsonKeys');
 
-var db = new Datastore({ filename: './data/database_inst', autoload: true });
+var db = new Datastore({ filename: './database_inst', autoload: true });
 
 function NeDatabase(){
 
