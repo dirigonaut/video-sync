@@ -15,7 +15,7 @@ function initialize(io, socket) {
     if(session.isAdmin(socket.id)){
       console.log('admin-set-media');
 
-      session.setMediaPath = data;
+      session.setMediaPath(data);
       io.emit("media-ready");
     }
   });

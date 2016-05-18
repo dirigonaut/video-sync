@@ -51,7 +51,7 @@ function EncoderManager(data){
 	});
 
 	self.encode = function() {
-		console.log("EncodingManager.encode");
+		console.log("EncodingManager.encode");z
 		var command = self.commands.shift();
 		command.start();
 	};

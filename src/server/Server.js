@@ -24,7 +24,6 @@ var validator;
 var authenticator;
 
 function Server(callback) {
-  if(app == null){
     ns  = new NodeStatic.Server('./static', {cache: 0, gzip: true});
     app = new Http.createServer(handler);
     io  = new SocketIO(app);
@@ -41,7 +40,6 @@ function Server(callback) {
     app.listen(8080);
     initialize();
     callback();
-  }
 }
 
 module.exports = Server;
@@ -65,7 +63,7 @@ function initialize() {
         smtp.initializeTransport(session.getActiveSession().smtp, sendInvitations);
       };
 
-      authenticator.requestToken(validator.sterilizeUser(data), socket.id, requestSmtp);
+      authenticator.requestToken(socket.id, validator.sterilizeUser(data), requestSmtp);
     });
 
     socket.on('auth-validate-token', function (data) {
@@ -75,7 +73,7 @@ function initialize() {
         userAuthorized(socket);
       };
 
-      authenticator.validateToken(validator.sterilizeUser(data), attachControllers);
+      authenticator.validateToken(socket.id, validator.sterilizeUser(data), attachControllers);
     });
 
     socket.on('error', function (data) {
@@ -110,7 +108,7 @@ function userAuthorized(socket) {
 
   socket.emit('authenticated');
 
-  if(session.getActiveSession() != null && session.getActiveSession().getMediaPath().length > 0) {
+  if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     socket.emit('media-ready');
   }
 }
@@ -119,7 +117,6 @@ function isAdministrator(socket) {
   if(session.getAdmin() == null) {
     if(socket.handshake.address == "::ffff:127.0.0.1"){
       session.setAdminId(socket.id);
-      session.setMediaPath("./static/media/bunny/");
 
       new AdminController(io, socket);
       new SmtpController(io, socket);
