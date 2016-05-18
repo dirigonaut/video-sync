@@ -63,11 +63,11 @@ RequestFactory.prototype.buildMailOptionsRequest = function(from, to, subject, t
 	return request;
 };
 
-RequestFactory.prototype.buildLoginRequest = function(user, pass) {
+RequestFactory.prototype.buildLoginRequest = function(address, token) {
 	console.log("RequestFactory.buildCreateSessionRequest");
 	var request = new Object();
-	request.user	= user;
-	request.pass	= pass;
+	request.address	= address;
+	request.token	= token;
 	return request;
 };
 

@@ -51,7 +51,7 @@ NeDatabase.prototype.readAllSessions = function(id, callback){
 };
 
 NeDatabase.prototype.readToken = function(id, callback){
-	var query = { token: id };
+	var query = { _id: id };
 	readJson(query, callback);
 };
 
@@ -77,25 +77,25 @@ NeDatabase.prototype.updateSession = function(id, callback){
 //Delete Calls
 NeDatabase.prototype.deleteSmtp = function(callback){
 	var query = { smtpProfile : { $exists: true } };
-	var option = "";
+	var option = {};
 	deleteJson(query, option, callback);
 };
 
 NeDatabase.prototype.deleteContact = function(callback){
 	var query = { email: { $exists: true } }
-	var option = "";
+	var option = {};
 	deleteJson(query, option, callback);
 };
 
 NeDatabase.prototype.deleteSession = function(id, callback){
 	var query = { sessionProfile: id };
-	var option = "";
+	var option = {};
 	deleteJson(query, option, callback);
 };
 
 NeDatabase.prototype.deleteTokens = function(id, callback){
-	var query = { token: id };
-	var option = "";
+	var query = { _id: id };
+	var option = {};
 	deleteJson(query, option, callback);
 };
 

@@ -15,7 +15,7 @@ Smtp.prototype.initializeTransport = function(address, callback) {
 
 		var loadSmtpOptions = function(data) {
 			if(data.type == "SMTP") {
-				smtpTransport = nodemailer.createTransport("SMTP",{
+				smtpTransport = NodeMailer.createTransport("SMTP",{
 						service: data.service,
 						auth: {
 								user: data.address,
@@ -23,7 +23,7 @@ Smtp.prototype.initializeTransport = function(address, callback) {
 						}
 				});
 			} else {
-				smtpTransport = nodemailer.createTransport("direct", {
+				smtpTransport = NodeMailer.createTransport("direct", {
 					debug: true
 				});
 			}
@@ -51,7 +51,7 @@ Smtp.prototype.createMailOptions = function(from, to, subject, text, html) {
 
 Smtp.prototype.sendMail = function(mailOptions) {
 	console.log("Smtp.sendMail");
-	if(isTransportInitialized()) {
+	if(false && isTransportInitialized()) {
 		smtpTransport.sendMail(mailOptions, function(error, response) {
 		    if(error) {
 		        console.log(error);
