@@ -50,7 +50,7 @@ function initialize(io, socket) {
   });
 
   socket.on('db-read-contacts', function() {
-    if(socket.auth){
+    if(session.isAdmin(socket.id)) {
       console.log('db-read-contacts');
 
       var emitResults = function(contacts) {
@@ -63,7 +63,7 @@ function initialize(io, socket) {
   });
 
   socket.on('db-read-sessions', function() {
-    if(socket.auth){
+    if(session.isAdmin(socket.id)) {
       console.log('db-read-sessions');
 
       var emitResults = function(contacts) {
@@ -99,14 +99,14 @@ function initialize(io, socket) {
 
   //Delete
   socket.on('db-delete-smtp', function(data) {
-    if(socket.auth){
+    if(session.isAdmin(socket.id)) {
       console.log('db-delete-smtp');
       database.deleteSmtp(socket, validator.sterilizeContact(data));
     }
   });
 
   socket.on('db-delete-contact', function(data) {
-    if(socket.auth){
+    if(session.isAdmin(socket.id)) {
   		console.log('db-delete-contact');
   		database.deleteContact(socket, validator.sterilizeEmail(data));
     }
