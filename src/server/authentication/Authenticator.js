@@ -16,7 +16,8 @@ Authenticator.prototype.requestToken = function(id, data, callback) {
   for(var x in invitees) {
     if(invitees[x] == data.address) {
       var token = createToken(id, data.address);
-      database.createToken(token, callback);
+      database.createToken(token, null);
+      callback(data, token);
     }
   }
 };
@@ -48,7 +49,7 @@ var createToken = function(id, address) {
 
   token._id     = id
   token.address = address;
-  token.token   = crypto.randomBytes(20).toString('hex');
+  token.token   = crypto.randomBytes(24).toString('hex');
 
   return token;
 }

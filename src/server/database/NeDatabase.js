@@ -26,7 +26,7 @@ NeDatabase.prototype.createToken = function(json, callback){
 
 //Read Calls
 NeDatabase.prototype.readSmtp = function(address, callback){
-	var query = { smtpProfile : address };
+	var query = { smtpAddress : address };
 	readJson(query, callback);
 };
 

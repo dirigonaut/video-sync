@@ -3,6 +3,7 @@ var NeDatabase	= require("../database/NeDatabase");
 
 var database 			= new NeDatabase();
 var smtpTransport = null;
+var activeSmtp		= null;
 
 function Smtp(){
 
@@ -10,22 +11,23 @@ function Smtp(){
 
 Smtp.prototype.initializeTransport = function(address, callback) {
 	console.log("Smtp.initializeTransport");
-	if(!isTransportInitialized() || address != smtpTransport.auth.user) {
+	if(!isTransportInitialized() || address != activeSmtp) {
 		this.closeTrasporter();
 
-		var loadSmtpOptions = function(data) {
+		var loadSmtpOptions = function(result) {
+			var data = result[0];
 			if(data.type == "SMTP") {
 				smtpTransport = NodeMailer.createTransport("SMTP",{
-						service: data.service,
+						service: data.smtpHost,
 						auth: {
-								user: data.address,
-								pass: data.pass
+								user: data.smtpAddress,
+								pass: data.smtpPassword
 						}
 				});
+				activeSmtp = data.smtpAddress;
 			} else {
-				smtpTransport = NodeMailer.createTransport("direct", {
-					debug: true
-				});
+				smtpTransport = NodeMailer.createTransport('smtps://' + encodeURI(data.smtpAddress) + ':' + data.smtpPassword + '@smtp.gmail.com');
+				activeSmtp = data.smtpAddress;
 			}
 
 			callback(data.address);
@@ -51,13 +53,13 @@ Smtp.prototype.createMailOptions = function(from, to, subject, text, html) {
 
 Smtp.prototype.sendMail = function(mailOptions) {
 	console.log("Smtp.sendMail");
-	if(false && isTransportInitialized()) {
+	if(isTransportInitialized()) {
 		smtpTransport.sendMail(mailOptions, function(error, response) {
 		    if(error) {
 		        console.log(error);
-		    } else {
-		    		console.log("Message sent: " + response.message);
 		    }
+
+				console.log("Message sent: " + response);
 		});
 		return true;
 	}
