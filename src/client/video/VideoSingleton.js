@@ -77,6 +77,10 @@ VideoSingleton.prototype.pause = function() {
   self.videoElement.pause();
 };
 
+VideoSingleton.prototype.seek = function(seektime) {
+  self.videoElement.currentTime = seektime;
+};
+
 VideoSingleton.prototype.mute = function(muted) {
   self.videoElement.muted = muted;
 };

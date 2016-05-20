@@ -19,27 +19,28 @@ EncoderCommandFactory.build_ffmpeg_request = function(source, dir, scale, type) 
 EncoderCommandFactory.get_ffmpeg_commands = function(source, name, scale, type, dir){
   var command = new Object();
 
+  command.outputDir = dir;
+  command.fileName  = name;
+
   if(type == EncoderCommandFactory.type_enum.VIDEO){
-    command.input       = EncoderCommandFactory.get_video_webm_ffmpeg_command(source, dir + name, scale);
-    command.destination = dir + name;
-    command.type        = EncoderCommandFactory.type_enum.VIDEO;
+    command.input     = EncoderCommandFactory.get_video_webm_ffmpeg_command(source, dir + name, scale);
+    command.type      = EncoderCommandFactory.type_enum.VIDEO;
   } else if (type == EncoderCommandFactory.type_enum.AUDIO){
-    command.input       = EncoderCommandFactory.get_audio_webm_ffmpeg_command(source,  dir + name, scale);
-    command.destination = dir + name;
-    command.type        = EncoderCommandFactory.type_enum.AUDIO;
+    command.input     = EncoderCommandFactory.get_audio_webm_ffmpeg_command(source,  dir + name, scale);
+    command.type      = EncoderCommandFactory.type_enum.AUDIO;
   }
 
   command.process = "webm";
   return command;
 }
 
-EncoderCommandFactory.get_video_webm_ffmpeg_command = function(source, destination, scale){
+EncoderCommandFactory.get_video_webm_ffmpeg_command = function(source, output, scale){
   return ' -y -i ' + source + ' -c:v libvpx-vp9 -s ' + scale + ' -b:v 500k -keyint_min 150' +
-                  ' -g 150 -tile-columns 4 -frame-parallel 1 -an -f webm -dash 1 ' + destination;
+                  ' -g 150 -tile-columns 4 -frame-parallel 1 -an -f webm -dash 1 ' + output;
 };
 
-EncoderCommandFactory.get_audio_webm_ffmpeg_command = function(source, destination, scale){
-  return ' -y -i ' + source + ' -vn -c:a libvorbis -b:a ' + scale + ' -f webm -dash 1 ' + destination;
+EncoderCommandFactory.get_audio_webm_ffmpeg_command = function(source, output, scale){
+  return ' -y -i ' + source + ' -vn -c:a libvorbis -b:a ' + scale + ' -f webm -dash 1 ' + output;
 };
 
 EncoderCommandFactory.get_ffmpeg_manifest_command = function(command_queue, output){
@@ -56,7 +57,7 @@ EncoderCommandFactory.get_ffmpeg_manifest_command = function(command_queue, outp
       audio_streams += audio_streams == "" ? i : "," + i;
     }
 
-    input += ' -f webm_dash_manifest -i ' + command_queue[i].destination;
+    input += ' -f webm_dash_manifest -i ' + command_queue[i].outputDir + command_queue[i].fileName;
 
     maps += ' -map ' + i;
   }

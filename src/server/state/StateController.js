@@ -26,4 +26,9 @@ function initialize(io, socket) {
     console.log('state-req-pause');
     io.emit('state-pause');
   });
+
+  socket.on('state-req-seek', function(data) {
+    console.log('state-req-seek');
+    io.emit('state-seek', data);
+  });
 }
