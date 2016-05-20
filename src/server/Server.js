@@ -115,6 +115,8 @@ function userAuthorized(socket) {
 }
 
 function isAdministrator(socket) {
+  socket.auth = false;
+  
   if(session.getAdmin() == null) {
     if(socket.handshake.address == "::ffff:127.0.0.1"){
       session.setAdminId(socket.id);
@@ -124,8 +126,6 @@ function isAdministrator(socket) {
       new DatabaseController(io, socket);
 
       userAuthorized(socket);
-    } else {
-      socket.auth = false;
     }
   }
 }
