@@ -15,34 +15,36 @@ function initialize(io, socket) {
   console.log("Attaching VideoController");
 
   socket.on('video-encode', function(data) {
-    console.log('video-encode');
-    var videoStream = new VideoStream();
-    var request = validator.sterilizeVideoInfo(data);
+    if(session.isAdmin(socket.id)) {
+      console.log('video-encode');
+      var videoStream = new VideoStream();
+      var request = validator.sterilizeVideoInfo(data);
 
-    var genWebmMeta = function (path) {
-      var meta = new WebmMetaData();
-      meta.on('finished', function() {
+      var genWebmMeta = function (path) {
+        var meta = new WebmMetaData();
+        meta.on('finished', function() {
+          socket.emit('video-encoded');
+        });
+
+        meta.generateMetaData(path);
+      };
+
+      var encoderManager = new EncoderManager(request);
+      encoderManager.on('webm', function(path) {
+        genWebmMeta(path);
+      }).on('finished', function(path) {
         socket.emit('video-encoded');
       });
 
-      meta.generateMetaData(path);
-    };
-
-    var encoderManager = new EncoderManager(request);
-    encoderManager.on('webm', function(path) {
-      genWebmMeta(path);
-    }).on('finished', function(path) {
-      socket.emit('video-encoded');
-    });
-
-    var encode = function(flag) {
-      if(flag == true) {
-        encoderManager.encode();
+      var encode = function(flag) {
+        if(flag == true) {
+          encoderManager.encode();
+        }
       }
-    }
 
-    if(request[0]) {
-      videoStream.ensureDirExists(request[0].outputDir, 484, encode);
+      if(request[0]) {
+        videoStream.ensureDirExists(request[0].outputDir, 484, encode);
+      }
     }
   });
 
