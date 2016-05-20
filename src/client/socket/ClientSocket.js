@@ -82,4 +82,9 @@ function registerEvents() {
 		console.log("state-pause");
 		mediaController.getVideoSingleton().pause();
 	});
+
+	socket.on('state-seek', function(data) {
+		console.log("state-seek");
+		mediaController.getVideoSingleton().seek(data.seektime);
+	});
 }

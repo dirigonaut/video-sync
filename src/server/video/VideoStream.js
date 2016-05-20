@@ -1,14 +1,14 @@
 var Fs   = require('fs');
 var Ebml = require('ebml');
 
-const util = require('util');
+const Util = require('util');
 const EventEmitter = require('events');
 
 function VideoStream(){
   EventEmitter.call(this);
 };
 
-util.inherits(VideoStream, EventEmitter);
+Util.inherits(VideoStream, EventEmitter);
 
 VideoStream.prototype.queuedDecode = function(metaRequests) {
   console.log("VideoStream.queuedDecode");
@@ -51,7 +51,7 @@ VideoStream.prototype.readAndDecode = function(readConfig, manifest, counter) {
   });
 };
 
-VideoStream.read = function(readConfig) {
+VideoStream.prototype.read = function(readConfig) {
   console.log('VideoStream.read');
   var readStream  = Fs.createReadStream(readConfig.path, readConfig.options);
 
@@ -66,7 +66,7 @@ VideoStream.read = function(readConfig) {
   });
 };
 
-VideoStream.write = function(writeConfig, data) {
+VideoStream.prototype.write = function(writeConfig, data) {
   console.log('VideoStream.write');
 	var writeStream = Fs.createWriteStream(writeConfig.path, writeConfig.options);
 
@@ -83,7 +83,7 @@ VideoStream.write = function(writeConfig, data) {
   writeStream.write(data);
 };
 
-VideoStream.readDir = function(readConfig) {
+VideoStream.prototype.readDir = function(readConfig) {
   console.log('VideoStream.readDir');
   Fs.readdir(readConfig.path, function (err, files) {
     if (err) {
@@ -108,7 +108,21 @@ VideoStream.readDir = function(readConfig) {
   });
 };
 
-VideoStream.createStreamConfig = function(path, callback) {
+VideoStream.prototype.ensureDirExists = function(path, mask, callback) {
+  Fs.mkdir(path, mask, function(err) {
+    if (err) {
+      if (err.code == 'EEXIST') {
+        callback(true);
+      } else {
+        callback(err);
+      }
+    } else {
+      callback(true);
+    }
+  });
+}
+
+VideoStream.prototype.createStreamConfig = function(path, callback) {
   console.log('VideoStream.streamConfig');
   var streamConfig = new Object();
   streamConfig.path = path;

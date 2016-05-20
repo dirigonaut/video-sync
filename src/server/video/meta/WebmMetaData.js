@@ -42,25 +42,24 @@ function WebmMetaData() {
 
   self._getClusters = function(segments) {
     console.log("WebmMetaData._getClusters");
-
+    var videoStream = new VideoStream();
     var metaRequests = [];
+
     for(var i in segments) {
       var metaRequest = new Object();
       console.log(dirPath + segments[i].baseUrl);
-      var readConfig = VideoStream.createStreamConfig(dirPath + segments[i].baseUrl, self._parseEBML)
+      var readConfig = videoStream.createStreamConfig(dirPath + segments[i].baseUrl, self._parseEBML);
 
-      metaRequest.manifest = new Manifest(readConfig.path, segments[i].initRange.split('-'));
+      metaRequest.manifest = new Manifest(segments[i].baseUrl, segments[i].initRange.split('-'));
       metaRequest.readConfig = readConfig;
       metaRequests.push(metaRequest);
     }
 
-    var stream = new VideoStream();
-
-    stream.on('end', function(manifest) {
+    videoStream.on('end', function(manifest) {
       self._saveMetaData(metaRequests);
     });
 
-    stream.queuedDecode(metaRequests);
+    videoStream.queuedDecode(metaRequests);
   };
 
   self._parseEBML = function(manifest, data) {
@@ -87,17 +86,18 @@ function WebmMetaData() {
 
   self._saveMetaData = function(metaRequests) {
     console.log("WebmMetaData._saveMetaData");
+    var videoStream = new VideoStream();
     var metaData = [];
 
     for(var i in metaRequests) {
       metaData.push(Manifest.flattenManifest(metaRequests[i].manifest));
     }
 
-    var writeConfig = VideoStream.createStreamConfig(dirPath + "webmMeta.json", null, function() {
+    var writeConfig = videoStream.createStreamConfig(dirPath + "webmMeta.json", null, function() {
         self.emit('finished');
     });
 
-    VideoStream.write(writeConfig, JSON.stringify(metaData));
+    videoStream.write(writeConfig, JSON.stringify(metaData));
   };
 
   self._setDir = function(path) {
@@ -107,9 +107,10 @@ function WebmMetaData() {
 
   self.generateMetaData = function(path) {
     console.log("WebmMetaData.generateMetaData");
+    var videoStream = new VideoStream();
     var buffer = [];
 
-    var readConfig = VideoStream.createStreamConfig(path, function(data) {
+    var readConfig = videoStream.createStreamConfig(path, function(data) {
         buffer.push(data);
     });
 
@@ -118,7 +119,7 @@ function WebmMetaData() {
       self._parseMpd(Buffer.concat(buffer));
     }
 
-    VideoStream.read(readConfig);
+    videoStream.read(readConfig);
   };
 
   return self;

@@ -33,6 +33,14 @@ $("video").on("timeupdate", function (e) {
   $('#seek-bar').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
 });
 
+$('#seek-bar').on('mouseup', function() {
+  var percent = parseInt($('#seek-bar').val());
+  var length  = $('#video')[0].duration;
+  var request = new Object();
+  request.seektime = Math.round(length * (percent / 100));
+  client.getClientSocket().sendRequest('state-req-seek', request);
+});
+
 //Location Events --------------------------------------------------------------
 $('#btnSessionMedia').click(function() {
     var media = $('#locationBar').val();
@@ -139,7 +147,6 @@ $('#submitCreds').click(function readContacts() {
   var user     = $('#loginUser').val();
   var token    = $('#loginToken').val();
 
-  console.log(user + " " + token);
   if(token.length > 0) {
     client.getClientSocket().sendRequest('auth-validate-token', client.getRequestFactory().buildLoginRequest(user, token));
   } else {

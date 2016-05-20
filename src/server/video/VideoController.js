@@ -16,6 +16,8 @@ function initialize(io, socket) {
 
   socket.on('video-encode', function(data) {
     console.log('video-encode');
+    var videoStream = new VideoStream();
+    var request = validator.sterilizeVideoInfo(data);
 
     var genWebmMeta = function (path) {
       var meta = new WebmMetaData();
@@ -26,25 +28,34 @@ function initialize(io, socket) {
       meta.generateMetaData(path);
     };
 
-    var encoderManager = new EncoderManager(validator.sterilizeVideoInfo(data));
+    var encoderManager = new EncoderManager(request);
     encoderManager.on('webm', function(path) {
       genWebmMeta(path);
     }).on('finished', function(path) {
       socket.emit('video-encoded');
     });
 
-    encoderManager.encode();
+    var encode = function(flag) {
+      if(flag == true) {
+        encoderManager.encode();
+      }
+    }
+
+    if(request[0]) {
+      videoStream.ensureDirExists(request[0].outputDir, 484, encode);
+    }
   });
 
   socket.on('get-meta-files', function(requestId) {
     console.log('get-meta-files');
+    var videoStream = new VideoStream();
 
-    var readConfig = VideoStream.createStreamConfig(session.getMediaPath(), function(file){
+    var readConfig = videoStream.createStreamConfig(session.getMediaPath(), function(file){
       var header = new Object();
       header.type = file.type;
 
       socket.emit("file-register-response", {requestId: validator.sterilizeVideoInfo(requestId), header: header}, function(bufferId) {
-        var readConfig = VideoStream.createStreamConfig(file.path, function(data) {
+        var readConfig = videoStream.createStreamConfig(file.path, function(data) {
           socket.emit("file-segment", {bufferId: bufferId, data: data});
         });
 
@@ -52,38 +63,41 @@ function initialize(io, socket) {
           socket.emit("file-end", {bufferId: bufferId});
         };
 
-        VideoStream.read(readConfig);
+        videoStream.read(readConfig);
       });
     });
 
-    VideoStream.readDir(readConfig);
+    videoStream.readDir(readConfig);
   });
 
   socket.on('get-segment', function(data) {
     console.log('get-segment');
+    var videoStream = new VideoStream();
     var data = validator.sterilizeVideoInfo(data);
     var typeId = data.typeId;
 
-    var readConfig = VideoStream.createStreamConfig(data.path, function(data) {
-      var segment = new Object();
-      segment.typeId = typeId;
-      segment.data = data;
+    if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
+      var readConfig = videoStream.createStreamConfig(session.getMediaPath() + data.path, function(data) {
+        var segment = new Object();
+        segment.typeId = typeId;
+        segment.data = data;
 
-      socket.emit("segment-chunk", segment);
-    });
+        socket.emit("segment-chunk", segment);
+      });
 
-    if(data.segment) {
-      var options = {"start": parseInt(data.segment[0]), "end": parseInt(data.segment[1])};
-      readConfig.options = options;
-    } else {
-      console.log("No segment options passed in.");
+      if(data.segment) {
+        var options = {"start": parseInt(data.segment[0]), "end": parseInt(data.segment[1])};
+        readConfig.options = options;
+      } else {
+        console.log("No segment options passed in.");
+      }
+
+      readConfig.onFinish = function() {
+        socket.emit("segment-end");
+      };
+
+      videoStream.read(readConfig);
     }
-
-    readConfig.onFinish = function() {
-      socket.emit("segment-end");
-    };
-
-    VideoStream.read(readConfig);
   });
 }
 
