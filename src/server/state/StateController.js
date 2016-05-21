@@ -26,7 +26,7 @@ function initialize(io, socket) {
     console.log('state-req-play');
     if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
 
-      var player = PlayerManager.getPlayer(socket.id);
+      var player = playerManager.getPlayer(socket.id);
       player.timestamp = data.time;
 
       var broadcastEvent = function() {
@@ -58,7 +58,7 @@ function initialize(io, socket) {
     console.log('state-time-update');
     if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
 
-      var player = PlayerManager.getPlayer(socket.id);
+      var player = playerManager.getPlayer(socket.id);
       player.timestamp = data.time;
 
       var broadcastEvent = function(players, event) {
