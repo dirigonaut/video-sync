@@ -3,12 +3,11 @@ var player = require('./Player');
 var players = new Map();
 
 function PlayerManager (){
-	this.debug = true;
 };
 
 PlayerManager.prototype.createPlayer = function(socket){
-    var new_player = new player(socket);
-    players.set(new_player.id, new_player);
+    var newPlayer = new player(socket);
+    players.set(socket.id, newPlayer);
     console.log("Adding player, total players now: " + players.size);
 };
 

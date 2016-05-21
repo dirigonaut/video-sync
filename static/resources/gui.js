@@ -41,7 +41,7 @@ $("video").on("timeupdate", function (e) {
   $('#seek-bar').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
 });
 
-$("#volume-bar").on("change", function (e) {
+$("#volume-bar").on("input change", function (e) {
   var range = parseInt($('#volume-bar').val()) * .01;
   $('#video')[0].volume = range;
 });
