@@ -1,9 +1,9 @@
 function Player(socket){
-    this.id 		    = socket.id;
     this.socket	  	= socket;
-    this.status 	  = "NONE";
+    this.state 	  	= 0;
     this.timestamp 	= 0.00;
-    this.stream     = null;
 };
+
+Player.State = {"INIT" : 0, "PLAY" : 1, "PAUSE" : 2, "SEEK" : 3, "JOIN" : 4, "SYNC" : 5};
 
 module.exports = Player;

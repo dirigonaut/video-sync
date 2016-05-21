@@ -90,5 +90,9 @@ Validator.prototype.sterilizeVideoInfo = function(input){
 	return input;
 };
 
+Validator.prototype.sterilize = function(input){
+	console.log(input);
+	return input;
+};
 
 module.exports = Validator;
