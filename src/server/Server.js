@@ -23,7 +23,7 @@ var session;
 var validator;
 var authenticator;
 
-function Server(callback) {
+function Server(ip, port, callback) {
     ns  = new NodeStatic.Server('./static', {cache: 0, gzip: true});
     app = new Http.createServer(handler);
     io  = new SocketIO(app);
@@ -35,9 +35,11 @@ function Server(callback) {
 
     session         = new Session();
     validator		    = new Validator();
-    authenticator   = new Authenticator()
+    authenticator   = new Authenticator();
 
-    app.listen(8080);
+    session.setLocalIp(ip + ":" + port);
+
+    app.listen(port);
     initialize();
     callback();
 }
@@ -116,7 +118,7 @@ function userAuthorized(socket) {
 
 function isAdministrator(socket) {
   socket.auth = false;
-  
+
   if(session.getAdmin() == null) {
     if(socket.handshake.address == "::ffff:127.0.0.1"){
       session.setAdminId(socket.id);

@@ -25,17 +25,16 @@ Smtp.prototype.initializeTransport = function(address, callback) {
 						}
 				});
 				activeSmtp = data.smtpAddress;
+				callback(data.address);
 			} else {
 				smtpTransport = NodeMailer.createTransport('smtps://' + encodeURI(data.smtpAddress) + ':' + data.smtpPassword + '@smtp.gmail.com');
 				activeSmtp = data.smtpAddress;
+				callback(data.address);
 			}
-
-			callback(data.address);
 		}
 
 		database.readSmtp(address, loadSmtpOptions);
 	}
-	callback();
 };
 
 Smtp.prototype.createMailOptions = function(from, to, subject, text, html) {
