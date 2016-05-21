@@ -17,6 +17,14 @@ $('#btnMute').click(function() {
   }
 });
 
+$('#seek-bar').on('mouseup', function() {
+  var percent = parseInt($('#seek-bar').val());
+  var length  = $('#video')[0].duration;
+  var request = new Object();
+  request.seektime = Math.round(length * (percent / 100));
+  client.getClientSocket().sendRequest('state-req-seek', request);
+});
+
 $('#btnFullScreen').click(function() {
   $('#video')[0].webkitRequestFullScreen();
 });
@@ -33,12 +41,9 @@ $("video").on("timeupdate", function (e) {
   $('#seek-bar').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
 });
 
-$('#seek-bar').on('mouseup', function() {
-  var percent = parseInt($('#seek-bar').val());
-  var length  = $('#video')[0].duration;
-  var request = new Object();
-  request.seektime = Math.round(length * (percent / 100));
-  client.getClientSocket().sendRequest('state-req-seek', request);
+$("#volume-bar").on("change", function (e) {
+  var range = parseInt($('#volume-bar').val()) * .01;
+  $('#video')[0].volume = range;
 });
 
 //Location Events --------------------------------------------------------------

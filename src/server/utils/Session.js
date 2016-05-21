@@ -5,6 +5,8 @@ var activeSession = null;
 var mediaPath     = null;
 var adminId       = null;
 
+var localIp       = null;
+
 function Session() {
 
 }
@@ -59,6 +61,14 @@ Session.prototype.setAdminId = function(id) {
     console.log("AdminId: " + id);
     adminId = id;
   }
+};
+
+Session.prototype.setLocalIp = function(ip) {
+  localIp = ip;
+};
+
+Session.prototype.getLocalIp = function() {
+  return localIp;
 };
 
 module.exports = Session;

@@ -18,7 +18,7 @@ function initialize(io, socket) {
       console.log('smtp-invite');
 
       var sendInvitations = function(address) {
-        smtp.sendMail(session.getActiveSession().mailOptions);
+        smtp.sendMail(addP2PLink(session.getActiveSession().mailOptions));
       };
 
       smtp.initializeTransport(session.getActiveSession().smtp, sendInvitations);
@@ -27,3 +27,10 @@ function initialize(io, socket) {
 }
 
 module.exports = SmtpController;
+
+function addP2PLink(mailOptions) {
+  console.log("adding Link");
+  var message = mailOptions.text;
+  mailOptions.text = message + " \n Link: http://" + session.getLocalIp() + "/html/client.html";
+  return mailOptions;
+}

@@ -33,6 +33,12 @@
   z-index: 3
 }
 
+.audio {
+  width: 5%;
+  position: relative;
+  z-index: 3
+}
+
 .location {
   width: 90%;
   position: relative;
