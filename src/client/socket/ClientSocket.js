@@ -9,11 +9,11 @@ var socket;
 function ClientSocket() {
 }
 
-ClientSocket.prototype.connect = function(callback, flag) {
-	if(flag) {
-		serverUrl = "http://192.168.1.147:8080";
-	} else {
+ClientSocket.prototype.connect = function(callback, url) {
+	if(url == null || !(url.length > 0)) {
 		serverUrl = "http://localhost:8080";
+	} else {
+		serverUrl = url;
 	}
 
 	console.log(serverUrl);
@@ -25,9 +25,11 @@ ClientSocket.prototype.connect = function(callback, flag) {
 	});
 };
 
-ClientSocket.prototype.sendRequest = function(event, request) {
-	console.log(event);
-	console.log(request);
+ClientSocket.prototype.sendRequest = function(event, request, noLogging) {
+	if(noLogging) {
+		console.log(event);
+		console.log(request);
+	}
 	socket.emit(event, request);
 };
 

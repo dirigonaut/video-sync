@@ -50,8 +50,8 @@ NeDatabase.prototype.readAllSessions = function(id, callback){
 	readJson(query, callback);
 };
 
-NeDatabase.prototype.readToken = function(id, callback){
-	var query = { _id: id };
+NeDatabase.prototype.readToken = function(address, token, callback){
+	var query = { address : address, token : token };
 	readJson(query, callback);
 };
 

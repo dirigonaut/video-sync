@@ -36,7 +36,8 @@
       window.onload = function() {
         window.URL = window.URL || window.webkitURL;
         window.MediaSource = window.MediaSource || window.WebKitMediaSource
-        client = new Client(document.getElementById('video'), new MediaSource, window, true);
+
+        client = new Client(document.getElementById('video'), new MediaSource, window);
       };
     </script>
   </body>

@@ -50,7 +50,7 @@
         var Client = require('./src/client/Client.js');
 
         var startClient = function() {
-          client = new Client(document.getElementById('video'), new MediaSource(), window, false);
+          client = new Client(document.getElementById('video'), new MediaSource(), window);
           loadGui();
         }
 

@@ -8,7 +8,7 @@ SyncRule.prototype.evaluate = function(issuer, callback) {
 
 
   if(trigger) {
-    callback(others, "sync-pause");
+    //callback(others, "sync-pause");
   }
 };
 

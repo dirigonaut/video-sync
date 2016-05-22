@@ -29,14 +29,13 @@ Authenticator.prototype.validateToken = function(id, data, callback) {
 
     var authorize = function(token) {
       if(token[0].token == data.token && token[0].address == data.address) {
-        database.deleteTokens(id);
         callback();
       }
     }
 
     for(var x in invitees) {
       if(invitees[x] == data.address) {
-        database.readToken(id, authorize);
+        database.readToken(data.address, data.token, authorize);
       }
     }
   }

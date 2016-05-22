@@ -1,9 +1,9 @@
 //Control Bar Events ----------------------------------------------------------
 $('#btnPlay').click(function() {
   if ($('#video')[0].paused) {
-    client.getClientSocket().sendRequest("state-req-play", client.getRequestFactory().buildPlayRequest());
+    client.getClientSocket().sendRequest("state-req-play", client.getRequestFactory().buildStateRequest("play", $("#video")[0].currentTime));
   } else {
-    client.getClientSocket().sendRequest("state-req-pause", client.getRequestFactory().buildPlayRequest());
+    client.getClientSocket().sendRequest("state-req-pause", client.getRequestFactory().buildStateRequest("pause", $("#video")[0].currentTime));
   }
 });
 
@@ -22,7 +22,7 @@ $('#seek-bar').on('mouseup', function() {
   var length  = $('#video')[0].duration;
   var request = new Object();
   request.seektime = Math.round(length * (percent / 100));
-  client.getClientSocket().sendRequest('state-req-seek', request);
+  client.getClientSocket().sendRequest('state-req-seek', request, false);
 });
 
 $('#btnFullScreen').click(function() {

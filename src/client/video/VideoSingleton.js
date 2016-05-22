@@ -8,6 +8,7 @@ var RequestFactory  = require('../utils/RequestFactory.js');
 var SourceBuffer    = require('./SourceBuffer.js');
 
 var self = null;
+var clientSocket = new ClientSocket();
 
 function VideoSingleton(video, mediaSource, window) {
   log.setDefaultLevel(0);
@@ -33,7 +34,7 @@ VideoSingleton.prototype.initialize = function(fileBuffer) {
   self.videoElement.addEventListener('play', onPlay, false);
   self.videoMetas = new Map();
 
-  new ClientSocket().sendRequest('get-meta-files', fileBuffer.registerRequest(self.addMetaData));
+  clientSocket.sendRequest('get-meta-files', fileBuffer.registerRequest(self.addMetaData));
 };
 
 VideoSingleton.prototype.addMediaSourceEvent = function(event, callback) {
@@ -43,7 +44,6 @@ VideoSingleton.prototype.addMediaSourceEvent = function(event, callback) {
 VideoSingleton.prototype.addVideoEvent = function(event, callback) {
   log.info('VideoSingleton.addOnProgress');
   self.videoElement.addEventListener(event, callback, false);
-  //self.videoElement.addEventListener('waiting', onSeek, false);
 };
 
 VideoSingleton.prototype.getVideoElement = function() {

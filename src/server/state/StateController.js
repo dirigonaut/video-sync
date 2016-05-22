@@ -30,7 +30,9 @@ function initialize(io, socket) {
       player.timestamp = data.time;
 
       var broadcastEvent = function() {
-        io.emit('state-play', updatePlayerState);
+        for(var player of playerManager.getPlayers()) {
+          player[1].socket.emit('state-play', updatePlayerState);
+        }
       }
 
       new PlayRule(2).evaluate(player, broadcastEvent);
@@ -45,7 +47,9 @@ function initialize(io, socket) {
   socket.on('state-req-seek', function(data) {
     console.log('state-req-seek');
     if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
-      io.emit('state-seek', data, updatePlayerState);
+      for(var player of playerManager.getPlayers()) {
+        player[1].socket.emit('state-play', data, updatePlayerState);
+      }
     }
   });
 
@@ -67,7 +71,7 @@ function initialize(io, socket) {
         }
       }
 
-      new SyncRule(2).evaluate(player, broadcastEvent);
+      //new SyncRule(2).evaluate(player, broadcastEvent);
     }
   });
 }
