@@ -48,7 +48,7 @@ function initialize(io, socket) {
     console.log('state-req-seek');
     if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
       for(var player of playerManager.getPlayers()) {
-        player[1].socket.emit('state-play', data, updatePlayerState);
+        player[1].socket.emit('state-seek', data, updatePlayerState);
       }
     }
   });
