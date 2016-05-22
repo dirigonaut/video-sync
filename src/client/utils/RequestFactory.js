@@ -16,10 +16,11 @@ RequestFactory.prototype.buildVideoMetaDataRequest = function(path, type) {
 	return request;
 };
 
-RequestFactory.prototype.buildPlayRequest = function() {
-	console.log("RequestFactory.buildPlayRequest");
+RequestFactory.prototype.buildStateRequest = function(state, time) {
+	console.log("RequestFactory.buildStateRequest");
 	var request = new Object();
-	request.state = "play";
+	request.state = state;
+	request.time = time;
 	return request;
 };
 

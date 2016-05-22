@@ -1,8 +1,10 @@
-var Session     = require('../utils/Session');
-var Validator   = require('../utils/Validator');
+var Session       = require('../utils/Session');
+var Validator     = require('../utils/Validator');
+var PlayerManager = require('../state/player/PlayerManager');
 
-var validator = new Validator();
-var session   = new Session();
+var validator     = new Validator();
+var session       = new Session();
+var playerManager = new PlayerManager();
 
 function AdminController(io, socket) {
   initialize(io, socket);
@@ -16,7 +18,12 @@ function initialize(io, socket) {
       console.log('admin-set-media');
 
       session.setMediaPath(data);
-      io.emit("media-ready");
+
+      var players = playerManager.getPlayers();
+
+      for(var player of players) {
+        player[1].socket.emit('media-ready');
+      }
     }
   });
 

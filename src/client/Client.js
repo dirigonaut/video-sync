@@ -6,16 +6,17 @@ var FileBuffer = require('./utils/FileBuffer');
 
 var clientSocket;
 
-function Client(video, mediaSource, window, flag) {
+function Client(video, mediaSource, window) {
   console.log("Client");
   var fileBuffer = new FileBuffer();
   var mediaController = new MediaController(fileBuffer);
 
   clientSocket = new ClientSocket();
 
+  console.log(window.location);
   clientSocket.connect(function(path){
     clientSocket.initialize(mediaController, fileBuffer);
-  }, flag);
+  }, window.location.host);
 
   var initMedia = function() {
     mediaController.initializeVideo(video, mediaSource, window);

@@ -1,14 +1,18 @@
-var SourceBuffer = require('./SourceBuffer.js');
-var VideoSingleton = require('./VideoSingleton.js');
+var SourceBuffer    = require('./SourceBuffer.js');
+var VideoSingleton  = require('./VideoSingleton.js');
+var ClientSocket    = require('../socket/ClientSocket.js');
+var RequestFactory  = require('../utils/RequestFactory.js');
 
 var fileBuffer;
 var self;
+var clientSocket = new ClientSocket();
 
 function MediaController(fBuffer) {
   console.log("MediaController");
   if(self == null) {
     this.video;
     this.sourceBuffers;
+    this.videoSingleton;
 
     fileBuffer = fBuffer;
     self = this;
@@ -29,6 +33,11 @@ MediaController.prototype.initializeVideo = function(element, mediaSource, windo
     this.sourceBuffers[SourceBuffer.Enum.AUDIO].setSourceBufferCallback('audio/webm; codecs="vorbis"'));
 
   this.videoSingleton.initialize(fileBuffer);
+
+  var videoSingleton = this.videoSingleton;
+  this.videoSingleton.addVideoEvent('timeupdate', function() {
+    clientSocket.sendRequest('state-time-update', new RequestFactory().buildStateRequest("time", videoSingleton.getVideoElement().currentTime));
+  });
 
   this.videoSingleton.addVideoEvent('timeupdate', this.videoSingleton.onProgress(SourceBuffer.Enum.VIDEO));
   this.videoSingleton.addVideoEvent('timeupdate', this.videoSingleton.onProgress(SourceBuffer.Enum.AUDIO));
