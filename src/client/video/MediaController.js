@@ -3,20 +3,15 @@ var VideoSingleton  = require('./VideoSingleton.js');
 var ClientSocket    = require('../socket/ClientSocket.js');
 var RequestFactory  = require('../utils/RequestFactory.js');
 
-var fileBuffer;
-var self;
 var clientSocket = new ClientSocket();
 
 function MediaController(fBuffer) {
   console.log("MediaController");
-  if(self == null) {
-    this.video;
-    this.sourceBuffers;
-    this.videoSingleton;
+  this.video;
+  this.sourceBuffers;
+  this.videoSingleton;
 
-    fileBuffer = fBuffer;
-    self = this;
-  }
+  this.fileBuffer = fBuffer;
 }
 
 MediaController.prototype.initializeVideo = function(element, mediaSource, window) {
@@ -32,26 +27,54 @@ MediaController.prototype.initializeVideo = function(element, mediaSource, windo
   this.videoSingleton.addMediaSourceEvent('sourceopen',
     this.sourceBuffers[SourceBuffer.Enum.AUDIO].setSourceBufferCallback('audio/webm; codecs="vorbis"'));
 
-  this.videoSingleton.initialize(fileBuffer);
+  this.videoSingleton.initialize(this.fileBuffer);
 
-  var videoSingleton = this.videoSingleton;
-  this.videoSingleton.addVideoEvent('timeupdate', function() {
-    clientSocket.sendRequest('state-time-update', new RequestFactory().buildStateRequest("time", videoSingleton.getVideoElement().currentTime));
-  });
+  this.videoSingleton.addVideoEvent('timeupdate', onTimeUpdateState(element));
 
   this.videoSingleton.addVideoEvent('timeupdate', this.videoSingleton.onProgress(SourceBuffer.Enum.VIDEO));
   this.videoSingleton.addVideoEvent('timeupdate', this.videoSingleton.onProgress(SourceBuffer.Enum.AUDIO));
 
   this.videoSingleton.addVideoEvent('seeking', this.videoSingleton.onSeek(SourceBuffer.Enum.VIDEO));
   this.videoSingleton.addVideoEvent('seeking', this.videoSingleton.onSeek(SourceBuffer.Enum.AUDIO));
-};
 
-MediaController.prototype.bufferSegment = function(segment) {
-  self.sourceBuffers[segment.typeId].bufferSegment(segment.data, self.videoSingleton);
-};
-
-MediaController.prototype.getVideoSingleton = function() {
-  return this.videoSingleton;
+  setSocketEvents(this.videoSingleton, this.sourceBuffers, new RequestFactory());
 };
 
 module.exports = MediaController;
+
+var setSocketEvents = function(videoSingleton, sourceBuffers, requestFactory) {
+  clientSocket.setEvent('state-play', function(callback) {
+    console.log("state-play");
+    var video = videoSingleton.getVideoElement();
+    video.play();
+    callback(clientSocket.getSocketId(), video.currentTime, video.paused);
+  });
+
+  clientSocket.setEvent('state-pause', function(callback) {
+    console.log("state-pause");
+    var video = videoSingleton.getVideoElement();
+    video.pause();
+    console.log(video.currentTime);
+    callback(clientSocket.getSocketId(), video.currentTime, video.paused);
+    clientSocket.sendRequest('state-sync');
+  });
+
+  clientSocket.setEvent('state-seek', function(data, callback) {
+    console.log("state-seek");
+    var video = videoSingleton.getVideoElement();
+    video.currentTime = data.seektime;
+    console.log(data);
+    callback(clientSocket.getSocketId(), video.currentTime, video.paused);
+  });
+
+  clientSocket.setEvent('segment-chunk', function(segment){
+    console.log('segment-chunk');
+    sourceBuffers[segment.typeId].bufferSegment(segment.data, videoSingleton);
+  });
+}
+
+var onTimeUpdateState = function(videoElement) {
+  return function() {
+      clientSocket.sendRequest('state-time-update', new RequestFactory().buildVideoStateRequest(videoElement), false);
+  }
+}

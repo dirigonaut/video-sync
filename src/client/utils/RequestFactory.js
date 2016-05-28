@@ -17,7 +17,6 @@ RequestFactory.prototype.buildVideoMetaDataRequest = function(path, type) {
 };
 
 RequestFactory.prototype.buildStateRequest = function(state, time) {
-	console.log("RequestFactory.buildStateRequest");
 	var request = new Object();
 	request.state = state;
 	request.time = time;
@@ -69,6 +68,14 @@ RequestFactory.prototype.buildLoginRequest = function(address, token) {
 	var request = new Object();
 	request.address	= address;
 	request.token	= token;
+	return request;
+};
+
+RequestFactory.prototype.buildVideoStateRequest = function(videoElement) {
+	var request = new Object();
+	request.timestamp	= videoElement.currentTime;
+	request.state			= videoElement.paused;
+	request.buffering	= videoElement.buffering;
 	return request;
 };
 

@@ -1,22 +1,20 @@
-var log = require('loglevel');
+var log          = require('loglevel');
+var ClientSocket = require('../socket/ClientSocket.js');
 
-var fileRequests = null;
-var buffers = null;
+var clientSocket = new ClientSocket();
 
 function FileBuffer() {
-  if(fileRequests == null) {
     log.setDefaultLevel(0);
     log.info('FileBuffer');
 
-    fileRequests = new Map();
-    buffers = new Map();
-  }
+    this.fileRequests = new Map();
+    this.buffers = new Map();
 }
 
 FileBuffer.prototype.reinitialize = function() {
   log.info('FileBuffer.reinitialize');
-  fileRequests = new Map();
-  buffers = new Map();
+  this.fileRequests = new Map();
+  this.buffers = new Map();
 };
 
 FileBuffer.prototype.registerRequest = function(callback) {
@@ -26,14 +24,14 @@ FileBuffer.prototype.registerRequest = function(callback) {
   requestInfo.requestId = "r" + this._genId();
   requestInfo.buffCount = 0;
 
-  fileRequests.set(requestInfo.requestId, requestInfo);
+  this.fileRequests.set(requestInfo.requestId, requestInfo);
 
   return requestInfo.requestId;
 };
 
 FileBuffer.prototype.registerResponse = function(requestId, header, callback) {
   log.info('FileBuffer.registerResponse');
-  var fileRequest = fileRequests.get(requestId);
+  var fileRequest = this.fileRequests.get(requestId);
   fileRequest.buffCount++;
 
   var buffer = new Object();
@@ -42,14 +40,14 @@ FileBuffer.prototype.registerResponse = function(requestId, header, callback) {
   buffer.info = header;
   buffer.data = [];
 
-  buffers.set(buffer.id, buffer);
+  this.buffers.set(buffer.id, buffer);
 
   callback(buffer.id);
 };
 
 FileBuffer.prototype.onData = function(bufferId, data) {
   log.info('FileBuffer.onData');
-  var buffer = buffers.get(bufferId);
+  var buffer = this.buffers.get(bufferId);
 
   if(data instanceof Buffer) {
     buffer.data.push(data);
@@ -61,16 +59,16 @@ FileBuffer.prototype.onData = function(bufferId, data) {
 
 FileBuffer.prototype.onFinish = function(bufferId) {
   log.info('FileBuffer.onFinish');
-  var buffer = buffers.get(bufferId);
-  var fileRequest = fileRequests.get(buffer.requestId);
+  var buffer = this.buffers.get(bufferId);
+  var fileRequest = this.fileRequests.get(buffer.requestId);
 
   fileRequest.onFinish(buffer.info, Buffer.concat(buffer.data));
-  buffers.delete(bufferId);
+  this.buffers.delete(bufferId);
   fileRequest.buffCount--;
 
   if(fileRequest.buffCount <= 0) {
     log.info("Deleting request: " + fileRequest.requestId + " from map.");
-    fileRequests.delete(fileRequest.requestId);
+    this.fileRequests.delete(fileRequest.requestId);
   }
 };
 
@@ -78,4 +76,26 @@ FileBuffer.prototype._genId = function() {
     return Math.random().toString(36).slice(-8);
 };
 
+FileBuffer.prototype.setupEvents = function() {
+  //cleanSocketEvents();
+  setSocketEvents(this);
+}
+
 module.exports = FileBuffer;
+
+var setSocketEvents = function(fileBuffer) {
+  clientSocket.setEvent('file-register-response', function(response, callback){
+    console.log('file-register-response');
+    fileBuffer.registerResponse(response.requestId, response.header, callback);
+  });
+
+  clientSocket.setEvent('file-segment', function(response){
+    console.log('file-segment');
+    fileBuffer.onData(response.bufferId, response.data);
+  });
+
+  clientSocket.setEvent('file-end', function(response){
+    console.log('file-end');
+    fileBuffer.onFinish(response.bufferId);
+  });
+}

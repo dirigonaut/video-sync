@@ -53,4 +53,24 @@ PlayerManager.prototype.getPlayersWithout = function(status){
   return temp;
 };
 
+PlayerManager.prototype.removePlayersWithStatus = function(playerArray, status){
+  var temp = new Array();
+  for (var p in playerArray) {
+    if(playerArray[p].status != status){
+      temp.push(playerArray[p]);
+    }
+  }
+  return temp;
+};
+
+PlayerManager.prototype.removePlayersWithId = function(playerArray, id){
+  var temp = new Array();
+  for (var p in playerArray) {
+    if(playerArray[p].id != id){
+      temp.push(playerArray[p]);
+    }
+  }
+  return temp;
+};
+
 module.exports = PlayerManager;

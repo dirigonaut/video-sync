@@ -26,7 +26,7 @@ $('#seek-bar').on('mouseup', function() {
 });
 
 $('#btnFullScreen').click(function() {
-  $('#video')[0].webkitRequestFullScreen();
+  $('#video')[0].webkitfullscreenchange();
 });
 
 $("video").on("pause", function (e) {
@@ -151,6 +151,7 @@ $('#btnEncode').click(function() {
 $('#submitCreds').click(function readContacts() {
   var user     = $('#loginUser').val();
   var token    = $('#loginToken').val();
+  console.log("testing");
 
   if(token.length > 0) {
     client.getClientSocket().sendRequest('auth-validate-token', client.getRequestFactory().buildLoginRequest(user, token));

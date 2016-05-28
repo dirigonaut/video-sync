@@ -69,22 +69,6 @@ VideoSingleton.prototype.setActiveMetaData = function(metaKey) {
   self.selectedMeta = metaKey;
 };
 
-VideoSingleton.prototype.play = function() {
-  self.videoElement.play();
-};
-
-VideoSingleton.prototype.pause = function() {
-  self.videoElement.pause();
-};
-
-VideoSingleton.prototype.seek = function(seektime) {
-  self.videoElement.currentTime = seektime;
-};
-
-VideoSingleton.prototype.mute = function(muted) {
-  self.videoElement.muted = muted;
-};
-
 VideoSingleton.prototype.onProgress = function(typeId) {
   var progress = function() {
     var selectedMedia = self.videoMetas.get(self.selectedMeta);
@@ -114,10 +98,6 @@ VideoSingleton.prototype.onSeek = function(typeId) {
   };
 
   return seek;
-};
-
-VideoSingleton.prototype.onSeeked = function() {
-  self.videoElement.pause = false;
 };
 
 module.exports = VideoSingleton;

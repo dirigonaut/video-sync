@@ -13,10 +13,6 @@ function StateController(io, socket) {
   initialize(io, socket);
 }
 
-StateController.prototype.getPlayerManager = function() {
-  return playerManager;
-};
-
 module.exports = StateController;
 
 function initialize(io, socket) {
@@ -41,7 +37,11 @@ function initialize(io, socket) {
 
   socket.on('state-req-pause', function(data) {
     console.log('state-req-pause');
-    io.emit('state-pause');
+    if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
+      for(var player of playerManager.getPlayers()) {
+        player[1].socket.emit('state-pause', updatePlayerState);
+      }
+    }
   });
 
   socket.on('state-req-seek', function(data) {
@@ -53,31 +53,45 @@ function initialize(io, socket) {
     }
   });
 
-  socket.on('state-req-join', function(data) {
-    console.log('state-req-join');
-    socket.emit('state-join', data, updatePlayerState);
+  socket.on('state-sync', function() {
+    console.log('state-sync');
+    if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
+      if(playerManager.getPlayers().size > 1) {
+        var syncTime = null;
+
+        for(var player of playerManager.getPlayers()) {
+          if(syncTime == null || syncTime > player[1].timestamp) {
+            syncTime = player[1].timestamp;
+          }
+        }
+
+        var request = new Object();
+        request.seektime = syncTime;
+
+        socket.emit('state-seek', request, updatePlayerState);
+      }
+    }
   });
 
   socket.on('state-time-update', function(data) {
-    console.log('state-time-update');
     if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
 
       var player = playerManager.getPlayer(socket.id);
-      player.timestamp = data.time;
+      player.timestamp = data.timestamp;
 
       var broadcastEvent = function(players, event) {
-        for(var i in players) {
-          players[i].socket.emit(event, updatePlayerState);
+        for(var player of players) {
+          player[1].socket.emit(event, updatePlayerState);
         }
       }
 
-      //new SyncRule(2).evaluate(player, broadcastEvent);
+      new SyncRule(2).evaluate(player, broadcastEvent);
     }
   });
 }
 
-function updatePlayerState(id, state, timestamp) {
-  var player        = playerManager.getPlayer(id);
+var updatePlayerState = function(id, timestamp, state) {
+  var player        = playerManager.getPlayer("/#" + id);
   player.state      = state;
   player.timestamp  = timestamp;
 }

@@ -6,17 +6,16 @@ var FileBuffer = require('./utils/FileBuffer');
 
 var clientSocket;
 
-function Client(video, mediaSource, window) {
+function Client(video, mediaSource, window, port) {
   console.log("Client");
   var fileBuffer = new FileBuffer();
   var mediaController = new MediaController(fileBuffer);
 
   clientSocket = new ClientSocket();
 
-  console.log(window.location);
-  clientSocket.connect(function(path){
-    clientSocket.initialize(mediaController, fileBuffer);
-  }, window.location.host);
+  clientSocket.connect(function(){
+    fileBuffer.setupEvents();
+  }, getServerUrl(window, port));
 
   var initMedia = function() {
     mediaController.initializeVideo(video, mediaSource, window);
@@ -38,3 +37,11 @@ Client.prototype.getCommandFactory = function() {
 }
 
 module.exports = Client;
+
+function getServerUrl(window, port) {
+  if(port != null && port != undefined) {
+    return "http://localhost:" + port;
+  }
+
+  return window.location.host
+}
