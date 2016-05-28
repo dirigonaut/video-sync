@@ -7,6 +7,7 @@ var Bundler       = require('./utils/Bundler');
 var Session       = require('./utils/Session');
 var Validator     = require('./utils/Validator');
 var NeDatabase    = require('./database/NeDatabase');
+var PlayerManager = require('./state/player/PlayerManager.js');
 var Authenticator = require('./authentication/Authenticator');
 
 var AdminController     = require('./administration/AdminController');
@@ -107,7 +108,7 @@ function userAuthorized(socket) {
   var video = new VideoController(io, socket);
   var state = new StateController(io, socket);
 
-  state.getPlayerManager().createPlayer(socket);
+  new PlayerManager().createPlayer(socket);
 
   socket.emit('authenticated');
 

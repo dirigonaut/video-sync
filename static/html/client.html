@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="../resources/video-js/video-js.css">
     <link rel="stylesheet" type="text/css" href="../css/gui.css">
 
-    <script type="text/javascript" src="../resources/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="../resources/jquery-2.2.4.min.js"></script>
     <script type="text/javascript" src="../resources/video-js/video.js"></script>
     <script type="text/javascript" src="../resources/bundle.js"></script>
     <script type="text/javascript" src="../resources/bootstrap/js/bootstrap.min.js"></script>
@@ -37,7 +37,7 @@
         window.URL = window.URL || window.webkitURL;
         window.MediaSource = window.MediaSource || window.WebKitMediaSource
 
-        client = new Client(document.getElementById('video'), new MediaSource, window);
+        client = new Client(document.getElementById('video'), new MediaSource(), window);
       };
     </script>
   </body>
