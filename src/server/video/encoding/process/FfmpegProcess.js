@@ -76,6 +76,8 @@ FfmpegProcess = function(options) {
       // We also need to pass `stderr` data to a function that will
       // filter and emit `progress` events.
       proc.stderr.pipe(split(/[\r\n]+/)).on('data', self._handleInfo);
+
+      self.proc.emit('start');
   }
 
   return self;

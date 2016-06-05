@@ -13,6 +13,7 @@ function Command(input) {
 
   args = args.concat(keyless.split(" "));
 
+  console.log(args);
   return args;
 }
 

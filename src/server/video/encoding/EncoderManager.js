@@ -66,11 +66,12 @@ module.exports = EncoderManager;
 function setEvents(command, manager) {
 	console.log("EncodingManager - setEvents");
 	command.on('start', function(command_line){
-		console.log("Server: Start encoding: ");
+		console.log("Server: Start encoding: " + new Date().getTime());
 	}).on('progress', function(percent) {
 		console.log(percent);
+		console.log(new Date().getTime());
 	}).on('close', function() {
-		console.log('Server: file has been converted succesfully');
+		console.log('Server: file has been converted succesfully: ' + new Date().getTime());
 		manager.emit('processed');
 	}).on('error', function(err) {
 		console.log(err);
