@@ -35,8 +35,8 @@ EncoderCommandFactory.get_ffmpeg_commands = function(source, name, scale, type, 
 }
 
 EncoderCommandFactory.get_video_webm_ffmpeg_command = function(source, output, scale){
-  return ' -y -i ' + source + ' -c:v libvpx-vp9 -s ' + scale + ' -b:v 500k -keyint_min 150' +
-                  ' -g 150 -tile-columns 4 -frame-parallel 1 -an -f webm -dash 1 ' + output;
+  return ' -y -i ' + source + ' -c:v libvpx-vp9 -s ' + scale + ' -keyint_min 150 -b:v 0 -crf 33 ' +
+                  ' -g 150 -tile-columns 4 -frame-parallel 1 -an -f webm -dash 1 -speed 1 -threads 8 ' + output;
 };
 
 EncoderCommandFactory.get_audio_webm_ffmpeg_command = function(source, output, scale){

@@ -85,7 +85,9 @@ function initialize(io, socket) {
         }
       }
 
-      new SyncRule(2).evaluate(player, broadcastEvent);
+      if(playerManager.getPlayers().size > 1) {
+        new SyncRule(2).evaluate(player, broadcastEvent);
+      }
     }
   });
 }
