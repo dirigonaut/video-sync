@@ -26,7 +26,13 @@ $('#seek-bar').on('mouseup', function() {
 });
 
 $('#btnFullScreen').click(function() {
-  $('#video')[0].webkitfullscreenchange();
+  var video = $('#video')[0];
+
+  if(document.fullScreen || document.webkitIsFullScreen) {
+    video.webkitExitFullScreen();
+  } else {
+    video.webkitRequestFullScreen();
+  }
 });
 
 $("video").on("pause", function (e) {
@@ -130,21 +136,24 @@ $('#createEncoding').click(function createEncoding() {
 
 //Side Events -----------------------------------------------------------------
 $('#btnSession').click(function() {
-  $('#sessionOverlay').show();
-  $('#smtpOverlay').hide();
-  $('#encodeOverlay').hide();
+  $('#sessionModal').modal('show');
+  $('#sessionModal').on('shown', function() {
+    $("#sessionId").focus();
+  })
 });
 
 $('#btnSmtp').click(function() {
-  $('#sessionOverlay').hide();
-  $('#smtpOverlay').show();
-  $('#encodeOverlay').hide();
+  $('#smtpModal').modal('show');
+  $('#smtpModal').on('shown', function() {
+    $("#smtpType").focus();
+  })
 });
 
 $('#btnEncode').click(function() {
-  $('#sessionOverlay').hide();
-  $('#smtpOverlay').hide();
-  $('#encodeOverlay').show();
+  $('#encodeModal').modal('show');
+  $('#encodeModal').on('shown', function() {
+    $("#encodeInput").focus();
+  })
 });
 
 //Login Events -----------------------------------------------------------------
