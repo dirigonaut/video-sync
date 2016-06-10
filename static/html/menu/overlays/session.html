@@ -1,31 +1,46 @@
-<form>
-  <fieldset>
-    <p>
-      <label for="sessionId">Id</label>
-      <input type="text" id="sessionId" value="11235"/>
-    </p>
-    <p>
-      <label for="sessionTitle">Title</label>
-      <input type="text" id="sessionTitle" value="Default Title"/>
-    </p>
-    <p>
-      <label for="sessionAddress">Email</label>
-      <input type="text" id="sessionAddress" value="bobofbobbles@gmail.com"/>
-    </p>
-    <p>
-      <label for="sessionInvitees">Invitees</label>
-      <input type="text" id="sessionInvitees" value="danielcsabo@gmail.com"/>
-    </p>
-    <p>
-      <label for="sessionSubject">Subject</label>
-      <input type="text" id="sessionSubject" value="Subject"/>
-    </p>
-    <p>
-      <label for="sessionText">Text</label>
-      <input type="text" id="sessionText" value="Hello"/>
-    </p>
-    <a href="#" id="createSession"> <span class="icon glyphicon glyphicon-ok"></span></a>
-    <a href="#" id="setSession"> <span class="icon glyphicon glyphicon-download"></span></a>
-    <a href="#" id="sendInvitation"> <span class="icon glyphicon glyphicon-send"></span></a>
-  </fieldset>
-</form>
+<div class="modal fade" id="sessionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Session</h4>
+      </div>
+      <div class="modal-body">
+        <form>
+          <fieldset>
+            <p>
+              <label for="sessionId">Id</label>
+              <input type="text" id="sessionId" value="11235"/>
+            </p>
+            <p>
+              <label for="sessionTitle">Title</label>
+              <input type="text" id="sessionTitle" value="Default Title"/>
+            </p>
+            <p>
+              <label for="sessionAddress">Email</label>
+              <input type="text" id="sessionAddress" value="bobofbobbles@gmail.com"/>
+            </p>
+            <p>
+              <label for="sessionInvitees">Invitees</label>
+              <input type="text" id="sessionInvitees" value="danielcsabo@gmail.com"/>
+            </p>
+            <p>
+              <label for="sessionSubject">Subject</label>
+              <input type="text" id="sessionSubject" value="Subject"/>
+            </p>
+            <p>
+              <label for="sessionText">Text</label>
+              <input type="text" id="sessionText" value="Hello"/>
+            </p>
+            <a href="#" id="createSession"> <span class="icon glyphicon glyphicon-ok"></span></a>
+            <a href="#" id="setSession"> <span class="icon glyphicon glyphicon-download"></span></a>
+            <a href="#" id="sendInvitation"> <span class="icon glyphicon glyphicon-send"></span></a>
+          </fieldset>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

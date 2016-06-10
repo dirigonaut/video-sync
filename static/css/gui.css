@@ -1,9 +1,13 @@
 .controls {
-  width: 80%;
+  width: 100%;
+  height: 25px;
   margin: auto;
-  position: relative;
-  overflow: auto;
-  z-index: 3
+  position: fixed;
+  display: inline-block;
+  background-color: #393838;
+  opacity: 1;
+  bottom: 0%;
+  z-index: 2147483648
 }
 
 .media {
@@ -14,10 +18,9 @@
 }
 
 .element {
-  width: 2%;
   position: relative;
   display: inline-block;
-  margin: auto;
+  margin: 0, auto;
   z-index: 3
 }
 
@@ -40,27 +43,27 @@
 }
 
 .location {
-  width: 90%;
-  position: relative;
-  margin: auto;
+  width: 100%;
+  position: fixed;
+  display: inline-block;
+  margin: 0 auto;
   z-index: 3
 }
 
 .side {
   top: 50%;
   float: left;
-  position: absolute;
+  position: fixed;
+  margin: 0 auto;
   overflow: auto;
   z-index: 3
 }
 
 .video {
-  width: 80%;
+  width: 100%;
   height: 100%;
   margin: auto;
-  position: relative;
-  display: block;
-  float: left;
+  position: fixed;
   background-color: #000000;
   z-index: 2
 }
@@ -80,14 +83,6 @@
   z-index: 2
 }
 
-#sessionOverlay {
-  display: none
-}
-
-#encodeOverlay {
-  display: none
-}
-
-#smtpOverlay {
-  display: none
+::-webkit-media-controls {
+  display:none !important;
 }
