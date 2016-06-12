@@ -3,44 +3,24 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+        <h4 class="modal-title" id="myModalLabel">SMTP</h4>
       </div>
       <div class="modal-body">
         <form>
           <fieldset>
-            <p>
-              <label for="smtpType">Type</label>
-              <input type="text" name="title" id="smtpType" value="SMTP"/>
-            </p>
-            <p>
-              <label for="smtpHost">Host</label>
-              <input type="text" name="title" id="smtpHost" value="Gmail"/>
-            </p>
-            <p>
-              <label for="smtpAddress">Address</label>
-              <input type="text" name="title" id="smtpAddress" value="bobofbobbles@gmail.com"/>
-            </p>
-            <p>
-              <label for="smtpPassword">Password</label>
-              <input type="text" name="title" id="smtpPassword" value="Password"/>
-            </p>
-            <a href="#" id="createSmtp"> <span class="icon glyphicon glyphicon-ok"></span></a>
-          </fieldset>
-          <fieldset>
-            <p>
-              <label for="contactHandle">Handle</label>
-              <input type="text" name="title" id="contactHandle" value="Handle"/>
-            </p>
-            <p>
-              <label for="contactAddress">Email</label>
-              <input type="text" name="title" id="contactAddress" value="address@host.com"/>
-            </p>
-            <a href="#" id="createContact"> <span class="icon glyphicon glyphicon-ok"></span></a>
+            <label for="smtpType">Type</label>
+            <input type="text" name="title" class="form-control" id="smtpType" placeholder="SMTP"/>
+            <label for="smtpHost">Host</label>
+            <input type="text" name="title" class="form-control" id="smtpHost" placeholder="Gmail"/>
+            <label for="smtpAddress">Address</label>
+            <input type="text" name="title" class="form-control" id="smtpAddress" placeholder="user@host.com"/>
+            <label for="smtpPassword">Password</label>
+            <input type="text" name="title" class="form-control" id="smtpPassword" placeholder="Password"/>
           </fieldset>
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</butto
+        <button type="button" class="btn btn-default" data-dismiss="modal" id="createSmtp">Save & Close</butto
       </div>
     </div>
   </div>

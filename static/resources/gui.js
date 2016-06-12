@@ -156,6 +156,13 @@ $('#btnEncode').click(function() {
   })
 });
 
+$('#btnLogin').click(function() {
+  $('#loginModal').modal('show');
+  $('#loginModal').on('shown', function() {
+    $("#loginUser").focus();
+  });
+});
+
 //Login Events -----------------------------------------------------------------
 $('#submitCreds').click(function readContacts() {
   var user     = $('#loginUser').val();

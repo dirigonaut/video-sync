@@ -15,19 +15,25 @@
     <script type="text/javascript" src="../resources/bootstrap/js/bootstrap.min.js"></script>
   </head>
   <body>
-    <div id="media_container" class="media">
-      <div id="video_container" class= "video">
-        <video id="video" class="video_element"></video>
-        <div id="control_container" class="controls">
+    <div id="video_container" class="video">
+      <div id="location_container" class="location">
+      </div>
+      <div id="side_container" class="side">
+        <div>
+          <a href="#" id="btnLogin"> <span class="glyphicon glyphicon-user"></span></a>
         </div>
       </div>
-      <div id="messenger" class="messenger">
+      <video id="video" class="video_element"></video>
+      <div id="control_container" class="controls">
       </div>
+    </div>
+    <div id="messenger"></div>
+    <div id="loginOverlay"></div>
     </div>
     <script>
       $(function(){
         $("#control_container").load("menu/controls.html");
-        $("#messenger").load("menu/overlays/login.html");
+        $("#loginOverlay").load("menu/overlays/login.html");
         $.getScript("../resources/gui.js");
       });
 
