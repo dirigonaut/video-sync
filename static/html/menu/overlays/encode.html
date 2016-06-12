@@ -3,33 +3,24 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+        <h4 class="modal-title" id="myModalLabel">Encoder</h4>
       </div>
       <div class="modal-body">
         <form>
           <fieldset>
-            <p>
-              <label for="encodeInput">Input</label>
-              <input type="text" name="title" id="encodeInput" value="/home/sabo-kun/repo/video-sync-2/static/media/bunny.mov"/>
-            </p>
-            <p>
-              <label for="encodeOutput">Output</label>
-              <input type="text" name="title" id="encodeOutput" value="/home/sabo-kun/repo/video-sync-2/static/media/bunny/"/>
-            </p>
-            <p>
-              <label for="encodeVideoQuality">Video Quality</label>
-              <input type="text" name="title" id="encodeVideoQuality" value="640x360"/>
-            </p>
-            <p>
-              <label for="encodeAudioQuality">Audio Quality</label>
-              <input type="text" name="title" id="encodeAudioQuality" value="128k"/>
-            </p>
-            <a href="#" id="createEncoding"> <span class="icon glyphicon glyphicon-ok"></span></a>
+            <label for="encodeInput">Input</label>
+            <input type="text" name="title" class="form-control" id="encodeInput" placeholder="/path/to/file.ext"/>
+            <label for="encodeOutput">Output</label>
+            <input type="text" name="title" class="form-control" id="encodeOutput" placeholder="/dir/to/save/encoded/video/to/"/>
+            <label for="encodeVideoQuality">Video Quality</label>
+            <input type="text" name="title" class="form-control" id="encodeVideoQuality" placeholder="1280x720"/>
+            <label for="encodeAudioQuality">Audio Quality</label>
+            <input type="text" name="title" class="form-control" id="encodeAudioQuality" placeholder="256k"/>
           </fieldset>
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal" id="createEncoding">Encode</button>
       </div>
     </div>
   </div>

@@ -83,6 +83,28 @@
   z-index: 2
 }
 
+.sessionBody {
+  width: 49%;
+  margin: auto;
+  display: inline-block;
+  position: relative;
+  float: left;
+}
+
+.sessionList {
+  width: 49%;
+  margin: auto;
+  display: inline-block;
+  position: relative;
+  float: right;
+}
+
+.sessionFooter {
+  width: 100%;
+  display: inline-block;
+  position: relative;
+}
+
 ::-webkit-media-controls {
   display:none !important;
 }
