@@ -77,25 +77,28 @@ FileBuffer.prototype._genId = function() {
 };
 
 FileBuffer.prototype.setupEvents = function() {
-  //cleanSocketEvents();
-  setSocketEvents(this);
+  clientSocket.clearEvent('file-register-response', fileRegisterResponse);
+  clientSocket.clearEvent('file-segment', fileSegment);
+  clientSocket.clearEvent('file-end', fileEnd);
+
+  clientSocket.setEvent('file-register-response', fileRegisterResponse);
+  clientSocket.setEvent('file-segment', fileSegment);
+  clientSocket.setEvent('file-end', fileEnd);
 }
 
 module.exports = FileBuffer;
 
-var setSocketEvents = function(fileBuffer) {
-  clientSocket.setEvent('file-register-response', function(response, callback){
-    console.log('file-register-response');
-    fileBuffer.registerResponse(response.requestId, response.header, callback);
-  });
+var fileRegisterResponse = function(response, callback){
+  console.log('file-register-response');
+  fileBuffer.registerResponse(response.requestId, response.header, callback);
+};
 
-  clientSocket.setEvent('file-segment', function(response){
-    console.log('file-segment');
-    fileBuffer.onData(response.bufferId, response.data);
-  });
+var fileSegment = function(response){
+  console.log('file-segment');
+  fileBuffer.onData(response.bufferId, response.data);
+};
 
-  clientSocket.setEvent('file-end', function(response){
-    console.log('file-end');
-    fileBuffer.onFinish(response.bufferId);
-  });
-}
+var fileEnd = function(response){
+  console.log('file-end');
+  fileBuffer.onFinish(response.bufferId);
+};

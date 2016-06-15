@@ -26,6 +26,14 @@ ClientSocket.prototype.setEvent = function(event, callback) {
 	socket.on(event, callback);
 };
 
+ClientSocket.prototype.clearEvent = function(event, callback) {
+	if(callback !== null && callback !== undefined) {
+		socket.off(event, callback);
+	} else {
+		socket.off(event);
+	}
+};
+
 ClientSocket.prototype.getSocketId = function() {
 	return socket.id;
 };

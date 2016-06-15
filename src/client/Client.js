@@ -1,10 +1,12 @@
-var CommandFactory = require('./utils/EncoderCommandFactory');
+var FormDataSingleton = require('./utils/FormDataSingleton');
 var MediaController = require('./video/MediaController');
 var RequestFactory = require('./utils/RequestFactory');
+var CommandFactory = require('./utils/EncoderCommandFactory');
 var ClientSocket = require('./socket/ClientSocket');
 var FileBuffer = require('./utils/FileBuffer');
 
 var clientSocket;
+var formData;
 
 function Client(video, mediaSource, window, port) {
   console.log("Client");
@@ -12,9 +14,12 @@ function Client(video, mediaSource, window, port) {
   var mediaController = new MediaController(fileBuffer);
 
   clientSocket = new ClientSocket();
+  formData = new FormDataSingleton();
 
   clientSocket.connect(function(){
     fileBuffer.setupEvents();
+    formData.setupEvents();
+    formData.initialize();
   }, getServerUrl(window, port));
 
   var initMedia = function() {
@@ -34,6 +39,10 @@ Client.prototype.getRequestFactory = function() {
 
 Client.prototype.getCommandFactory = function() {
   return CommandFactory;
+}
+
+Client.prototype.getFormDataSingleton = function() {
+  return formData;
 }
 
 module.exports = Client;

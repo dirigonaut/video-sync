@@ -31,7 +31,7 @@ NeDatabase.prototype.readSmtp = function(address, callback){
 };
 
 NeDatabase.prototype.readAllSmtp = function(callback){
-	var query = { smtpProfile : { $exists: true } };
+	var query = { mailOptions : { $exists: true } };
 	readJson(query, callback);
 };
 
