@@ -23,8 +23,8 @@ RequestFactory.prototype.buildStateRequest = function(state, time) {
 	return request;
 };
 
-RequestFactory.prototype.buildSmtpRequest = function(type, host, address, password) {
-	console.log("RequestFactory.buildCreateContactRequest");
+RequestFactory.prototype.buildSmtpCreateRequest = function(type, host, address, password) {
+	console.log("RequestFactory.buildSmtpCreateRequest");
 	var request	= new Object();
 	request.smtpType			= type;
 	request.smtpHost			= host;

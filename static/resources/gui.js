@@ -88,6 +88,29 @@ $('#setSession').click(function setSession() {
 
 $('#sendInvitation').click(function readSessions() {
   client.getClientSocket().sendRequest("smtp-invite");
+})
+
+$('#sessionList').on("click", "tr", function(e) {
+    var id = e.currentTarget.children[0].outerText;
+    var formData = client.getFormDataSingleton();
+    var sessions = formData.getSessionList();
+    var session = null;
+
+    for(var i in sessions) {
+      if(sessions[i]._id === id) {
+        session = sessions[i];
+        break;
+      }
+    }
+
+    if(session !== null && session !== undefined) {
+      $("#sessionId").val(session._id);
+      $("#sessionTitle").val(session.title);
+      $("#sessionAddress").val(session.smtp);
+      $("#sessionInvitees").val(session.invitees);
+      $("#sessionSubject").val(session.mailOptions.subject);
+      $("#sessionText").val(session.mailOptions.text);
+    }
 });
 
 //Smtp Events -----------------------------------------------------------------
@@ -106,7 +129,7 @@ $('#createSmtp').click(function createSmtp() {
   var password  = $('#smtpPassword').val();
 
   client.getClientSocket().sendRequest("db-create-smtp",
-    client.getRequestFactory().buildSmtpRequest(type, host, address, password));
+    client.getRequestFactory().buildSmtpCreateRequest(type, host, address, password));
 });
 
 $('#readContacts').click(function readContacts() {
@@ -136,6 +159,28 @@ $('#createEncoding').click(function createEncoding() {
 
 //Side Events -----------------------------------------------------------------
 $('#btnSession').click(function() {
+  var formData = client.getFormDataSingleton();
+
+  if($("#sessionId").val() == '') {
+    var session = formData.getActiveSession();
+
+    if(session !== null && session !== undefined) {
+      $("#sessionId").val(session._id);
+      $("#sessionTitle").val(session.title);
+      $("#sessionAddress").val(session.smtp);
+      $("#sessionInvitees").val(session.invitees);
+      $("#sessionSubject").val(session.mailOptions.subject);
+      $("#sessionText").val(session.mailOptions.text);
+    }
+  }
+
+  $('#sessionList tbody tr:not(:first)').remove();
+
+  var sessions = formData.getSessionList();
+  for(var i in sessions) {
+    $('#sessionList tr:last').after('<tr><td style="display:none;">' + sessions[i]._id + '</td><td>' + sessions[i].title + '</td></tr>');
+  }
+
   $('#sessionModal').modal('show');
   $('#sessionModal').on('shown', function() {
     $("#sessionId").focus();
