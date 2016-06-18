@@ -9,11 +9,13 @@ function WebmMeta(metaJson) {
 
   var activeVideo = ActiveMeta();
   activeVideo.selected = 0;
+  activeVideo.timeStep = parseInt(this.metaJson[activeVideo.selected].clusters[1].time) - parseInt(this.metaJson[activeVideo.selected].clusters[0].time);
+  activeVideo.threshold = activeVideo.timeStep / 2;
   this.active.set(SourceBuffer.Enum.VIDEO, activeVideo);
 
   var activeAudio = ActiveMeta();
   activeAudio.selected = 1;
-  activeAudio.timestep = 4983;
+  activeAudio.timeStep = parseInt(this.metaJson[activeAudio.selected].clusters[1].time) - parseInt(this.metaJson[activeAudio.selected].clusters[0].time);
   activeAudio.threshold = activeAudio.timeStep / 2;
   this.active.set(SourceBuffer.Enum.AUDIO, activeAudio);
 
@@ -21,10 +23,12 @@ function WebmMeta(metaJson) {
 }
 
 WebmMeta.prototype.selectVideoQuality = function(index) {
+  log.info('WebmMeta.selectVideoQuality');
   self.active.get(SourceBuffer.Enum.VIDEO).selected = index;
 };
 
 WebmMeta.prototype.selectAudioQuality = function(index) {
+  log.info('WebmMeta.selectAudioQuality');
   self.active.get(SourceBuffer.Enum.AUDIO).selected = index;
 };
 
@@ -58,15 +62,19 @@ WebmMeta.prototype.getSegmentIndex = function(typeId, timestamp) {
   var clusters = self.metaJson[activeMeta.selected].clusters;
   var clusterIndex = null;
 
-  for(var i in clusters) {
-    if(clusters[i].time == timestamp) {
-      clusterIndex = parseInt(i);
-      break;
-    } else if (clusters[i].time > timestamp) {
-      clusterIndex = parseInt(i) - 1;
-      break;
-    } else {
-      clusterIndex = parseInt(i);
+  if(timestamp == 0) {
+      clusterIndex = 0;
+  } else {
+    for(var i in clusters) {
+      if(clusters[i].time == timestamp) {
+        clusterIndex = parseInt(i);
+        break;
+      } else if (clusters[i].time > timestamp) {
+        clusterIndex = parseInt(i) - 1;
+        break;
+      } else {
+        clusterIndex = parseInt(i);
+      }
     }
   }
 
