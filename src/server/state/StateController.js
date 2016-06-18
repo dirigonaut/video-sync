@@ -93,7 +93,7 @@ function initialize(io, socket) {
 }
 
 var updatePlayerState = function(id, timestamp, state) {
-  var player        = playerManager.getPlayer("/#" + id);
+  var player = playerManager.getPlayer(id);
 
   if(player !== null && player!== undefined) {
     player.state      = state;
