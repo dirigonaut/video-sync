@@ -12,7 +12,12 @@ PlayerManager.prototype.createPlayer = function(socket){
 };
 
 PlayerManager.prototype.getPlayer = function(id){
-  return players.get(id);
+  var player = players.get(id);
+
+  if(player === null || player === undefined) {
+    player = players.get("/#" + id);
+  }
+  return player;
 };
 
 PlayerManager.prototype.getPlayers = function(){
