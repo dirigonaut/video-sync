@@ -71,7 +71,7 @@ $('#createSession').click(function createSession() {
   var id        = $('#sessionId').val();
   var title     = $('#sessionTitle').val();
   var address   = $('#sessionAddress').val();
-  var invitees  = [$('#sessionInvitees').val()];
+  var invitees  = ($('#sessionInvitees').val()).split(" ");
 
   client.getClientSocket().sendRequest("db-create-session",
     client.getRequestFactory().buildSessionRequest(id, title, address, invitees, mailOptions));
