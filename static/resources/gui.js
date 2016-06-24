@@ -1,4 +1,8 @@
 //Control Bar Events ----------------------------------------------------------
+function updateProgressBar(e) {
+  $('#seek-bar').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
+}
+
 $('#btnPlay').click(function() {
   if ($('#video')[0].paused) {
     client.getClientSocket().sendRequest("state-req-play", client.getRequestFactory().buildStateRequest("play", $("#video")[0].currentTime));
@@ -23,6 +27,13 @@ $('#seek-bar').on('mouseup', function() {
   var request = new Object();
   request.seektime = Math.round(length * (percent / 100));
   client.getClientSocket().sendRequest('state-req-seek', request, false);
+
+  $('#seek-bar').val(request.seektime / $("#video")[0].duration * 100);
+  $("video").on("timeupdate", updateProgressBar);
+});
+
+$('#seek-bar').on('mousedown', function() {
+  $("video").off("timeupdate", updateProgressBar);
 });
 
 $('#btnFullScreen').click(function() {
@@ -43,9 +54,7 @@ $("video").on("play", function (e) {
   $('.glyphicon-play').attr('class', 'glyphicon glyphicon-pause');
 });
 
-$("video").on("timeupdate", function (e) {
-  $('#seek-bar').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
-});
+$("video").on("timeupdate", updateProgressBar);
 
 $("#volume-bar").on("input change", function (e) {
   var range = parseInt($('#volume-bar').val()) * .01;

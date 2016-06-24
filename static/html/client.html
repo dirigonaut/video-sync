@@ -43,7 +43,11 @@
         window.URL = window.URL || window.webkitURL;
         window.MediaSource = window.MediaSource || window.WebKitMediaSource
 
-        client = new Client(document.getElementById('video'), new MediaSource(), window);
+        client = new Client(window);
+        client.on('isConnected', function() {
+            client.getClientSocket().setEvent("media-ready",
+              client.initializeVideo(document.getElementById('video'), new MediaSource(), window))
+        });
       };
     </script>
   </body>
