@@ -14,9 +14,10 @@ function MediaController(fBuffer) {
   this.fileBuffer = fBuffer;
 }
 
-MediaController.prototype.initializeVideo = function(element, mediaSource, window) {
+MediaController.prototype.initializeVideo = function(videoElement, mediaSource, window) {
   console.log("MediaController.initializeVideo");
-  this.videoSingleton = new VideoSingleton(element, mediaSource, window);
+  videoElement.src    = window.URL.createObjectURL(mediaSource);
+  this.videoSingleton = new VideoSingleton(videoElement, mediaSource);
 
   this.sourceBuffers = new Array(2);
   this.sourceBuffers[SourceBuffer.Enum.VIDEO] = new SourceBuffer(SourceBuffer.Enum.VIDEO, this.videoSingleton);
@@ -29,7 +30,7 @@ MediaController.prototype.initializeVideo = function(element, mediaSource, windo
 
   this.videoSingleton.initialize(this.fileBuffer);
 
-  this.videoSingleton.addVideoEvent('timeupdate', onTimeUpdateState(element));
+  this.videoSingleton.addVideoEvent('timeupdate', onTimeUpdateState(videoElement));
 
   this.videoSingleton.addVideoEvent('timeupdate', this.videoSingleton.onProgress(SourceBuffer.Enum.VIDEO));
   this.videoSingleton.addVideoEvent('timeupdate', this.videoSingleton.onProgress(SourceBuffer.Enum.AUDIO));
@@ -62,6 +63,7 @@ var setSocketEvents = function(videoSingleton, sourceBuffers, requestFactory) {
   clientSocket.setEvent('state-seek', function(data, callback) {
     console.log("state-seek");
     var video = videoSingleton.getVideoElement();
+    video.pause();
     video.currentTime = data.seektime;
     console.log(data);
     callback(clientSocket.getSocketId(), video.currentTime, video.paused);

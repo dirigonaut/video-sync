@@ -1,3 +1,6 @@
+const util          = require('util');
+const EventEmitter  = require('events');
+
 var FormDataSingleton = require('./utils/FormDataSingleton');
 var MediaController = require('./video/MediaController');
 var RequestFactory = require('./utils/RequestFactory');
@@ -5,14 +8,19 @@ var CommandFactory = require('./utils/EncoderCommandFactory');
 var ClientSocket = require('./socket/ClientSocket');
 var FileBuffer = require('./utils/FileBuffer');
 
+var mediaController;
 var clientSocket;
+var fileBuffer;
 var formData;
 
-function Client(video, mediaSource, window, port) {
-  console.log("Client");
-  var fileBuffer = new FileBuffer();
-  var mediaController = new MediaController(fileBuffer);
+var isConnected;
 
+function Client(window, port) {
+  console.log("Client");
+  var self = this;
+
+  isConnected = false;
+  fileBuffer = new FileBuffer();
   clientSocket = new ClientSocket();
   formData = new FormDataSingleton();
 
@@ -20,13 +28,18 @@ function Client(video, mediaSource, window, port) {
     fileBuffer.setupEvents();
     formData.setupEvents();
     formData.initialize();
+    isConnected = true;
+    self.emit('isConnected');
   }, getServerUrl(window, port));
+}
 
-  var initMedia = function() {
+util.inherits(Client, EventEmitter);
+
+Client.prototype.initializeVideo = function(video, mediaSource, window) {
+  if(isConnected) {
+    mediaController = new MediaController(fileBuffer);
     mediaController.initializeVideo(video, mediaSource, window);
-  };
-
-  clientSocket.setEvent("media-ready", initMedia);
+  }
 }
 
 Client.prototype.getClientSocket = function() {

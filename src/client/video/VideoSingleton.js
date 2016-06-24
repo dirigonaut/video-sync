@@ -10,14 +10,11 @@ var SourceBuffer    = require('./SourceBuffer.js');
 var self = null;
 var clientSocket = new ClientSocket();
 
-function VideoSingleton(video, mediaSource, window) {
+function VideoSingleton(video, mediaSource) {
   log.setDefaultLevel(0);
   if(self == null) {
     log.info('VideoSingleton');
-    video.src = window.URL.createObjectURL(mediaSource);
-
     this.mediaSource      = mediaSource;
-    this.window           = window;
     this.videoElement     = video;
 
     this.videoMetas       = null;
@@ -93,7 +90,6 @@ VideoSingleton.prototype.onSeek = function(typeId) {
     var selectedMedia = self.videoMetas.get(self.selectedMeta);
     selectedMedia.updateActiveMeta(typeId, selectedMedia.getSegmentIndex(typeId, self.videoElement.currentTime * 1000));
 
-    self.videoElement.pause(true);
     self.emit("get-segment", typeId, self.videoElement.currentTime * 1000);
   };
 
