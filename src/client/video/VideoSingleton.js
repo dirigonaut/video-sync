@@ -10,11 +10,10 @@ var SourceBuffer    = require('./SourceBuffer.js');
 var self = null;
 var clientSocket = new ClientSocket();
 
-function VideoSingleton(video, mediaSource) {
+function VideoSingleton(video) {
   log.setDefaultLevel(0);
   if(self == null) {
     log.info('VideoSingleton');
-    this.mediaSource      = mediaSource;
     this.videoElement     = video;
 
     this.videoMetas       = null;
@@ -34,21 +33,8 @@ VideoSingleton.prototype.initialize = function(fileBuffer) {
   clientSocket.sendRequest('get-meta-files', fileBuffer.registerRequest(self.addMetaData));
 };
 
-VideoSingleton.prototype.addMediaSourceEvent = function(event, callback) {
-  self.mediaSource.addEventListener(event, callback, false);
-};
-
-VideoSingleton.prototype.addVideoEvent = function(event, callback) {
-  log.info('VideoSingleton.addOnProgress');
-  self.videoElement.addEventListener(event, callback, false);
-};
-
 VideoSingleton.prototype.getVideoElement = function() {
   return self.videoElement;
-};
-
-VideoSingleton.prototype.getMediaSource = function() {
-  return self.mediaSource;
 };
 
 VideoSingleton.prototype.addMetaData = function(header, binaryFile) {

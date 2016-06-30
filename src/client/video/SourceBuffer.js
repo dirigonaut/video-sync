@@ -2,7 +2,7 @@ var log               = require('loglevel');
 var ClientSocket      = require('../socket/ClientSocket.js');
 var RequestFactory    = require('../utils/RequestFactory.js');
 
-function SourceBuffer(enum_type, video){
+function SourceBuffer(enum_type, video, mediaSource){
   var self = Object();
 
   self.type = enum_type;
@@ -35,15 +35,17 @@ function SourceBuffer(enum_type, video){
 
   self.setSourceBufferCallback = function(spec) {
     return function(e) {
-      self.sourceBuffer = video.getMediaSource().addSourceBuffer(spec);
+      console.log("SourceBuffer attached to MediaSource.")
+      self.sourceBuffer = mediaSource.addSourceBuffer(spec);
       self.sourceBuffer.addEventListener('error',  self.objectState);
       self.sourceBuffer.addEventListener('abort',  self.objectState);
       self.sourceBuffer.addEventListener('update', self.getOnBufferUpdate());
+      self.sourceBuffer.addEventListener('sourceend', self.clearEvents());
     };
   };
 
   self.bufferSegment = function(data) {
-    if (self.sourceBuffer.updating || video.mediaSource.readyState != "open" || self.queue.length > 0) {
+    if (self.sourceBuffer.updating || mediaSource.readyState != "open" || self.queue.length > 0) {
       self.queue.push(new Uint8Array(data));
     } else if(!self.sourceBuffer.updating) {
       self.sourceBuffer.appendBuffer(new Uint8Array(data));
@@ -68,6 +70,12 @@ function SourceBuffer(enum_type, video){
 
   self.objectState = function(e) {
     log.info("SourceBuffer's objectState");
+    console.log(e);
+  };
+
+  self.clearEvents = function(e) {
+    log.info("SourceBuffer's clearEvents");
+
     console.log(e);
   };
 

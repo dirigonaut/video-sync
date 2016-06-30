@@ -47,10 +47,21 @@
         var Client = require('./src/client/Client.js');
 
         var startClient = function() {
-          client = new Client(window, port);
+          var mediaSource = null;
+          client = new Client(document.getElementById('video'), window, port);
           client.on('isConnected', function() {
-              client.getClientSocket().setEvent("media-ready",
-                client.initializeVideo(document.getElementById('video'), new MediaSource(), window));
+              client.getClientSocket().setEvent("media-ready", function() {
+                if(mediaSource !== null) {
+                  mediaSource.endOfStream();
+                  mediaSource.addEventListener('sourceended', function() {
+                    mediaSource = new MediaSource();
+                    client.initializeVideo(mediaSource, window);
+                  });
+                } else {
+                  mediaSource = new MediaSource();
+                  client.initializeVideo(mediaSource, window);
+                }
+              });
           });
           loadGui();
         }
