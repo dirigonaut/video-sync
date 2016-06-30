@@ -15,7 +15,7 @@ var formData;
 
 var isConnected;
 
-function Client(window, port) {
+function Client(videoElement, window, port) {
   console.log("Client");
   var self = this;
 
@@ -23,6 +23,7 @@ function Client(window, port) {
   fileBuffer = new FileBuffer();
   clientSocket = new ClientSocket();
   formData = new FormDataSingleton();
+  mediaController = new MediaController(videoElement, fileBuffer);
 
   clientSocket.connect(function(){
     fileBuffer.setupEvents();
@@ -35,10 +36,9 @@ function Client(window, port) {
 
 util.inherits(Client, EventEmitter);
 
-Client.prototype.initializeVideo = function(video, mediaSource, window) {
+Client.prototype.initializeVideo = function(mediaSource, window) {
   if(isConnected) {
-    mediaController = new MediaController(fileBuffer);
-    mediaController.initializeVideo(video, mediaSource, window);
+    mediaController.initializeVideo(mediaSource, window);
   }
 }
 

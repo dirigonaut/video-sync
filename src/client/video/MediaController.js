@@ -1,3 +1,6 @@
+const util          = require('util');
+const EventEmitter  = require('events');
+
 var SourceBuffer    = require('./SourceBuffer.js');
 var VideoSingleton  = require('./VideoSingleton.js');
 var ClientSocket    = require('../socket/ClientSocket.js');
@@ -5,40 +8,53 @@ var RequestFactory  = require('../utils/RequestFactory.js');
 
 var clientSocket = new ClientSocket();
 
-function MediaController(fBuffer) {
-  console.log("MediaController");
-  this.video;
-  this.sourceBuffers;
-  this.videoSingleton;
+var videElement = null;
+var fileBuffer = null;
 
-  this.fileBuffer = fBuffer;
+function MediaController(video, fBuffer) {
+  console.log("MediaController");
+  fileBuffer = fBuffer;
+  videoElement = video;
+
+  this.on('initialized', function(mediaSource, window) {
+    videoElement.src = window.URL.createObjectURL(mediaSource);
+  });
 }
 
-MediaController.prototype.initializeVideo = function(videoElement, mediaSource, window) {
+util.inherits(MediaController, EventEmitter);
+
+MediaController.prototype.initializeVideo = function(mediaSource, window) {
   console.log("MediaController.initializeVideo");
-  videoElement.src    = window.URL.createObjectURL(mediaSource);
-  this.videoSingleton = new VideoSingleton(videoElement, mediaSource);
+  videoSingleton = new VideoSingleton(videoElement);
 
-  this.sourceBuffers = new Array(2);
-  this.sourceBuffers[SourceBuffer.Enum.VIDEO] = new SourceBuffer(SourceBuffer.Enum.VIDEO, this.videoSingleton);
-  this.sourceBuffers[SourceBuffer.Enum.AUDIO] = new SourceBuffer(SourceBuffer.Enum.AUDIO, this.videoSingleton);
+  sourceBuffers = new Array(2);
+  sourceBuffers[SourceBuffer.Enum.VIDEO] = new SourceBuffer(SourceBuffer.Enum.VIDEO, videoSingleton, mediaSource);
+  sourceBuffers[SourceBuffer.Enum.AUDIO] = new SourceBuffer(SourceBuffer.Enum.AUDIO, videoSingleton, mediaSource);
 
-  this.videoSingleton.addMediaSourceEvent('sourceopen',
-    this.sourceBuffers[SourceBuffer.Enum.VIDEO].setSourceBufferCallback('video/webm; codecs="vp9"'));
-  this.videoSingleton.addMediaSourceEvent('sourceopen',
-    this.sourceBuffers[SourceBuffer.Enum.AUDIO].setSourceBufferCallback('audio/webm; codecs="vorbis"'));
+  mediaSource.addEventListener('sourceopen',
+    sourceBuffers[SourceBuffer.Enum.VIDEO].setSourceBufferCallback('video/webm; codecs="vp9"'), false);
+  mediaSource.addEventListener('sourceopen',
+    sourceBuffers[SourceBuffer.Enum.AUDIO].setSourceBufferCallback('audio/webm; codecs="vorbis"'), false);
 
-  this.videoSingleton.initialize(this.fileBuffer);
+  videoSingleton.initialize(fileBuffer);
 
-  this.videoSingleton.addVideoEvent('timeupdate', onTimeUpdateState(videoElement));
+  videoElement.addEventListener('timeupdate', onTimeUpdateState(videoElement), false);
 
-  this.videoSingleton.addVideoEvent('timeupdate', this.videoSingleton.onProgress(SourceBuffer.Enum.VIDEO));
-  this.videoSingleton.addVideoEvent('timeupdate', this.videoSingleton.onProgress(SourceBuffer.Enum.AUDIO));
+  videoElement.addEventListener('timeupdate', videoSingleton.onProgress(SourceBuffer.Enum.VIDEO), false);
+  videoElement.addEventListener('timeupdate', videoSingleton.onProgress(SourceBuffer.Enum.AUDIO), false);
 
-  this.videoSingleton.addVideoEvent('seeking', this.videoSingleton.onSeek(SourceBuffer.Enum.VIDEO));
-  this.videoSingleton.addVideoEvent('seeking', this.videoSingleton.onSeek(SourceBuffer.Enum.AUDIO));
+  videoElement.addEventListener('seeking', videoSingleton.onSeek(SourceBuffer.Enum.VIDEO), false);
+  videoElement.addEventListener('seeking', videoSingleton.onSeek(SourceBuffer.Enum.AUDIO), false);
 
-  setSocketEvents(this.videoSingleton, this.sourceBuffers, new RequestFactory());
+  removeSocketEvents();
+  setSocketEvents(videoSingleton, sourceBuffers, new RequestFactory());
+
+  mediaSource.addEventListener('sourceended', function() {
+    mediaSource.removeSourceBuffer(sourceBuffers[SourceBuffer.Enum.VIDEO].sourceBuffer);
+    mediaSource.removeSourceBuffer(sourceBuffers[SourceBuffer.Enum.AUDIO].sourceBuffer);
+  });
+
+  this.emit('initialized', mediaSource, window);
 };
 
 module.exports = MediaController;
@@ -73,6 +89,13 @@ var setSocketEvents = function(videoSingleton, sourceBuffers, requestFactory) {
     console.log('segment-chunk');
     sourceBuffers[segment.typeId].bufferSegment(segment.data, videoSingleton);
   });
+}
+
+var removeSocketEvents = function () {
+  clientSocket.clearEvent('state-play');
+  clientSocket.clearEvent('state-pause');
+  clientSocket.clearEvent('state-seek');
+  clientSocket.clearEvent('segment-chunk');
 }
 
 var onTimeUpdateState = function(videoElement) {
