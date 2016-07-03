@@ -43,10 +43,23 @@
         window.URL = window.URL || window.webkitURL;
         window.MediaSource = window.MediaSource || window.WebKitMediaSource
 
-        client = new Client(window);
+        var mediaSource = null;
+        client = new Client(document.getElementById('video'), window, port);
         client.on('isConnected', function() {
-            client.getClientSocket().setEvent("media-ready",
-              client.initializeVideo(document.getElementById('video'), new MediaSource(), window))
+            client.getClientSocket().setEvent("media-ready", function() {
+
+              var initMedia = function() {
+                console.log("Init MediaSource");
+                mediaSource = new MediaSource();
+                return mediaSource;
+              };
+
+              if(mediaSource !== null) {
+                mediaSource.endOfStream();
+              } else {
+                client.initializeVideo(window, initMedia);
+              }
+            });
         });
       };
     </script>
