@@ -8,8 +8,8 @@ var RequestFactory  = require('../utils/RequestFactory.js');
 
 var clientSocket = new ClientSocket();
 
-var videElement = null;
-var fileBuffer = null;
+var videoElement  = null;
+var fileBuffer    = null;
 
 function MediaController(video, fBuffer) {
   console.log("MediaController");
@@ -17,7 +17,9 @@ function MediaController(video, fBuffer) {
   videoElement = video;
 
   this.on('initialized', function(mediaSource, window) {
+    console.log("Attach MediaSource to the videoElement.")
     videoElement.src = window.URL.createObjectURL(mediaSource);
+    videoElement.load();
   });
 }
 
@@ -25,9 +27,10 @@ util.inherits(MediaController, EventEmitter);
 
 MediaController.prototype.initializeVideo = function(mediaSource, window) {
   console.log("MediaController.initializeVideo");
-  videoSingleton = new VideoSingleton(videoElement);
+  var videoSingleton = new VideoSingleton(videoElement);
+  videoSingleton.initialize(fileBuffer);
 
-  sourceBuffers = new Array(2);
+  var sourceBuffers = new Array(2);
   sourceBuffers[SourceBuffer.Enum.VIDEO] = new SourceBuffer(SourceBuffer.Enum.VIDEO, videoSingleton, mediaSource);
   sourceBuffers[SourceBuffer.Enum.AUDIO] = new SourceBuffer(SourceBuffer.Enum.AUDIO, videoSingleton, mediaSource);
 
@@ -36,23 +39,46 @@ MediaController.prototype.initializeVideo = function(mediaSource, window) {
   mediaSource.addEventListener('sourceopen',
     sourceBuffers[SourceBuffer.Enum.AUDIO].setSourceBufferCallback('audio/webm; codecs="vorbis"'), false);
 
-  videoSingleton.initialize(fileBuffer);
+  var onTimeUpdateState = function() {
+    clientSocket.sendRequest('state-time-update', new RequestFactory().buildVideoStateRequest(videoElement), false);
+  };
 
-  videoElement.addEventListener('timeupdate', onTimeUpdateState(videoElement), false);
+  videoElement.addEventListener('timeupdate', onTimeUpdateState, false);
 
-  videoElement.addEventListener('timeupdate', videoSingleton.onProgress(SourceBuffer.Enum.VIDEO), false);
-  videoElement.addEventListener('timeupdate', videoSingleton.onProgress(SourceBuffer.Enum.AUDIO), false);
+  var videoUpdate = videoSingleton.onProgress(SourceBuffer.Enum.VIDEO);
+  var audioUpdate = videoSingleton.onProgress(SourceBuffer.Enum.AUDIO);
+  videoElement.addEventListener('timeupdate', videoUpdate, false);
+  videoElement.addEventListener('timeupdate', audioUpdate, false);
 
-  videoElement.addEventListener('seeking', videoSingleton.onSeek(SourceBuffer.Enum.VIDEO), false);
-  videoElement.addEventListener('seeking', videoSingleton.onSeek(SourceBuffer.Enum.AUDIO), false);
+  var videoSeek = videoSingleton.onSeek(SourceBuffer.Enum.VIDEO);
+  var audioSeek = videoSingleton.onSeek(SourceBuffer.Enum.AUDIO);
+  videoElement.addEventListener('seeking', videoSeek, false);
+  videoElement.addEventListener('seeking', audioSeek, false);
 
   removeSocketEvents();
   setSocketEvents(videoSingleton, sourceBuffers, new RequestFactory());
 
-  mediaSource.addEventListener('sourceended', function() {
+  var self = this;
+
+  var reset = function() {
+    console.log("MediaController Reset");
+    videoElement.removeEventListener('timeupdate', onTimeUpdateState, false);
+    videoElement.removeEventListener('timeupdate', videoUpdate, false);
+    videoElement.removeEventListener('timeupdate', audioUpdate, false);
+    videoElement.removeEventListener('seeking', videoSeek, false);
+    videoElement.removeEventListener('seeking', audioSeek, false);
+
     mediaSource.removeSourceBuffer(sourceBuffers[SourceBuffer.Enum.VIDEO].sourceBuffer);
     mediaSource.removeSourceBuffer(sourceBuffers[SourceBuffer.Enum.AUDIO].sourceBuffer);
-  });
+    mediaSource.removeEventListener('sourceend', reset);
+
+    console.log(videoSingleton);
+    videoSingleton.reset();
+    delete videoSingleton._events;
+    self.emit('readyToInitialize');
+  };
+
+  mediaSource.addEventListener('sourceended', reset);
 
   this.emit('initialized', mediaSource, window);
 };
@@ -96,10 +122,4 @@ var removeSocketEvents = function () {
   clientSocket.clearEvent('state-pause');
   clientSocket.clearEvent('state-seek');
   clientSocket.clearEvent('segment-chunk');
-}
-
-var onTimeUpdateState = function(videoElement) {
-  return function() {
-      clientSocket.sendRequest('state-time-update', new RequestFactory().buildVideoStateRequest(videoElement), false);
-  }
 }

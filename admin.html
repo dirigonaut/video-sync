@@ -51,15 +51,17 @@
           client = new Client(document.getElementById('video'), window, port);
           client.on('isConnected', function() {
               client.getClientSocket().setEvent("media-ready", function() {
+
+                var initMedia = function() {
+                  console.log("Init MediaSource");
+                  mediaSource = new MediaSource();
+                  return mediaSource;
+                };
+
                 if(mediaSource !== null) {
                   mediaSource.endOfStream();
-                  mediaSource.addEventListener('sourceended', function() {
-                    mediaSource = new MediaSource();
-                    client.initializeVideo(mediaSource, window);
-                  });
                 } else {
-                  mediaSource = new MediaSource();
-                  client.initializeVideo(mediaSource, window);
+                  client.initializeVideo(window, initMedia);
                 }
               });
           });

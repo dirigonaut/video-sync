@@ -36,9 +36,13 @@ function Client(videoElement, window, port) {
 
 util.inherits(Client, EventEmitter);
 
-Client.prototype.initializeVideo = function(mediaSource, window) {
+Client.prototype.initializeVideo = function(window, callback) {
   if(isConnected) {
-    mediaController.initializeVideo(mediaSource, window);
+    mediaController.initializeVideo(callback(), window);
+
+    mediaController.on('readyToInitialize', function() {
+      mediaController.initializeVideo(callback(), window);
+    });
   }
 }
 
