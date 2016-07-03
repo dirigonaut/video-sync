@@ -13,25 +13,31 @@ function SourceBuffer(enum_type, video, mediaSource){
   log.setDefaultLevel(0);
   log.info('SourceBuffer.initialize');
 
-  video.on('get-init', function(){
+  var getInit = function(){
     requestVideoData(video.getActiveMetaData().getInit(self.type));
-  });
+  };
 
-  video.on('get-next', function(typeId, timestamp) {
+  video.on('get-init', getInit);
+
+  var getNext = function(typeId, timestamp) {
     if(typeId == self.type) {
       if(!isTimeRangeBuffered(timestamp)) {
         requestVideoData(video.getActiveMetaData().getNextSegment(self.type));
       }
     }
-  });
+  };
 
-  video.on('get-segment', function(typeId, timestamp) {
+  video.on('get-next', getNext);
+
+  var getSegment = function(typeId, timestamp) {
     if(typeId == self.type) {
       if(!isTimeRangeBuffered(timestamp)) {
         requestVideoData(video.getActiveMetaData().getSegment(self.type, timestamp));
       }
     }
-  });
+  };
+
+  video.on('get-segment', getSegment);
 
   self.setSourceBufferCallback = function(spec) {
     return function(e) {
@@ -40,7 +46,7 @@ function SourceBuffer(enum_type, video, mediaSource){
       self.sourceBuffer.addEventListener('error',  self.objectState);
       self.sourceBuffer.addEventListener('abort',  self.objectState);
       self.sourceBuffer.addEventListener('update', self.getOnBufferUpdate());
-      self.sourceBuffer.addEventListener('sourceend', self.clearEvents());
+      self.sourceBuffer.addEventListener('sourceend', self.clearEvents);
     };
   };
 
@@ -75,8 +81,14 @@ function SourceBuffer(enum_type, video, mediaSource){
 
   self.clearEvents = function(e) {
     log.info("SourceBuffer's clearEvents");
+    video.removeListener('get-init', getInit);
+    video.removeListener('get-next', getNext);
+    video.removeListener('get-segment', getSegment);
 
-    console.log(e);
+    self.sourceBuffer.removeEventListener('error',  self.objectState);
+    self.sourceBuffer.removeEventListener('abort',  self.objectState);
+    self.sourceBuffer.removeEventListener('update', self.getOnBufferUpdate());
+    self.sourceBuffer.removeEventListener('sourceend', self.clearEvents());
   };
 
   var requestVideoData = function(requestDetails) {

@@ -12,15 +12,13 @@ var clientSocket = new ClientSocket();
 
 function VideoSingleton(video) {
   log.setDefaultLevel(0);
-  if(self == null) {
-    log.info('VideoSingleton');
-    this.videoElement     = video;
+  log.info('VideoSingleton');
+  this.videoElement     = video;
 
-    this.videoMetas       = null;
-    this.selectedMeta     = "webm";
+  this.videoMetas       = null;
+  this.selectedMeta     = "webm";
 
-    self = this;
-  }
+  self = this;
 }
 
 util.inherits(VideoSingleton, EventEmitter);
@@ -31,6 +29,11 @@ VideoSingleton.prototype.initialize = function(fileBuffer) {
   self.videoMetas = new Map();
 
   clientSocket.sendRequest('get-meta-files', fileBuffer.registerRequest(self.addMetaData));
+};
+
+VideoSingleton.prototype.reset = function(fileBuffer) {
+  log.info('VideoSingleton.reset');
+  self.videoElement.removeEventListener('play', onPlay, false);
 };
 
 VideoSingleton.prototype.getVideoElement = function() {
@@ -59,6 +62,7 @@ VideoSingleton.prototype.onProgress = function(typeId) {
       if(selectedMedia.isLastSegment(typeId)){
         if(selectedMedia.isReadyForNextSegment(typeId, self.videoElement.currentTime)){
           console.log("VideoSingleton.onProgress - isReady");
+          console.log(self.listeners('get-next'));
           self.emit("get-next", typeId, (self.videoElement.currentTime * 1000) + selectedMedia.getActiveMeta(typeId).timeStep);
         }
       } else {
@@ -86,6 +90,7 @@ module.exports = VideoSingleton;
 
 function onPlay() {
   console.log("VideoSingleton.onPlay");
+  console.log(self);
   self.emit("get-init");
   self.videoElement.removeEventListener('play', onPlay, false);
 }

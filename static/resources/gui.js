@@ -63,6 +63,7 @@ $("#volume-bar").on("input change", function (e) {
 
 //Location Events --------------------------------------------------------------
 $('#btnSessionMedia').click(function() {
+  console.log("Load new video.")
     var media = $('#locationBar').val();
     client.getClientSocket().sendRequest("admin-set-media", media);
 });
