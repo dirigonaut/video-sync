@@ -44,7 +44,7 @@
         window.MediaSource = window.MediaSource || window.WebKitMediaSource
 
         var mediaSource = null;
-        client = new Client(document.getElementById('video'), window, port);
+        client = new Client(document.getElementById('video'), window);
         client.on('isConnected', function() {
             client.getClientSocket().setEvent("media-ready", function() {
 
