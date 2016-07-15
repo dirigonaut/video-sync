@@ -31,7 +31,7 @@ NeDatabase.prototype.readSmtp = function(address, callback){
 };
 
 NeDatabase.prototype.readAllSmtp = function(callback){
-	var query = { mailOptions : { $exists: true } };
+	var query = { smtpAddress : { $exists: true } };
 	readJson(query, callback);
 };
 
@@ -45,8 +45,8 @@ NeDatabase.prototype.readSession = function(id, callback){
 	readJson(query, callback);
 };
 
-NeDatabase.prototype.readAllSessions = function(id, callback){
-	var query = { sessionProfile: { $exists: true } };
+NeDatabase.prototype.readAllSessions = function(callback){
+	var query = { title: { $exists: true } };
 	readJson(query, callback);
 };
 

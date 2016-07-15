@@ -170,30 +170,64 @@ $('#createEncoding').click(function createEncoding() {
 //Side Events -----------------------------------------------------------------
 $('#btnSession').click(function() {
   var formData = client.getFormDataSingleton();
-
-  if($("#sessionId").val() == '') {
-    var session = formData.getActiveSession();
-
-    if(session !== null && session !== undefined) {
-      $("#sessionId").val(session._id);
-      $("#sessionTitle").val(session.title);
-      $("#sessionAddress").val(session.smtp);
-      $("#sessionInvitees").val(session.invitees);
-      $("#sessionSubject").val(session.mailOptions.subject);
-      $("#sessionText").val(session.mailOptions.text);
-    }
-  }
-
-  $('#sessionList tbody tr:not(:first)').remove();
-
   var sessions = formData.getSessionList();
-  for(var i in sessions) {
-    $('#sessionList tr:last').after('<tr><td style="display:none;">' + sessions[i]._id + '</td><td>' + sessions[i].title + '</td></tr>');
+
+  if(sessions.length > 0) {
+    if($("#sessionId").val() == '') {
+      var session = sessions[0];
+
+      if(session !== null && session !== undefined) {
+        $("#sessionId").val(session._id);
+        $("#sessionTitle").val(session.title);
+        $("#sessionAddress").val(session.smtp);
+        $("#sessionInvitees").val(session.invitees);
+        $("#sessionSubject").val(session.mailOptions.subject);
+        $("#sessionText").val(session.mailOptions.text);
+      }
+    }
+
+    $('#sessionList tbody tr:not(:first)').remove();
+
+
+    for(var i in sessions) {
+      $('#sessionList tr:last').after('<tr><td style="display:none;">' + sessions[i]._id + '</td><td>' + sessions[i].title + '</td></tr>');
+    }
   }
 
   $('#sessionModal').modal('show');
   $('#sessionModal').on('shown', function() {
     $("#sessionId").focus();
+  })
+});
+
+$('#btnSmtp').click(function() {
+  var formData = client.getFormDataSingleton();
+  var smtps = formData.getSmtpList();
+  console.log(smtps);
+
+  if(smtps.length > 0) {
+    if($("#smtpId").val() == '') {
+      var smtp = smtps[0];
+
+      if(smtp !== null && smtp !== undefined) {
+        $("#smtpId").val(smtp._id);
+        $("#smtpType").val(smtp.type);
+        $("#smtpHost").val(smtp.smtpHost);
+        $("#smtpAddress").val(smtp.smtpAddress);
+        $("#smtpPassword").val(smtp.smtpPassword);
+      }
+    }
+
+    $('#smtpList tbody tr:not(:first)').remove();
+
+    for(var i in smtps) {
+      $('#smtpList tr:last').after('<tr><td style="display:none;">' + smtps[i]._id + '</td><td>' + smtps[i].smtpAddress + '</td></tr>');
+    }
+  }
+
+  $('#smtpModal').modal('show');
+  $('#smtpModal').on('shown', function() {
+    $("#smtpId").focus();
   })
 });
 

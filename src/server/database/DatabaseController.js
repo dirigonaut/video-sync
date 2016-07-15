@@ -66,9 +66,9 @@ function initialize(io, socket) {
     if(session.isAdmin(socket.id)) {
       console.log('db-read-sessions');
 
-      var emitResults = function(contacts) {
+      var emitResults = function(sessions) {
         //Remove everything but the address
-        socket.emit("db-sessions", contacts);
+        socket.emit("db-sessions", sessions);
       };
 
       database.readAllSessions(emitResults);

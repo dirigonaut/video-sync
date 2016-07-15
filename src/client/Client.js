@@ -28,7 +28,7 @@ function Client(videoElement, window, port) {
   clientSocket.connect(function(){
     fileBuffer.setupEvents();
     formData.setupEvents();
-    formData.initialize();
+    formData.initializeData();
     isConnected = true;
     self.emit('isConnected');
   }, getServerUrl(window, port));

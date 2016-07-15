@@ -16,20 +16,20 @@ Smtp.prototype.initializeTransport = function(address, callback) {
 
 		var loadSmtpOptions = function(result) {
 			var data = result[0];
-			if(data.type == "SMTP") {
-				smtpTransport = NodeMailer.createTransport("SMTP",{
-						service: data.smtpHost,
-						auth: {
-								user: data.smtpAddress,
-								pass: data.smtpPassword
-						}
-				});
-				activeSmtp = data.smtpAddress;
-				callback(data.address);
-			} else {
-				smtpTransport = NodeMailer.createTransport('smtps://' + encodeURI(data.smtpAddress) + ':' + data.smtpPassword + '@smtp.gmail.com');
-				activeSmtp = data.smtpAddress;
-				callback(data.address);
+			if(data != undefined && data != null) {
+				if(data.type == "Custom") {
+					//TODO: allow some basic custom smtp logic
+				} else {
+					smtpTransport = NodeMailer.createTransport({
+							service: data.smtpHost,
+							auth: {
+									user: data.smtpAddress,
+									pass: data.smtpPassword
+							}
+					});
+					activeSmtp = data.smtpAddress;
+					callback();
+				}
 			}
 		}
 
@@ -37,12 +37,10 @@ Smtp.prototype.initializeTransport = function(address, callback) {
 	}
 };
 
-Smtp.prototype.createMailOptions = function(from, to, subject, text, html) {
+Smtp.prototype.createMailOptions = function(subject, text, html) {
 	console.log("Smtp.createMailOptions");
 	var mailOptions 		= new Object();
 
-	mailOptions.from 		= from;
-	mailOptions.to 			= to;
 	mailOptions.subject	= subject;
 	mailOptions.text 		= text;
 	mailOptions.html 		= html;
