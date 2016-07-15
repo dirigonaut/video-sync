@@ -83,7 +83,7 @@
   z-index: 2
 }
 
-.sessionBody {
+.formBody {
   width: 49%;
   margin: auto;
   display: inline-block;
@@ -91,7 +91,7 @@
   float: left;
 }
 
-.sessionList {
+.formList {
   width: 49%;
   margin: auto;
   display: inline-block;
@@ -99,7 +99,7 @@
   float: right;
 }
 
-.sessionFooter {
+.formFooter {
   width: 100%;
   display: inline-block;
   position: relative;

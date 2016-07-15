@@ -4,40 +4,41 @@ var ClientSocket    = require('../socket/ClientSocket.js');
 var clientSocket = new ClientSocket();
 
 var sessionList = [];
-var activeSession = null;
-
-var smtp = null;
+var smtpList = [];
 
 function FormDataSingleton() {
 
 };
 
-FormDataSingleton.prototype.initialize = function() {
+FormDataSingleton.prototype.setupEvents = function() {
+  clientSocket.clearEvent('db-smtps', dbSmtps);
+  clientSocket.clearEvent('db-sessions', dbSessions);
+
+  clientSocket.setEvent('db-smtps', dbSmtps);
+  clientSocket.setEvent('db-sessions', dbSessions);
+};
+
+FormDataSingleton.prototype.initializeData = function() {
   clientSocket.sendRequest('db-read-smpts');
+  clientSocket.sendRequest('db-read-sessions');
 };
 
 FormDataSingleton.prototype.getSessionList = function() {
-  return smtp;
+  return sessionList;
 };
 
-FormDataSingleton.prototype.getActiveSession = function() {
-  return activeSession;
+FormDataSingleton.prototype.getSmtpList = function() {
+  return smtpList;
 };
-
-FormDataSingleton.prototype.setActiveSession = function(session) {
-  activeSession = session;
-};
-
-FormDataSingleton.prototype.setupEvents = function() {
-  clientSocket.clearEvent('db-smtps', dbSmtps);
-
-  clientSocket.setEvent('db-smtps', dbSmtps);
-}
 
 module.exports = FormDataSingleton;
 
 var dbSmtps = function(response){
   console.log('db-smtps');
-  smtp = response;
-  activeSession = smtp[0];
+  smtpList = response;
+};
+
+var dbSessions = function(response) {
+  console.log('db-sessions');
+  sessionList = response;
 };
