@@ -1,5 +1,5 @@
 var Http        = require('http')
-var NodeStatic  = require('node-static');
+var Express     = require('express');
 var SocketIO    = require('socket.io');
 
 var Smtp          = require('./smtp/Smtp');
@@ -18,16 +18,16 @@ var DatabaseController  = require('./database/DatabaseController');
 
 var app = null;
 var io  = null;
-var ns  = null;
+var server  = null;
 
 var session;
 var validator;
 var authenticator;
 
 function Server(ip, port, callback) {
-    ns  = new NodeStatic.Server('./static', {cache: 0, gzip: true});
-    app = new Http.createServer(handler);
-    io  = new SocketIO(app);
+    app = Express();
+    server = Http.Server(app);
+    io  = new SocketIO(server);
 
     new Bundler();
 
@@ -40,7 +40,9 @@ function Server(ip, port, callback) {
 
     session.setLocalIp(ip + ":" + port);
 
-    app.listen(port);
+    app.use(Express.static('static'));
+    server.listen(port);
+
     initialize();
     callback();
 }
@@ -93,13 +95,6 @@ function initialize() {
       }
     }, 300000);
   });
-}
-
-function handler(request, response) {
-  console.log(request);
-  request.addListener('end', function() {
-    ns.serve(request, response);
-  }).resume();
 }
 
 function userAuthorized(socket) {
