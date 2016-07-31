@@ -24,6 +24,10 @@ NeDatabase.prototype.createToken = function(json, callback){
 	createJson(json, callback);
 };
 
+NeDatabase.prototype.createCerts = function(json, callback){
+	createJson(json, callback);
+};
+
 //Read Calls
 NeDatabase.prototype.readSmtp = function(address, callback){
 	var query = { smtpAddress : address };
@@ -52,6 +56,11 @@ NeDatabase.prototype.readAllSessions = function(callback){
 
 NeDatabase.prototype.readToken = function(address, token, callback){
 	var query = { address : address, token : token };
+	readJson(query, callback);
+};
+
+NeDatabase.prototype.readCerts = function(callback){
+	var query = { certificate : { $exists: true } };
 	readJson(query, callback);
 };
 
@@ -96,6 +105,12 @@ NeDatabase.prototype.deleteSession = function(id, callback){
 NeDatabase.prototype.deleteTokens = function(id, callback){
 	var query = { _id: id };
 	var option = {};
+	deleteJson(query, option, callback);
+};
+
+NeDatabase.prototype.deleteCerts = function(date, callback){
+	var query = { expire: { $lt: date } };
+	var option = { multi: true };
 	deleteJson(query, option, callback);
 };
 

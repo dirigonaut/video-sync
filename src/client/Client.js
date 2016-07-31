@@ -66,7 +66,7 @@ module.exports = Client;
 
 function getServerUrl(window, port) {
   if(port != null && port != undefined) {
-    return "http://localhost:" + port;
+    return "https://localhost:" + port;
   }
 
   return window.location.host

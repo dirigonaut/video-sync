@@ -1,4 +1,4 @@
-var Http        = require('http')
+var Https       = require('https');
 var Express     = require('express');
 var SocketIO    = require('socket.io');
 
@@ -7,6 +7,7 @@ var Bundler       = require('./utils/Bundler');
 var Session       = require('./utils/Session');
 var Validator     = require('./utils/Validator');
 var NeDatabase    = require('./database/NeDatabase');
+var Certificate   = require('./utils/Certificate');
 var PlayerManager = require('./state/player/PlayerManager.js');
 var Authenticator = require('./authentication/Authenticator');
 
@@ -25,9 +26,13 @@ var validator;
 var authenticator;
 
 function Server(ip, port, callback) {
-    app = Express();
-    server = Http.Server(app);
-    io  = new SocketIO(server);
+  app = Express();
+
+  var initHttpsServer = function(cert) {
+    server = Https.createServer({key: cert.private,
+      cert: cert.cert}, app);
+
+    io = SocketIO(server);
 
     new Bundler();
 
@@ -45,6 +50,9 @@ function Server(ip, port, callback) {
 
     initialize();
     callback();
+  };
+
+  new Certificate().getCertificates(initHttpsServer);
 }
 
 module.exports = Server;
