@@ -1,3 +1,4 @@
+var Http       = require('http');
 var Https       = require('https');
 var Express     = require('express');
 var SocketIO    = require('socket.io');
@@ -29,9 +30,7 @@ function Server(ip, port, callback) {
   app = Express();
 
   var initHttpsServer = function(cert) {
-    server = Https.createServer({key: cert.private,
-      cert: cert.cert}, app);
-
+    server = Http.Server(app); //{key: cert.private, cert: cert.cert},
     io = SocketIO(server);
 
     new Bundler();
