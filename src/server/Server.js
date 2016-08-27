@@ -39,7 +39,7 @@ function Server(ip, port, callback) {
     };
 
     server = Https.createServer(options, app);
-    io = SocketIO(server);
+    io = SocketIO.listen(server);
 
     new Bundler();
 
