@@ -29,8 +29,16 @@ var authenticator;
 function Server(ip, port, callback) {
   app = Express();
 
-  var initHttpsServer = function(cert) {
-    server = Http.Server(app); //{key: cert.private, cert: cert.cert},
+  var initHttpsServer = function(pem) {
+    var options = {
+      key: pem.privateKey,
+      cert: pem.certificate,
+      requestCert: true,
+      ciphers: 'ECDHE-RSA-AES256-SHA:AES256-SHA:RC4-SHA:RC4:HIGH:!MD5:!aNULL:!EDH:!AESGCM',
+      honorCipherOrder: true
+    };
+
+    server = Https.createServer(options, app);
     io = SocketIO(server);
 
     new Bundler();
