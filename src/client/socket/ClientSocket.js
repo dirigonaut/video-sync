@@ -8,7 +8,7 @@ function ClientSocket() {
 ClientSocket.prototype.connect = function(callback, serverUrl) {
 	console.log("Socket connecting to: " + serverUrl);
 
-	socket = io.connect(serverUrl, {'force new connection': true});//secure: true, rejectUnauthorized: false});
+	socket = io.connect(serverUrl, {rejectUnauthorized: false});
 
 	socket.on('authenticated', function() {
 		callback();

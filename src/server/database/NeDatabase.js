@@ -60,7 +60,7 @@ NeDatabase.prototype.readToken = function(address, token, callback){
 };
 
 NeDatabase.prototype.readCerts = function(callback){
-	var query = { certificate : { $exists: true } };
+	var query = { pem : { $exists: true } };
 	readJson(query, callback);
 };
 
@@ -109,7 +109,7 @@ NeDatabase.prototype.deleteTokens = function(id, callback){
 };
 
 NeDatabase.prototype.deleteCerts = function(date, callback){
-	var query = { expire: { $lt: date } };
+	var query = { expire: { $gt: date } };
 	var option = { multi: true };
 	deleteJson(query, option, callback);
 };
