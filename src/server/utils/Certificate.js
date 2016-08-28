@@ -17,7 +17,7 @@ Certificate.prototype.getCertificates = function(callback) {
   var validateCerts = function(certs) {
     if(certs == null || certs == undefined || certs.length == 0) {
       console.log("There are no SSL Certificates, signing new ones.");
-      var cert = self._generate(null, callback);
+      var cert = self._generate(self._getAttributes(), callback);
     } else {
       console.log("Loading SSL Certificates.");
       var cert = certs[0];
@@ -27,7 +27,7 @@ Certificate.prototype.getCertificates = function(callback) {
         console.log("SSL Certificates are expired, signing new ones.");
         database.deleteCerts(Moment().valueOf());
 
-        var cert = self._generate(null, callback);
+        var cert = self._generate(self._getAttributes(), callback);
       }
     }
   }
@@ -48,7 +48,24 @@ Certificate.prototype._generate = function(attrs, callback) {
   cert.validity.notAfter = new Date();
   cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 1);
 
-  // use your own attributes here, or supply a csr (check the docs)
+  // here we set subject and issuer as the same one
+  cert.setSubject(attrs);
+  cert.setIssuer(attrs);
+
+  // the actual certificate signing
+  cert.sign(keypair.privateKey);
+
+  // now convert the Forge certificate to PEM format
+  var pem = {
+    privateKey: pki.privateKeyToPem(keypair.privateKey),
+    publicKey: pki.publicKeyToPem(keypair.publicKey),
+    certificate: pki.certificateToPem(cert)
+  };
+
+  self._save(pem, callback);
+};
+
+Certificate.prototype._getAttributes = function() {
   var attrs = [{
     name: 'commonName',
     value: 'example.org'
@@ -69,21 +86,7 @@ Certificate.prototype._generate = function(attrs, callback) {
     value: 'Test'
   }];
 
-  // here we set subject and issuer as the same one
-  cert.setSubject(attrs);
-  cert.setIssuer(attrs);
-
-  // the actual certificate signing
-  cert.sign(keypair.privateKey);
-
-  // now convert the Forge certificate to PEM format
-  var pem = {
-    privateKey: pki.privateKeyToPem(keypair.privateKey),
-    publicKey: pki.publicKeyToPem(keypair.publicKey),
-    certificate: pki.certificateToPem(cert)
-  };
-
-  self._save(pem, callback);
+  return attrs;
 };
 
 Certificate.prototype._save = function(certs, callback) {
