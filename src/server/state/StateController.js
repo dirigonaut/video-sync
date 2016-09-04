@@ -1,4 +1,4 @@
-var Validator     = require('../utils/Validator');
+var Validator     = require('../authentication/Validator');
 var StateEngine   = require('./StateEngine.js');
 
 var validator     = new Validator();
