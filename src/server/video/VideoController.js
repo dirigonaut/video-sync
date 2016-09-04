@@ -2,7 +2,7 @@ var VideoStream     = require('./VideoStream');
 var EncoderManager  = require('./encoding/EncoderManager');
 var WebmMetaData    = require('./meta/WebmMetaData');
 var Session         = require('../utils/Session');
-var Validator       = require('../utils/Validator');
+var Validator       = require('../authentication/Validator');
 
 var validator       = new Validator();
 var session         = new Session();

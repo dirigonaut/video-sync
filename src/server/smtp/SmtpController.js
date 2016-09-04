@@ -1,6 +1,6 @@
 var Smtp      = require('./Smtp');
 var Session   = require('../utils/Session');
-var Validator = require('../utils/Validator');
+var Validator = require('../authentication/Validator');
 
 var smtp      = new Smtp();
 var validator = new Validator();

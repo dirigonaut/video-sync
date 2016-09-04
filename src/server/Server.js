@@ -6,9 +6,9 @@ var SocketIO    = require('socket.io');
 var Smtp          = require('./smtp/Smtp');
 var Bundler       = require('./utils/Bundler');
 var Session       = require('./utils/Session');
-var Validator     = require('./utils/Validator');
+var Validator     = require('./authentication/Validator');
 var NeDatabase    = require('./database/NeDatabase');
-var Certificate   = require('./utils/Certificate');
+var Certificate   = require('./authentication/Certificate');
 var PlayerManager = require('./state/player/PlayerManager.js');
 var Authenticator = require('./authentication/Authenticator');
 
