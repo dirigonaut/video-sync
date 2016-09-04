@@ -4,11 +4,11 @@ var playerManager = new PlayerManager();
 
 function ChatEngine() { }
 
-ChatEngine.prototype.broadcast = function(message) {
+ChatEngine.prototype.broadcast = function(from, message) {
 
 };
 
-ChatEngine.prototype.ping = function(socket, message) {
+ChatEngine.prototype.ping = function(from, to, message) {
 
 };
 

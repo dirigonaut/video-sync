@@ -1,7 +1,9 @@
+var PlayerManager = require('../state/player/PlayerManager');
 var CommandEngine = require('./CommandEngine');
 var ChatEngine    = require('./ChatEngine');
 var Session       = require('../utils/Session');
 
+var playerManager = new PlayerManager();
 var commandEngine = new CommandEngine();
 var chatEngine    = new ChatEngine();
 var session       = new Session();
@@ -28,7 +30,7 @@ function initialize(io, socket) {
       console.log('chat-command');
 
       var response = function(message) {
-        chatEngine.broadcast(message);
+        chatEngine.broadcast(playerManager.getPlayer(socket.id).socket, message);
       }
 
       commandEngine.processCommand(data);
