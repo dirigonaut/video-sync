@@ -1,11 +1,13 @@
+var UserAdmin     = require("./UserAdministration");
 var Session       = require('../utils/Session');
 var Validator     = require('../authentication/Validator');
 var PlayerManager = require('../state/player/PlayerManager');
 var CommandEngine = require('../chat/CommandEngine');
 var ChatEngine    = require('./ChatEngine');
 
-var validator     = new Validator();
+var UserAdmin     = new UserAdmin();
 var session       = new Session();
+var validator     = new Validator();
 var playerManager = new PlayerManager();
 var commandEngine = new CommandEngine();
 var chatEngine    = new ChatEngine();
@@ -16,6 +18,13 @@ function AdminController(io, socket) {
 
 function initialize(io, socket) {
   console.log("Attaching AdminController");
+
+  socket.on('admin-smtp-invite', function() {
+    if(session.isAdmin(socket.id) && session.getActiveSession() != null){
+      console.log('admin-smtp-invite');
+      UserAdmin.inviteUsers();
+    }
+  });
 
   socket.on('admin-set-media', function(data) {
     if(session.isAdmin(socket.id)){

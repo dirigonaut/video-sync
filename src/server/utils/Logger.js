@@ -7,8 +7,6 @@ var Session       = require('../utils/Session');
 var session     = new Session();
 var chatEngine  = new ChatEngine();
 
-const SYSTEM  = "system";
-
 var logLevel  = 0;
 var socket    = null;
 
@@ -61,8 +59,9 @@ var setAdminSocket = function() {
   }
 };
 
-var pingLog = function(level, message) {
+var pingLog = function(level, text) {
   if(level >= logLevel) {
-    chatEngine.ping(SYSTEM, socket, message);
+    var message chatEngine.buildMessage(ChatEngine.SYSTEM, socket, text);
+    chatEngine.ping(ChatEngine.Enum.LOG, message);
   }
 };

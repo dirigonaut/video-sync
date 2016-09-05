@@ -17,20 +17,33 @@ function initialize(io, socket) {
 
   socket.on('chat-broadcast', function(data) {
     console.log('chat-broadcast');
-    chatEngine.broadcast(data);
+
+    var message chatEngine.buildMessage(socket.id, null, text);
+    chatEngine.broadcast(ChatEngine.Enum.BROADCAST, message);
   });
 
   socket.on('chat-private', function(data) {
     console.log('chat-private');
-    chatEngine.ping(data.socket, data.message);
+
+    var player = playerManager.getPlayer(data.to);
+
+    if(player != null) {
+      var message chatEngine.buildMessage(socket.id, player.socket, data.text);
+      chatEngine.ping(ChatEngine.Enum.PING, message);
+    } else {
+      var message chatEngine.buildMessage(ChatEngine.SYSTEM, socket,
+        "No such player by that name cannot send private message.");
+      chatEngine.ping(ChatEngine.Enum.PING, message);
+    }
   });
 
   socket.on('chat-command', function(data) {
     if(!session.isAdmin(socket.id)){
       console.log('chat-command');
 
-      var response = function(message) {
-        chatEngine.broadcast(playerManager.getPlayer(socket.id).socket, message);
+      var response = function(text) {
+        var message chatEngine.buildMessage(socket.id, null, text);
+        chatEngine.broadcast(ChatEngine.Enum.BROADCAST, message);
       }
 
       commandEngine.processCommand(data);

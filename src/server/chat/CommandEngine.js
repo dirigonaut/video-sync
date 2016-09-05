@@ -1,8 +1,12 @@
+var UserAdmin     = require('../administration/UserAdministration');
 var StateEngine   = require('./StateEngine.js');
 var PlayerManager = require('../state/player/PlayerManager');
+var ChatEngine    = require('./ChatEngine');
 
+var userAdmin     = new UserAdmin();
 var stateEngine   = new StateEngine();
 var playerManager = new PlayerManager();
+var chatEngine    = new ChatEngine();
 
 function CommandEngine() {
 
@@ -11,40 +15,50 @@ function CommandEngine() {
 CommandEngine.prototype.processAdminCommand = function(command, callback) {
   switch(command.command) {
     case CommandEngine.Enum.INVITE:
-    break;
+      var message = chatEngine.buildMessage(ChatEngine.SYSTEM, command.issuer, "admin invite response");
+      userAdmin.inviteUser(command.param);
+      chatEngine.ping(ChatEngine.PING, message);
+      break;
     case CommandEngine.Enum.KICK:
-    break;
+      var message = chatEngine.buildMessage(ChatEngine.SYSTEM, command.issuer, "admin kick response");
+      userAdmin.kickUser(command.param);
+      chatEngine.ping(ChatEngine.PING, message);
+      break;
     case CommandEngine.Enum.HELP:
-      callback("admin response");
-    break;
+      var message = chatEngine.buildMessage(ChatEngine.SYSTEM, command.issuer, "admin help response");
+      chatEngine.ping(ChatEngine.PING, message);
+      break;
     default:
       this.processCommand(command, callback);
-    break;
+      break;
   }
 };
 
 CommandEngine.prototype.processCommand = function(command, callback) {
   switch(command.command) {
     case CommandEngine.Enum.PLAY:
-      callback("response");
+      callback("play response from " + command.issuer);
       stateEngine.play();
-    break;
+      break;
     case CommandEngine.Enum.PAUSE:
-      callback("response");
+      callback("pause response from " + command.issuer);
       stateEngine.pause();
-    break;
+      break;
     case CommandEngine.Enum.SEEK:
-      callback("response");
-      stateEngine.pause(command.param);
-    break;
+      callback("seek response from " + command.issuer);
+      stateEngine.seek(command.param);
+      break;
     case CommandEngine.Enum.USERS:
-    break;
+      var message = chatEngine.buildMessage(ChatEngine.SYSTEM, command.issuer, "users response");
+      chatEngine.ping(ChatEngine.PING, message);
+      break;
     case CommandEngine.Enum.HELP:
-      callback("response");
-    break;
+      var message = chatEngine.buildMessage(ChatEngine.SYSTEM, command.issuer, "help response");
+      chatEngine.ping(ChatEngine.PING, message);
+      break;
     default:
       callback(command.command + " is not a recognized command, type /help for a list of commands.");
-    break;
+      break;
   }
 };
 
