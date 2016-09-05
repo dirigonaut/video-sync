@@ -97,7 +97,7 @@ $('#setSession').click(function setSession() {
 });
 
 $('#sendInvitation').click(function readSessions() {
-  client.getClientSocket().sendRequest("smtp-invite");
+  client.getClientSocket().sendRequest("admin-smtp-invite");
 })
 
 $('#sessionList').on("click", "tr", function(e) {

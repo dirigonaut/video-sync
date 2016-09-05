@@ -1,9 +1,8 @@
-var Http       = require('http');
 var Https       = require('https');
 var Express     = require('express');
 var SocketIO    = require('socket.io');
 
-var Smtp          = require('./smtp/Smtp');
+var Smtp          = require('./utils/Smtp');
 var Bundler       = require('./utils/Bundler');
 var Session       = require('./utils/Session');
 var Validator     = require('./authentication/Validator');
@@ -15,8 +14,8 @@ var Authenticator = require('./authentication/Authenticator');
 var AdminController     = require('./administration/AdminController');
 var VideoController     = require('./video/VideoController');
 var StateController     = require('./state/StateController');
-var SmtpController      = require('./smtp/SmtpController');
 var DatabaseController  = require('./database/DatabaseController');
+var ChatController      = require('./chat/ChatController');
 
 var app = null;
 var io  = null;
@@ -117,6 +116,7 @@ function userAuthorized(socket) {
 
   var video = new VideoController(io, socket);
   var state = new StateController(io, socket);
+  var chat = new ChatController(io, socket);
 
   new PlayerManager().createPlayer(socket);
 
@@ -135,7 +135,6 @@ function isAdministrator(socket) {
       session.setAdminId(socket.id);
 
       new AdminController(io, socket);
-      new SmtpController(io, socket);
       new DatabaseController(io, socket);
 
       userAuthorized(socket);

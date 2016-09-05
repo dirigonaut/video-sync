@@ -32,6 +32,10 @@ Session.prototype.getInvitee = function(id, session) {
   }
 };
 
+Session.prototype.addInvitee = function(id, session) {
+  session.invitees.push(id);
+};
+
 Session.prototype.removeInvitee = function(id, session) {
   for(var x in session.invitees) {
     if(session.invitees[x] == id) {
