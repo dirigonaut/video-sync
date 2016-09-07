@@ -1,5 +1,5 @@
 var validator 		= require('validator');
-var	json_keys			= require('./JsonKeys');
+var	json_keys			= require('../utils/JsonKeys');
 
 function Validator(){
 	this.debug = true;

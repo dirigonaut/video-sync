@@ -3,9 +3,9 @@ var Session       = require('../utils/Session');
 var Validator     = require('../authentication/Validator');
 var PlayerManager = require('../state/player/PlayerManager');
 var CommandEngine = require('../chat/CommandEngine');
-var ChatEngine    = require('./ChatEngine');
+var ChatEngine    = require('../chat/ChatEngine');
 
-var UserAdmin     = new UserAdmin();
+var userAdmin     = new UserAdmin();
 var session       = new Session();
 var validator     = new Validator();
 var playerManager = new PlayerManager();
@@ -22,7 +22,7 @@ function initialize(io, socket) {
   socket.on('admin-smtp-invite', function() {
     if(session.isAdmin(socket.id) && session.getActiveSession() != null){
       console.log('admin-smtp-invite');
-      UserAdmin.inviteUsers();
+      userAdmin.inviteUsers();
     }
   });
 

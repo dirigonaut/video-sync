@@ -7,9 +7,7 @@ var SyncRule      = require('./rules/SyncRule.js');
 var playerManager = new PlayerManager();
 var session       = new Session();
 
-function StateEngine() {
-
-}
+function StateEngine() { }
 
 StateEngine.prototype.play = function() {
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
@@ -78,8 +76,7 @@ StateEngine.prototype.timeUpdate = function() {
       new SyncRule(2).evaluate(player, broadcastEvent);
     }
   }
-});
-}
+};
 
 module.exports = StateEngine;
 
@@ -93,4 +90,4 @@ var updatePlayerState = function(id, timestamp, state) {
     console.log("Id: " + id);
     console.log(playerManager.getPlayers());
   }
-}
+};

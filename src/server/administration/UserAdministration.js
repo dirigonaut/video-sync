@@ -1,6 +1,6 @@
 var PlayerManager = require('../state/player/PlayerManager');
 var NeDatabase    = require('../database/NeDatabase');
-var Smtp          = require('../smtp/Smtp');
+var Smtp          = require('../utils/Smtp');
 var Session       = require('../utils/Session');
 
 var playerManager = new PlayerManager();
@@ -42,7 +42,7 @@ UserAdministration.prototype.inviteUsers = function() {
   smtp.initializeTransport(session.getActiveSession().smtp, sendInvitations);
 };
 
-module.export = UserAdministration;
+module.exports = UserAdministration;
 
 function addP2PLink(mailOptions) {
   console.log("adding Link");

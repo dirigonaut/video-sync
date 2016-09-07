@@ -26,7 +26,7 @@ ChatEngine.prototype.buildMessage = function(from, toSocket, text) {
   return message;
 };
 
-module.export = ChatEngine;
+module.exports = ChatEngine;
 
 ChatEngine.SYSTEM = "system";
 ChatEngine.Enum = {"PING" : "chat-ping-resp", "BROADCAST" : "chat-broadcast-resp", "LOG" : "chat-log-resp"};
