@@ -18,7 +18,7 @@ function initialize(io, socket) {
   socket.on('chat-broadcast', function(data) {
     console.log('chat-broadcast');
 
-    var message chatEngine.buildMessage(socket.id, null, text);
+    var message = chatEngine.buildMessage(socket.id, null, data);
     chatEngine.broadcast(ChatEngine.Enum.BROADCAST, message);
   });
 
@@ -28,10 +28,10 @@ function initialize(io, socket) {
     var player = playerManager.getPlayer(data.to);
 
     if(player != null) {
-      var message chatEngine.buildMessage(socket.id, player.socket, data.text);
+      var message = chatEngine.buildMessage(socket.id, player.socket, data.text);
       chatEngine.ping(ChatEngine.Enum.PING, message);
     } else {
-      var message chatEngine.buildMessage(ChatEngine.SYSTEM, socket,
+      var message = chatEngine.buildMessage(ChatEngine.SYSTEM, socket,
         "No such player by that name cannot send private message.");
       chatEngine.ping(ChatEngine.Enum.PING, message);
     }
@@ -42,7 +42,7 @@ function initialize(io, socket) {
       console.log('chat-command');
 
       var response = function(text) {
-        var message chatEngine.buildMessage(socket.id, null, text);
+        var message = chatEngine.buildMessage(socket.id, null, text);
         chatEngine.broadcast(ChatEngine.Enum.BROADCAST, message);
       }
 
@@ -51,4 +51,4 @@ function initialize(io, socket) {
   });
 }
 
-module.export = ChatController;
+module.exports = ChatController;

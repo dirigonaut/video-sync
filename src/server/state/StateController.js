@@ -35,5 +35,5 @@ function initialize(io, socket) {
 
   socket.on('state-time-update', function(data) {
     stateEngine.timeUpdate();
-  }
+  });
 }

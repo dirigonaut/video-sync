@@ -1,5 +1,5 @@
 var UserAdmin     = require('../administration/UserAdministration');
-var StateEngine   = require('./StateEngine.js');
+var StateEngine   = require('../state/StateEngine.js');
 var PlayerManager = require('../state/player/PlayerManager');
 var ChatEngine    = require('./ChatEngine');
 
@@ -8,9 +8,7 @@ var stateEngine   = new StateEngine();
 var playerManager = new PlayerManager();
 var chatEngine    = new ChatEngine();
 
-function CommandEngine() {
-
-}
+function CommandEngine() { }
 
 CommandEngine.prototype.processAdminCommand = function(command, callback) {
   switch(command.command) {
