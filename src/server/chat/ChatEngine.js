@@ -5,6 +5,7 @@ var playerManager = new PlayerManager();
 function ChatEngine() { }
 
 ChatEngine.prototype.broadcast = function(event, message) {
+  console.log("ChatEngine.prototype.broadcast");
   if(event != null && message != null) {
     for(var player of playerManager.getPlayers()) {
       player[1].socket.emit(event, message);
@@ -12,16 +13,15 @@ ChatEngine.prototype.broadcast = function(event, message) {
   }
 };
 
-ChatEngine.prototype.ping = function(event, message) {
-  if(event != null && message != null && message.toSocket != null) {
-    message.toSocket.emit(event, message);
+ChatEngine.prototype.ping = function(event, socket, message) {
+  if(event != null && message != null && socket != null) {
+    socket.emit(event, message);
   }
 };
 
-ChatEngine.prototype.buildMessage = function(from, toSocket, text) {
+ChatEngine.prototype.buildMessage = function(from, text) {
   var message = new Object();
   message.from = from;
-  mesasge.toSocket = toSocket;
   message.text = text;
   return message;
 };

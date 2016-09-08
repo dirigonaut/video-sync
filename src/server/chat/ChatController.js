@@ -2,38 +2,40 @@ var PlayerManager = require('../state/player/PlayerManager');
 var CommandEngine = require('./CommandEngine');
 var ChatEngine    = require('./ChatEngine');
 var Session       = require('../utils/Session');
+var Logger        = require('../utils/Logger');
 
 var playerManager = new PlayerManager();
 var commandEngine = new CommandEngine();
 var chatEngine    = new ChatEngine();
 var session       = new Session();
+var log           = new Logger();
 
 function ChatController(io, socket) {
   initialize(io, socket);
 }
 
 function initialize(io, socket) {
-  console.log("Attaching ChatController");
+  log.trace("Attaching ChatController");
 
   socket.on('chat-broadcast', function(data) {
-    console.log('chat-broadcast');
+    log.trace('chat-broadcast');
 
-    var message = chatEngine.buildMessage(socket.id, null, data);
+    var message = chatEngine.buildMessage(socket.id, data);
     chatEngine.broadcast(ChatEngine.Enum.BROADCAST, message);
   });
 
   socket.on('chat-private', function(data) {
-    console.log('chat-private');
+    log.trace('chat-private');
 
     var player = playerManager.getPlayer(data.to);
 
-    if(player != null) {
-      var message = chatEngine.buildMessage(socket.id, player.socket, data.text);
-      chatEngine.ping(ChatEngine.Enum.PING, message);
+    if(player != null && player != undefined) {
+      var message = chatEngine.buildMessage(socket.id, data.text);
+      chatEngine.ping(ChatEngine.Enum.PING, player.socket, message);
     } else {
-      var message = chatEngine.buildMessage(ChatEngine.SYSTEM, socket,
+      var message = chatEngine.buildMessage(ChatEngine.SYSTEM,
         "No such player by that name cannot send private message.");
-      chatEngine.ping(ChatEngine.Enum.PING, message);
+      chatEngine.ping(ChatEngine.Enum.PING, player.socket, message);
     }
   });
 
@@ -42,7 +44,7 @@ function initialize(io, socket) {
       console.log('chat-command');
 
       var response = function(text) {
-        var message = chatEngine.buildMessage(socket.id, null, text);
+        var message = chatEngine.buildMessage(socket.id, text);
         chatEngine.broadcast(ChatEngine.Enum.BROADCAST, message);
       }
 

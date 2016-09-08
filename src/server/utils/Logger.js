@@ -17,7 +17,7 @@ function Logger() {
 }
 
 Logger.prototype.trace = function(message) {
-  log.trace(message);
+  //log.trace(message);
   pingLog(Logger.Enum.TRACE, message);
 };
 
@@ -60,8 +60,8 @@ var setAdminSocket = function() {
 };
 
 var pingLog = function(level, text) {
-  if(level >= logLevel) {
-    var message chatEngine.buildMessage(ChatEngine.SYSTEM, socket, text);
-    chatEngine.ping(ChatEngine.Enum.LOG, message);
-  }
+  //if(level >= logLevel) {
+    var message = chatEngine.buildMessage(ChatEngine.SYSTEM, text);
+    chatEngine.ping(ChatEngine.Enum.LOG, socket, message);
+  //}
 };
