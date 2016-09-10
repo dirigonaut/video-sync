@@ -15,7 +15,7 @@ function initialize(io, socket) {
 
   socket.on('state-req-play', function(data) {
     console.log('state-req-play');
-    stateEngine.play();
+    stateEngine.play(socket.id, data);
   });
 
   socket.on('state-req-pause', function(data) {
@@ -30,10 +30,10 @@ function initialize(io, socket) {
 
   socket.on('state-sync', function() {
     console.log('state-sync');
-    stateEngine.sync();
+    stateEngine.sync(socket);
   });
 
   socket.on('state-time-update', function(data) {
-    stateEngine.timeUpdate();
+    stateEngine.timeUpdate(socket.id, data);
   });
 }

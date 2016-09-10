@@ -1,5 +1,5 @@
 function testSendChatCommand(command) {
-  var message = {"command" : command, "issuer" : client.getClientSocket().getSocketId(), "param" : null};
+  var message = {"command" : command, "issuer" : client.getClientSocket().getSocketId(), "param" : 100};
   client.getClientSocket().sendRequest("chat-command", message);
 }
 

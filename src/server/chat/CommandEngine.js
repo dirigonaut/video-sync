@@ -11,6 +11,8 @@ var chatEngine    = new ChatEngine();
 function CommandEngine() { }
 
 CommandEngine.prototype.processAdminCommand = function(command, callback) {
+  console.log("CommandEngine.prototype.processAdminCommand");
+  console.log(command);
   switch(command.command) {
     case CommandEngine.Enum.INVITE:
       var message = chatEngine.buildMessage(ChatEngine.SYSTEM, command.issuer, "admin invite response");
@@ -33,10 +35,11 @@ CommandEngine.prototype.processAdminCommand = function(command, callback) {
 };
 
 CommandEngine.prototype.processCommand = function(command, callback) {
+  console.log("CommandEngine.prototype.processCommand");
   switch(command.command) {
     case CommandEngine.Enum.PLAY:
       callback("play response from " + command.issuer);
-      stateEngine.play();
+      stateEngine.play(command.issuer);
       break;
     case CommandEngine.Enum.PAUSE:
       callback("pause response from " + command.issuer);
