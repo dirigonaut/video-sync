@@ -9,11 +9,9 @@ var session       = new Session();
 
 function StateEngine() { }
 
-StateEngine.prototype.play = function() {
+StateEngine.prototype.play = function(id) {
+  console.log()
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
-
-    var player = playerManager.getPlayer(socket.id);
-    player.timestamp = data.time;
 
     var broadcastEvent = function() {
       for(var player of playerManager.getPlayers()) {
@@ -41,7 +39,7 @@ StateEngine.prototype.seek = function(data) {
   }
 };
 
-StateEngine.prototype.sync = function(data) {
+StateEngine.prototype.sync = function(socket) {
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     if(playerManager.getPlayers().size > 1) {
       var syncTime = null;
@@ -60,10 +58,10 @@ StateEngine.prototype.sync = function(data) {
   }
 };
 
-StateEngine.prototype.timeUpdate = function() {
+StateEngine.prototype.timeUpdate = function(id, data) {
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
 
-    var player = playerManager.getPlayer(socket.id);
+    var player = playerManager.getPlayer(id);
     player.timestamp = data.timestamp;
 
     var broadcastEvent = function(players, event) {

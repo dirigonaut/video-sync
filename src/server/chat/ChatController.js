@@ -48,7 +48,7 @@ function initialize(io, socket) {
         chatEngine.broadcast(ChatEngine.Enum.BROADCAST, message);
       }
 
-      commandEngine.processCommand(data);
+      commandEngine.processCommand(data, callback);
     }
   });
 }

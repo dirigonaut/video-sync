@@ -55,7 +55,7 @@ function initialize(io, socket) {
         chatEngine.broadcast(message);
       }
 
-      commandEngine.processAdminCommand(data);
+      commandEngine.processAdminCommand(data, response);
     }
   });
 }
