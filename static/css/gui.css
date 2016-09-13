@@ -1,5 +1,5 @@
 .controls {
-  width: 100%;
+  width: 80%;
   height: 25px;
   margin: auto;
   position: fixed;
@@ -11,7 +11,7 @@
 }
 
 .media {
-  width: 100%;
+  width: 80%;
   height: 100%;
   position: relative;
   z-index: 1
@@ -43,7 +43,7 @@
 }
 
 .location {
-  width: 100%;
+  width: 90%;
   position: fixed;
   display: inline-block;
   margin: 0 auto;
@@ -60,7 +60,7 @@
 }
 
 .video {
-  width: 100%;
+  width: 80%;
   height: 100%;
   margin: auto;
   position: fixed;
@@ -75,12 +75,26 @@
   z-index: 2
 }
 
-.messenger {
+.chat {
   width: 20%;
+  top:0;
   height: 100%;
   float: right;
-  position: relative;
+  right:0;
+  position: fixed;
+  background-color: #393838;
   z-index: 2
+}
+
+.chatInput {
+  display: inline-block;
+  position: fixed;
+  top:90%;
+  height: 20%;
+}
+
+.chatBody {
+  background-color: #000000;
 }
 
 .formBody {
