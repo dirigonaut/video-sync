@@ -89,12 +89,22 @@
 .chatInput {
   display: inline-block;
   position: fixed;
-  top:90%;
+  top: 95%;
   height: 20%;
 }
 
+.chatElement {
+  width: 75%;
+  display: inline-block;
+}
+
 .chatBody {
-  background-color: #000000;
+  height: 100%;
+}
+
+.manuscript {
+  box-sizing: border-box; /* fit parent width */
+  height: 100%;
 }
 
 .formBody {

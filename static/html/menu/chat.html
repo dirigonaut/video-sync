@@ -1,10 +1,8 @@
 <div id="chatBody" class="chatBody">
-  <ul id="messages"></ul>
-</div>
-<div id="chatInput" class="chatInput">
+  <textarea id="chatManuscript" class="form-control manuscript" type="text" rows="30" readonly></textarea>
   <form>
     <fieldset>
-      <input type="text" name="chat-message" class="form-control" id="chat-message" placeholder="Your message here."/>
+      <input type="text" name="chat-message" class="form-control chatElement" id="chatMessage" placeholder="Your message here."/>
       <button type="button" class="btn btn-default" id="sendChat">Send</button>
     </fieldset>
   </form>

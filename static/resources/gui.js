@@ -264,3 +264,16 @@ $('#submitCreds').click(function readContacts() {
     client.getClientSocket().sendRequest('auth-get-token', client.getRequestFactory().buildLoginRequest(user, token));
   }
 });
+
+//Chat Events ------------------------------------------------------------------
+$('#sendChat').click(function() {
+  var message = $('#chatMessage').val();
+  $('#chatMessage').val("");
+
+  client.getClientSocket().sendRequest('chat-broadcast', message);
+});
+
+client.getClientSocket().setEvent('chat-broadcast-resp', function(message) {
+  console.log("chat-broadcast-resp");
+  $('#chatManuscript').append(message.from + ": " + message.text + "\n");
+});
