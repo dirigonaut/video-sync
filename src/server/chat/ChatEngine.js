@@ -14,6 +14,7 @@ ChatEngine.prototype.broadcast = function(event, message) {
 };
 
 ChatEngine.prototype.ping = function(event, socket, message) {
+  console.log(socket);
   if(event != null && message != null && socket != null) {
     socket.emit(event, message);
   }

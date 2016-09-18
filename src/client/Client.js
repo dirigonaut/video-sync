@@ -7,11 +7,13 @@ var RequestFactory = require('./utils/RequestFactory');
 var CommandFactory = require('./utils/EncoderCommandFactory');
 var ClientSocket = require('./socket/ClientSocket');
 var FileBuffer = require('./utils/FileBuffer');
+var ChatUtil = require('./utils/ChatUtil');
 
 var mediaController;
 var clientSocket;
 var fileBuffer;
 var formData;
+var chatUtil;
 
 var isConnected;
 
@@ -24,6 +26,7 @@ function Client(videoElement, window, port) {
   clientSocket = new ClientSocket();
   formData = new FormDataSingleton();
   mediaController = new MediaController(videoElement, fileBuffer);
+  chatUtil = new ChatUtil();
 
   clientSocket.connect(function(){
     fileBuffer.setupEvents();
@@ -44,23 +47,27 @@ Client.prototype.initializeVideo = function(window, callback) {
       mediaController.initializeVideo(callback(), window);
     });
   }
-}
+};
 
 Client.prototype.getClientSocket = function() {
   return clientSocket;
-}
+};
 
 Client.prototype.getRequestFactory = function() {
   return new RequestFactory();
-}
+};
 
 Client.prototype.getCommandFactory = function() {
   return CommandFactory;
-}
+};
 
 Client.prototype.getFormDataSingleton = function() {
   return formData;
-}
+};
+
+Client.prototype.getChatUtil = function() {
+  return chatUtil;
+};
 
 module.exports = Client;
 
