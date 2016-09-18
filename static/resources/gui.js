@@ -267,7 +267,7 @@ $('#submitCreds').click(function readContacts() {
 
 //Chat Events ------------------------------------------------------------------
 $('#sendChat').click(function() {
-  var message = $('#chatMessage').val();
+  var message = client.getChatUtil().parseInput($('#chatMessage').val(), null);
   $('#chatMessage').val("");
 
   client.getClientSocket().sendRequest('chat-broadcast', message);
@@ -277,3 +277,13 @@ client.getClientSocket().setEvent('chat-broadcast-resp', function(message) {
   console.log("chat-broadcast-resp");
   $('#chatManuscript').append(message.from + ": " + message.text + "\n");
 });
+
+client.getClientSocket().setEvent('chat-log-resp', function(message) {
+  console.log("chat-log-resp");
+  $('#logManuscript').append(message.from + ": " + message.text + "\n");
+});
+
+//client.getChatUtil().on('client-log', function(message) {
+//  console.log("client-log");
+//  $('#logManuscript').append(message.from ": " + message.text + "\n");
+//});

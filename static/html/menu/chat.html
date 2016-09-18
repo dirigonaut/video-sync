@@ -1,9 +1,19 @@
 <div id="chatBody" class="chatBody">
-  <textarea id="chatManuscript" class="form-control manuscript" type="text" rows="30" readonly></textarea>
-  <form>
-    <fieldset>
-      <input type="text" name="chat-message" class="form-control chatElement" id="chatMessage" placeholder="Your message here."/>
-      <button type="button" class="btn btn-default" id="sendChat">Send</button>
-    </fieldset>
-  </form>
+  <ul class="nav nav-tabs" role="tablist">
+    <li role="presentation" class="active"><a href="#chat" aria-controls="chat" role="tab" data-toggle="tab">Chat</a></li>
+    <li role="presentation"><a href="#log" aria-controls="log" role="tab" data-toggle="tab">Log</a></li>
+  </ul>
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane active" id="chat">
+      <textarea id="chatManuscript" class="form-control manuscript" type="text" rows="30" readonly></textarea>
+      <form>
+        <fieldset>
+          <input type="text" name="chat-message" class="form-control chatElement" id="chatMessage" placeholder="Your message here."/>
+          <button type="button" class="btn btn-default" id="sendChat">Send</button>
+        </fieldset>
+      </form>
+    </div>
+    <div role="tabpanel" class="tab-pane" id="log">
+      <textarea id="logManuscript" class="form-control manuscript" type="text" rows="30" readonly></textarea>
+    </div>
 </div>

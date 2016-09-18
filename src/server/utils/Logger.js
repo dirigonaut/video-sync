@@ -61,6 +61,7 @@ var setAdminSocket = function() {
 
 var pingLog = function(level, text) {
   //if(level >= logLevel) {
+    console.log("here");
     var message = chatEngine.buildMessage(ChatEngine.SYSTEM, text);
     chatEngine.ping(ChatEngine.Enum.LOG, socket, message);
   //}
