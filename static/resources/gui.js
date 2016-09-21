@@ -283,7 +283,7 @@ client.getClientSocket().setEvent('chat-log-resp', function(message) {
   $('#logManuscript').append(message.from + ": " + message.text + "\n");
 });
 
-//client.getChatUtil().on('client-log', function(message) {
-//  console.log("client-log");
-//  $('#logManuscript').append(message.from ": " + message.text + "\n");
-//});
+client.getChatUtil().on('client-log', function(message) {
+  console.log("client-log");
+  $('#logManuscript').append(message.from + ": " + message.text + "\n");
+});

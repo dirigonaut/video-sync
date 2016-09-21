@@ -20,7 +20,8 @@ function initialize(io, socket) {
   socket.on('chat-broadcast', function(data) {
     log.trace('chat-broadcast');
 
-    var message = chatEngine.buildMessage(socket.id, data);
+    var message = data;
+    message.from = socket.id;
     chatEngine.broadcast(ChatEngine.Enum.BROADCAST, message);
   });
 
@@ -30,7 +31,9 @@ function initialize(io, socket) {
     var player = playerManager.getPlayer(data.to);
 
     if(player != null && player != undefined) {
-      var message = chatEngine.buildMessage(socket.id, data.text);
+      var message = data;
+      message.from = socket.id;
+      
       chatEngine.ping(ChatEngine.Enum.PING, player.socket, message);
     } else {
       var message = chatEngine.buildMessage(ChatEngine.SYSTEM,

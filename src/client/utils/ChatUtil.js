@@ -33,7 +33,7 @@ ChatUtil.prototype._createCommand = function() {
 };
 
 ChatUtil.prototype.clientLog = function(caller, log) {
-  this._createMessage(caller, log)
+  this._createMessage(caller, log);
   self.emit('client-log', log);
 };
 
