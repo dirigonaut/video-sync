@@ -4,6 +4,7 @@ var Validator     = require('../authentication/Validator');
 var PlayerManager = require('../state/player/PlayerManager');
 var CommandEngine = require('../chat/CommandEngine');
 var ChatEngine    = require('../chat/ChatEngine');
+var Logger        = require('../utils/Logger');
 
 var userAdmin     = new UserAdmin();
 var session       = new Session();
@@ -11,6 +12,7 @@ var validator     = new Validator();
 var playerManager = new PlayerManager();
 var commandEngine = new CommandEngine();
 var chatEngine    = new ChatEngine();
+var log           = new Logger();
 
 function AdminController(io, socket) {
   initialize(io, socket);

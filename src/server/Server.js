@@ -5,6 +5,7 @@ var SocketIO    = require('socket.io');
 var Smtp          = require('./utils/Smtp');
 var Bundler       = require('./utils/Bundler');
 var Session       = require('./utils/Session');
+var Logger        = require('./utils/Logger');
 var Validator     = require('./authentication/Validator');
 var NeDatabase    = require('./database/NeDatabase');
 var Certificate   = require('./authentication/Certificate');
@@ -21,6 +22,7 @@ var app = null;
 var io  = null;
 var server  = null;
 
+var log;
 var session;
 var validator;
 var authenticator;
@@ -49,6 +51,9 @@ function Server(ip, port, callback) {
     validator		    = new Validator();
     authenticator   = new Authenticator();
 
+    log = new Logger();
+    log.setLevel(Logger.Enum.TRACE);
+
     session.setLocalIp(ip + ":" + port);
 
     app.use(Express.static('static'));
@@ -65,16 +70,14 @@ module.exports = Server;
 
 function initialize() {
   io.on('connection', function (socket) {
-    console.log("socket has connected: " + socket.id + " ip:" + socket.handshake.address);
+    log.trace("socket has connected: " + socket.id + " ip:" + socket.handshake.address);
     isAdministrator(socket);
     socket.emit('connected');
 
     socket.on('auth-get-token', function (data) {
-      console.log('auth-get-token');
+      log.trace('auth-get-token');
 
       var requestSmtp = function(recipientAddress, token) {
-        console.log(recipientAddress);
-        console.log(token);
         var sendInvitations = function(hostAddress) {
           var mailOptions = smtp.createMailOptions(session.getActiveSession().smtp, recipientAddress, "Video-Sync Token", "Session token: " + token.token, "");
           smtp.sendMail(mailOptions);
@@ -87,7 +90,7 @@ function initialize() {
     });
 
     socket.on('auth-validate-token', function (data) {
-      console.log('auth-validate-token');
+      log.trace('auth-validate-token');
 
       var attachControllers = function(token) {
         userAuthorized(socket);
@@ -97,13 +100,13 @@ function initialize() {
     });
 
     socket.on('error', function (data) {
-      console.log(data);
+      log.trace(data);
     });
 
     setTimeout(function(){
       //If the socket didn't authenticate, disconnect it
       if (!socket.auth) {
-        console.log("Disconnecting socket ", socket.id);
+        log.trace("Disconnecting socket ", socket.id);
         database.deleteTokens(socket.id);
         socket.disconnect('unauthorized');
       }

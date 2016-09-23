@@ -3,9 +3,11 @@ var EncoderManager  = require('./encoding/EncoderManager');
 var WebmMetaData    = require('./meta/WebmMetaData');
 var Session         = require('../utils/Session');
 var Validator       = require('../authentication/Validator');
+var Logger          = require('./utils/Logger');
 
 var validator       = new Validator();
 var session         = new Session();
+var log             = new Logger();
 
 function VideoController(io, socket) {
   initialize(io, socket);
