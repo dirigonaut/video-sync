@@ -1,8 +1,11 @@
-var Fs   = require('fs');
-var Ebml = require('ebml');
+var Fs      = require('fs');
+var Ebml    = require('ebml');
+var Logger  = require('../utils/Logger');
 
 const Util = require('util');
 const EventEmitter = require('events');
+
+var log = new Logger();
 
 function VideoStream(){
   EventEmitter.call(this);

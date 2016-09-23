@@ -1,3 +1,7 @@
+var Logger = require('../../utils/Logger');
+
+var log = new Logger();
+
 function LinkedCluster() {
   this.next = null;
   this.prev = null;

@@ -10,11 +10,7 @@ var chatEngine  = new ChatEngine();
 var logLevel  = 0;
 var socket    = null;
 
-function Logger() {
-  if(socket == null) {
-    setAdminSocket();
-  }
-}
+function Logger() { }
 
 Logger.prototype.trace = function(message) {
   log.trace(message);

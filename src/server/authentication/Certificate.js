@@ -1,11 +1,13 @@
-var Forge = require('node-forge');
-var Moment = require('moment');
+var Forge      = require('node-forge');
+var Moment     = require('moment');
 var NeDatabase = require('../database/NeDatabase');
+var Logger     = require('./utils/Logger');
 
 var self;
 const EXPIR = 365;
 
 var database = new NeDatabase();
+var log      = new Logger();
 
 function Certificate() {
   Moment().format('YYYY MM DD');

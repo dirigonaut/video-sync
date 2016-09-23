@@ -4,8 +4,11 @@ const util = require('util');
 var Command = require('./process/Command');
 var Ffmpeg = require('./process/FfmpegProcess');
 var Mp4Box = require('./process/Mp4BoxProcess');
+var Logger = require('../utils/Logger');
 
 const webm_manifest = "webm_dash_manifest";
+
+var log = new Logger();
 
 function EncoderManager(data){
 	console.log("EncodingManager");

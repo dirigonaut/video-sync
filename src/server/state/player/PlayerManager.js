@@ -1,12 +1,14 @@
-var player = require('./Player');
+var Player = require('./Player');
+var Logger = require('../../utils/Logger');
 
+var log = new Logger();
 var players = new Map();
 
 function PlayerManager (){
 };
 
 PlayerManager.prototype.createPlayer = function(socket){
-  var newPlayer = new player(socket);
+  var newPlayer = new Player(socket);
   players.set(socket.id, newPlayer);
   console.log("Adding player, total players now: " + players.size);
 };
