@@ -5,7 +5,7 @@ var SocketIO    = require('socket.io');
 var Smtp          = require('./utils/Smtp');
 var Bundler       = require('./utils/Bundler');
 var Session       = require('./utils/Session');
-var Logger        = require('./utils/Logger');
+var Log           = require('./utils/Logger');
 var Validator     = require('./authentication/Validator');
 var NeDatabase    = require('./database/NeDatabase');
 var Certificate   = require('./authentication/Certificate');
@@ -22,7 +22,6 @@ var app = null;
 var io  = null;
 var server  = null;
 
-var log;
 var session;
 var validator;
 var authenticator;
@@ -51,9 +50,6 @@ function Server(ip, port, callback) {
     validator		    = new Validator();
     authenticator   = new Authenticator();
 
-    log = new Logger();
-    log.setLevel(Logger.Enum.TRACE);
-
     session.setLocalIp(ip + ":" + port);
 
     app.use(Express.static('static'));
@@ -70,7 +66,7 @@ module.exports = Server;
 
 function initialize() {
   io.on('connection', function (socket) {
-    log.trace("socket has connected: " + socket.id + " ip:" + socket.handshake.address);
+    Log.trace("socket has connected: " + socket.id + " ip:" + socket.handshake.address);
     isAdministrator(socket);
     socket.emit('connected');
 
@@ -121,13 +117,16 @@ function userAuthorized(socket) {
   var state = new StateController(io, socket);
   var chat = new ChatController(io, socket);
 
-  new PlayerManager().createPlayer(socket);
+  var manager = new PlayerManager();
+  manager.createPlayer(socket);
 
   socket.emit('authenticated');
 
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     socket.emit('media-ready');
   }
+
+  socket.emit('chat-handles', manager.getHandles());
 }
 
 function isAdministrator(socket) {
@@ -136,6 +135,9 @@ function isAdministrator(socket) {
   if(session.getAdmin() == null) {
     if(socket.handshake.address == "::ffff:127.0.0.1"){
       session.setAdminId(socket.id);
+
+      new Log(socket);
+      Log.setLevel(Log.Enum.TRACE);
 
       new AdminController(io, socket);
       new DatabaseController(io, socket);

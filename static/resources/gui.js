@@ -275,7 +275,7 @@ $('#sendChat').click(function() {
 
 client.getClientSocket().setEvent('chat-broadcast-resp', function(message) {
   console.log("chat-broadcast-resp");
-  $('#chatManuscript').append(message.from + ": " + message.text + "\n");
+  $('#chatManuscript').append(client.getChatUtil().getUserHandle(message.from) + ": " + message.text + "\n");
 });
 
 client.getClientSocket().setEvent('chat-log-resp', function(message) {

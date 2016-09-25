@@ -1,8 +1,5 @@
 var Datastore 	= require('nedb');
 var	JsonKeys		= require('../utils/JsonKeys');
-var Logger      = require('../utils/Logger');
-
-var log = new Logger();
 
 var db = new Datastore({ filename: './database_inst', autoload: true });
 

@@ -1,12 +1,11 @@
 var PlayerManager = require('./player/PlayerManager');
 var Session       = require('../utils/Session');
-var Logger        = require('./utils/Logger');
+var Log           = require('../utils/Logger')
 var PlayRule      = require('./rules/PlayRule.js');
 var SyncRule      = require('./rules/SyncRule.js');
 
 var playerManager = new PlayerManager();
 var session       = new Session();
-var log           = new Logger();
 
 function StateEngine() { }
 

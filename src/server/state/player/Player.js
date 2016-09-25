@@ -1,5 +1,6 @@
 function Player(socket){
     this.socket	  	= socket;
+    this.handle     = "JohnDoe";
     this.state 	  	= 0;
     this.timestamp 	= 0;
 };
