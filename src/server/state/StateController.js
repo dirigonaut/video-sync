@@ -1,10 +1,9 @@
 var Validator     = require('../authentication/Validator');
 var StateEngine   = require('./StateEngine.js');
-var Logger        = require('./utils/Logger');
+var Log           = require('../utils/Logger')
 
 var validator     = new Validator();
-var stateEngine   = new StateEngine();
-var log           = new Logger();
+var stateEngine   = new StateEngine();;
 
 function StateController(io, socket) {
   initialize(io, socket);

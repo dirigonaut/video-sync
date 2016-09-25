@@ -1,7 +1,12 @@
 const util          = require('util');
 const EventEmitter  = require('events');
 
+var ClientSocket    = require('../socket/ClientSocket.js');
+
+var clientSocket = new ClientSocket();
+
 var self = null;
+var handleList = null;
 
 function ChatUtil() {
   if(self == null) {
@@ -37,4 +42,19 @@ ChatUtil.prototype.clientLog = function(caller, log) {
   self.emit('client-log', log);
 };
 
+ChatUtil.prototype.setupEvents = function() {
+  clientSocket.clearEvent('chat-handles', loadUserHandles);
+  clientSocket.setEvent('chat-handles', loadUserHandles);
+};
+
+ChatUtil.prototype.getUserHandle = function(id) {
+  return handelList.get(id);
+};
+
 module.exports = ChatUtil;
+
+function loadUserHandles(data) {
+  console.log('Got Handles');
+  console.log(data);
+  handleList = data;
+}

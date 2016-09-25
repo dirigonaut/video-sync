@@ -30,6 +30,7 @@ function Client(videoElement, window, port) {
 
   clientSocket.connect(function(){
     fileBuffer.setupEvents();
+    chatUtil.setupEvents();
     formData.setupEvents();
     formData.initializeData();
     isConnected = true;

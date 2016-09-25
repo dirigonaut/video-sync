@@ -1,7 +1,5 @@
 var Player = require('./Player');
-var Logger = require('../../utils/Logger');
 
-var log = new Logger();
 var players = new Map();
 
 function PlayerManager (){
@@ -76,6 +74,14 @@ PlayerManager.prototype.removePlayersWithId = function(playerArray, id){
     if(playerArray[p].id != id){
       temp.push(playerArray[p]);
     }
+  }
+  return temp;
+};
+
+PlayerManager.prototype.getHandles = function() {
+  var temp = new Map();
+  for (var p of players.keys()) {
+    temp.set(players.get(p).socket.id, players.get(p).handle);
   }
   return temp;
 };

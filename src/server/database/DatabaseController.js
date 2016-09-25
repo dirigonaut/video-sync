@@ -1,12 +1,11 @@
 var NeDatabase  = require('./NeDatabase');
 var Session     = require('../utils/Session');
 var Validator   = require('../authentication/Validator');
-var Logger      = require('./utils/Logger');
+var Log         = require('../utils/Logger')
 
 var database  = new NeDatabase();
 var validator = new Validator();
 var session   = new Session();
-var log       = new Logger();
 
 function DatabaseController(io, socket) {
   initialize(io, socket);

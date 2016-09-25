@@ -4,9 +4,7 @@ var DOMParser       = require('xmldom').DOMParser;
 var Ebml            = require('ebml');
 var VideoStream     = require('../VideoStream');
 var Manifest        = require('./Manifest');
-var Logger          = require('../utils/Logger');
-
-var log = new Logger();
+var Log             = require('../../utils/Logger')
 
 function WebmMetaData() {
   var self = {};

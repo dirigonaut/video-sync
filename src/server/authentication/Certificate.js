@@ -1,7 +1,7 @@
 var Forge      = require('node-forge');
 var Moment     = require('moment');
 var NeDatabase = require('../database/NeDatabase');
-var Logger     = require('./utils/Logger');
+var Logger     = require('../utils/Logger');
 
 var self;
 const EXPIR = 365;
