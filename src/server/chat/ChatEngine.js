@@ -7,8 +7,10 @@ function ChatEngine() { }
 ChatEngine.prototype.broadcast = function(event, message) {
   console.log("ChatEngine.prototype.broadcast");
   if(event != null && message != null) {
-    for(var player of playerManager.getPlayers()) {
-      player[1].socket.emit(event, message);
+    var players = playerManager.getPlayers();
+    for(var p of players.keys()) {
+      players.get(p).socket.emit(event, message);
+      console.log(players.get(p).socket.id);
     }
   }
 };

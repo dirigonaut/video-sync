@@ -79,9 +79,9 @@ PlayerManager.prototype.removePlayersWithId = function(playerArray, id){
 };
 
 PlayerManager.prototype.getHandles = function() {
-  var temp = new Map();
+  var temp = new Array();
   for (var p of players.keys()) {
-    temp.set(players.get(p).socket.id, players.get(p).handle);
+    temp.push([players.get(p).socket.id, players.get(p).handle]);
   }
   return temp;
 };

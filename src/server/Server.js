@@ -71,7 +71,7 @@ function initialize() {
     socket.emit('connected');
 
     socket.on('auth-get-token', function (data) {
-      log.trace('auth-get-token');
+      Log.trace('auth-get-token');
 
       var requestSmtp = function(recipientAddress, token) {
         var sendInvitations = function(hostAddress) {
@@ -86,7 +86,7 @@ function initialize() {
     });
 
     socket.on('auth-validate-token', function (data) {
-      log.trace('auth-validate-token');
+      Log.trace('auth-validate-token');
 
       var attachControllers = function(token) {
         userAuthorized(socket);
@@ -96,7 +96,7 @@ function initialize() {
     });
 
     socket.on('error', function (data) {
-      log.trace(data);
+      Log.trace(data);
     });
 
     setTimeout(function(){
