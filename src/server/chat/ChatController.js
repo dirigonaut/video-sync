@@ -15,6 +15,7 @@ function ChatController(io, socket) {
 
 function initialize(io, socket) {
   Log.trace("Attaching ChatController");
+  chatEngine.ping(ChatEngine.Enum.PING, socket, "Welcome!");
 
   socket.on('chat-broadcast', function(data) {
     Log.trace('chat-broadcast');

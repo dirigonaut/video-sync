@@ -48,13 +48,12 @@ ChatUtil.prototype.setupEvents = function() {
 };
 
 ChatUtil.prototype.getUserHandle = function(id) {
-  return handelList.get(id);
+  return id.substring(1, 5) + " "  + handleList.get(id);
 };
 
 module.exports = ChatUtil;
 
 function loadUserHandles(data) {
   console.log('Got Handles');
-  console.log(data);
-  handleList = data;
+  handleList = new Map(data);
 }

@@ -27,13 +27,16 @@
       <div id="control_container" class="controls">
       </div>
     </div>
-    <div id="messenger"></div>
+    <div id="chat_container" class="chat">
+    </div>
     <div id="loginOverlay"></div>
     </div>
     <script>
       $(function(){
         $("#control_container").load("menu/controls.html");
         $("#loginOverlay").load("menu/overlays/login.html");
+        $("#chat_container").load("menu/chat.html");
+
         $.getScript("../resources/gui.js");
       });
 
