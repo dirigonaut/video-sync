@@ -10,20 +10,22 @@
     <link rel="stylesheet" type="text/css" href="./static/css/gui.css">
   </head>
   <body>
-    <div id="video_container" class="video">
-      <div id="location_container" class="location">
+    <div class="container">
+      <div id="media-container" class="media-container">
+        <div id="location-container" class="file-bar flex-h">
+        </div>
+        <video id="video" class="video-holder"></video>
+        <div id="side-container" class="side-bar">
+        </div>
+        <div id="control-container" class="control-bar flex-h">
+        </div>
       </div>
-      <video id="video" class="video_element"></video>
-      <div id="side_container" class="side">
+      <div id="chat-container" class="chat-container">
       </div>
-      <div id="control_container" class="controls">
-      </div>
+      <div id="sessionOverlay"></div>
+      <div id="smtpOverlay"></div>
+      <div id="encodeOverlay"></div>
     </div>
-    <div id="chat_container" class="chat">
-    </div>
-    <div id="sessionOverlay"></div>
-    <div id="smtpOverlay"></div>
-    <div id="encodeOverlay"></div>
     <script type="text/javascript" src="./static/resources/jquery-2.2.4.min.js"></script>
     <script type="text/javascript" src="./static/resources/video-js/video.js"></script>
     <script type="text/javascript" src="./static/resources/bootstrap/js/bootstrap.min.js"></script>
@@ -32,10 +34,10 @@
     var server = null;
 
       var loadGui = function(){
-        $("#control_container").load("static/html/menu/controls.html");
-        $("#location_container").load("static/html/menu/location.html");
-        $("#side_container").load("static/html/menu/side.html");
-        $("#chat_container").load("static/html/menu/chat.html");
+        $("#control-container").load("static/html/menu/controls.html");
+        $("#location-container").load("static/html/menu/location.html");
+        $("#side-container").load("static/html/menu/side.html");
+        $("#chat-container").load("static/html/menu/chat.html");
 
         $("#sessionOverlay").load("static/html/menu/overlays/session.html");
         $("#smtpOverlay").load("static/html/menu/overlays/smtp.html");

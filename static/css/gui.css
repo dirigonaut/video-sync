@@ -1,4 +1,209 @@
-.controls {
+/* GUI CSS */
+.container {
+  position:relative;
+  height:100vh;
+  width:100vw;
+  background-color: black;
+  margin: 0;
+  padding: 0;
+}
+
+.media-container {
+  position: relative;
+  float:left;
+  left:0%;
+  width: 80%;
+  background-color: black;
+  height:100vh;
+}
+
+.chat-container {
+  position: relative;
+  float: left;
+  width:20%;
+  height:100vh;
+  background-color: black;
+}
+
+.file-bar {
+  float:left;
+  height:5vh;
+  width:100%;
+  overflow-x: hidden;
+  top:0;
+  background-color: black;
+}
+
+.video-holder {
+  float:left;
+  width:100%;
+  height:90vh;
+  background-color: black;
+}
+
+.side-bar {
+  position:absolute;
+  top:50%;
+  width:5vh;
+  overflow-x: hidden;
+  transform: translate(0%, -50%);
+  background-color: black;
+}
+
+.control-bar {
+  float:left;
+  height:5vh;
+  width:100%;
+  overflow-x: hidden;
+  clear:left;
+  background-color: black;
+}
+
+.chat-bar {
+  position:relative;
+  float: right;
+  width:20%;
+  height:100vh;
+  z-index: 10;
+}
+
+.chat-tab {
+  float: left;
+  margin:.25vh 1vh .5vh 1vh;
+}
+
+.chat-manuscript {
+  width:93%;
+  height:500px;
+  background-color: white;
+  margin:1vh .5vw 1vh .5vw;
+}
+
+.chat-input {
+  float: left;
+  width:68%;
+  height:9%;
+  background-color: black;
+  margin:1vh .5vw 1vh .5vw;
+}
+
+.button {
+  float: right;
+  width:24%;
+  height:9%;
+  background-color: black;
+  margin:.5vh 1vh .5vh .5vh;
+}
+
+.slider {
+  float:left;
+  width:70vw;
+  height:4vh;
+  text-align: center;
+  background-color: black;
+  display:inline;
+  margin:.5vh;
+}
+
+.file-path {
+  float:left;
+  width:95vw;
+  text-align: center;
+  background-color: black;
+  display:inline;
+  margin:.5vh;
+}
+
+.icon-h {
+  float:left;
+  width:4vh;
+  height:4vh;
+  text-align: center;
+  background-color: black;
+  margin:.5vh;
+}
+
+.icon-v {
+  float:left;
+  width:4vh;
+  height:4vh;
+  text-align: center;
+  background-color: black;
+  margin:.5vh;
+}
+
+.center-v {
+  transform: translate(0%, 40%);
+}
+
+.flex-v {
+  flex-direction: column;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center | space-between | space-around;
+
+  -ms-flex-align: center;
+	-webkit-align-items: center;
+	-webkit-box-align: center;
+
+  align-items: center;
+}
+
+.flex-h {
+  flex-direction: row;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center | space-between | space-around;
+
+  -ms-flex-align: center;
+	-webkit-align-items: center;
+	-webkit-box-align: center;
+
+  align-items: center;
+}
+
+/* Overlays CSS */
+.overlay-body {
+
+}
+
+.overlay-list {
+
+}
+
+.overlay-footer {
+
+}
+
+/* CSS Animations */
+.fadeout {
+  opacity: 0;
+  transition: opacity .55s ease-in-out;
+  -moz-transition: opacity .55s ease-in-out;
+  -webkit-transition: opacity .55s ease-in-out;
+}
+.fadein{
+  opacity: 1.0;
+  transition: opacity .55s ease-in-out;
+  -moz-transition: opacity .55s ease-in-out;
+  -webkit-transition: opacity .55s ease-in-out;
+}
+
+/* Misc */
+::-webkit-media-controls {
+  display:none !important;
+}
+
+.glyphicon {
+    font-size: 32px;
+    color:white;
+}
+
+a {
+   color: white;
+}
+/* Old CSS */
+.controls-old {
   width: 80%;
   height: 25px;
   margin: auto;
@@ -24,7 +229,7 @@
   z-index: 3
 }
 
-.icon {
+.icon-old {
   margin: auto;
   display: inline;
   z-index: 3
@@ -127,8 +332,4 @@
   width: 100%;
   display: inline-block;
   position: relative;
-}
-
-::-webkit-media-controls {
-  display:none !important;
 }
