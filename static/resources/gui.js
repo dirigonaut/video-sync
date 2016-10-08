@@ -41,8 +41,12 @@ $('#btnFullScreen').click(function() {
 
   if(document.fullScreen || document.webkitIsFullScreen) {
     video.webkitExitFullScreen();
+    $('.control-bar-fullscreen').addClass("control-bar");
+    $('.control-bar-fullscreen').removeClass("control-bar-fullscreen");
   } else {
     video.webkitRequestFullScreen();
+    $('.control-bar').addClass("control-bar-fullscreen");
+    $('.control-bar').removeClass("control-bar");
   }
 });
 
@@ -287,3 +291,31 @@ client.getChatUtil().on('client-log', function(message) {
   console.log("client-log");
   $('#logManuscript').append(message.from + ": " + message.text + "\n");
 });
+
+//CSS Animation ----------------------------------------------------------------
+var opaque = false;
+
+$('.container').mousemove(function(e) {
+  if(!opaque) {
+    opaque = true;
+    showUI();
+    inactive();
+  }
+});
+
+function inactive() {
+    setTimeout(function() {
+      opaque = false;
+      hideUI();
+    }, 3000);
+}
+
+function hideUI() {
+  $('.fadein').addClass("fadeout");
+  $('.fadein').removeClass("fadein");
+}
+
+function showUI() {
+  $('.fadeout').addClass("fadein");
+  $('.fadeout').removeClass("fadeout");
+}
