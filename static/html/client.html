@@ -15,27 +15,27 @@
     <script type="text/javascript" src="../resources/bootstrap/js/bootstrap.min.js"></script>
   </head>
   <body>
-    <div id="video_container" class="video">
-      <div id="location_container" class="location">
-      </div>
-      <div id="side_container" class="side">
-        <div>
-          <a href="#" id="btnLogin"> <span class="glyphicon glyphicon-user"></span></a>
+    <div class="container">
+      <div id="media-container" class="media-container">
+        <div id="location-container" class="file-bar flex-h fadein">
+        </div>
+        <video id="video" class="video-holder"></video>
+        <div id="side-container" class="side-bar fadein">
+        </div>
+        <div id="control-container" class="control-bar flex-h fadein">
         </div>
       </div>
-      <video id="video" class="video_element"></video>
-      <div id="control_container" class="controls">
+      <div id="chat-container" class="chat-container">
       </div>
-    </div>
-    <div id="chat_container" class="chat">
-    </div>
-    <div id="loginOverlay"></div>
+      <div id="loginOverlay"></div>
+      </div>
     </div>
     <script>
       $(function(){
-        $("#control_container").load("menu/controls.html");
+        $("#control-container").load("menu/controls.html");
+        $("#chat-container").load("menu/chat.html");
+
         $("#loginOverlay").load("menu/overlays/login.html");
-        $("#chat_container").load("menu/chat.html");
 
         $.getScript("../resources/gui.js");
       });

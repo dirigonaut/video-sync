@@ -10,8 +10,8 @@ var session       = new Session();
 function StateEngine() { }
 
 StateEngine.prototype.play = function(id) {
-  console.log()
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
+    var player = playerManager.getPlayer(id);
 
     var broadcastEvent = function() {
       for(var player of playerManager.getPlayers()) {
