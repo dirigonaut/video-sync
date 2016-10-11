@@ -32,7 +32,12 @@ function initialize(io, socket) {
   socket.on('db-create-session', function(data) {
     if(session.isAdmin(socket.id)) {
       console.log('db-create-session');
-      database.createSession(validator.sterilizeSession(data));
+
+      var emitResults = function() {
+        socket.emit("db-refresh");
+      }
+
+      database.createSession(validator.sterilizeSession(data), emitResults);
     }
   });
 
@@ -116,7 +121,14 @@ function initialize(io, socket) {
   socket.on('db-delete-session', function(data) {
     if(session.isAdmin(socket.id)) {
       console.log('db-delete-session');
-      database.deleteSession(validator.sterilizeSession(data));
+
+      var emitResponse= function(deleted){
+        if(deleted > 0){
+          socket.emit('db-refresh');
+        }
+      }
+
+      database.deleteSession(validator.sterilizeSession(data._id), emitResponse);
     }
   });
 }
