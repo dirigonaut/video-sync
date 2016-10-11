@@ -97,7 +97,7 @@ NeDatabase.prototype.deleteContact = function(callback){
 };
 
 NeDatabase.prototype.deleteSession = function(id, callback){
-	var query = { sessionProfile: id };
+	var query = { _id: id };
 	var option = {};
 	deleteJson(query, option, callback);
 };

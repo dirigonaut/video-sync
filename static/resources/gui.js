@@ -110,10 +110,19 @@ $('#sessionList').on("click", "tr", function(e) {
     var sessions = formData.getSessionList();
     var session = null;
 
-    for(var i in sessions) {
-      if(sessions[i]._id === id) {
-        session = sessions[i];
-        break;
+    if(id == "Session") {
+      $("#sessionId").val("");
+      $("#sessionTitle").val("");
+      $("#sessionAddress").val("");
+      $("#sessionInvitees").val("");
+      $("#sessionSubject").val("");
+      $("#sessionText").val("");
+    } else {
+      for(var i in sessions) {
+        if(sessions[i]._id === id) {
+          session = sessions[i];
+          break;
+        }
       }
     }
 
@@ -125,6 +134,17 @@ $('#sessionList').on("click", "tr", function(e) {
       $("#sessionSubject").val(session.mailOptions.subject);
       $("#sessionText").val(session.mailOptions.text);
     }
+});
+
+$('#sessionList').on("click", "button", function(e) {
+  var session = $($(e.currentTarget).parent()).parent();
+  console.log(session);
+  var id = session[0].children[0].outerText;
+
+  session.remove();
+
+  client.getClientSocket().sendRequest("db-delete-session",
+    client.getRequestFactory().buildSessionRequest(id, null, null, null, null));
 });
 
 //Smtp Events -----------------------------------------------------------------
@@ -173,30 +193,37 @@ $('#createEncoding').click(function createEncoding() {
 
 //Side Events -----------------------------------------------------------------
 $('#btnSession').click(function() {
-  var formData = client.getFormDataSingleton();
-  var sessions = formData.getSessionList();
+  var loadSessions = function() {
+    var formData = client.getFormDataSingleton();
+    var sessions = formData.getSessionList();
 
-  if(sessions.length > 0) {
-    if($("#sessionId").val() == '') {
-      var session = sessions[0];
+    if(sessions.length > 0) {
+      if($("#sessionId").val() == '') {
+        var session = sessions[0];
 
-      if(session !== null && session !== undefined) {
-        $("#sessionId").val(session._id);
-        $("#sessionTitle").val(session.title);
-        $("#sessionAddress").val(session.smtp);
-        $("#sessionInvitees").val(session.invitees);
-        $("#sessionSubject").val(session.mailOptions.subject);
-        $("#sessionText").val(session.mailOptions.text);
+        if(session !== null && session !== undefined) {
+          $("#sessionId").val(session._id);
+          $("#sessionTitle").val(session.title);
+          $("#sessionAddress").val(session.smtp);
+          $("#sessionInvitees").val(session.invitees);
+          $("#sessionSubject").val(session.mailOptions.subject);
+          $("#sessionText").val(session.mailOptions.text);
+        }
+      }
+
+      $('#sessionList tbody tr:not(:first)').remove();
+
+
+      for(var i in sessions) {
+        $('#sessionList tr:last').after('<tr><td style="display:none;">' + sessions[i]._id + '</td><td>' + sessions[i].title +
+        '<button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>');
       }
     }
+  };
 
-    $('#sessionList tbody tr:not(:first)').remove();
-
-
-    for(var i in sessions) {
-      $('#sessionList tr:last').after('<tr><td style="display:none;">' + sessions[i]._id + '</td><td>' + sessions[i].title + '</td></tr>');
-    }
-  }
+  //needs to be put somewhere else
+  client.getClientSocket().setEvent("db-sessions", loadSessions);
+  loadSessions();
 
   $('#sessionModal').modal('show');
   $('#sessionModal').on('shown', function() {

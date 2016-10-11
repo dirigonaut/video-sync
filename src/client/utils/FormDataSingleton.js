@@ -13,9 +13,11 @@ function FormDataSingleton() {
 FormDataSingleton.prototype.setupEvents = function() {
   clientSocket.clearEvent('db-smtps', dbSmtps);
   clientSocket.clearEvent('db-sessions', dbSessions);
+  clientSocket.clearEvent('db-refresh', dbRefresh);
 
   clientSocket.setEvent('db-smtps', dbSmtps);
   clientSocket.setEvent('db-sessions', dbSessions);
+  clientSocket.setEvent('db-refresh', dbRefresh);
 };
 
 FormDataSingleton.prototype.initializeData = function() {
@@ -42,3 +44,8 @@ var dbSessions = function(response) {
   console.log('db-sessions');
   sessionList = response;
 };
+
+var dbRefresh = function() {
+  clientSocket.sendRequest('db-read-smpts');
+  clientSocket.sendRequest('db-read-sessions');
+}
