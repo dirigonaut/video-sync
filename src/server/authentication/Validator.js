@@ -48,7 +48,7 @@ Validator.prototype.sterilizeSmtp = function(input) {
 	clean[json_keys.SMTP_PASSWORD]	= validator.toString(input[json_keys.SMTP_PASSWORD]);
 
 	this.logDataCleaning(input, clean);
-	return clean;
+	return input;
 };
 
 Validator.prototype.sterilizeContact = function(input) {
