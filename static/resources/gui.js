@@ -163,7 +163,7 @@ $('#createSmtp').click(function createSmtp() {
   var password  = $('#smtpPassword').val();
 
   client.getClientSocket().sendRequest("db-create-smtp",
-    client.getRequestFactory().buildSmtpCreateRequest(type, host, address, password));
+    client.getRequestFactory().buildSmtpRequest(null, type, host, address, password));
 });
 
 $('#readContacts').click(function readContacts() {
@@ -172,6 +172,46 @@ $('#readContacts').click(function readContacts() {
 
 $('#readSmtps').click(function readSmtps() {
   client.getClientSocket().sendRequest("db-read-smtps");
+});
+
+$('#smtpList').on("click", "tr", function(e) {
+    var id = e.currentTarget.children[0].outerText;
+    var formData = client.getFormDataSingleton();
+    var smtps = formData.getSmtpList();
+    var smtp = null;
+
+    if(id == "Smtp") {
+      $("#smtpId").val("");
+      $("#smtpType").val("");
+      $("#smtpHost").val("");
+      $("#smtpAddress").val("");
+      $("#smtpPassword").val("");
+    } else {
+      for(var i in smtps) {
+        if(smtps[i]._id === id) {
+          smtp = smtps[i];
+          break;
+        }
+      }
+    }
+
+    if(smtp !== null && smtp !== undefined) {
+      $("#smtpId").val(smtp._id);
+      $("#smtpType").val(smtp.type);
+      $("#smtpHost").val(smtp.smtpHost);
+      $("#smtpAddress").val(smtp.smtpAddress);
+      $("#smtpPassword").val(smtp.smtpPassword);
+    }
+});
+
+$('#smtpList').on("click", "button", function(e) {
+  var smtp = $($(e.currentTarget).parent()).parent();
+  var id = smtp[0].children[0].outerText;
+
+  smtp.remove();
+
+  client.getClientSocket().sendRequest("db-delete-smtp",
+    client.getRequestFactory().buildSmtpRequest(id, null, null, null, null));
 });
 
 //Encode Events ---------------------------------------------------------------
@@ -193,36 +233,6 @@ $('#createEncoding').click(function createEncoding() {
 
 //Side Events -----------------------------------------------------------------
 $('#btnSession').click(function() {
-  var loadSessions = function() {
-    var formData = client.getFormDataSingleton();
-    var sessions = formData.getSessionList();
-
-    if(sessions.length > 0) {
-      if($("#sessionId").val() == '') {
-        var session = sessions[0];
-
-        if(session !== null && session !== undefined) {
-          $("#sessionId").val(session._id);
-          $("#sessionTitle").val(session.title);
-          $("#sessionAddress").val(session.smtp);
-          $("#sessionInvitees").val(session.invitees);
-          $("#sessionSubject").val(session.mailOptions.subject);
-          $("#sessionText").val(session.mailOptions.text);
-        }
-      }
-
-      $('#sessionList tbody tr:not(:first)').remove();
-
-
-      for(var i in sessions) {
-        $('#sessionList tr:last').after('<tr><td style="display:none;">' + sessions[i]._id + '</td><td>' + sessions[i].title +
-        '<button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>');
-      }
-    }
-  };
-
-  //needs to be put somewhere else
-  client.getClientSocket().setEvent("db-sessions", loadSessions);
   loadSessions();
 
   $('#sessionModal').modal('show');
@@ -231,10 +241,48 @@ $('#btnSession').click(function() {
   })
 });
 
+var loadSessions = function() {
+  var formData = client.getFormDataSingleton();
+  var sessions = formData.getSessionList();
+
+  if(sessions.length > 0) {
+    if($("#sessionId").val() == '') {
+      var session = sessions[0];
+
+      if(session !== null && session !== undefined) {
+        $("#sessionId").val(session._id);
+        $("#sessionTitle").val(session.title);
+        $("#sessionAddress").val(session.smtp);
+        $("#sessionInvitees").val(session.invitees);
+        $("#sessionSubject").val(session.mailOptions.subject);
+        $("#sessionText").val(session.mailOptions.text);
+      }
+    }
+
+    $('#sessionList tbody tr:not(:first)').remove();
+
+
+    for(var i in sessions) {
+      $('#sessionList tr:last').after('<tr><td style="display:none;">' + sessions[i]._id + '</td><td>' + sessions[i].title +
+      '<button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>');
+    }
+  }
+};
+
+client.getClientSocket().setEvent("db-sessions", loadSessions);
+
 $('#btnSmtp').click(function() {
+  loadSmtps();
+
+  $('#smtpModal').modal('show');
+  $('#smtpModal').on('shown', function() {
+    $("#smtpType").focus();
+  });
+});
+
+var loadSmtps = function() {
   var formData = client.getFormDataSingleton();
   var smtps = formData.getSmtpList();
-  console.log(smtps);
 
   if(smtps.length > 0) {
     if($("#smtpId").val() == '') {
@@ -252,22 +300,13 @@ $('#btnSmtp').click(function() {
     $('#smtpList tbody tr:not(:first)').remove();
 
     for(var i in smtps) {
-      $('#smtpList tr:last').after('<tr><td style="display:none;">' + smtps[i]._id + '</td><td>' + smtps[i].smtpAddress + '</td></tr>');
+      $('#smtpList tr:last').after('<tr><td style="display:none;">' + smtps[i]._id + '</td><td>' + smtps[i].smtpAddress +
+      '<button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>');
     }
   }
+}
 
-  $('#smtpModal').modal('show');
-  $('#smtpModal').on('shown', function() {
-    $("#smtpId").focus();
-  })
-});
-
-$('#btnSmtp').click(function() {
-  $('#smtpModal').modal('show');
-  $('#smtpModal').on('shown', function() {
-    $("#smtpType").focus();
-  })
-});
+client.getClientSocket().setEvent("db-smtps", loadSmtps);
 
 $('#btnEncode').click(function() {
   $('#encodeModal').modal('show');

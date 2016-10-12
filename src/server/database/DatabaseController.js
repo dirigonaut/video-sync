@@ -18,14 +18,24 @@ function initialize(io, socket) {
   socket.on('db-create-smtp', function(data) {
     if(session.isAdmin(socket.id)) {
       console.log('db-create-smtp');
-      database.createSmtp(validator.sterilizeSmtp(data));
+
+      var emitResults = function() {
+        socket.emit("db-refresh");
+      }
+
+      database.createSmtp(validator.sterilizeSmtp(data), emitResults);
     }
   });
 
   socket.on('db-create-contact', function(data) {
     if(session.isAdmin(socket.id)) {
   		console.log('db-add-contact');
-  		database.createContact(validator.sterilizeContact(data));
+
+      var emitResults = function() {
+        socket.emit("db-refresh");
+      }
+
+  		database.createContact(validator.sterilizeContact(data), emitResults);
     }
   });
 
@@ -107,14 +117,28 @@ function initialize(io, socket) {
   socket.on('db-delete-smtp', function(data) {
     if(session.isAdmin(socket.id)) {
       console.log('db-delete-smtp');
-      database.deleteSmtp(socket, validator.sterilizeContact(data));
+
+      var emitResponse = function(deleted){
+        if(deleted > 0){
+          socket.emit('db-refresh');
+        }
+      }
+
+      database.deleteSmtp(validator.sterilizeSmtp(data.id), emitResponse);
     }
   });
 
   socket.on('db-delete-contact', function(data) {
     if(session.isAdmin(socket.id)) {
   		console.log('db-delete-contact');
-  		database.deleteContact(socket, validator.sterilizeEmail(data));
+
+      var emitResponse = function(deleted){
+        if(deleted > 0){
+          socket.emit('db-refresh');
+        }
+      }
+
+  		database.deleteContact(validator.sterilizeEmail(data.id), emitResponse);
     }
   });
 
@@ -122,7 +146,7 @@ function initialize(io, socket) {
     if(session.isAdmin(socket.id)) {
       console.log('db-delete-session');
 
-      var emitResponse= function(deleted){
+      var emitResponse = function(deleted){
         if(deleted > 0){
           socket.emit('db-refresh');
         }

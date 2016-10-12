@@ -84,8 +84,8 @@ NeDatabase.prototype.updateSession = function(id, callback){
 };
 
 //Delete Calls
-NeDatabase.prototype.deleteSmtp = function(callback){
-	var query = { smtpProfile : { $exists: true } };
+NeDatabase.prototype.deleteSmtp = function(id, callback){
+	var query = { _id : id };
 	var option = {};
 	deleteJson(query, option, callback);
 };
