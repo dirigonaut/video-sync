@@ -231,8 +231,8 @@ $('#smtpList').on("click", "button", function(e) {
 $('#createEncoding').click(function createEncoding() {
   var input     = $('#encodeInput').val();
   var output    = $('#encodeOutput').val();
-  var vQuality  = $('#encodeVideoQuality').val();
-  var aQuality  = $('#encodeAudioQuality').val();
+  var vQuality  = $("input[name=video-quality]:checked").val();
+  var aQuality  = $("input[name=audio-quality]:checked").val();
 
   var commands = [];
   var factory = client.getCommandFactory();
@@ -325,7 +325,7 @@ $('#btnEncode').click(function() {
   $('#encodeModal').modal('show');
   $('#encodeModal').on('shown', function() {
     $("#encodeInput").focus();
-  })
+  });
 });
 
 $('#btnLogin').click(function() {

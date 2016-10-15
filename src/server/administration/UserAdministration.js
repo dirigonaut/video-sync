@@ -9,13 +9,20 @@ var database      = new NeDatabase();
 var smtp          = new Smtp();
 var session       = new Session();
 
-
 function UserAdministration() { }
 
 UserAdministration.prototype.kickUser = function(user) {
   session.getActiveSession().removeInvitee(user, session);
   database.deleteTokens(user, null);
   playerManager.removePlayer(user);
+
+  this.disconnectSocket();
+};
+
+UserAdministration.prototype.disconnectSocket = function(socket) {
+  Log.trace("Disconnecting socket ", socket.id);
+  database.deleteTokens(socket.id);
+  socket.disconnect('unauthorized');
 };
 
 UserAdministration.prototype.purgeUserInfo = function(user) {

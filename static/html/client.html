@@ -22,7 +22,7 @@
         <video id="video" class="video-holder"></video>
         <div id="side-container" class="side-bar fadein">
           <div class="icon-v">
-            <a href="#" id="btnLogin"> <span class="glyphicon glyphicon-user"></span></a>
+            <a href="#" id="btnLogin"><span class="glyphicon glyphicon-thumbnail glyphicon-user"></span></a>
           </div>
         </div>
         <div id="control-container" class="control-bar flex-h fadein">
@@ -31,41 +31,42 @@
       <div id="chat-container" class="chat-container">
       </div>
       <div id="loginOverlay"></div>
-      </div>
     </div>
     <script>
-      $(function(){
-        $("#control-container").load("menu/controls.html");
-        $("#chat-container").load("menu/chat.html");
-
-        $("#loginOverlay").load("menu/overlays/login.html");
-
-        $.getScript("../resources/gui.js");
-      });
-
       var client;
 
       window.onload = function() {
         window.URL = window.URL || window.webkitURL;
         window.MediaSource = window.MediaSource || window.WebKitMediaSource
 
+        $("#control-container").load("menu/controls.html");
+        $("#chat-container").load("menu/chat.html");
+        $("#loginOverlay").load("menu/overlays/login.html", function(){
+          $('#loginModal').modal('show');
+        });
+
+        $.getScript("../resources/gui.js");
+
         var mediaSource = null;
         client = new Client(document.getElementById('video'), window);
         client.on('isConnected', function() {
-            client.getClientSocket().setEvent("media-ready", function() {
+          $('#loginModal').modal('hide');
+          $('#btnLogin').remove();
 
-              var initMedia = function() {
-                console.log("Init MediaSource");
-                mediaSource = new MediaSource();
-                return mediaSource;
-              };
+          client.getClientSocket().setEvent("media-ready", function() {
 
-              if(mediaSource !== null) {
-                mediaSource.endOfStream();
-              } else {
-                client.initializeVideo(window, initMedia);
-              }
-            });
+            var initMedia = function() {
+              console.log("Init MediaSource");
+              mediaSource = new MediaSource();
+              return mediaSource;
+            };
+
+            if(mediaSource !== null) {
+              mediaSource.endOfStream();
+            } else {
+              client.initializeVideo(window, initMedia);
+            }
+          });
         });
       };
     </script>

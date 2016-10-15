@@ -30,9 +30,15 @@ Authenticator.prototype.validateToken = function(id, data, callback) {
     var invitees = session.getActiveSession().invitees;
 
     var authorize = function(token) {
-      if(token[0].token == data.token && token[0].address == data.address) {
-        callback();
+      var authorized = false;
+
+      if(token.length > 0) {
+        if(token[0].token == data.token && token[0].address == data.address) {
+          authorized = true;
+        }
       }
+
+      callback(authorized);
     }
 
     var users = invitees[0].split(" ");
