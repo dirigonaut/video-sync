@@ -23,10 +23,9 @@ RequestFactory.prototype.buildStateRequest = function(state, time) {
 	return request;
 };
 
-RequestFactory.prototype.buildSmtpRequest = function(id, type, host, address, password) {
+RequestFactory.prototype.buildSmtpRequest = function(type, host, address, password) {
 	console.log("RequestFactory.buildSmtpCreateRequest");
 	var request	= new Object();
-	request.id 						= id;
 	request.smtpType			= type;
 	request.smtpHost			= host;
 	request.smtpAddress		= address;
@@ -42,10 +41,9 @@ RequestFactory.prototype.buildContactRequest = function(handle, address) {
 	return request;
 };
 
-RequestFactory.prototype.buildSessionRequest = function(_id, title, smtp, invitees, mailOptions) {
+RequestFactory.prototype.buildSessionRequest = function(title, smtp, invitees, mailOptions) {
 	console.log("RequestFactory.buildCreateSessionRequest");
 	var request = new Object();
-	request._id					 = _id;
 	request.title        = title;
   request.smtp         = smtp;
   request.invitees     = invitees;

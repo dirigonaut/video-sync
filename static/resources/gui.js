@@ -87,8 +87,13 @@ $('#createSession').click(function createSession() {
   var address   = $('#sessionAddress').val();
   var invitees  = ($('#sessionInvitees').val()).split(",");
 
-  client.getClientSocket().sendRequest("db-create-session",
-    client.getRequestFactory().buildSessionRequest(id, title, address, invitees, mailOptions));
+  if(id == null || id == undefined || id == "") {
+    client.getClientSocket().sendRequest("db-create-session",
+      client.getRequestFactory().buildSessionRequest(title, address, invitees, mailOptions));
+  } else {
+    client.getClientSocket().sendRequest("db-update-session", [id,
+      client.getRequestFactory().buildSessionRequest(title, address, invitees, mailOptions)]);
+  }
 });
 
 $('#readSessions').click(function readSessions() {
@@ -117,6 +122,7 @@ $('#sessionList').on("click", "tr", function(e) {
       $("#sessionInvitees").val("");
       $("#sessionSubject").val("");
       $("#sessionText").val("");
+      $("#createSession").html("Create");
     } else {
       for(var i in sessions) {
         if(sessions[i]._id === id) {
@@ -133,6 +139,7 @@ $('#sessionList').on("click", "tr", function(e) {
       $("#sessionInvitees").val(session.invitees);
       $("#sessionSubject").val(session.mailOptions.subject);
       $("#sessionText").val(session.mailOptions.text);
+      $("#createSession").html("Save");
     }
 });
 
@@ -143,8 +150,7 @@ $('#sessionList').on("click", "button", function(e) {
 
   session.remove();
 
-  client.getClientSocket().sendRequest("db-delete-session",
-    client.getRequestFactory().buildSessionRequest(id, null, null, null, null));
+  client.getClientSocket().sendRequest("db-delete-session", id);
 });
 
 //Smtp Events -----------------------------------------------------------------
@@ -157,13 +163,19 @@ $('#createContact').click(function createContact() {
 });
 
 $('#createSmtp').click(function createSmtp() {
+  var id        = $('#smtpId').val();
   var type      = $('#smtpType').val();
   var host      = $('#smtpHost').val();
   var address   = $('#smtpAddress').val();
   var password  = $('#smtpPassword').val();
 
-  client.getClientSocket().sendRequest("db-create-smtp",
-    client.getRequestFactory().buildSmtpRequest(null, type, host, address, password));
+  if(id == null || id == undefined || id == "") {
+    client.getClientSocket().sendRequest("db-create-smtp",
+      client.getRequestFactory().buildSmtpRequest(type, host, address, password));
+  } else {
+    client.getClientSocket().sendRequest("db-update-smtp", [id,
+      client.getRequestFactory().buildSmtpRequest(type, host, address, password)]);
+  }
 });
 
 $('#readContacts').click(function readContacts() {
@@ -186,6 +198,7 @@ $('#smtpList').on("click", "tr", function(e) {
       $("#smtpHost").val("");
       $("#smtpAddress").val("");
       $("#smtpPassword").val("");
+      $("#createSmtp").html("Create");
     } else {
       for(var i in smtps) {
         if(smtps[i]._id === id) {
@@ -197,10 +210,11 @@ $('#smtpList').on("click", "tr", function(e) {
 
     if(smtp !== null && smtp !== undefined) {
       $("#smtpId").val(smtp._id);
-      $("#smtpType").val(smtp.type);
+      $("#smtpType").val(smtp.smtpType);
       $("#smtpHost").val(smtp.smtpHost);
       $("#smtpAddress").val(smtp.smtpAddress);
       $("#smtpPassword").val(smtp.smtpPassword);
+      $("#createSmtp").html("Save");
     }
 });
 
@@ -210,8 +224,7 @@ $('#smtpList').on("click", "button", function(e) {
 
   smtp.remove();
 
-  client.getClientSocket().sendRequest("db-delete-smtp",
-    client.getRequestFactory().buildSmtpRequest(id, null, null, null, null));
+  client.getClientSocket().sendRequest("db-delete-smtp", id);
 });
 
 //Encode Events ---------------------------------------------------------------

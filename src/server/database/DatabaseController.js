@@ -70,7 +70,6 @@ function initialize(io, socket) {
       console.log('db-read-contacts');
 
       var emitResults = function(contacts) {
-        //Remove everything but the address
         socket.emit("db-contacts", contacts);
       };
 
@@ -83,7 +82,6 @@ function initialize(io, socket) {
       console.log('db-read-sessions');
 
       var emitResults = function(sessions) {
-        //Remove everything but the address
         socket.emit("db-sessions", sessions);
       };
 
@@ -95,21 +93,37 @@ function initialize(io, socket) {
   socket.on('db-update-contact', function(data) {
     if(session.isAdmin(socket.id)) {
       console.log('db-update-contact');
-      database.updateContact(validator.sterilizeContact(data));
+
+      var emitResults = function() {
+        socket.emit("db-refresh");
+      };
+
+      database.updateContact(data[0], validator.sterilizeContact(data[1]), emitResults);
     }
   });
 
   socket.on('db-update-smtp', function(data) {
     if(session.isAdmin(socket.id)) {
       console.log('db-update-smtp');
-      database.createSmtp(validator.sterilizeSmtp(data));
+
+      var emitResults = function() {
+        socket.emit("db-refresh");
+      };
+
+      console.log(data);
+      database.updateSmtp(data[0], validator.sterilizeSmtp(data[1]), emitResults);
     }
   });
 
   socket.on('db-update-session', function(data) {
     if(session.isAdmin(socket.id)) {
       console.log('db-update-session');
-      database.createSession(validator.sterilizeSession(data));
+
+      var emitResults = function() {
+        socket.emit("db-refresh");
+      };
+
+      database.updateSession(data[0], validator.sterilizeSession(data[1]), emitResults);
     }
   });
 
@@ -124,7 +138,7 @@ function initialize(io, socket) {
         }
       }
 
-      database.deleteSmtp(validator.sterilizeSmtp(data.id), emitResponse);
+      database.deleteSmtp(validator.sterilizeSmtp(data), emitResponse);
     }
   });
 
@@ -138,7 +152,7 @@ function initialize(io, socket) {
         }
       }
 
-  		database.deleteContact(validator.sterilizeEmail(data.id), emitResponse);
+  		database.deleteContact(validator.sterilizeEmail(data), emitResponse);
     }
   });
 
@@ -152,7 +166,7 @@ function initialize(io, socket) {
         }
       }
 
-      database.deleteSession(validator.sterilizeSession(data._id), emitResponse);
+      database.deleteSession(validator.sterilizeSession(data), emitResponse);
     }
   });
 }
