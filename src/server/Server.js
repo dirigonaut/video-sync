@@ -6,6 +6,7 @@ var Smtp          = require('./utils/Smtp');
 var Bundler       = require('./utils/Bundler');
 var Session       = require('./utils/Session');
 var Log           = require('./utils/Logger');
+var UserAdmin     = require('./administration/UserAdministration');
 var Validator     = require('./authentication/Validator');
 var NeDatabase    = require('./database/NeDatabase');
 var Certificate   = require('./authentication/Certificate');
@@ -23,6 +24,7 @@ var io  = null;
 var server  = null;
 
 var session;
+var userAdmin;
 var validator;
 var authenticator;
 
@@ -47,6 +49,7 @@ function Server(ip, port, callback) {
     database        = new NeDatabase();
 
     session         = new Session();
+    userAdmin       = new UserAdmin();
     validator		    = new Validator();
     authenticator   = new Authenticator();
 
@@ -67,6 +70,7 @@ module.exports = Server;
 function initialize() {
   io.on('connection', function (socket) {
     Log.trace("socket has connected: " + socket.id + " ip:" + socket.handshake.address);
+    socket.logonAttempts = 0;
     isAdministrator(socket);
     socket.emit('connected');
 
@@ -88,11 +92,19 @@ function initialize() {
     socket.on('auth-validate-token', function (data) {
       Log.trace('auth-validate-token');
 
-      var attachControllers = function(token) {
-        userAuthorized(socket);
+      var loginAttempt = function(authorized) {
+        if(authorized) {
+          userAuthorized(socket);
+        } else {
+          socket.logonAttempts += 1;
+
+          if(socket.logonAttempts > 4) {
+            userAdmin.disconnectSocket(socket);
+          }
+        }
       };
 
-      authenticator.validateToken(socket.id, validator.sterilizeUser(data), attachControllers);
+      authenticator.validateToken(socket.id, validator.sterilizeUser(data), loginAttempt);
     });
 
     socket.on('error', function (data) {
@@ -102,9 +114,7 @@ function initialize() {
     setTimeout(function(){
       //If the socket didn't authenticate, disconnect it
       if (!socket.auth) {
-        log.trace("Disconnecting socket ", socket.id);
-        database.deleteTokens(socket.id);
-        socket.disconnect('unauthorized');
+        userAdmin.disconnectSocket(socket);
       }
     }, 300000);
   });
