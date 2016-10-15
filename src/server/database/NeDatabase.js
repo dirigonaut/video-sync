@@ -65,21 +65,18 @@ NeDatabase.prototype.readCerts = function(callback){
 };
 
 //Update Calls
-NeDatabase.prototype.updateSmtp = function(address, callback){
-	var query = { smtpProfile : address };
-	var json	= "";
+NeDatabase.prototype.updateSmtp = function(id, json, callback){
+	var query = { _id : id };
 	updateJson(query, json, callback);
 };
 
-NeDatabase.prototype.updateContact = function(callback){
-	var query = { email: { $exists: true } }
-	var json	= "";
+NeDatabase.prototype.updateContact = function(id, json, callback){
+	var query = { _id: id };
 	updateJson(query, json, callback);
 };
 
-NeDatabase.prototype.updateSession = function(id, callback){
-	var query = { sessionProfile: id };
-	var json	= "";
+NeDatabase.prototype.updateSession = function(id, json, callback){
+	var query = { _id: id };
 	updateJson(query, json, callback);
 };
 
@@ -90,8 +87,8 @@ NeDatabase.prototype.deleteSmtp = function(id, callback){
 	deleteJson(query, option, callback);
 };
 
-NeDatabase.prototype.deleteContact = function(callback){
-	var query = { email: { $exists: true } }
+NeDatabase.prototype.deleteContact = function(id, callback){
+	var query = { _id: id };
 	var option = {};
 	deleteJson(query, option, callback);
 };

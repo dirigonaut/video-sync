@@ -6,6 +6,7 @@
   background-color: black;
   margin: 0;
   padding: 0;
+  overflow: hidden;
 }
 
 .media-container {
@@ -23,6 +24,7 @@
   width:20%;
   height:100vh;
   background-color: black;
+  overflow: hidden;
 }
 
 .file-bar {
@@ -87,8 +89,8 @@
 }
 
 .chat-manuscript {
-  width:95%;
-  height:90vh;
+  width:90%;
+  height:85vh;
   background-color: white;
   margin:1vh .5vw 1vh .5vw;
 }
@@ -229,6 +231,10 @@
 
 a {
    color: white;
+}
+
+textarea {
+    resize: none;
 }
 /* Old CSS */
 .controls-old {
