@@ -32,7 +32,7 @@
   float:left;
   height:5vh;
   width:100%;
-  overflow-x: hidden;
+  overflow: hidden;
   top:0;
   background-color: black;
 }
@@ -57,7 +57,7 @@
   float:left;
   height:5vh;
   width:100%;
-  overflow-x: hidden;
+  overflow: hidden;
   clear:left;
   background-color: black;
   overflow: hidden;
@@ -94,6 +94,7 @@
   width:90%;
   height:85vh;
   background-color: white;
+  overflow-x: hidden;
   margin:1vh .5vw 1vh .5vw;
 }
 

@@ -48,7 +48,7 @@ ChatUtil.prototype.setupEvents = function() {
 };
 
 ChatUtil.prototype.getUserHandle = function(id) {
-  return id.substring(1, 5) + " "  + handleList.get(id);
+  return handleList.get(id);
 };
 
 module.exports = ChatUtil;

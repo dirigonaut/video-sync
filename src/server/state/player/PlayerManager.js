@@ -25,7 +25,13 @@ PlayerManager.prototype.getPlayers = function(){
 };
 
 PlayerManager.prototype.removePlayer = function(id){
-  this.players.delete(id);
+  players.delete(id);
+
+  var player = players.get(id);
+
+  if(player === null || player === undefined) {
+    player = players.delete("/#" + id);
+  }
 };
 
 PlayerManager.prototype.getOtherPlayers = function(id){

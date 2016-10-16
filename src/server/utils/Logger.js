@@ -45,7 +45,13 @@ var pingLog = function(level, text) {
   if(level >= logLevel && socket !== null && socket !== undefined) {
     var message = new Object();
     message.from = 'system';
-    message.text = text;
+
+    if(text !== null && typeof text === 'object') {
+      message.text = JSON.stringify(text);
+    } else {
+      message.text = text;
+    }
+
     socket.emit("chat-log-resp", message);
   }
 };
