@@ -65,4 +65,4 @@ CommandEngine.prototype.processCommand = function(command, callback) {
 
 module.exports = CommandEngine;
 
-CommandEngine.Enum = {"PLAY" : 0, "PAUSE" : 1, "SEEK" : 2, "USERS" : 3, "INVITE" : 4, "KICK" : 5, "HELP" : 6};
+CommandEngine.Enum = {"PLAY" : 0, "PAUSE" : 1, "SEEK" : 2, "USERS" : 3, "INVITE" : 4, "KICK" : 5, "HELP" : 6, "HANDLE" : 7};

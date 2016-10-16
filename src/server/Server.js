@@ -71,7 +71,7 @@ function initialize() {
   io.on('connection', function (socket) {
     Log.trace("socket has connected: " + socket.id + " ip:" + socket.handshake.address);
     socket.logonAttempts = 0;
-    isAdministrator(socket);
+    isAdministrator(socket, io);
     socket.emit('connected');
 
     socket.on('auth-get-token', function (data) {
@@ -94,7 +94,7 @@ function initialize() {
 
       var loginAttempt = function(authorized) {
         if(authorized) {
-          userAuthorized(socket);
+          userAuthorized(socket, io);
         } else {
           socket.logonAttempts += 1;
 
@@ -105,6 +105,11 @@ function initialize() {
       };
 
       authenticator.validateToken(socket.id, validator.sterilizeUser(data), loginAttempt);
+    });
+
+    socket.on('disconnect', function() {
+      var manager = new PlayerManager();
+      manager.removePlayer(socket.id);
     });
 
     socket.on('error', function (data) {
@@ -120,7 +125,7 @@ function initialize() {
   });
 }
 
-function userAuthorized(socket) {
+function userAuthorized(socket, io) {
   socket.auth = true;
 
   var video = new VideoController(io, socket);
@@ -129,17 +134,16 @@ function userAuthorized(socket) {
 
   var manager = new PlayerManager();
   manager.createPlayer(socket);
-
   socket.emit('authenticated');
 
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     socket.emit('media-ready');
   }
 
-  socket.emit('chat-handles', manager.getHandles());
+  io.emit('chat-handles', manager.getHandles());
 }
 
-function isAdministrator(socket) {
+function isAdministrator(socket, io) {
   socket.auth = false;
 
   if(session.getAdmin() == null) {
@@ -152,7 +156,7 @@ function isAdministrator(socket) {
       new AdminController(io, socket);
       new DatabaseController(io, socket);
 
-      userAuthorized(socket);
+      userAuthorized(socket, io);
     }
   }
 }

@@ -13,10 +13,10 @@ $('#btnPlay').click(function() {
 
 $('#btnMute').click(function() {
   if ($('#video')[0].muted) {
-    $('.glyphicon-volume-off').attr('class', 'glyphicon glyphicon-volume-up');
+    $('.glyphicon-volume-off').attr('class', 'glyphicon glyphicon-thumbnail glyphicon-volume-up');
     $("video").prop('muted', false);
   } else {
-    $('.glyphicon-volume-up').attr('class', 'glyphicon glyphicon-volume-off');
+    $('.glyphicon-volume-up').attr('class', 'glyphicon glyphicon-thumbnail glyphicon-volume-off');
     $("video").prop('muted', true);
   }
 });
@@ -51,11 +51,11 @@ $('#btnFullScreen').click(function() {
 });
 
 $("video").on("pause", function (e) {
-  $('.glyphicon-pause').attr('class', 'glyphicon glyphicon-play');
+  $('.glyphicon-pause').attr('class', 'glyphicon glyphicon-thumbnail glyphicon-play');
 });
 
 $("video").on("play", function (e) {
-  $('.glyphicon-play').attr('class', 'glyphicon glyphicon-pause');
+  $('.glyphicon-play').attr('class', 'glyphicon glyphicon-thumbnail glyphicon-pause');
 });
 
 $("video").on("timeupdate", updateProgressBar);
@@ -339,7 +339,6 @@ $('#btnLogin').click(function() {
 $('#submitCreds').click(function readContacts() {
   var user     = $('#loginUser').val();
   var token    = $('#loginToken').val();
-  console.log("testing");
 
   if(token.length > 0) {
     client.getClientSocket().sendRequest('auth-validate-token', client.getRequestFactory().buildLoginRequest(user, token));
@@ -358,12 +357,14 @@ $('#sendChat').click(function() {
 
 client.getClientSocket().setEvent('chat-broadcast-resp', function(message) {
   console.log("chat-broadcast-resp");
-  $('#chatManuscript').append(client.getChatUtil().getUserHandle(message.from) + ": " + message.text + "\n");
+  $('#chatManuscript').append('<p><span class="chat-message" title="' + message.from + '" style="color:blue; font-weight: bold;">' +
+    new Date().toTimeString().split(" ")[0] + " " + client.getChatUtil().getUserHandle(message.from) + ': </span>' + message.text + '</p>');
 });
 
 client.getClientSocket().setEvent('chat-log-resp', function(message) {
   console.log("chat-log-resp");
-  $('#logManuscript').append(message.from + ": " + message.text + "\n");
+  $('#logManuscript').append('<p><span class="chat-message" title="' + message.from + '" style="color:blue; font-weight: bold;">' +
+    new Date().toTimeString().split(" ")[0] + " " + message.from + ': </span>' + message.text + '</p>');
 });
 
 client.getChatUtil().on('client-log', function(message) {
