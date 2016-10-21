@@ -1,7 +1,9 @@
 var Validator     = require('../authentication/Validator');
 var StateEngine   = require('./StateEngine.js');
 var Log           = require('../utils/Logger')
+var PlayerManager = require('./player/PlayerManager');
 
+var playerManager = new PlayerManager();
 var validator     = new Validator();
 var stateEngine   = new StateEngine();;
 
@@ -21,7 +23,7 @@ function initialize(io, socket) {
 
   socket.on('state-req-pause', function(data) {
     console.log('state-req-pause');
-    stateEngine.pause();
+    stateEngine.pause(socket);
   });
 
   socket.on('state-req-seek', function(data) {
@@ -36,5 +38,10 @@ function initialize(io, socket) {
 
   socket.on('state-time-update', function(data) {
     stateEngine.timeUpdate(socket.id, data);
+  });
+
+  socket.on('state-initialized', function() {
+    var player = playerManager.getPlayer(socket.id);
+    player.isInit = true;
   });
 }
