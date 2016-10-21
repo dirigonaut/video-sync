@@ -3,6 +3,7 @@ var NeDatabase	= require("../database/NeDatabase");
 var database      = new NeDatabase();
 var activeSession = null;
 var mediaPath     = null;
+var mediaStarted  = false;
 var adminId       = null;
 
 var localIp       = null;
@@ -44,8 +45,19 @@ Session.prototype.removeInvitee = function(id, session) {
   }
 };
 
+Session.prototype.mediaStarted = function() {
+  if(mediaPath !== null && !mediaStarted) {
+    mediaStarted = true;
+  }
+};
+
+Session.prototype.getMediaStarted = function() {
+  return mediaStarted;
+};
+
 Session.prototype.setMediaPath = function(path) {
   mediaPath = path;
+  mediaStarted = false;
 };
 
 Session.prototype.getMediaPath = function() {

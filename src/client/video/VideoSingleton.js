@@ -62,7 +62,6 @@ VideoSingleton.prototype.onProgress = function(typeId) {
       if(selectedMedia.isLastSegment(typeId)){
         if(selectedMedia.isReadyForNextSegment(typeId, self.videoElement.currentTime)){
           console.log("VideoSingleton.onProgress - isReady");
-          console.log(self.listeners('get-next'));
           self.emit("get-next", typeId, (self.videoElement.currentTime * 1000) + selectedMedia.getActiveMeta(typeId).timeStep);
         }
       } else {

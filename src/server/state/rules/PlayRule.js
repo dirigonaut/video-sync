@@ -1,6 +1,9 @@
 var PlayerManager = require('../player/PlayerManager');
+var Player        = require('../player/Player');
+var Session       = require('../../utils/Session');
 
 var playerManager = new PlayerManager();
+var session       = new Session();
 
 function PlayRule(fuzzyRange) {
   this.fuzzyRange = fuzzyRange;
@@ -8,18 +11,23 @@ function PlayRule(fuzzyRange) {
 
 PlayRule.prototype.evaluate = function(issuer, callback) {
   console.log("PlayRule.evaluate");
-	var others  = playerManager.getOtherPlayers(issuer.socket.id);
-  var trigger = true;
-  console.log(others);
+	var players = playerManager.getPlayers();
+  var issuees = [];
 
-	for (var i in others){
-    console.log("Issuer: " + parseFloat(issuer.timestamp) + " Other: " + parseFloat(others[i].timestamp));
-    console.log(Math.abs(parseFloat(issuer.timestamp) - parseFloat(others[i].timestamp)) + " < " + this.fuzzyRange);
-		trigger = trigger && (Math.abs(parseFloat(issuer.timestamp) - parseFloat(others[i].timestamp)) < this.fuzzyRange);
-	}
+  if(issuer.sync == Player.Sync.DESYNCED || (session.getMediaStarted() == true && issuer.isInit())) {
+    callback([issuer]);
+  } else {
+    for(var player of players) {
+      if(player[1].sync == Player.Sync.SYNCED || (session.getMediaStarted() == false && player[1].isInit())) {
+        if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(player[1].timestamp)) < this.fuzzyRange) {
+          issuees.push(player[1]);
+        }
+      }
+  	}
+  }
 
-  if(trigger) {
-    callback();
+  if(issuees.length > 0) {
+    callback(issuees);
   }
 };
 

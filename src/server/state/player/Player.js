@@ -1,10 +1,16 @@
 function Player(socket){
     this.socket	  	= socket;
     this.handle     = "JohnDoe";
-    this.state 	  	= 0;
+    this.state 	  	= null;
+    this.sync       = 0;
     this.timestamp 	= 0;
 };
 
-Player.State = {"INIT" : 0, "PLAY" : 1, "PAUSE" : 2, "SEEK" : 3, "JOIN" : 4, "SYNC" : 5};
+Player.prototype.isInit = function() {
+  return this.sync == Player.Sync.SYNCING && this.timestamp == 0;
+}
+
+Player.State = {"PLAY" : 0, "PAUSE" : 1};
+Player.Sync  = {"SYNCING" : 0, "SYNCED" : 1, "SYNCWAIT": 2, "DESYNCED" : 3};
 
 module.exports = Player;
