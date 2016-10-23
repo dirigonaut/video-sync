@@ -46,6 +46,8 @@ Command._getTailKeylessPathValues = function(command) {
   for(var x = 2; x < parms.length; ++x) {
     if(parms[x].charAt(0) === "/") {
       keylessValues += keylessValues == "" ? parms[x] : " " + parms[x];
+    } else if(parms[x].charAt(1) === ":") {
+      keylessValues += keylessValues == "" ? parms[x] : " " + parms[x];
     }
   }
 
