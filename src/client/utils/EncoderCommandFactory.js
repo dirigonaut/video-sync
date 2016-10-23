@@ -2,6 +2,11 @@ function EncoderCommandFactory(){ }
 
 function gen_new_name(path, scale){
   var parsed_path = path.split("/");
+
+  if(parsed_path.length <= 1) {
+    parsed_path = path.split("\\");
+  }
+  
   var parsed_file = parsed_path[parsed_path.length -1].split(".");
   return parsed_file[0] + "_" + scale + ".webm";
 };
