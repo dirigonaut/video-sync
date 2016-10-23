@@ -13,17 +13,17 @@ SyncRule.prototype.evaluate = function(issuer, callback) {
   var synced = true;
 
   if(issuer.sync !== Player.Sync.DESYNCED) {
-    for(var player of players){
-      if(player[1].sync == Player.Sync.SYNCED && player[1].state == Player.State.PLAY) {
-        if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(player[1].timestamp)) < this.fuzzyRange) {
-          issuees.push(player[1]);
+    for(var player of players.values()){
+      if(player.sync == Player.Sync.SYNCED && player.state == Player.State.PLAY) {
+        if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(player.timestamp)) > this.fuzzyRange) {
+          issuees.push(player);
         }
       }
   	}
   }
 
   if(issuees.length > 0) {
-    callback(playerManager.getPlayers(), "state-pause");
+    callback(issuees, "state-pause");
   }
 };
 
