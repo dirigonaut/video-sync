@@ -102,6 +102,11 @@ function WebmMetaData() {
 
   self._setDir = function(path) {
     var splitPath = path.split('/');
+    
+    if(parsed_path.length <= 1) {
+      parsed_path = path.split("\\");
+    }
+
     dirPath = path.replace(splitPath[splitPath.length - 1], '');
   }
 
