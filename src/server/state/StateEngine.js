@@ -64,16 +64,16 @@ StateEngine.prototype.sync = function(socket) {
     if(playerManager.getPlayers().size > 1) {
       var syncTime = null;
 
-      for(var player of playerManager.getPlayers()) {
-        if(syncTime == null || syncTime > player[1].timestamp) {
-          syncTime = player[1].timestamp;
+      for(var player of playerManager.getPlayers().values()) {
+        if(syncTime == null || (player.sync == Player.Sync.SYNCED && syncTime > player.timestamp)) {
+          syncTime = player.timestamp;
         }
       }
 
-      var request = new Object();
-      request.seektime = syncTime;
+      var response = new Object();
+      response.seektime = syncTime;
 
-      socket.emit('state-seek', request, updatePlayerState);
+      socket.emit('state-seek', response, updatePlayerState);
     }
   }
 };
