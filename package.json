@@ -1,6 +1,6 @@
 {
   "name": "video-sync",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "admin.html",
   "window": {
     "title": "Video-Sync",
