@@ -11,34 +11,32 @@ function Smtp(){
 
 Smtp.prototype.initializeTransport = function(address, callback) {
 	console.log("Smtp.initializeTransport");
-	if(!isTransportInitialized()) {
-		if(address != activeSmtp) {
-			this.closeTrasporter();
+	if(address != activeSmtp) {
+		this.closeTrasporter();
 
-			var loadSmtpOptions = function(result) {
-				var data = result[0];
-				if(data != undefined && data != null) {
-					if(data.type == "Custom") {
-						//TODO: allow some basic custom smtp logic
-					} else {
-						console.log("Setting Smtp options.");
-						smtpTransport = NodeMailer.createTransport({
-								service: data.smtpHost,
-								auth: {
-										user: data.smtpAddress,
-										pass: data.smtpPassword
-								}
-						});
-						activeSmtp = data.smtpAddress;
-						callback();
-					}
+		var loadSmtpOptions = function(result) {
+			var data = result[0];
+			if(data != undefined && data != null) {
+				if(data.type == "Custom") {
+					//TODO: allow some basic custom smtp logic
+				} else {
+					console.log("Setting Smtp options.");
+					smtpTransport = NodeMailer.createTransport({
+							service: data.smtpHost,
+							auth: {
+									user: data.smtpAddress,
+									pass: data.smtpPassword
+							}
+					});
+					activeSmtp = data.smtpAddress;
+					callback();
 				}
 			}
-
-			database.readSmtp(address, loadSmtpOptions);
-		} else {
-			callback();
 		}
+
+		database.readSmtp(address, loadSmtpOptions);
+	} else {
+		callback();
 	}
 };
 
@@ -81,5 +79,5 @@ Smtp.prototype.closeTrasporter = function() {
 module.exports = Smtp;
 
 var isTransportInitialized = function() {
-	return smtpTransport != null;
+	return smtpTransport !== null && smtpTransport !== undefined;
 }

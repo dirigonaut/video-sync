@@ -18,8 +18,7 @@ Authenticator.prototype.requestToken = function(id, data, callback) {
   for(var x in invitees) {
     if(invitees[x] == data.address) {
       var token = createToken(id, data.address);
-      database.createToken(token, null);
-      callback(data, token);
+      database.createToken(token, callback);
     }
   }
 };

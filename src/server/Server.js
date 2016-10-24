@@ -77,9 +77,9 @@ function initialize() {
     socket.on('auth-get-token', function (data) {
       Log.trace('auth-get-token');
 
-      var requestSmtp = function(recipientAddress, token) {
+      var requestSmtp = function(token) {
         var sendInvitations = function(hostAddress) {
-          var mailOptions = smtp.createMailOptions(session.getActiveSession().smtp, recipientAddress.address, "Video-Sync Token", "Session token: " + token.token, "");
+          var mailOptions = smtp.createMailOptions(session.getActiveSession().smtp, token.address, "Video-Sync Token", "Session token: " + token.token, "");
           smtp.sendMail(mailOptions);
         };
 
