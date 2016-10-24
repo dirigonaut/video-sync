@@ -137,7 +137,7 @@ function getFile(path) {
   var parsed_path = null;
 
   if(path.charAt(0) === "/") {
-    parsed_path = path.split("/");;
+    parsed_path = path.split("/");
   } else if(path.charAt(1) === ":") {
     parsed_path = path.split("\\");
   }
