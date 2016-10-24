@@ -47,10 +47,11 @@ function WebmMetaData() {
 
     for(var i in segments) {
       var metaRequest = new Object();
-      console.log(dirPath + segments[i].baseUrl);
-      var readConfig = videoStream.createStreamConfig(dirPath + segments[i].baseUrl, self._parseEBML);
+      var fileName = getFile(segments[i].baseUrl);
+      console.log(dirPath + fileName);
+      var readConfig = videoStream.createStreamConfig(dirPath + fileName, self._parseEBML);
 
-      metaRequest.manifest = new Manifest(segments[i].baseUrl, segments[i].initRange.split('-'));
+      metaRequest.manifest = new Manifest(fileName, segments[i].initRange.split('-'));
       metaRequest.readConfig = readConfig;
       metaRequests.push(metaRequest);
     }
@@ -131,3 +132,18 @@ function WebmMetaData() {
 }
 
 module.exports = WebmMetaData;
+
+function getFile(path) {
+  var parsed_path = null;
+  var splitPath = path.split(" ");
+
+  if(splitPath[0].charAt(0) === "/") {
+    parsed_path = = path.split("/");;
+  } else if(splitPath[0].charAt(1) === ":") {
+    parsed_path = path.split("\\");
+  }
+
+
+  var parsed_file = parsed_path[parsed_path.length - 1];
+  return parsed_file;
+}
