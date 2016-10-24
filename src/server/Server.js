@@ -110,6 +110,7 @@ function initialize() {
     socket.on('disconnect', function() {
       var manager = new PlayerManager();
       manager.removePlayer(socket.id);
+      userAdmin.disconnectSocket(socket);
     });
 
     socket.on('error', function (data) {
