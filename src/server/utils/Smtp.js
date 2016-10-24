@@ -21,6 +21,7 @@ Smtp.prototype.initializeTransport = function(address, callback) {
 					if(data.type == "Custom") {
 						//TODO: allow some basic custom smtp logic
 					} else {
+						console.log("Setting Smtp options.");
 						smtpTransport = NodeMailer.createTransport({
 								service: data.smtpHost,
 								auth: {
