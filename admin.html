@@ -73,7 +73,8 @@
           loadGui();
         }
 
-        server = new Server(ip, port, startClient);
+        var appData = require('nw.gui').App.dataPath;
+        server = new Server(ip, port, appData, startClient);
       };
 
       window.onload = function() {
