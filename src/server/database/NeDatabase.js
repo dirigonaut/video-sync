@@ -1,10 +1,13 @@
+var Path 				= require('path');
 var Datastore 	= require('nedb');
 var	JsonKeys		= require('../utils/JsonKeys');
 
-var db = new Datastore({ filename: './database_inst', autoload: true });
+var db;
 
-function NeDatabase(){
-
+function NeDatabase(appData){
+	if((db === null || db === undefined) && appData !== undefined) {
+		db = new Datastore({ filename: Path.join(appData, 'database_inst'), autoload: true });
+	}
 };
 
 //Create Calls

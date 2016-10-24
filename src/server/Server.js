@@ -28,7 +28,7 @@ var userAdmin;
 var validator;
 var authenticator;
 
-function Server(ip, port, callback) {
+function Server(ip, port, appData, callback) {
   app = Express();
 
   var initHttpsServer = function(pem) {
@@ -46,7 +46,6 @@ function Server(ip, port, callback) {
     new Bundler();
 
     smtp            = new Smtp();
-    database        = new NeDatabase();
 
     session         = new Session();
     userAdmin       = new UserAdmin();
@@ -62,6 +61,7 @@ function Server(ip, port, callback) {
     callback();
   };
 
+  database = new NeDatabase(appData);
   new Certificate().getCertificates(initHttpsServer);
 }
 
