@@ -79,7 +79,7 @@ function initialize() {
 
       var requestSmtp = function(recipientAddress, token) {
         var sendInvitations = function(hostAddress) {
-          var mailOptions = smtp.createMailOptions(session.getActiveSession().smtp, recipientAddress, "Video-Sync Token", "Session token: " + token.token, "");
+          var mailOptions = smtp.createMailOptions(session.getActiveSession().smtp, recipientAddress.address, "Video-Sync Token", "Session token: " + token.token, "");
           smtp.sendMail(mailOptions);
         };
 
