@@ -50,7 +50,7 @@ Smtp.prototype.createMailOptions = function(subject, text, html) {
 
 Smtp.prototype.sendMail = function(mailOptions) {
 	console.log("Smtp.sendMail");
-	if(false && isTransportInitialized()) {
+	if(isTransportInitialized()) {
 		smtpTransport.sendMail(mailOptions, function(error, response) {
 		    if(error) {
 		        console.log(error);
