@@ -135,15 +135,17 @@ module.exports = WebmMetaData;
 
 function getFile(path) {
   var parsed_path = null;
-  var splitPath = path.split(" ");
 
-  if(splitPath[0].charAt(0) === "/") {
+  if(path.charAt(0) === "/") {
     parsed_path = = path.split("/");;
-  } else if(splitPath[0].charAt(1) === ":") {
+  } else if(path.charAt(1) === ":") {
     parsed_path = path.split("\\");
   }
 
+  var parsed_file = path;
+  if(parsed_path !== null && parsed_path !== undefined) {
+    parsed_file = parsed_path[parsed_path.length - 1];
+  }
 
-  var parsed_file = parsed_path[parsed_path.length - 1];
   return parsed_file;
 }
