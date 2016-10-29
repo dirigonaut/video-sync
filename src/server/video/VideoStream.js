@@ -2,56 +2,9 @@ var Fs      = require('fs');
 var Ebml    = require('ebml');
 var Logger  = require('../utils/Logger');
 
-const Util = require('util');
-const EventEmitter = require('events');
-
 var log = new Logger();
 
-function VideoStream(){
-  EventEmitter.call(this);
-};
-
-Util.inherits(VideoStream, EventEmitter);
-
-VideoStream.prototype.queuedDecode = function(metaRequests) {
-  console.log("VideoStream.queuedDecode");
-  var emitter = this;
-  var counter = new EventEmitter();
-  counter.queue = metaRequests.length - 1;
-
-  counter.on('processed', function(manifest) {
-    if(this.queue > 0) {
-      --this.queue;
-    } else {
-      emitter.emit('end', manifest);
-    }
-  });
-
-  for(var i in metaRequests) {
-    this.readAndDecode(metaRequests[i].readConfig, metaRequests[i].manifest, counter);
-  }
-};
-
-//Adjust to take requests with manifest file included
-VideoStream.prototype.readAndDecode = function(readConfig, manifest, counter) {
-  console.log("VideoStream.readAndDecode");
-  var readStream  = Fs.createReadStream(readConfig.path, readConfig.options);
-  var decoder     = new Ebml.Decoder();
-
-  readStream.on('data', function(data) {
-    decoder.write(data);
-  });
-  readStream.on('error', function(e) {
-    console.log("VideoStream.readAndDecode, Server: Error: " + e);
-  });
-  readStream.on('end', function() {
-    console.log("VideoStream.readAndDecode, Server: Finished reading stream");
-    counter.emit('processed', manifest);
-  });
-
-  decoder.on('data', function(data) {
-    readConfig.callback(manifest, data);
-  });
+function VideoStream() {
 };
 
 VideoStream.prototype.read = function(readConfig) {
@@ -126,6 +79,17 @@ VideoStream.prototype.ensureDirExists = function(path, mask, callback) {
 }
 
 VideoStream.prototype.createStreamConfig = function(path, callback) {
+  console.log('VideoStream.streamConfig');
+  var streamConfig = new Object();
+  streamConfig.path = path;
+  streamConfig.options = null;
+  streamConfig.callback = callback;
+  streamConfig.onFinish = null;
+
+  return streamConfig;
+};
+
+VideoStream.createStreamConfig = function(path, callback) {
   console.log('VideoStream.streamConfig');
   var streamConfig = new Object();
   streamConfig.path = path;

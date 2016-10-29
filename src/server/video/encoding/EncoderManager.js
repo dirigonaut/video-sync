@@ -3,10 +3,10 @@ const util = require('util');
 
 var Command = require('./process/Command');
 var Ffmpeg = require('./process/FfmpegProcess');
-var Mp4Box = require('./process/Mp4BoxProcess');
 var Log    = require('../../utils/Logger')
 
 const webm_manifest = "webm_dash_manifest";
+const mp4_manifest = "webm_dash_manifest";
 
 function EncoderManager(data){
 	console.log("EncodingManager");
@@ -15,23 +15,27 @@ function EncoderManager(data){
 	self.postProcess = [];
 
 	for(var i = 0; i < data.length; ++i){
-		switch (data[i].process) {
+		switch (data[i].codec) {
 			case "webm" :
-				var ffmpeg = new Ffmpeg(Command(data[i].input));
-				setEvents(ffmpeg, self);
-				self.commands.push(ffmpeg);
+				var webm = new Ffmpeg(Command(data[i].input));
+				setEvents(webm, self);
+				self.commands.push(webm);
 
 				if(data[i].input.includes(webm_manifest)) {
-					self.postProcess.push([data[i].process, ffmpeg.options[ffmpeg.options.length -1]]);
+					self.postProcess.push([data[i].codec, webm.options[webm.options.length - 1]]);
 				}
 			break;
-			case "mp4box" :
-				var mp4Box = new Mp4Box(new Command(data[i].input));
-				setEvents(mp4Box);
-				self.commands.push(mp4Box, self);
+			case "mp4" :
+				var mp4 = new Ffmpeg(Command(data[i].input));
+				setEvents(mp4, self);
+				self.commands.push(mp4);
+
+				if(data[i].input.includes(mp4_manifest)) {
+					self.postProcess.push([data[i].codec, mp4.options[mp4.options.length - 1]]);
+				}
 			break;
 			default:
-				console.log("EncoderManager: " + command.process + " is not supported process.");
+				console.log("EncoderManager: " + command.codec + " is not supported process.");
 			break;
 		}
 	}
@@ -71,7 +75,7 @@ function setEvents(command, manager) {
 	}).on('progress', function(percent) {
 		console.log(percent);
 		console.log(new Date().getTime());
-	}).on('close', function() {
+	}).on('close', function(exitCode) {
 		console.log('Server: file has been converted succesfully: ' + new Date().getTime());
 		manager.emit('processed');
 	}).on('error', function(err) {

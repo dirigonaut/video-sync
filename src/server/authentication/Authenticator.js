@@ -1,7 +1,7 @@
 const crypto      = require('crypto');
 
 var NeDatabase    = require('../database/NeDatabase');
-var Session       = require('../utils/Session');
+var Session       = require('../administration/Session');
 var Logger        = require('../utils/Logger');
 
 var database			= new NeDatabase();

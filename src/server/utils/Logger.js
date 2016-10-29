@@ -8,26 +8,31 @@ function Logger(adminSocket) {
 }
 
 Logger.trace = function(message) {
-  log.trace(message);
+  console.log(message);
+  //log.trace(message);
   pingLog(Logger.Enum.TRACE, message);
 };
 
 Logger.debug = function(message) {
+  console.log(message);
   log.debug(message);
   pingLog(Logger.Enum.DEBUG, message);
 };
 
 Logger.info = function(message) {
+  console.log(message);
   log.info(message);
   pingLog(Logger.Enum.INFO, message);
 };
 
 Logger.warn = function(message) {
+  console.log(message);
   log.warn(message);
   pingLog(Logger.Enum.WARN, message);
 };
 
 Logger.error = function(message) {
+  console.log(message);
   log.error(message);
   pingLog(Logger.Enum.ERROR, message);
 };

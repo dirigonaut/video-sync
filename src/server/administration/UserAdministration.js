@@ -1,7 +1,7 @@
 var PlayerManager = require('../state/player/PlayerManager');
 var NeDatabase    = require('../database/NeDatabase');
-var Smtp          = require('../utils/Smtp');
-var Session       = require('../utils/Session');
+var Smtp          = require('./Smtp');
+var Session       = require('./Session');
 var Log           = require('../utils/Logger');
 
 var playerManager = new PlayerManager();

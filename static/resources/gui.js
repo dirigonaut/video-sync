@@ -237,9 +237,17 @@ $('#createEncoding').click(function createEncoding() {
   var commands = [];
   var factory = client.getCommandFactory();
 
-  commands.push(factory.build_ffmpeg_request(input , output, vQuality, "1"));
-  commands.push(factory.build_ffmpeg_request(input, output, aQuality, "2"));
-  commands.push(factory.get_ffmpeg_manifest_command(commands, output + "bunny.mpd"));
+  if($("#codec-webm:checked").val()) {
+    commands.push(factory.buildFfmpegRequest("webm", "1", input, output, vQuality));
+    commands.push(factory.buildFfmpegRequest("webm", "2", input, output, aQuality));
+    commands.push(factory.getWebmManifestCommand(commands, output + "bunny.mpd"));
+  }
+
+  if($("#codec-mp4:checked").val()) {
+    commands.push(factory.buildFfmpegRequest("mp4", "1", input, output, vQuality));
+    commands.push(factory.buildFfmpegRequest("mp4", "2", input, output, aQuality));
+    commands.push(factory.getMp4ManifestCommand(commands, output + "bunny.mpd"));
+  }
 
   client.getClientSocket().sendRequest('video-encode', commands);
 });
