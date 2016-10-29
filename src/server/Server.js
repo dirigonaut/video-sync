@@ -2,9 +2,9 @@ var Https       = require('https');
 var Express     = require('express');
 var SocketIO    = require('socket.io');
 
-var Smtp          = require('./utils/Smtp');
+var Smtp          = require('./administration/Smtp');
 var Bundler       = require('./utils/Bundler');
-var Session       = require('./utils/Session');
+var Session       = require('./administration/Session');
 var Log           = require('./utils/Logger');
 var UserAdmin     = require('./administration/UserAdministration');
 var Validator     = require('./authentication/Validator');

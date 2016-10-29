@@ -1,14 +1,14 @@
 function EncoderCommandFactory(){ }
 
-function gen_new_name(path, scale){
+function genNewName(path, scale, codec){
   var parsed_path = path.split("/");
 
   if(parsed_path.length <= 1) {
     parsed_path = path.split("\\");
   }
-  
+
   var parsed_file = parsed_path[parsed_path.length -1].split(".");
-  return parsed_file[0] + "_" + scale + ".webm";
+  return parsed_file[0] + "_" + scale + "." + codec;
 };
 
 EncoderCommandFactory.type_enum = {
@@ -17,38 +17,44 @@ EncoderCommandFactory.type_enum = {
   AUDIO : 2
 };
 
-EncoderCommandFactory.build_ffmpeg_request = function(source, dir, scale, type) {
-    return EncoderCommandFactory.get_ffmpeg_commands(source, gen_new_name(source, scale), scale, type, dir)
-};
-
-EncoderCommandFactory.get_ffmpeg_commands = function(source, name, scale, type, dir){
+EncoderCommandFactory.buildFfmpegRequest = function(codec, type, source, output, scale){
   var command = new Object();
 
-  command.outputDir = dir;
-  command.fileName  = name;
+  command.outputDir = output;
+  command.fileName  = genNewName(source, scale, codec);
 
   if(type == EncoderCommandFactory.type_enum.VIDEO){
-    command.input     = EncoderCommandFactory.get_video_webm_ffmpeg_command(source, dir + name, scale);
-    command.type      = EncoderCommandFactory.type_enum.VIDEO;
+    command.type = EncoderCommandFactory.type_enum.VIDEO;
+
+    if(codec == "webm") {
+      command.input = EncoderCommandFactory.getVideoWebmFfmpegCommand(source, output + command.fileName, scale);
+    } else if(codec == "mp4") {
+      command.input = EncoderCommandFactory.getVideoMp4FfmpegCommand(source, output + command.fileName, scale);
+    }
   } else if (type == EncoderCommandFactory.type_enum.AUDIO){
-    command.input     = EncoderCommandFactory.get_audio_webm_ffmpeg_command(source,  dir + name, scale);
-    command.type      = EncoderCommandFactory.type_enum.AUDIO;
+    command.type = EncoderCommandFactory.type_enum.AUDIO;
+
+    if(codec == "webm") {
+      command.input = EncoderCommandFactory.getAudioWebmFfmpegCommand(source, output + command.fileName, scale);
+    } else if(codec == "mp4") {
+      command.input = EncoderCommandFactory.getAudioMp4FfmpegCommand(source, output + command.fileName, scale);
+    }
   }
 
-  command.process = "webm";
+  command.codec = codec;
   return command;
 }
 
-EncoderCommandFactory.get_video_webm_ffmpeg_command = function(source, output, scale){
+EncoderCommandFactory.getVideoWebmFfmpegCommand = function(source, output, scale){
   return ' -y -i ' + source + ' -c:v libvpx-vp9 -s ' + scale + ' -keyint_min 150 -b:v 0 -crf 42 ' +
                   ' -g 150 -tile-columns 6 -frame-parallel 1 -an -f webm -dash 1 -speed 2 -threads 8 ' + output;
 };
 
-EncoderCommandFactory.get_audio_webm_ffmpeg_command = function(source, output, scale){
+EncoderCommandFactory.getAudioWebmFfmpegCommand = function(source, output, scale){
   return ' -y -i ' + source + ' -vn -c:a libvorbis -b:a ' + scale + ' -f webm -dash 1 ' + output;
 };
 
-EncoderCommandFactory.get_ffmpeg_manifest_command = function(command_queue, output){
+EncoderCommandFactory.getWebmManifestCommand = function(command_queue, output){
   var command       = new Object();
   var input         = "";
   var video_streams = "";
@@ -68,20 +74,20 @@ EncoderCommandFactory.get_ffmpeg_manifest_command = function(command_queue, outp
   }
 
   command.input = ' -y' + input + ' -c ' + 'copy' + maps + ' -f webm_dash_manifest -adaptation_sets ' + 'id=0,streams=' + video_streams + ' id=1,streams=' + audio_streams + ' ' + output
-  command.process = "webm";
+  command.codec = "webm";
   return command;
 };
 
-EncoderCommandFactory.get_video_mp4_ffmpeg_command = function(source, destination, scale){
+EncoderCommandFactory.getVideoMp4FfmpegCommand = function(source, output, scale){
   return ' -y -i ' + source + ' -an -c:v libx264 -x264opts keyint=24:min-keyint=24:no-scenecut'
-  + ' -b:v 1500k -maxrate 1500k -bufsize 1000k -vf scale=-1:' + scale + ' ' + destination;
+  + ' -b:v 1500k -maxrate 1500k -bufsize 1000k -vf scale=-1:' + scale + ' ' + output;
 };
 
-EncoderCommandFactory.get_audio_mp4_ffmpeg_command = function(source, destination, scale){
-  return ' -y -i ' + source + ' -vn -c:a libmp3lame -b:a ' + scale + ' ' + destination;
+EncoderCommandFactory.getAudioMp4FfmpegCommand = function(source, output, scale){
+  return ' -y -i ' + source + ' -vn -c:a libmp3lame -b:a ' + scale + ' ' + output;
 };
 
-EncoderCommandFactory.get_mp4box_manifest_command = function(command_queue, output){
+EncoderCommandFactory.getMp4ManifestCommand = function(command_queue, output){
   var command       = new Object();
   var video_streams = "";
   var audio_streams = "";
@@ -95,7 +101,7 @@ EncoderCommandFactory.get_mp4box_manifest_command = function(command_queue, outp
   }
 
   command.input = '-dash 2000 -rap -frag-rap -profile live -bs-switching no -out ' + output + ' ' + video_streams + ' ' + audio_streams;
-  command.process = "MP4Box";
+  command.codec = "mp4";
   return command
 };
 

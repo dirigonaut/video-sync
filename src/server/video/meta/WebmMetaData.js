@@ -1,8 +1,8 @@
 const EventEmitter  = require('events');
 
 var DOMParser       = require('xmldom').DOMParser;
-var Ebml            = require('ebml');
 var VideoStream     = require('../VideoStream');
+var WebmParser      = require('../encoding/parser/WebmParser');
 var Manifest        = require('./Manifest');
 var Log             = require('../../utils/Logger')
 
@@ -42,25 +42,25 @@ function WebmMetaData() {
 
   self._getClusters = function(segments) {
     console.log("WebmMetaData._getClusters");
-    var videoStream = new VideoStream();
+    var webmParser = new WebmParser();
     var metaRequests = [];
 
     for(var i in segments) {
       var metaRequest = new Object();
       var fileName = getFile(segments[i].baseUrl);
       console.log(dirPath + fileName);
-      var readConfig = videoStream.createStreamConfig(dirPath + fileName, self._parseEBML);
+      var readConfig = VideoStream.createStreamConfig(dirPath + fileName, self._parseEBML);
 
       metaRequest.manifest = new Manifest(fileName, segments[i].initRange.split('-'));
       metaRequest.readConfig = readConfig;
       metaRequests.push(metaRequest);
     }
 
-    videoStream.on('end', function(manifest) {
+    webmParser.on('end', function(manifest) {
       self._saveMetaData(metaRequests);
     });
 
-    videoStream.queuedDecode(metaRequests);
+    webmParser.queuedDecode(metaRequests);
   };
 
   self._parseEBML = function(manifest, data) {

@@ -1,5 +1,5 @@
 var PlayerManager = require('./player/PlayerManager');
-var Session       = require('../utils/Session');
+var Session       = require('../administration/Session');
 var Log           = require('../utils/Logger')
 var PlayRule      = require('./rules/PlayRule.js');
 var SyncRule      = require('./rules/SyncRule.js');

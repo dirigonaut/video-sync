@@ -1,7 +1,7 @@
 var VideoStream     = require('./VideoStream');
 var EncoderManager  = require('./encoding/EncoderManager');
 var WebmMetaData    = require('./meta/WebmMetaData');
-var Session         = require('../utils/Session');
+var Session         = require('../administration/Session');
 var Validator       = require('../authentication/Validator');
 var Log             = require('../utils/Logger')
 
@@ -32,6 +32,8 @@ function initialize(io, socket) {
 
       var encoderManager = new EncoderManager(request);
       encoderManager.on('webm', function(path) {
+        genWebmMeta(path);
+      }).on('mp4', function(path) {
         genWebmMeta(path);
       }).on('finished', function(path) {
         socket.emit('video-encoded');
