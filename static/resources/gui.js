@@ -246,7 +246,7 @@ $('#createEncoding').click(function createEncoding() {
   if($("#codec-mp4:checked").val()) {
     commands.push(factory.buildFfmpegRequest("mp4", "1", input, output, vQuality));
     commands.push(factory.buildFfmpegRequest("mp4", "2", input, output, aQuality));
-    commands.push(factory.getMp4ManifestCommand(commands, output + "bunny.mpd"));
+    commands.push(factory.getMp4ManifestCommand(commands, input));
   }
 
   client.getClientSocket().sendRequest('video-encode', commands);

@@ -1,5 +1,4 @@
 var Fs      = require('fs');
-var Ebml    = require('ebml');
 var Logger  = require('../utils/Logger');
 
 var log = new Logger();

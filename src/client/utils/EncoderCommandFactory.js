@@ -79,8 +79,9 @@ EncoderCommandFactory.getWebmManifestCommand = function(command_queue, output){
 };
 
 EncoderCommandFactory.getVideoMp4FfmpegCommand = function(source, output, scale){
-  return ' -y -i ' + source + ' -an -c:v libx264 -x264opts keyint=24:min-keyint=24:no-scenecut'
-  + ' -b:v 1500k -maxrate 1500k -bufsize 1000k -vf scale=-1:' + scale + ' ' + output;
+  return ' -y -i ' + source + ' -g 52 -an -c:v libx264 -profile:v main -preset slow'
+  + ' -vf scale=-1:' + scale.split("x")[1] + ' -f mp4 -movflags frag_keyframe+empty_moov '
+  + output;
 };
 
 EncoderCommandFactory.getAudioMp4FfmpegCommand = function(source, output, scale){
@@ -100,7 +101,7 @@ EncoderCommandFactory.getMp4ManifestCommand = function(command_queue, output){
     }
   }
 
-  command.input = '-dash 2000 -rap -frag-rap -profile live -bs-switching no -out ' + output + ' ' + video_streams + ' ' + audio_streams;
+  command.input = ' -dash 2000 -rap -frag-rap -profile live -bs-switching no -out ' + output + ' ';// + ' ' + video_streams + ' ' + audio_streams;
   command.codec = "mp4";
   return command
 };
