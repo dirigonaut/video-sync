@@ -11,7 +11,9 @@ function Command(input) {
     args = args.concat(Command._getKeyValuePair(options[i]));
   }
 
-  args = args.concat(keyless.split(" "));
+  if(keyless.length > 0) {
+    args = args.concat(keyless.split(" "));
+  }
 
   console.log(args);
   return args;

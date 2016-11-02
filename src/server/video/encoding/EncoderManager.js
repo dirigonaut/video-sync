@@ -6,7 +6,7 @@ var Ffmpeg = require('./process/FfmpegProcess');
 var Log    = require('../../utils/Logger')
 
 const webm_manifest = "webm_dash_manifest";
-const mp4_manifest = "webm_dash_manifest";
+const mp4_manifest = "-frag-rap";
 
 function EncoderManager(data){
 	console.log("EncodingManager");
