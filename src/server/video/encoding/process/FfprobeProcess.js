@@ -19,7 +19,9 @@ FfprobeProcess.prototype.process = function(path) {
 
   var default_events = ['message', 'error', 'exit', 'close', 'disconnect'];
   default_events.forEach(function(event) {
-      ffprobe.on(event, self.emit(event));
+      ffprobe.on(event, function(data) {
+        self.emit(event, data);
+      });
   });
 
   // We also need to pass `stdout` data to a function that will
