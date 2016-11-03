@@ -1,5 +1,4 @@
 var VideoStream     = require('./VideoStream');
-var FfprobeProcess  = require('./encoding/process/FfprobeProcess');
 var EncoderManager  = require('./encoding/EncoderManager');
 var WebmMetaData    = require('./meta/WebmMetaData');
 var Session         = require('../administration/Session');
@@ -32,12 +31,7 @@ function initialize(io, socket) {
       };
 
       var genMp4Meta = function (path) {
-        var ffprobe = new FfprobeProcess();
-        ffprobe.on('start', function(data) {
-          console.log("we has started");
-        });
 
-        ffprobe.process(path, function(data){console.log(data);});
       };
 
       var encoderManager = new EncoderManager(request);

@@ -17,20 +17,14 @@ FfprobeProcess.prototype.process = function(path) {
   var ffprobe = Spawn("ffprobe", options);
   console.log(`Spawned child pid: ${ffprobe.pid}`);
 
-  var default_events = ['message', 'error', 'exit', 'close', 'disconnect'];
-  default_events.forEach(function(event) {
-      ffprobe.on(event, function(data) {
-        self.emit(event, data);
-      });
-  });
-
-  // We also need to pass `stdout` data to a function that will
-  // filter and emit `progress` events.
+  var json = "";
   ffprobe.stdout.on('data', function(data) {
-    self.emit(data);
+    json += data;
   });
 
-  this.emit('start');
+  ffprobe.on('exit', function(data) {
+    self.emit('finished', json);
+  });
 }
 
 module.exports = FfprobeProcess;
