@@ -2,12 +2,20 @@ function FileSystemUtils() {
 
 }
 
-FileSystemUtils.prototype.splitPath = function(string, delimiter) {
+FileSystemUtils.prototype.splitPath = function(path) {
 
 };
 
-FileSystemUtils.prototype.splitNameFromPath = function(string, delimiter) {
+FileSystemUtils.prototype.splitNameFromPath = function(path) {
 
 };
 
-module.exports = FileSystemUtils();
+FileSystemUtils.prototype.splitDirFromPath = function(path) {
+
+};
+
+FileSystemUtils.prototype.splitExtensionFromPath = function(path) {
+
+};
+
+module.exports = FileSystemUtils;
