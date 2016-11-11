@@ -40,9 +40,8 @@ Authenticator.prototype.validateToken = function(id, data, callback) {
       callback(authorized);
     }
 
-    var users = invitees[0].split(" ");
-    for(var x in users) {
-      if(users[x] == data.address) {
+    for(var x in invitees) {
+      if(invitees[x] == data.address) {
         database.readToken(data.address, data.token, authorize);
       }
     }
