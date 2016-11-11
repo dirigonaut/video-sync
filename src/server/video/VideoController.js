@@ -1,5 +1,6 @@
 var VideoStream     = require('./VideoStream');
 var EncoderManager  = require('./encoding/EncoderManager');
+var MpdUtils        = require('./meta/MpdUtil');
 var WebmMetaData    = require('./meta/WebmMetaData');
 var Session         = require('../administration/Session');
 var Validator       = require('../authentication/Validator');
@@ -31,7 +32,11 @@ function initialize(io, socket) {
       };
 
       var genMp4Meta = function (path) {
+        var mpdUtils = new MpdUtils();
 
+        mpdUtils.generateMpd(path, function() {
+          socket.emit('video-encoded');
+        });
       };
 
       var encoderManager = new EncoderManager(request);
