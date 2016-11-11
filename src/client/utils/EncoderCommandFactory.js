@@ -1,15 +1,7 @@
+var FileUtils = require('../../../server/utils/FileSystemUtils');
+var fileUtils = new FileUtils();
+
 function EncoderCommandFactory(){ }
-
-function genNewName(path, scale, codec){
-  var parsed_path = path.split("/");
-
-  if(parsed_path.length <= 1) {
-    parsed_path = path.split("\\");
-  }
-
-  var parsed_file = parsed_path[parsed_path.length -1].split(".");
-  return parsed_file[0] + "_" + scale + "." + codec;
-};
 
 EncoderCommandFactory.type_enum = {
   NULL  : 0,
@@ -107,3 +99,7 @@ EncoderCommandFactory.getMp4ManifestCommand = function(command_queue, output){
 };
 
 module.exports = EncoderCommandFactory;
+
+function genNewName(path, scale, codec){
+  return fileUtils.splitNameFromPath(path) + "_" + scale + "." + codec;
+};

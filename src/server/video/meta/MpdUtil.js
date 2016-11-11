@@ -1,7 +1,7 @@
 var EventEmiter = require('events').EventEmitter;
 var DOMParser   = require('xmldom').DOMParser;
 
-var FfprobeProcess  = require('./encoding/process/FfprobeProcess');
+var FfprobeProcess  = require('../encoding/process/FfprobeProcess');
 var Mp4Parser  = require('../encoding/parser/Mp4Parser');
 var VideoStream = require('../VideoStream');
 var FileUtils = require('../../utils/FileSystemUtils');

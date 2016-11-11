@@ -1,3 +1,7 @@
+var FileUtils = require('../../../utils/FileSystemUtils');
+
+var fileUtils = new FileUtils();
+
 function Command(input) {
   console.log("Command");
   var args = [];
@@ -34,7 +38,7 @@ Command._getKeyValuePair = function(pair) {
     });
   }
 
-  if(value !== null && value.trim() !== ""){
+  if(value !== null && value.trim() !== "") {
     keyValuePair.push(value);
   }
 
@@ -46,9 +50,7 @@ Command._getTailKeylessPathValues = function(command) {
   var parms = command.split(" ");
 
   for(var x = 2; x < parms.length; ++x) {
-    if(parms[x].charAt(0) === "/") {
-      keylessValues += keylessValues == "" ? parms[x] : " " + parms[x];
-    } else if(parms[x].charAt(1) === ":") {
+    if(fileUtils.isPath(path)) {
       keylessValues += keylessValues == "" ? parms[x] : " " + parms[x];
     }
   }
