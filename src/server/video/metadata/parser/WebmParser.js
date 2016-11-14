@@ -23,7 +23,7 @@ WebmParser.prototype.queuedDecode = function(metaRequests) {
     if(this.queue > 0) {
       --this.queue;
     } else {
-      emitter.emit('end', manifest);
+      emitter.emit('end');
     }
   });
 

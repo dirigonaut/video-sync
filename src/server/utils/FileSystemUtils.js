@@ -21,9 +21,7 @@ FileSystemUtils.prototype.splitNameFromPath = function(path) {
 
 FileSystemUtils.prototype.splitDirFromPath = function(path) {
   var splitPath = this.splitPath(path);
-
-  var parsed_dir = splitPath.splice(0, splitPath.length - 2);
-  return parsed_dir.merge();
+  return path.substring(0, path.length - splitPath[splitPath.length - 1].length);
 };
 
 FileSystemUtils.prototype.splitExtensionFromPath = function(path) {
