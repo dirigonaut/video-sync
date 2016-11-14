@@ -1,4 +1,4 @@
-var FileUtils = require('../../../server/utils/FileSystemUtils');
+var FileUtils = require('../../server/utils/FileSystemUtils');
 var fileUtils = new FileUtils();
 
 function EncoderCommandFactory(){ }
@@ -33,7 +33,7 @@ EncoderCommandFactory.buildFfmpegRequest = function(codec, type, source, output,
     }
   }
 
-  command.codec = codec;
+  command.codec = 'ffmpeg';
   return command;
 }
 
@@ -66,7 +66,7 @@ EncoderCommandFactory.getWebmManifestCommand = function(command_queue, output){
   }
 
   command.input = ' -y' + input + ' -c ' + 'copy' + maps + ' -f webm_dash_manifest -adaptation_sets ' + 'id=0,streams=' + video_streams + ' id=1,streams=' + audio_streams + ' ' + output
-  command.codec = "webm";
+  command.codec = "ffmpeg";
   return command;
 };
 
@@ -87,15 +87,15 @@ EncoderCommandFactory.getMp4ManifestCommand = function(command_queue, output){
 
   for(var i in command_queue){
     if(command_queue[i].type == EncoderCommandFactory.type_enum.VIDEO){
-      video_streams += video_streams == "" ? command_queue[i].destination : " " + command_queue[i].destination;
+      video_streams += video_streams == "" ? command_queue[i].outputDir + command_queue[i].fileName: " " + command_queue[i].outputDir + command_queue[i].fileName;
     } else if(command_queue[i].type == EncoderCommandFactory.type_enum.AUDIO){
-      audio_streams += audio_streams == "" ? command_queue[i].destination : " " + command_queue[i].destination;
+      audio_streams += audio_streams == "" ? command_queue[i].outputDir + command_queue[i].fileName: " " + command_queue[i].outputDir + command_queue[i].fileName;
     }
   }
 
-  command.input = ' -dash 2000 -rap -frag-rap -profile live -bs-switching no -out ' + output + ' ';// + ' ' + video_streams + ' ' + audio_streams;
-  command.codec = "mp4";
-  return command
+  command.input = ' -dash 2000 -frag 2000 -rap -profile on-demand -bs-switching no -out ' + output + ' ' + video_streams + ' ' + audio_streams;
+  command.codec = "mp4Box";
+  return command;
 };
 
 module.exports = EncoderCommandFactory;

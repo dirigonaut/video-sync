@@ -1,10 +1,11 @@
 var VideoStream     = require('./VideoStream');
 var EncoderManager  = require('./encoding/EncoderManager');
-var MpdUtils        = require('./meta/MpdUtil');
-var WebmMetaData    = require('./meta/WebmMetaData');
+var WebmMetaData    = require('./metadata/WebmMetaData');
 var Session         = require('../administration/Session');
 var Validator       = require('../authentication/Validator');
-var Log             = require('../utils/Logger')
+var XmlUtil         = require('./metadata/xml/XmlUtil');
+var MpdUtil         = require('./metadata/MpdUtil');
+var Log             = require('../utils/Logger');
 
 var validator       = new Validator();
 var session         = new Session();
@@ -23,27 +24,24 @@ function initialize(io, socket) {
       var request = validator.sterilizeVideoInfo(data);
 
       var genWebmMeta = function (path) {
-        var meta = new WebmMetaData();
-        meta.on('finished', function() {
-          socket.emit('video-encoded');
-        });
+        var webmMetaData = new WebmMetaData();
 
-        meta.generateMetaData(path);
-      };
+        var saveMetaToMpd = function(meta) {
+          var xmlUtil = new XmlUtil();
+          var xmlMeta = xmlUtil.webmMetaToXml(meta);
 
-      var genMp4Meta = function (path) {
-        var mpdUtils = new MpdUtils();
+          var mpdUtil = new MpdUtil();
+          mpdUtil.addSegmentsToMpd(path, xmlMeta, function() {
+            socket.emit('webm-meta-generated');
+          });
+        };
 
-        mpdUtils.generateMpd(path, function() {
-          socket.emit('video-encoded');
-        });
+        webmMetaData.generateWebmMeta(path, saveMetaToMpd);
       };
 
       var encoderManager = new EncoderManager(request);
       encoderManager.on('webm', function(path) {
         genWebmMeta(path);
-      }).on('mp4', function(path) {
-        genMp4Meta(path);
       }).on('finished', function(path) {
         socket.emit('video-encoded');
       });

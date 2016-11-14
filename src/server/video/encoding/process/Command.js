@@ -50,7 +50,7 @@ Command._getTailKeylessPathValues = function(command) {
   var parms = command.split(" ");
 
   for(var x = 2; x < parms.length; ++x) {
-    if(fileUtils.isPath(path)) {
+    if(fileUtils.isPath(parms[x])) {
       keylessValues += keylessValues == "" ? parms[x] : " " + parms[x];
     }
   }

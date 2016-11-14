@@ -3,6 +3,7 @@ const util = require('util');
 
 var Command = require('./process/Command');
 var Ffmpeg = require('./process/FfmpegProcess');
+var Mp4Box = require('./process/Mp4BoxProcess');
 var Log    = require('../../utils/Logger')
 
 const webm_manifest = "webm_dash_manifest";
@@ -16,23 +17,19 @@ function EncoderManager(data){
 
 	for(var i = 0; i < data.length; ++i){
 		switch (data[i].codec) {
-			case "webm" :
-				var webm = new Ffmpeg(Command(data[i].input));
-				setEvents(webm, self);
-				self.commands.push(webm);
+			case "ffmpeg" :
+				var ffmpeg = new Ffmpeg(Command(data[i].input));
+				setEvents(ffmpeg, self);
+				self.commands.push(ffmpeg);
 
 				if(data[i].input.includes(webm_manifest)) {
-					self.postProcess.push([data[i].codec, webm.options[webm.options.length - 1]]);
+					self.postProcess.push(['webm', ffmpeg.command[ffmpeg.command.length - 1]]);
 				}
 			break;
-			case "mp4" :
-				var mp4 = new Ffmpeg(Command(data[i].input));
-				setEvents(mp4, self);
-				self.commands.push(mp4);
-
-				if(data[i].input.includes(mp4_manifest)) {
-					self.postProcess.push([data[i].codec, mp4.options[mp4.options.length - 1]]);
-				}
+			case "mp4Box" :
+				var mp4Box = new Mp4Box(Command(data[i].input));
+				setEvents(mp4Box, self);
+				self.commands.push(mp4Box);
 			break;
 			default:
 				console.log("EncoderManager: " + command.codec + " is not supported process.");
@@ -43,7 +40,7 @@ function EncoderManager(data){
 	self.on('processed', function() {
 		if(self.commands.length > 0) {
 			var command = self.commands.shift();
-			command.start();
+			command.process();
 		} else {
 			if(self.postProcess.length > 0) {
 				for(var x in self.postProcess){
@@ -58,7 +55,7 @@ function EncoderManager(data){
 	self.encode = function() {
 		console.log("EncodingManager.encode");
 		var command = self.commands.shift();
-		command.start();
+		command.process();
 	};
 
 	return self;
