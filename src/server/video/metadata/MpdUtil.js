@@ -10,7 +10,7 @@ function MpdUtil() { }
 MpdUtil.prototype.addSegmentsToMpd = function(path, metaMap, callback) {
   var processMpd = function(mpd) {
     insertMetaData(mpd, metaMap);
-    cleanMpd(mpd);
+    cleanMpdPaths(mpd);
     saveMpd(path, mpd, callback);
   };
 
@@ -19,7 +19,7 @@ MpdUtil.prototype.addSegmentsToMpd = function(path, metaMap, callback) {
 
 MpdUtil.prototype.removeFullPathsFromMpd = function(path) {
   var processMpd = function(mpd) {
-    cleanMpd(mpd);
+    cleanMpdPaths(mpd);
     saveMpd(path, mpd, callback);
   };
 
@@ -39,8 +39,8 @@ var loadMpd = function(path, callback) {
   var readConfig = fileStream.createStreamConfig(path, bufferData);
   readConfig.onFinish =function() {
     var file = Buffer.concat(buffer);
-    //var mpd = new DOMParser().parseFromString(file.toString(), "text/xml");
-    //callback(mpd);
+    var mpd = new DOMParser().parseFromString(file.toString(), "text/xml");
+    callback(mpd);
   };
 
   fileStream.read(readConfig);
@@ -50,15 +50,14 @@ var saveMpd = function(path, callback) {
   var fileStream = new VideoStream();
   var writeConfig = fileStream.createStreamConfig(path, null);
 
-  writeConfig.onFinish(function() {
+  writeConfig.onFinish = function() {
     callback();
-  });
+  };
 
   fileStream.write(writeConfig, path);
 };
 
 var insertMetaData = function(mpd, metaData) {
-  var doc = new DOMParser().parseFromString(mpd);
   var adaptionSets = mpd.documentElement.getElementsByTagName('AdaptationSet');
   var representationMap = new Map();
 
@@ -69,6 +68,6 @@ var insertMetaData = function(mpd, metaData) {
   }
 };
 
-var cleanMpd = function(mpd) {
+var cleanMpdPaths = function(mpd) {
 
 };
