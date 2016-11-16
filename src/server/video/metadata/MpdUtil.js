@@ -37,7 +37,7 @@ var loadMpd = function(path, callback) {
   };
 
   var readConfig = fileStream.createStreamConfig(path, bufferData);
-  readConfig.onFinish =function() {
+  readConfig.onFinish = function() {
     var file = Buffer.concat(buffer);
     var mpd = new DOMParser().parseFromString(file.toString(), "text/xml");
     callback(mpd);
@@ -66,8 +66,10 @@ var insertMetaData = function(mpd, metaData) {
     var track = adaptionSets[i].getElementsByTagName('Representation').item(0);
     representationMap.set(id, track);
   }
+
+  console.log(representationMap);
 };
 
 var cleanMpdPaths = function(mpd) {
-
+  return mpd;
 };
