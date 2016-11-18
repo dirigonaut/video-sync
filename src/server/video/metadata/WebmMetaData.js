@@ -68,7 +68,7 @@ var getClusters = function(dirPath, segments, callback) {
     var fileExt  = fileUtil.splitExtensionFromPath(segments[i].baseUrl);
     var readConfig = VideoStream.createStreamConfig(`${dirPath}${fileName}.${fileExt}`, parseEBML);
 
-    metaRequest.manifest = new Manifest(fileName, segments[i].initRange.split('-'));
+    metaRequest.manifest = new Manifest(`${fileName}.${fileExt}`, segments[i].initRange.split('-'));
     metaRequest.readConfig = readConfig;
     metaRequests.push(metaRequest);
   }
