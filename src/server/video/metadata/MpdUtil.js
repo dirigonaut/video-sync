@@ -71,6 +71,8 @@ var insertMetaData = function(mpd, metaData) {
   for(var i = 0; i < adaptionSets.length; ++i) {
     var id = adaptionSets[i].getElementsByTagName('BaseURL').item(0).childNodes.item(0).data;
     var track = adaptionSets[i].getElementsByTagName('Representation').item(0);
+    var base = track.getElementsByTagName('SegmentBase').item(0);
+    track.removeChild(base);
     representationMap.set(id, track);
   }
 

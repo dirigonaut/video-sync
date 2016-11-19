@@ -24,6 +24,14 @@ Manifest.cluster = function() {
   return cluster;
 };
 
+Manifest.setTimecodeScale = function(manifest, timecodeScale) {
+  manifest.timecodeScale = timecodeScale;
+};
+
+Manifest.setDuration = function(manifest, duration) {
+  manifest.duration = duration;
+};
+
 Manifest.addCluster = function(manifest, cluster) {
   var linkedCluster = new LinkedCluster();
   linkedCluster.cluster = cluster;
