@@ -3,7 +3,7 @@ const EventEmitter  = require('events');
 
 var log             = require('loglevel');
 var ClientSocket    = require('../socket/ClientSocket.js');
-var WebmMeta        = require('./WebmMeta.js');
+var WebmMeta        = require('./meta/WebmMeta.js');
 var RequestFactory  = require('../utils/RequestFactory.js');
 var SourceBuffer    = require('./SourceBuffer.js');
 
