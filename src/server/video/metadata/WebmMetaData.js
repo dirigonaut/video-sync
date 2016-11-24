@@ -1,4 +1,5 @@
 var DOMParser       = require('xmldom').DOMParser;
+
 var VideoStream     = require('../VideoStream');
 var WebmParser      = require('./parser/WebmParser');
 var Manifest        = require('./Manifest');
@@ -68,7 +69,7 @@ var getClusters = function(dirPath, segments, callback) {
     var fileExt  = fileUtil.splitExtensionFromPath(segments[i].baseUrl);
     var readConfig = VideoStream.createStreamConfig(`${dirPath}${fileName}.${fileExt}`, parseEBML);
 
-    metaRequest.manifest = new Manifest(fileName, segments[i].initRange.split('-'));
+    metaRequest.manifest = new Manifest(`${fileName}.${fileExt}`, segments[i].initRange.split('-'));
     metaRequest.readConfig = readConfig;
     metaRequests.push(metaRequest);
   }
@@ -76,7 +77,9 @@ var getClusters = function(dirPath, segments, callback) {
   webmParser.on('end', function() {
     var metaData = [];
     for(var i in metaRequests) {
-      metaData.push(Manifest.flattenManifest(metaRequests[i].manifest));
+      var flatManifest = Manifest.flattenManifest(metaRequests[i].manifest);
+      flatManifest.duration = flatManifest.clusters[1].time;
+      metaData.push(flatManifest);
     }
 
     callback(metaData);
@@ -101,6 +104,13 @@ var parseEBML = function(manifest, data) {
     if(tagData.name == 'Timecode') {
       var cluster = Manifest.getCluster(manifest, tagData.start);
       cluster.time = tagData.data.readUIntBE(0, tagData.data.length);
+    } else if(tagData.name === 'Duration') {
+      var duration = tagData.data.readFloatBE(0, tagData.data.length);
+      console.log(`Duration: ${duration/1000}`);
+      Manifest.setDuration(manifest, duration);
+    } else if(tagData.name === 'TimecodeScale') {
+      var timecodeScale = tagData.data.readUIntBE(0, tagData.data.length)
+      Manifest.setTimecodeScale(manifest, timecodeScale);
     }
   }
 
