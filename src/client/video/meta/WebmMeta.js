@@ -1,5 +1,5 @@
 var log           = require('loglevel');
-var SourceBuffer  = require('./SourceBuffer.js');
+var SourceBuffer  = require('../SourceBuffer.js');
 
 var self;
 

@@ -3,7 +3,7 @@ const EventEmitter  = require('events');
 
 var log             = require('loglevel');
 var ClientSocket    = require('../socket/ClientSocket.js');
-var WebmMeta        = require('./meta/WebmMeta.js');
+var MpdMeta        = require('./meta/MpdMeta.js');
 var RequestFactory  = require('../utils/RequestFactory.js');
 var SourceBuffer    = require('./SourceBuffer.js');
 
@@ -42,9 +42,7 @@ VideoSingleton.prototype.getVideoElement = function() {
 
 VideoSingleton.prototype.addMetaData = function(header, binaryFile) {
   log.info('VideoSingleton.addMetaData');
-  if(header.type == "webm") {
-    self.videoMetas.set(header.type, new WebmMeta(JSON.parse(binaryFile.toString())));
-  }
+  self.videoMetas.set(header.type, new MpdMeta(binaryFile.toString()));
 };
 
 VideoSingleton.prototype.getActiveMetaData = function() {
@@ -77,7 +75,7 @@ VideoSingleton.prototype.onProgress = function(typeId) {
 VideoSingleton.prototype.onSeek = function(typeId) {
   var seek = function() {
     var selectedMedia = self.videoMetas.get(self.selectedMeta);
-    selectedMedia.updateActiveMeta(typeId, selectedMedia.getSegmentIndex(typeId, self.videoElement.currentTime * 1000));
+    selectedMedia.updateActiveMeta(typeId, selectedMedia.getSegmentIndex(typeId, self.videoElement.currentTime));
 
     self.emit("get-segment", typeId, self.videoElement.currentTime * 1000);
   };

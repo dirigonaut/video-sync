@@ -71,7 +71,7 @@ EncoderCommandFactory.getWebmManifestCommand = function(command_queue, output){
 };
 
 EncoderCommandFactory.getVideoMp4FfmpegCommand = function(source, output, scale){
-  return ' -y -i ' + source + ' -g 52 -an -c:v libx264 -profile:v main -preset slow'
+  return ' -y -i ' + source + ' -f 24 -an -c:v libx264 -profile:v main -preset slow -x264opts keyint=24:min-keyint=24:no-scenecut'
   + ' -vf scale=-1:' + scale.split("x")[1] + ' -f mp4 -movflags frag_keyframe+empty_moov '
   + output;
 };
