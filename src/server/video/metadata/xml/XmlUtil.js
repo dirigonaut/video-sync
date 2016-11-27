@@ -14,7 +14,7 @@ XmlUtil.prototype.webmMetaToXml = function(meta) {
     var manifest = meta[i];
     var xml = "";
 
-    xml += xmlFactory.buildSegmentList(manifest.timecodeScale, manifest.duration / manifest.timecodeScale);
+    xml += xmlFactory.buildSegmentList(manifest.timecodeScale, manifest.duration);
     xml += xmlFactory.buildInitialization(manifest.init);
 
     for(var j in manifest.clusters) {

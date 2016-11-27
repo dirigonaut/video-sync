@@ -47,12 +47,15 @@ VideoStream.prototype.readDir = function(readConfig) {
 
     var mpdFiles = [];
     for(var x = 0; x < files.length; ++x) {
-      var splitPath = files[x].split(".");
-      var extension = splitPath[splitPath.length - 1];
-      if(extension == "json") {
+      var splitExt = files[x].split(".");
+      var splitPath = splitExt[0].split("_");
+
+      var extension = splitExt[splitExt.length - 1];
+      var type = splitPath[splitPath.length - 1];
+      if(extension == "mpd") {
         var file = new Object();
         file.path = readConfig.path + files[x];
-        file.type = 'webm';
+        file.type = type;
         mpdFiles.push(file);
       }
     }
