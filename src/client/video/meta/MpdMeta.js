@@ -3,8 +3,10 @@ var xml2js = require('xml2js');
 var log           = require('loglevel');
 var SourceBuffer  = require('../SourceBuffer.js');
 
-function MpdMeta(mpdXML) {
+function MpdMeta(mpdXML, util) {
   log.info('MpdMeta');
+  this.util = util;
+
   var _this = this;
   var parser = new xml2js.Parser();
 
@@ -43,7 +45,7 @@ MpdMeta.prototype.selectAudioQuality = function(index) {
 MpdMeta.prototype.getInit = function(typeId) {
   console.log('MpdMeta.getInit ' + typeId);
   var activeMeta = this.active.get(typeId);
-  var range = getInit(this.metaJson, activeMeta.trackIndex).split("-");
+  var range = this.util.getInit(this.metaJson, activeMeta.trackIndex).split("-");
   var segment = [range[0], range[1]];
   return this._addPath(activeMeta.trackIndex, segment);
 };
@@ -51,7 +53,7 @@ MpdMeta.prototype.getInit = function(typeId) {
 MpdMeta.prototype.getNextSegment = function(typeId) {
   log.info('MpdMeta.getNextSegment');
   var activeMeta = this.active.get(typeId);
-  var segments = getSegmentList(this.metaJson, activeMeta.trackIndex).SegmentURL;
+  var segments = this.util.getSegmentList(this.metaJson, activeMeta.trackIndex).SegmentURL;
 
   var range = segments[activeMeta.next.index].$.mediaRange.split("-");
   var segment = [range[0], range[1]];
@@ -62,7 +64,7 @@ MpdMeta.prototype.getNextSegment = function(typeId) {
 MpdMeta.prototype.getSegment = function(typeId, timestamp) {
   log.info('MpdMeta.getSegment');
   var activeMeta = this.active.get(typeId);
-  var segments = getSegmentList(this.metaJson, activeMeta.trackIndex).SegmentURL;
+  var segments = this.util.getSegmentList(this.metaJson, activeMeta.trackIndex).SegmentURL;
 
   var index = this.getSegmentIndex(typeId, timestamp);
   var range = segments[index].$.mediaRange.split("-");
@@ -90,7 +92,7 @@ MpdMeta.prototype.updateActiveMeta = function(typeId, segmentIndex) {
 
 MpdMeta.prototype.isLastSegment = function(typeId) {
   var activeMeta = this.active.get(typeId);
-  return activeMeta.current.index < getSegmentList(this.metaJson, activeMeta.trackIndex).SegmentURL.length;
+  return activeMeta.current.index < this.util.getSegmentList(this.metaJson, activeMeta.trackIndex).SegmentURL.length;
 };
 
 MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
@@ -120,8 +122,16 @@ MpdMeta.prototype.getActiveMeta = function(typeId) {
 };
 
 MpdMeta.prototype._addPath = function(trackIndex, cluster) {
-  console.log([getBaseURL(this.metaJson, trackIndex), cluster])
-  return [getBaseURL(this.metaJson, trackIndex), cluster];
+  console.log([this.util.getBaseUrl(this.metaJson, trackIndex), cluster])
+  return [this.util.getBaseUrl(this.metaJson, trackIndex), cluster];
+};
+
+MpdMeta.prototype.getMimeType = function(typeId) {
+  return this.util.getMimeType(this.metaJson, this.active.get(typeId).trackIndex);
+};
+
+MpdMeta.prototype.getTrackTimeStep = function(typeId) {
+  return this.util.getTimeStep(this.metaJson, this.active.get(typeId).trackIndex);
 };
 
 module.exports = MpdMeta;
@@ -141,28 +151,4 @@ function ActiveMeta() {
   activeMeta.next.buffered  = false;
 
   return activeMeta;
-};
-
-var getBaseURL = function(mpd, trackIndex) {
-  return mpd.Period[0].AdaptationSet[trackIndex].Representation[0].BaseURL[0];
-};
-
-var getTimeStep = function(mpd, trackIndex) {
-  var $ = mpd.Period[0].AdaptationSet[trackIndex].Representation[0].SegmentList[0].$;
-  return $.duration / $.timescale;
-};
-
-var getSegmentList = function(mpd, trackIndex) {
-  return mpd.Period[0].AdaptationSet[trackIndex].Representation[0].SegmentList[0];
-};
-
-var getInit = function(mpd, trackIndex) {
-  return mpd.Period[0].AdaptationSet[trackIndex].Representation[0].SegmentList[0].Initialization[0].$.range;
-};
-
-var getMimeType = function(mpd, typeId) {
-  var type = mpd.Period[0].AdaptationSet[trackIndex].$.mimType;
-  var codec = mpd.Period[0].AdaptationSet[trackIndex].$.codec;
-
-  return `${type}; codecs="${codec}"`;
 };

@@ -30,57 +30,62 @@ MediaController.prototype.initializeVideo = function(mediaSource, window) {
   var videoSingleton = new VideoSingleton(videoElement);
   videoSingleton.initialize(fileBuffer);
 
-  var sourceBuffers = new Array(2);
-  sourceBuffers[SourceBuffer.Enum.VIDEO] = new SourceBuffer(SourceBuffer.Enum.VIDEO, videoSingleton, mediaSource);
-  sourceBuffers[SourceBuffer.Enum.AUDIO] = new SourceBuffer(SourceBuffer.Enum.AUDIO, videoSingleton, mediaSource);
+  videoSingleton.once('meta-data-loaded', function() {
+    var sourceBuffers = new Array(2);
+    sourceBuffers[SourceBuffer.Enum.VIDEO] = new SourceBuffer(SourceBuffer.Enum.VIDEO, videoSingleton, mediaSource);
+    sourceBuffers[SourceBuffer.Enum.AUDIO] = new SourceBuffer(SourceBuffer.Enum.AUDIO, videoSingleton, mediaSource);
 
-  mediaSource.addEventListener('sourceopen',
-    sourceBuffers[SourceBuffer.Enum.VIDEO].setSourceBufferCallback('video/webm; codecs="vp9"'), false);
-  mediaSource.addEventListener('sourceopen',
-    sourceBuffers[SourceBuffer.Enum.AUDIO].setSourceBufferCallback('audio/webm; codecs="vorbis"'), false);
+    var videoCodec = videoSingleton.getActiveMetaData().getMimeType(SourceBuffer.Enum.VIDEO);
+    var audioCodec = videoSingleton.getActiveMetaData().getMimeType(SourceBuffer.Enum.AUDIO);
 
-  var onTimeUpdateState = function() {
-    clientSocket.sendRequest('state-time-update', new RequestFactory().buildVideoStateRequest(videoElement), false);
-  };
+    mediaSource.addEventListener('sourceopen',
+      sourceBuffers[SourceBuffer.Enum.VIDEO].setSourceBufferCallback(videoCodec), false);
+    mediaSource.addEventListener('sourceopen',
+      sourceBuffers[SourceBuffer.Enum.AUDIO].setSourceBufferCallback(audioCodec), false);
 
-  videoElement.addEventListener('timeupdate', onTimeUpdateState, false);
+    var onTimeUpdateState = function() {
+      clientSocket.sendRequest('state-time-update', new RequestFactory().buildVideoStateRequest(videoElement), false);
+    };
 
-  var videoUpdate = videoSingleton.onProgress(SourceBuffer.Enum.VIDEO);
-  var audioUpdate = videoSingleton.onProgress(SourceBuffer.Enum.AUDIO);
-  videoElement.addEventListener('timeupdate', videoUpdate, false);
-  videoElement.addEventListener('timeupdate', audioUpdate, false);
+    videoElement.addEventListener('timeupdate', onTimeUpdateState, false);
 
-  var videoSeek = videoSingleton.onSeek(SourceBuffer.Enum.VIDEO);
-  var audioSeek = videoSingleton.onSeek(SourceBuffer.Enum.AUDIO);
-  videoElement.addEventListener('seeking', videoSeek, false);
-  videoElement.addEventListener('seeking', audioSeek, false);
+    var videoUpdate = videoSingleton.onProgress(SourceBuffer.Enum.VIDEO);
+    var audioUpdate = videoSingleton.onProgress(SourceBuffer.Enum.AUDIO);
+    videoElement.addEventListener('timeupdate', videoUpdate, false);
+    videoElement.addEventListener('timeupdate', audioUpdate, false);
 
-  removeSocketEvents();
-  setSocketEvents(videoSingleton, sourceBuffers, new RequestFactory());
+    var videoSeek = videoSingleton.onSeek(SourceBuffer.Enum.VIDEO);
+    var audioSeek = videoSingleton.onSeek(SourceBuffer.Enum.AUDIO);
+    videoElement.addEventListener('seeking', videoSeek, false);
+    videoElement.addEventListener('seeking', audioSeek, false);
 
-  var self = this;
+    removeSocketEvents();
+    setSocketEvents(videoSingleton, sourceBuffers, new RequestFactory());
 
-  var reset = function() {
-    console.log("MediaController Reset");
-    videoElement.removeEventListener('timeupdate', onTimeUpdateState, false);
-    videoElement.removeEventListener('timeupdate', videoUpdate, false);
-    videoElement.removeEventListener('timeupdate', audioUpdate, false);
-    videoElement.removeEventListener('seeking', videoSeek, false);
-    videoElement.removeEventListener('seeking', audioSeek, false);
+    var self = this;
 
-    mediaSource.removeSourceBuffer(sourceBuffers[SourceBuffer.Enum.VIDEO].sourceBuffer);
-    mediaSource.removeSourceBuffer(sourceBuffers[SourceBuffer.Enum.AUDIO].sourceBuffer);
-    mediaSource.removeEventListener('sourceend', reset);
+    var reset = function() {
+      console.log("MediaController Reset");
+      videoElement.removeEventListener('timeupdate', onTimeUpdateState, false);
+      videoElement.removeEventListener('timeupdate', videoUpdate, false);
+      videoElement.removeEventListener('timeupdate', audioUpdate, false);
+      videoElement.removeEventListener('seeking', videoSeek, false);
+      videoElement.removeEventListener('seeking', audioSeek, false);
 
-    console.log(videoSingleton);
-    videoSingleton.reset();
-    delete videoSingleton._events;
-    self.emit('readyToInitialize');
-  };
+      mediaSource.removeSourceBuffer(sourceBuffers[SourceBuffer.Enum.VIDEO].sourceBuffer);
+      mediaSource.removeSourceBuffer(sourceBuffers[SourceBuffer.Enum.AUDIO].sourceBuffer);
+      mediaSource.removeEventListener('sourceend', reset);
 
-  mediaSource.addEventListener('sourceended', reset);
+      console.log(videoSingleton);
+      videoSingleton.reset();
+      delete videoSingleton._events;
+      self.emit('readyToInitialize');
+    };
 
-  this.emit('initialized', mediaSource, window);
+    mediaSource.addEventListener('sourceended', reset);
+
+    this.emit('initialized', mediaSource, window);
+  });
 };
 
 module.exports = MediaController;
