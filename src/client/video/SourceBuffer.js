@@ -3,7 +3,7 @@ var ClientSocket      = require('../socket/ClientSocket.js');
 var RequestFactory    = require('../utils/RequestFactory.js');
 
 function SourceBuffer(enum_type, video, mediaSource){
-  var self = Object();
+  var self = {};
 
   self.type = enum_type;
   self.hasInit = false;

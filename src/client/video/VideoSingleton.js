@@ -42,7 +42,16 @@ VideoSingleton.prototype.getVideoElement = function() {
 
 VideoSingleton.prototype.addMetaData = function(header, binaryFile) {
   log.info('VideoSingleton.addMetaData');
-  self.videoMetas.set(header.type, new MpdMeta(binaryFile.toString()));
+  var util = null;
+
+  if(header.type === 'webm') {
+    util = new WebmParser();
+  } else if(header.type === 'mp4') {
+    util = new Mp4Parser();
+  }
+
+  self.videoMetas.set(header.type, new MpdMeta(binaryFile.toString(), util));
+  self.emit('metadata-loaded');
 };
 
 VideoSingleton.prototype.getActiveMetaData = function() {
