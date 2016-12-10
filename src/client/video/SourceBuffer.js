@@ -45,7 +45,8 @@ function SourceBuffer(enum_type, video, mediaSource){
       self.sourceBuffer = mediaSource.addSourceBuffer(spec);
       self.sourceBuffer.addEventListener('error',  self.objectState);
       self.sourceBuffer.addEventListener('abort',  self.objectState);
-      self.sourceBuffer.addEventListener('update', self.getOnBufferUpdate());
+      self.sourceBuffer.addEventListener('update', self.getOnBufferUpdate);
+      self.sourceBuffer.addEventListener('sourceopen', self.objectState);
       self.sourceBuffer.addEventListener('sourceend', self.clearEvents);
     };
   };
@@ -87,8 +88,9 @@ function SourceBuffer(enum_type, video, mediaSource){
 
     self.sourceBuffer.removeEventListener('error',  self.objectState);
     self.sourceBuffer.removeEventListener('abort',  self.objectState);
-    self.sourceBuffer.removeEventListener('update', self.getOnBufferUpdate());
-    self.sourceBuffer.removeEventListener('sourceend', self.clearEvents());
+    self.sourceBuffer.removeEventListener('update', self.getOnBufferUpdate);
+    self.sourceBuffer.removeEventListener('sourceopen', self.objectState);
+    self.sourceBuffer.removeEventListener('sourceend', self.clearEvents);
   };
 
   var requestVideoData = function(requestDetails) {

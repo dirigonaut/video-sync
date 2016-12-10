@@ -27,17 +27,24 @@ util.inherits(MediaController, EventEmitter);
 
 MediaController.prototype.initializeVideo = function(mediaSource, window) {
   console.log("MediaController.initializeVideo");
+  var _this = this;
+
   var videoSingleton = new VideoSingleton(videoElement);
   videoSingleton.initialize(fileBuffer);
 
-  videoSingleton.once('meta-data-loaded', function() {
+  videoSingleton.once('meta-data-loaded', function(loadedCodecType) {
+    console.log("Entering the callback");
     var sourceBuffers = new Array(2);
     sourceBuffers[SourceBuffer.Enum.VIDEO] = new SourceBuffer(SourceBuffer.Enum.VIDEO, videoSingleton, mediaSource);
     sourceBuffers[SourceBuffer.Enum.AUDIO] = new SourceBuffer(SourceBuffer.Enum.AUDIO, videoSingleton, mediaSource);
 
+    videoSingleton.setActiveMetaData(loadedCodecType);
+
     var videoCodec = videoSingleton.getActiveMetaData().getMimeType(SourceBuffer.Enum.VIDEO);
     var audioCodec = videoSingleton.getActiveMetaData().getMimeType(SourceBuffer.Enum.AUDIO);
 
+    console.log(`Video: ${videoCodec}, Audio: ${audioCodec}`);
+    console.log(mediaSource);
     mediaSource.addEventListener('sourceopen',
       sourceBuffers[SourceBuffer.Enum.VIDEO].setSourceBufferCallback(videoCodec), false);
     mediaSource.addEventListener('sourceopen',
@@ -62,8 +69,6 @@ MediaController.prototype.initializeVideo = function(mediaSource, window) {
     removeSocketEvents();
     setSocketEvents(videoSingleton, sourceBuffers, new RequestFactory());
 
-    var self = this;
-
     var reset = function() {
       console.log("MediaController Reset");
       videoElement.removeEventListener('timeupdate', onTimeUpdateState, false);
@@ -79,12 +84,12 @@ MediaController.prototype.initializeVideo = function(mediaSource, window) {
       console.log(videoSingleton);
       videoSingleton.reset();
       delete videoSingleton._events;
-      self.emit('readyToInitialize');
+      _this.emit('readyToInitialize');
     };
 
     mediaSource.addEventListener('sourceended', reset);
 
-    this.emit('initialized', mediaSource, window);
+    _this.emit('initialized', mediaSource, window);
   });
 };
 
