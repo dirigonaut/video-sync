@@ -20,8 +20,8 @@ Mp4Parser.prototype.getInit = function(mpd, trackIndex) {
 };
 
 Mp4Parser.prototype.getMimeType = function(mpd, typeId) {
-  var type = mpd.Period[0].AdaptationSet[trackIndex].$.mimType;
-  var codec = mpd.Period[0].AdaptationSet[trackIndex].$.codec;
+  var type = mpd.Period[0].AdaptationSet[typeId].Representation[0].$.mimeType;
+  var codec = mpd.Period[0].AdaptationSet[typeId].Representation[0].$.codecs;
 
   return `${type}; codecs="${codec}"`;
 };

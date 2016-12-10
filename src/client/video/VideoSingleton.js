@@ -3,9 +3,11 @@ const EventEmitter  = require('events');
 
 var log             = require('loglevel');
 var ClientSocket    = require('../socket/ClientSocket.js');
-var MpdMeta        = require('./meta/MpdMeta.js');
+var MpdMeta         = require('./meta/MpdMeta.js');
 var RequestFactory  = require('../utils/RequestFactory.js');
 var SourceBuffer    = require('./SourceBuffer.js');
+var Mp4Parser       = require('./meta/Mp4Parser.js');
+var WebmParser      = require('./meta/WebmParser.js');
 
 var self = null;
 var clientSocket = new ClientSocket();
@@ -16,7 +18,7 @@ function VideoSingleton(video) {
   this.videoElement     = video;
 
   this.videoMetas       = null;
-  this.selectedMeta     = "webm";
+  this.selectedMeta     = null;
 
   self = this;
 }
@@ -51,7 +53,7 @@ VideoSingleton.prototype.addMetaData = function(header, binaryFile) {
   }
 
   self.videoMetas.set(header.type, new MpdMeta(binaryFile.toString(), util));
-  self.emit('metadata-loaded');
+  self.emit('meta-data-loaded', header.type);
 };
 
 VideoSingleton.prototype.getActiveMetaData = function() {
@@ -69,7 +71,7 @@ VideoSingleton.prototype.onProgress = function(typeId) {
       if(selectedMedia.isLastSegment(typeId)){
         if(selectedMedia.isReadyForNextSegment(typeId, self.videoElement.currentTime)){
           console.log("VideoSingleton.onProgress - isReady");
-          self.emit("get-next", typeId, (self.videoElement.currentTime * 1000) + selectedMedia.getActiveMeta(typeId).timeStep);
+          self.emit("get-next", typeId, (self.videoElement.currentTime) + selectedMedia.getActiveMeta(typeId).timeStep);
         }
       } else {
         console.log("VideoSingleton.onProgress - end of segments");
@@ -86,7 +88,7 @@ VideoSingleton.prototype.onSeek = function(typeId) {
     var selectedMedia = self.videoMetas.get(self.selectedMeta);
     selectedMedia.updateActiveMeta(typeId, selectedMedia.getSegmentIndex(typeId, self.videoElement.currentTime));
 
-    self.emit("get-segment", typeId, self.videoElement.currentTime * 1000);
+    self.emit("get-segment", typeId, self.videoElement.currentTime);
   };
 
   return seek;

@@ -20,8 +20,8 @@ WebmParser.prototype.getInit = function(mpd, trackIndex) {
 };
 
 WebmParser.prototype.getMimeType = function(mpd, typeId) {
-  var type = mpd.Period[0].AdaptationSet[trackIndex].$.mimType;
-  var codec = mpd.Period[0].AdaptationSet[trackIndex].$.codec;
+  var type = mpd.Period[0].AdaptationSet[typeId].$.mimeType;
+  var codec = mpd.Period[0].AdaptationSet[typeId].$.codecs;
 
   return `${type}; codecs="${codec}"`;
 };
