@@ -1,45 +1,32 @@
 var xml2js = require('xml2js');
 
+var MetaState  = require('./MetaState.js');
 var log           = require('loglevel');
 var SourceBuffer  = require('../SourceBuffer.js');
 
 function MpdMeta(mpdXML, util) {
   log.info('MpdMeta');
   this.util = util;
+  this.active = new Map();
+  this.threshold = 1;
 
   var _this = this;
   var parser = new xml2js.Parser();
 
   parser.parseString(mpdXML, function (err, result) {
     _this.metaJson = result.MPD;
-    console.log(_this.metaJson);
 
-    _this.active   = new Map();
-
-    var activeVideo = ActiveMeta();
-    activeVideo.trackIndex = 0;
-    activeVideo.timeStep = _this.util.getTimeStep(_this.metaJson, activeVideo.trackIndex);
-    activeVideo.threshold = activeVideo.timeStep;
-    _this.active.set(SourceBuffer.Enum.VIDEO, activeVideo);
-
-    var activeAudio = ActiveMeta();
-    activeAudio.trackIndex = 1;
-    activeAudio.timeStep = _this.util.getTimeStep(_this.metaJson, activeAudio.trackIndex);
-    activeAudio.threshold = activeAudio.timeStep;
-    _this.active.set(SourceBuffer.Enum.AUDIO, activeAudio);
-
-    console.log(_this.active);
+    _this.selectTrackQuality(SourceBuffer.Enum.VIDEO, 0);
+    _this.selectTrackQuality(SourceBuffer.Enum.AUDIO, 1);
   });
 }
 
-MpdMeta.prototype.selectVideoQuality = function(index) {
-  log.info('MpdMeta.selectVideoQuality');
-  this.active.get(SourceBuffer.Enum.VIDEO).trackIndex = index;
-};
+MpdMeta.prototype.selectTrackQuality = function(typeId, index) {
+  log.info(`MpdMeta.selectTrackQuality typeId: ${typeId}, index: ${index}`);
+  var timeStep = this.util.getTimeStep(this.metaJson, index)
 
-MpdMeta.prototype.selectAudioQuality = function(index) {
-  log.info('MpdMeta.selectAudioQuality');
-  this.active.get(SourceBuffer.Enum.AUDIO).trackIndex = index;
+  var metaState = new MetaState(index, timeStep);
+  this.active.set(typeId, metaState);
 };
 
 MpdMeta.prototype.getInit = function(typeId) {
@@ -53,9 +40,9 @@ MpdMeta.prototype.getInit = function(typeId) {
 MpdMeta.prototype.getNextSegment = function(typeId) {
   console.log('MpdMeta.getNextSegment');
   var activeMeta = this.active.get(typeId);
-  var segments = this.util.getSegmentList(this.metaJson, activeMeta.trackIndex).SegmentURL;
+  var segments = this.util.getSegmentList(this.metaJson, activeMeta.trackIndex);
 
-  var range = segments[activeMeta.next.index].$.mediaRange.split("-");
+  var range = segments[activeMeta.next].split("-");
   var segment = [range[0], range[1]];
 
   return this._addPath(activeMeta.trackIndex, segment);
@@ -64,20 +51,20 @@ MpdMeta.prototype.getNextSegment = function(typeId) {
 MpdMeta.prototype.getSegment = function(typeId, timestamp) {
   console.log('MpdMeta.getSegment');
   var activeMeta = this.active.get(typeId);
-  var segments = this.util.getSegmentList(this.metaJson, activeMeta.trackIndex).SegmentURL;
+  var segments = this.util.getSegmentList(this.metaJson, activeMeta.trackIndex);
 
   var index = this.getSegmentIndex(typeId, timestamp);
-  var range = segments[index].$.mediaRange.split("-");
+  var range = segments[index].split("-");
   var segment = [range[0], range[1]];
 
-  console.log(`range: ${range}`);
+  activeMeta.setSegmentBuffered(index);
+  console.log(activeMeta);
   return this._addPath(activeMeta.trackIndex, segment);
 };
 
 MpdMeta.prototype.getSegmentIndex = function(typeId, timestamp) {
   var activeMeta = this.active.get(typeId);
   var index = Math.trunc(timestamp / activeMeta.timeStep);
-  //console.log(`Timestamp: ${timestamp}, Timestep: ${activeMeta.timeStep}, Index: ${index}`);
   return index;
 };
 
@@ -85,36 +72,35 @@ MpdMeta.prototype.updateActiveMeta = function(typeId, segmentIndex) {
   log.info('MpdMeta.updateActiveMeta');
   var activeMeta = this.active.get(typeId);
 
-  if(segmentIndex != activeMeta.current.index) {
-    activeMeta.current.index = parseInt(segmentIndex);
-    activeMeta.next.index    = activeMeta.current.index + 1;
-    activeMeta.next.buffered = false;
+  if(segmentIndex != activeMeta.current) {
+    activeMeta.current = parseInt(segmentIndex);
+    activeMeta.next    = activeMeta.current + 1;
   }
 };
 
 MpdMeta.prototype.isLastSegment = function(typeId) {
   var activeMeta = this.active.get(typeId);
-  return activeMeta.current.index < this.util.getSegmentList(this.metaJson, activeMeta.trackIndex).SegmentURL.length;
+  return activeMeta.current < this.util.getSegmentList(this.metaJson, activeMeta.trackIndex).length;
 };
 
 MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
+  var isReady = false;
   var activeMeta = this.active.get(typeId);
   var index = this.getSegmentIndex(typeId, currentTime);
+  var threshold = this.threshold * activeMeta.timeStep;
 
+  console.log(`--- TypeId: ${typeId} Time: ${currentTime} Current: ${activeMeta.current} isBuffered: ${activeMeta.isSegmentBuffered(activeMeta.next)}`)
   if(index != null) {
-    var isReady = false;
-
-    console.log(activeMeta);
-    if((activeMeta.current.index * activeMeta.timeStep + activeMeta.threshold < currentTime) && !activeMeta.next.buffered) {
+    if(activeMeta.current * activeMeta.timeStep < currentTime + threshold && !activeMeta.isSegmentBuffered(activeMeta.next)) {
+      console.log(activeMeta);
       console.log(`triggered ${typeId}`);
+      activeMeta.setSegmentBuffered(activeMeta.next);
       isReady = true;
-      activeMeta.next.buffered = true;
     }
 
-    if(index == activeMeta.next.index) {
-      activeMeta.current.index = activeMeta.next.index;
-      activeMeta.next.index    = activeMeta.current.index + 1;
-      activeMeta.next.buffered = false;
+    if((activeMeta.current + 1) * activeMeta.timeStep <= currentTime) {
+      console.log(`Updating meta for type ${typeId} for index ${activeMeta.current + 1}`);
+      this.updateActiveMeta(typeId, activeMeta.current + 1);
     }
   }
 
@@ -139,20 +125,3 @@ MpdMeta.prototype.getTrackTimeStep = function(typeId) {
 };
 
 module.exports = MpdMeta;
-
-function ActiveMeta() {
-  var activeMeta            = {};
-
-  activeMeta.trackIndex     = null;
-  activeMeta.timeStep       = 0;
-  activeMeta.threshold      = activeMeta.timeStep;
-
-  activeMeta.current        = {};
-  activeMeta.current.index  = 0;
-
-  activeMeta.next           = {};
-  activeMeta.next.index     = activeMeta.current.index + 1;
-  activeMeta.next.buffered  = false;
-
-  return activeMeta;
-};
