@@ -104,9 +104,9 @@ function SourceBuffer(enum_type, video, mediaSource){
     var timeRanges = self.sourceBuffer.buffered;
 
     for(var i = 0; i < timeRanges.length; ++i) {
-      if(timeRanges.start(i) * 1000 > timestamp) {
+      if(timeRanges.start(i) > timestamp) {
         break;
-      } else if (timeRanges.end(i) * 1000 > timestamp) {
+      } else if (timeRanges.end(i) > timestamp) {
         buffered = true;
         break;
       }
