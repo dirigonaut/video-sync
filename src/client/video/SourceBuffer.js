@@ -45,7 +45,7 @@ function SourceBuffer(enum_type, video, mediaSource){
       self.sourceBuffer = mediaSource.addSourceBuffer(spec);
       self.sourceBuffer.addEventListener('error',  self.objectState);
       self.sourceBuffer.addEventListener('abort',  self.objectState);
-      self.sourceBuffer.addEventListener('update', self.getOnBufferUpdate);
+      self.sourceBuffer.addEventListener('update', self.getOnBufferUpdate());
       self.sourceBuffer.addEventListener('sourceopen', self.objectState);
       self.sourceBuffer.addEventListener('sourceend', self.clearEvents);
     };
@@ -76,7 +76,7 @@ function SourceBuffer(enum_type, video, mediaSource){
   };
 
   self.objectState = function(e) {
-    log.info("SourceBuffer's objectState");
+    console.log("SourceBuffer's objectState");
     console.log(e);
   };
 
