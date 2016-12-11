@@ -19,13 +19,13 @@ function MpdMeta(mpdXML, util) {
     var activeVideo = ActiveMeta();
     activeVideo.trackIndex = 0;
     activeVideo.timeStep = _this.util.getTimeStep(_this.metaJson, activeVideo.trackIndex);
-    activeVideo.threshold = activeVideo.timeStep / 2;
+    activeVideo.threshold = activeVideo.timeStep;
     _this.active.set(SourceBuffer.Enum.VIDEO, activeVideo);
 
     var activeAudio = ActiveMeta();
     activeAudio.trackIndex = 1;
     activeAudio.timeStep = _this.util.getTimeStep(_this.metaJson, activeAudio.trackIndex);
-    activeAudio.threshold = activeAudio.timeStep / 2;
+    activeAudio.threshold = activeAudio.timeStep;
     _this.active.set(SourceBuffer.Enum.AUDIO, activeAudio);
 
     console.log(_this.active);
@@ -77,7 +77,7 @@ MpdMeta.prototype.getSegment = function(typeId, timestamp) {
 MpdMeta.prototype.getSegmentIndex = function(typeId, timestamp) {
   var activeMeta = this.active.get(typeId);
   var index = Math.trunc(timestamp / activeMeta.timeStep);
-  console.log(`Timestamp: ${timestamp}, Timestep: ${activeMeta.timeStep}, Index: ${index}`);
+  //console.log(`Timestamp: ${timestamp}, Timestep: ${activeMeta.timeStep}, Index: ${index}`);
   return index;
 };
 
@@ -98,14 +98,15 @@ MpdMeta.prototype.isLastSegment = function(typeId) {
 };
 
 MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
-  console.log('MpdMeta.isReadyForNextSegment');
   var activeMeta = this.active.get(typeId);
   var index = this.getSegmentIndex(typeId, currentTime);
 
   if(index != null) {
     var isReady = false;
 
-    if((index * activeMeta.timeStep < currentTime) && !activeMeta.next.buffered) {
+    console.log(activeMeta);
+    if((activeMeta.current.index * activeMeta.timeStep + activeMeta.threshold < currentTime) && !activeMeta.next.buffered) {
+      console.log(`triggered ${typeId}`);
       isReady = true;
       activeMeta.next.buffered = true;
     }
@@ -144,7 +145,7 @@ function ActiveMeta() {
 
   activeMeta.trackIndex     = null;
   activeMeta.timeStep       = 0;
-  activeMeta.threshold      = activeMeta.timeStep / 2;
+  activeMeta.threshold      = activeMeta.timeStep;
 
   activeMeta.current        = {};
   activeMeta.current.index  = 0;
