@@ -57,10 +57,8 @@
   float:left;
   height:5vh;
   width:100%;
-  overflow: hidden;
   clear:left;
   background-color: black;
-  overflow: hidden;
 }
 
 .control-bar-fullscreen {
@@ -132,12 +130,32 @@
   margin:.5vh;
 }
 
+.pop-over {
+  position: relative;
+  width:200px;
+  height:150px;
+  background-color: white;
+  margin:.5vh;
+  top: -200px;
+  right: 175px;
+  display:none;
+}
+
+.align-right {
+  text-align: right;
+}
+
+.align-left {
+  text-align: left;
+}
+
 .icon-h {
   float:left;
   width:4vh;
   height:4vh;
   text-align: center;
   margin:.5vh;
+  overflow: visible;
 }
 
 .icon-v {
@@ -237,6 +255,7 @@ a {
 textarea {
     resize: none;
 }
+
 /* Old CSS */
 .controls-old {
   width: 80%;
