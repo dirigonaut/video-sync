@@ -1,6 +1,7 @@
 const util          = require('util');
 const EventEmitter  = require('events');
 
+var MetaManager     = require('./MetaManager.js');
 var SourceBuffer    = require('./SourceBuffer.js');
 var VideoSingleton  = require('./VideoSingleton.js');
 var ClientSocket    = require('../socket/ClientSocket.js');
@@ -16,10 +17,12 @@ function MediaController(video, fBuffer) {
   fileBuffer = fBuffer;
   videoElement = video;
 
+  var _this = this;
   this.on('initialized', function(mediaSource, window) {
     console.log("Attach MediaSource to the videoElement.")
     videoElement.src = window.URL.createObjectURL(mediaSource);
     videoElement.load();
+    _this.emit("video-ready");
   });
 }
 
@@ -29,19 +32,21 @@ MediaController.prototype.initializeVideo = function(mediaSource, window) {
   console.log("MediaController.initializeVideo");
   var _this = this;
 
-  var videoSingleton = new VideoSingleton(videoElement);
-  videoSingleton.initialize(fileBuffer);
+  var metaManager = new MetaManager();
+  metaManager.requestMetaData(fileBuffer);
 
-  videoSingleton.once('meta-data-loaded', function(loadedCodecType) {
-    console.log("Entering the callback");
+  metaManager.on('meta-data-loaded', function(loadedCodecType) {
+    var videoSingleton = new VideoSingleton(videoElement);
+    videoSingleton.initialize();
+
     var sourceBuffers = new Array(2);
     sourceBuffers[SourceBuffer.Enum.VIDEO] = new SourceBuffer(SourceBuffer.Enum.VIDEO, videoSingleton, mediaSource);
     sourceBuffers[SourceBuffer.Enum.AUDIO] = new SourceBuffer(SourceBuffer.Enum.AUDIO, videoSingleton, mediaSource);
 
     videoSingleton.setActiveMetaData(loadedCodecType);
 
-    var videoCodec = videoSingleton.getActiveMetaData().getMimeType(SourceBuffer.Enum.VIDEO);
-    var audioCodec = videoSingleton.getActiveMetaData().getMimeType(SourceBuffer.Enum.AUDIO);
+    var videoCodec = metaManager.getActiveMetaData().getMimeType(SourceBuffer.Enum.VIDEO);
+    var audioCodec = metaManager.getActiveMetaData().getMimeType(SourceBuffer.Enum.AUDIO);
 
     console.log(`Video: ${videoCodec}, Audio: ${audioCodec}`);
     console.log(mediaSource);
@@ -91,6 +96,14 @@ MediaController.prototype.initializeVideo = function(mediaSource, window) {
 
     _this.emit('initialized', mediaSource, window);
   });
+};
+
+MediaController.prototype.getVideoMetaData = function() {
+  return this.videoSingleton.getMeta
+};
+
+MediaController.prototype.setBufferAhead = function(bufferThreshold) {
+
 };
 
 module.exports = MediaController;

@@ -65,6 +65,15 @@ $("#volume-bar").on("input change", function (e) {
   $('#video')[0].volume = range;
 });
 
+$("#btnOptions").on("click", function (e) {
+  if($(".pop-over").css('display') === 'none') {
+    $(".pop-over").show();
+  } else {
+    $(".pop-over").hide();
+  }
+});
+
+
 //Location Events --------------------------------------------------------------
 $('#btnSessionMedia').click(function() {
   console.log("Load new video.")
