@@ -395,17 +395,50 @@ client.getMediaController().on('meta-data-loaded', function(trackInfo) {
   console.log('meta-data-loaded');
   console.log(trackInfo);
 
-  var activeKey = trackInfo.get('active');
-
   var typeHtml = `<select name="select">`;
   var videoHtml = `<select name="select">`;
   var audioHtml = `<select name="select">`;
   var subtitleHtml = `<select name="select">`;
-  for(var i of trackInfo) {
-  //  <option value="value1">Value 1</option>
+
+  var active = trackInfo.get('active');
+  trackInfo.delete('active');
+  console.log(active);
+
+  var buildTrackHtml = function(tracks, type, activeIndex) {
+    html = "";
+    for(var i in tracks) {
+      if(active.type === type && tracks[i].index === activeIndex) {
+        html += `<option value="${tracks[i].index}" selected>${tracks[i].quality}</option>`;
+      } else {
+        html += `<option value="${tracks[i].index}">${tracks[i].quality}</option>`;
+      }
+    }
+    return html;
+  };
+
+  for(var track of trackInfo) {
+    var type = track[0];
+    if(active !== null && active.type === type) {
+      typeHtml += `<option value="${type}" selected>${type}</option>`;
+    } else {
+      typeHtml += `<option value="${type}">${type}</option>`;
+    }
   }
 
-  //$('#logManuscript').append('<p><span class="chat-message" title="' + message.from + '" style="color:blue; font-weight: bold;">');
+  if(active !== null && active !== undefined) {
+    videoHtml += buildTrackHtml(track[1].video, type, active == null ? undefined : active.video);
+    audioHtml += buildTrackHtml(track[1].audio, type, active == null ? undefined : active.audio);
+  }
+
+  typeHtml += `</select">`;
+  videoHtml += `</select>`;
+  audioHtml += `</select>`;
+  subtitleHtml += `</select>`;
+
+  $('#meta-types').html(typeHtml);
+  $('#track-video').html(videoHtml);
+  $('#track-audio').html(audioHtml);
+  $('#track-subs').html(subtitleHtml);
 });
 
 
