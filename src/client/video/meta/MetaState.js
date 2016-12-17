@@ -1,11 +1,17 @@
-function MetaState(index, timeStep) {
-  this.trackIndex     = index;
-  this.timeStep       = timeStep;
-
+function MetaState(timeStep) {
+  this.timeStep = timeStep;
   this.current  = 0;
   this.next     = 1;
 
   this.bufferSegments = [];
+};
+
+MetaState.prototype.setTrackIndex = function(index) {
+  this.trackIndex = index;
+};
+
+MetaState.prototype.getTrackIndex = function() {
+  return this.trackIndex;
 };
 
 MetaState.prototype.isSegmentBuffered = function(index) {

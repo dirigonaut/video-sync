@@ -34,8 +34,11 @@ MediaController.prototype.initializeVideo = function(mediaSource, window) {
 
   this.metaManager = new MetaManager();
   this.metaManager.requestMetaData(fileBuffer);
+  this.metaManager.on('meta-data-loaded', function() {
+    _this.emit('meta-data-loaded', _this.metaManager.getTrackInfo());
+  });
 
-  this.metaManager.on('meta-data-loaded', function(loadedCodecType) {
+  this.metaManager.on('meta-data-activated', function() {
     var videoSingleton = new VideoSingleton(videoElement, _this.metaManager.getActiveMetaData());
     videoSingleton.initialize();
 
@@ -93,16 +96,17 @@ MediaController.prototype.initializeVideo = function(mediaSource, window) {
 
     mediaSource.addEventListener('sourceended', reset);
 
+    _this.emit('meta-data-loaded', _this.metaManager.getTrackInfo());
     _this.emit('initialized', mediaSource, window);
   });
 };
 
-MediaController.prototype.getTrackInfo = function() {
-  return this.metaManager.getTrackInfo();
-};
-
 MediaController.prototype.setBufferAhead = function(bufferThreshold) {
   this.metaManager.setBufferThreshold(bufferThreshold);
+};
+
+MediaController.prototype.setActiveMetaData = function(metaInfo) {
+  this.metaManager.setActiveMetaData(metaInfo);
 };
 
 module.exports = MediaController;
