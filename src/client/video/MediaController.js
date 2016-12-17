@@ -32,24 +32,23 @@ MediaController.prototype.initializeVideo = function(mediaSource, window) {
   console.log("MediaController.initializeVideo");
   var _this = this;
 
-  var metaManager = new MetaManager();
-  metaManager.requestMetaData(fileBuffer);
+  this.metaManager = new MetaManager();
+  this.metaManager.requestMetaData(fileBuffer);
 
-  metaManager.on('meta-data-loaded', function(loadedCodecType) {
-    var videoSingleton = new VideoSingleton(videoElement);
+  this.metaManager.on('meta-data-loaded', function(loadedCodecType) {
+    var videoSingleton = new VideoSingleton(videoElement, _this.metaManager.getActiveMetaData());
     videoSingleton.initialize();
 
     var sourceBuffers = new Array(2);
-    sourceBuffers[SourceBuffer.Enum.VIDEO] = new SourceBuffer(SourceBuffer.Enum.VIDEO, videoSingleton, mediaSource);
-    sourceBuffers[SourceBuffer.Enum.AUDIO] = new SourceBuffer(SourceBuffer.Enum.AUDIO, videoSingleton, mediaSource);
+    sourceBuffers[SourceBuffer.Enum.VIDEO] = new SourceBuffer(SourceBuffer.Enum.VIDEO,
+      videoSingleton, _this.metaManager.getActiveMetaData(), mediaSource);
+    sourceBuffers[SourceBuffer.Enum.AUDIO] = new SourceBuffer(SourceBuffer.Enum.AUDIO,
+      videoSingleton, _this.metaManager.getActiveMetaData(), mediaSource);
 
-    videoSingleton.setActiveMetaData(loadedCodecType);
-
-    var videoCodec = metaManager.getActiveMetaData().getMimeType(SourceBuffer.Enum.VIDEO);
-    var audioCodec = metaManager.getActiveMetaData().getMimeType(SourceBuffer.Enum.AUDIO);
+    var videoCodec = _this.metaManager.getActiveMetaData().getMimeType(SourceBuffer.Enum.VIDEO);
+    var audioCodec = _this.metaManager.getActiveMetaData().getMimeType(SourceBuffer.Enum.AUDIO);
 
     console.log(`Video: ${videoCodec}, Audio: ${audioCodec}`);
-    console.log(mediaSource);
     mediaSource.addEventListener('sourceopen',
       sourceBuffers[SourceBuffer.Enum.VIDEO].setSourceBufferCallback(videoCodec), false);
     mediaSource.addEventListener('sourceopen',
@@ -98,12 +97,12 @@ MediaController.prototype.initializeVideo = function(mediaSource, window) {
   });
 };
 
-MediaController.prototype.getVideoMetaData = function() {
-  return this.videoSingleton.getMeta
+MediaController.prototype.getTrackInfo = function() {
+  return this.metaManager.getTrackInfo();
 };
 
 MediaController.prototype.setBufferAhead = function(bufferThreshold) {
-
+  this.metaManager.setBufferThreshold(bufferThreshold);
 };
 
 module.exports = MediaController;

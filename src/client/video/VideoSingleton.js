@@ -11,7 +11,7 @@ function VideoSingleton(video, meta) {
   log.setDefaultLevel(0);
   log.info('VideoSingleton');
   this.videoElement = video;
-  this.meta         = null;
+  this.meta         = meta;
   self              = this;
 }
 

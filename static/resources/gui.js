@@ -391,6 +391,15 @@ client.getChatUtil().on('client-log', function(message) {
   $('#logManuscript').append(message.from + ": " + message.text + "\n");
 });
 
+client.getMediaController().on('video-ready', function() {
+  console.log('video-ready');
+  var trackInfo = client.getMediaController().getTrackInfo();
+  console.log(trackInfo);
+
+  //$('#logManuscript').append('<p><span class="chat-message" title="' + message.from + '" style="color:blue; font-weight: bold;">');
+});
+
+
 //CSS Animation ----------------------------------------------------------------
 var opaque = false;
 

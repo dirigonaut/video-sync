@@ -57,6 +57,10 @@ Client.prototype.getClientSocket = function() {
   return clientSocket;
 };
 
+Client.prototype.getMediaController = function() {
+  return mediaController;
+};
+
 Client.prototype.getRequestFactory = function() {
   return new RequestFactory();
 };
