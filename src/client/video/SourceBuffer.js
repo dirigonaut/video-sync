@@ -2,7 +2,7 @@ var log               = require('loglevel');
 var ClientSocket      = require('../socket/ClientSocket.js');
 var RequestFactory    = require('../utils/RequestFactory.js');
 
-function SourceBuffer(enum_type, video, mediaSource){
+function SourceBuffer(enum_type, video, meta, mediaSource){
   var self = {};
 
   self.type = enum_type;
@@ -14,7 +14,7 @@ function SourceBuffer(enum_type, video, mediaSource){
   log.info('SourceBuffer.initialize');
 
   var getInit = function(){
-    requestVideoData(video.getActiveMetaData().getInit(self.type));
+    requestVideoData(meta.getInit(self.type));
   };
 
   video.on('get-init', getInit);
@@ -22,7 +22,7 @@ function SourceBuffer(enum_type, video, mediaSource){
   var getNext = function(typeId, timestamp) {
     if(typeId == self.type) {
       if(!isTimeRangeBuffered(timestamp)) {
-        requestVideoData(video.getActiveMetaData().getNextSegment(self.type));
+        requestVideoData(meta.getNextSegment(self.type));
       }
     }
   };
@@ -32,7 +32,7 @@ function SourceBuffer(enum_type, video, mediaSource){
   var getSegment = function(typeId, timestamp) {
     if(typeId == self.type) {
       if(!isTimeRangeBuffered(timestamp)) {
-        requestVideoData(video.getActiveMetaData().getSegment(self.type, timestamp));
+        requestVideoData(meta.getSegment(self.type, timestamp));
       }
     }
   };
@@ -61,7 +61,7 @@ function SourceBuffer(enum_type, video, mediaSource){
     if(!self.hasInitSeg) {
       console.log("Init segment has been received.");
       self.hasInitSeg = true;
-      requestVideoData(video.getActiveMetaData().getSegment(self.type, 0));
+      requestVideoData(meta.getSegment(self.type, 0));
     }
   };
 

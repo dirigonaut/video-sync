@@ -124,4 +124,12 @@ MpdMeta.prototype.getTrackTimeStep = function(typeId) {
   return this.util.getTimeStep(this.metaJson, this.active.get(typeId).trackIndex);
 };
 
+MpdMeta.prototype.getTracks = function() {
+  return this.util.getTracks(this.metaJson);
+};
+
+MpdMeta.prototype.setThreshold = function(threshold) {
+  return this.threshold = threshold;
+};
+
 module.exports = MpdMeta;

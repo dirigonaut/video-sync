@@ -36,7 +36,7 @@ Mp4Parser.prototype.getMimeType = function(mpd, typeId) {
 Mp4Parser.prototype.getTracks = function(mpd) {
   var adaptionSets = [];
 
-  var set = mpd.Period[0].AdaptationSet[trackIndex];
+  var set = mpd.Period[0].AdaptationSet;
   for(var i in set) {
     adaptionSets.push(this.getTrack(mpd, i));
   };

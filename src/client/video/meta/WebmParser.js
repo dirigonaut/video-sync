@@ -36,7 +36,7 @@ WebmParser.prototype.getMimeType = function(mpd, typeId) {
 WebmParser.prototype.getTracks = function(mpd) {
   var adaptionSets = [];
 
-  var set = mpd.Period[0].AdaptationSet[trackIndex];
+  var set = mpd.Period[0].AdaptationSet;
   for(var i in set) {
     adaptionSets.push(this.getTrack(mpd, i));
   };
@@ -54,7 +54,7 @@ WebmParser.prototype.getTrack = function(mpd, trackIndex) {
 };
 
 WebmParser.prototype.getTrackType = function(mpd, trackIndex) {
-  var type = mpd.Period[0].AdaptationSet[typeId].Representation[0].$.mimeType;
+  var type = mpd.Period[0].AdaptationSet[trackIndex].$.mimeType;
   return type.split('/')[0];
 };
 
