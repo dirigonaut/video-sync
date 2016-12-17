@@ -96,7 +96,6 @@ MediaController.prototype.initializeVideo = function(mediaSource, window) {
 
     mediaSource.addEventListener('sourceended', reset);
 
-    _this.emit('meta-data-loaded', _this.metaManager.getTrackInfo());
     _this.emit('initialized', mediaSource, window);
   });
 };

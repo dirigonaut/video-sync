@@ -54,7 +54,7 @@ Mp4Parser.prototype.getTrack = function(mpd, trackIndex) {
 };
 
 Mp4Parser.prototype.getTrackType = function(mpd, trackIndex) {
-  var type = mpd.Period[0].AdaptationSet[typeId].Representation[0].$.mimeType;
+  var type = mpd.Period[0].AdaptationSet[trackIndex].Representation[0].$.mimeType;
   return type.split('/')[0];
 };
 

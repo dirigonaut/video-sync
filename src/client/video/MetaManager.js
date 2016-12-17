@@ -32,7 +32,7 @@ MetaManager.prototype.requestMetaData = function(fileBuffer) {
 
     _this.metaDataList.set(header.type, new MpdMeta(binaryFile.toString(), util));
 
-    if(_this.activeMetaData === null) {
+    if(_this.activeMetaData === null && header.type === 'webm') {
       var trackInfo = _this.getTrackInfo().get(header.type);
       var metaInfo = _this.buildMetaInfo(header.type, trackInfo.video[0].index, trackInfo.audio[0].index, trackInfo.subtitle);
       _this.setActiveMetaData(metaInfo);
