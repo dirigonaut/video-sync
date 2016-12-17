@@ -15,18 +15,21 @@ function MpdMeta(mpdXML, util) {
 
   parser.parseString(mpdXML, function (err, result) {
     _this.metaJson = result.MPD;
-
-    _this.selectTrackQuality(SourceBuffer.Enum.VIDEO, 0);
-    _this.selectTrackQuality(SourceBuffer.Enum.AUDIO, 1);
   });
 }
 
 MpdMeta.prototype.selectTrackQuality = function(typeId, index) {
   log.info(`MpdMeta.selectTrackQuality typeId: ${typeId}, index: ${index}`);
-  var timeStep = this.util.getTimeStep(this.metaJson, index)
 
-  var metaState = new MetaState(index, timeStep);
-  this.active.set(typeId, metaState);
+  if(this.active.get(typeId) === null || this.active.get(typeId) === undefined) {
+    var timeStep = this.util.getTimeStep(this.metaJson, index);
+    var metaState = new MetaState(timeStep);
+    metaState.setTrackIndex(index);
+
+    this.active.set(typeId, metaState);
+  } else {
+    this.active.get(typeId).setTrackIndex(index);
+  }
 };
 
 MpdMeta.prototype.getInit = function(typeId) {
@@ -107,8 +110,8 @@ MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
   return isReady;
 };
 
-MpdMeta.prototype.getActiveMeta = function(typeId) {
-  return this.active.get(typeId);
+MpdMeta.prototype.getActiveTrackInfo = function() {
+  return this.active;
 };
 
 MpdMeta.prototype._addPath = function(trackIndex, cluster) {

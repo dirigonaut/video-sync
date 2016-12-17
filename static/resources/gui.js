@@ -391,10 +391,19 @@ client.getChatUtil().on('client-log', function(message) {
   $('#logManuscript').append(message.from + ": " + message.text + "\n");
 });
 
-client.getMediaController().on('video-ready', function() {
-  console.log('video-ready');
-  var trackInfo = client.getMediaController().getTrackInfo();
+client.getMediaController().on('meta-data-loaded', function(trackInfo) {
+  console.log('meta-data-loaded');
   console.log(trackInfo);
+
+  var activeKey = trackInfo.get('active');
+
+  var typeHtml = `<select name="select">`;
+  var videoHtml = `<select name="select">`;
+  var audioHtml = `<select name="select">`;
+  var subtitleHtml = `<select name="select">`;
+  for(var i of trackInfo) {
+  //  <option value="value1">Value 1</option>
+  }
 
   //$('#logManuscript').append('<p><span class="chat-message" title="' + message.from + '" style="color:blue; font-weight: bold;">');
 });

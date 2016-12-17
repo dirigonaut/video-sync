@@ -37,7 +37,7 @@ VideoSingleton.prototype.onProgress = function(typeId) {
       if(self.meta.isLastSegment(typeId)){
         if(self.meta.isReadyForNextSegment(typeId, self.videoElement.currentTime)){
           console.log("VideoSingleton.onProgress - isReady");
-          self.emit("get-next", typeId, (self.videoElement.currentTime) + self.meta.getActiveMeta(typeId).timeStep);
+          self.emit("get-next", typeId, (self.videoElement.currentTime) + self.meta.getTrackTimeStep(typeId));
         }
       } else {
         console.log("VideoSingleton.onProgress - end of segments");
