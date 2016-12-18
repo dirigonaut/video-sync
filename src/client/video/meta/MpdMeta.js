@@ -8,7 +8,7 @@ function MpdMeta(mpdXML, util) {
   log.info('MpdMeta');
   this.util = util;
   this.active = new Map();
-  this.threshold = 1;
+  this.threshold = 2;
 
   var _this = this;
   var parser = new xml2js.Parser();
@@ -92,11 +92,10 @@ MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
   var index = this.getSegmentIndex(typeId, currentTime);
   var threshold = this.threshold * activeMeta.timeStep;
 
-  console.log(`--- TypeId: ${typeId} Time: ${currentTime} Current: ${activeMeta.current} isBuffered: ${activeMeta.isSegmentBuffered(activeMeta.next)}`)
+  console.log(`if(${activeMeta.current} * ${activeMeta.timeStep} < ${currentTime} + ${threshold} && ${!activeMeta.isSegmentBuffered(activeMeta.next)}) ==` +
+  `${activeMeta.current * activeMeta.timeStep < currentTime + threshold && !activeMeta.isSegmentBuffered(activeMeta.next)}`);
   if(index != null) {
     if(activeMeta.current * activeMeta.timeStep < currentTime + threshold && !activeMeta.isSegmentBuffered(activeMeta.next)) {
-      console.log(activeMeta);
-      console.log(`triggered ${typeId}`);
       activeMeta.setSegmentBuffered(activeMeta.next);
       isReady = true;
     }
@@ -132,7 +131,7 @@ MpdMeta.prototype.getTracks = function() {
 };
 
 MpdMeta.prototype.setThreshold = function(threshold) {
-  return this.threshold = threshold;
+  this.threshold = threshold;
 };
 
 module.exports = MpdMeta;

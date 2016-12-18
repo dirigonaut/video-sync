@@ -391,9 +391,31 @@ client.getChatUtil().on('client-log', function(message) {
   $('#logManuscript').append(message.from + ": " + message.text + "\n");
 });
 
+//Video Events -----------------------------------------------------------------
+$('#meta-types').on("change", function (e) {
+  console.log($(e.currentTarget.children.select).val());
+  var mediaController = client.getMediaController();
+  var trackInfo = mediaController.getTrackInfo();
+
+  var typeId = $(e.currentTarget.children.select).val();
+  var selectedTrack = trackInfo.get(typeId);
+
+  var videoIndex = selectedTrack.video[0].index;
+  var audioIndex = selectedTrack.audio[0].index;
+
+  mediaController.setActiveMetaData(typeId, videoIndex, audioIndex, null);
+});
+
+$('#buffer-ahead').on("change", function (e) {
+  var value = $(e.currentTarget.children[0]).val();
+  var value = Math.trunc(value / 10);
+  console.log(value);
+  $(e.currentTarget.children[0]).val(value * 10);
+  client.getMediaController().setBufferAhead(value);
+});
+
 client.getMediaController().on('meta-data-loaded', function(trackInfo) {
   console.log('meta-data-loaded');
-  console.log(trackInfo);
 
   var typeHtml = `<select name="select">`;
   var videoHtml = `<select name="select">`;
@@ -402,7 +424,6 @@ client.getMediaController().on('meta-data-loaded', function(trackInfo) {
 
   var active = trackInfo.get('active');
   trackInfo.delete('active');
-  console.log(active);
 
   var buildTrackHtml = function(tracks, type, activeIndex) {
     html = "";
@@ -440,7 +461,6 @@ client.getMediaController().on('meta-data-loaded', function(trackInfo) {
   $('#track-audio').html(audioHtml);
   $('#track-subs').html(subtitleHtml);
 });
-
 
 //CSS Animation ----------------------------------------------------------------
 var opaque = false;

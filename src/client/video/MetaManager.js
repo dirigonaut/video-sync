@@ -58,7 +58,7 @@ MetaManager.prototype.setActiveMetaData = function(metaInfo) {
 
 MetaManager.prototype.setBufferThreshold = function(threshold) {
   for(var meta of this.metaDataList) {
-    meta.setThreshold(threshold);
+    meta[1].setThreshold(threshold);
   }
 };
 

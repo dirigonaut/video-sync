@@ -94,18 +94,31 @@ MediaController.prototype.initializeVideo = function(mediaSource, window) {
       _this.emit('readyToInitialize');
     };
 
+    _this.on('change-meta-type', function(metaInfo) {
+      console.log(metaInfo);
+      mediaSource.endOfStream();
+      _this.on('readyToInitialize', function() {
+        _this.metaManager.setActiveMetaData(metaInfo);
+      });
+    });
+
     mediaSource.addEventListener('sourceended', reset);
 
     _this.emit('initialized', mediaSource, window);
   });
 };
 
+MediaController.prototype.getTrackInfo = function() {
+  return this.metaManager.getTrackInfo();
+};
+
 MediaController.prototype.setBufferAhead = function(bufferThreshold) {
   this.metaManager.setBufferThreshold(bufferThreshold);
 };
 
-MediaController.prototype.setActiveMetaData = function(metaInfo) {
-  this.metaManager.setActiveMetaData(metaInfo);
+MediaController.prototype.setActiveMetaData = function(key, videoIndex, audioIndex, subtitleIndex) {
+  var metaInfo = this.metaManager.buildMetaInfo(key, videoIndex, audioIndex, subtitleIndex);
+  this.emit('change-meta-type', metaInfo);
 };
 
 module.exports = MediaController;
