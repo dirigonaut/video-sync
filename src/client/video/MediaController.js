@@ -12,100 +12,77 @@ var clientSocket = new ClientSocket();
 var videoElement  = null;
 var fileBuffer    = null;
 
+var _this = null;
+
 function MediaController(video, fBuffer) {
   console.log("MediaController");
+  this.initialized = false;
+  this.metaManager = new MetaManager();
+
   fileBuffer = fBuffer;
   videoElement = video;
 
-  var _this = this;
+  _this = this;
+  
   this.on('initialized', function(mediaSource, window) {
     console.log("Attach MediaSource to the videoElement.")
     videoElement.src = window.URL.createObjectURL(mediaSource);
     videoElement.load();
     _this.emit("video-ready");
   });
+
+  this.metaManager.on('meta-data-loaded', function() {
+    _this.emit('meta-data-loaded', _this.metaManager.getTrackInfo());
+  });
 }
 
 util.inherits(MediaController, EventEmitter);
 
-MediaController.prototype.initializeVideo = function(mediaSource, window) {
-  console.log("MediaController.initializeVideo");
-  var _this = this;
+MediaController.prototype.initialize = function(mediaSource, window) {
+  console.log("MediaController.initializePlayer");
+  var changeActiveMeta = function(metaInfo) {
+    console.log(metaInfo);
+    mediaSource.endOfStream();
+    _this.on('readyToInitialize', function() {
+      _this.metaManager.setActiveMetaData(metaInfo);
+    });
+  };
 
-  this.metaManager = new MetaManager();
-  this.metaManager.requestMetaData(fileBuffer);
-  this.metaManager.on('meta-data-loaded', function() {
-    _this.emit('meta-data-loaded', _this.metaManager.getTrackInfo());
-  });
-
-  this.metaManager.on('meta-data-activated', function() {
+  var buildVideoPlayer = function() {
     var videoSingleton = new VideoSingleton(videoElement, _this.metaManager.getActiveMetaData());
     videoSingleton.initialize();
 
     var sourceBuffers = new Array(2);
-    sourceBuffers[SourceBuffer.Enum.VIDEO] = new SourceBuffer(SourceBuffer.Enum.VIDEO,
-      videoSingleton, _this.metaManager.getActiveMetaData(), mediaSource);
-    sourceBuffers[SourceBuffer.Enum.AUDIO] = new SourceBuffer(SourceBuffer.Enum.AUDIO,
-      videoSingleton, _this.metaManager.getActiveMetaData(), mediaSource);
+    sourceBuffers[SourceBuffer.Enum.VIDEO] = initializeBuffer(SourceBuffer.Enum.VIDEO,
+      videoSingleton, mediaSource, _this.metaManager);
+    sourceBuffers[SourceBuffer.Enum.AUDIO] = initializeBuffer(SourceBuffer.Enum.AUDIO,
+      videoSingleton, mediaSource, _this.metaManager);
 
-    var videoCodec = _this.metaManager.getActiveMetaData().getMimeType(SourceBuffer.Enum.VIDEO);
-    var audioCodec = _this.metaManager.getActiveMetaData().getMimeType(SourceBuffer.Enum.AUDIO);
-
-    console.log(`Video: ${videoCodec}, Audio: ${audioCodec}`);
-    mediaSource.addEventListener('sourceopen',
-      sourceBuffers[SourceBuffer.Enum.VIDEO].setSourceBufferCallback(videoCodec), false);
-    mediaSource.addEventListener('sourceopen',
-      sourceBuffers[SourceBuffer.Enum.AUDIO].setSourceBufferCallback(audioCodec), false);
-
-    var onTimeUpdateState = function() {
-      clientSocket.sendRequest('state-time-update', new RequestFactory().buildVideoStateRequest(videoElement), false);
-    };
-
-    videoElement.addEventListener('timeupdate', onTimeUpdateState, false);
-
-    var videoUpdate = videoSingleton.onProgress(SourceBuffer.Enum.VIDEO);
-    var audioUpdate = videoSingleton.onProgress(SourceBuffer.Enum.AUDIO);
-    videoElement.addEventListener('timeupdate', videoUpdate, false);
-    videoElement.addEventListener('timeupdate', audioUpdate, false);
-
-    var videoSeek = videoSingleton.onSeek(SourceBuffer.Enum.VIDEO);
-    var audioSeek = videoSingleton.onSeek(SourceBuffer.Enum.AUDIO);
-    videoElement.addEventListener('seeking', videoSeek, false);
-    videoElement.addEventListener('seeking', audioSeek, false);
+    initializeVideo(videoSingleton, mediaSource);
 
     removeSocketEvents();
     setSocketEvents(videoSingleton, sourceBuffers, new RequestFactory());
 
-    var reset = function() {
-      console.log("MediaController Reset");
-      videoElement.removeEventListener('timeupdate', onTimeUpdateState, false);
-      videoElement.removeEventListener('timeupdate', videoUpdate, false);
-      videoElement.removeEventListener('timeupdate', audioUpdate, false);
-      videoElement.removeEventListener('seeking', videoSeek, false);
-      videoElement.removeEventListener('seeking', audioSeek, false);
-
-      mediaSource.removeSourceBuffer(sourceBuffers[SourceBuffer.Enum.VIDEO].sourceBuffer);
-      mediaSource.removeSourceBuffer(sourceBuffers[SourceBuffer.Enum.AUDIO].sourceBuffer);
-      mediaSource.removeEventListener('sourceend', reset);
-
-      console.log(videoSingleton);
+    var resetMediaSource = function() {
+      console.log("MediaSource Reset");
       videoSingleton.reset();
       delete videoSingleton._events;
+
+      mediaSource.removeEventListener('sourceend', resetMediaSource);
       _this.emit('readyToInitialize');
     };
 
-    _this.on('change-meta-type', function(metaInfo) {
-      console.log(metaInfo);
-      mediaSource.endOfStream();
-      _this.on('readyToInitialize', function() {
-        _this.metaManager.setActiveMetaData(metaInfo);
-      });
-    });
-
-    mediaSource.addEventListener('sourceended', reset);
-
+    mediaSource.addEventListener('sourceended', resetMediaSource);
     _this.emit('initialized', mediaSource, window);
-  });
+  };
+
+  if(!_this.initialized) {
+    _this.on('change-meta-type', changeActiveMeta);
+    _this.metaManager.on('meta-data-activated', buildVideoPlayer);
+    _this.initialized = true;
+  }
+
+  _this.metaManager.requestMetaData(fileBuffer);
 };
 
 MediaController.prototype.getTrackInfo = function() {
@@ -122,6 +99,56 @@ MediaController.prototype.setActiveMetaData = function(key, videoIndex, audioInd
 };
 
 module.exports = MediaController;
+
+var initializeBuffer = function(typeId, videoSingleton, mediaSource, metaManager) {
+  var sourceBuffer = new SourceBuffer(typeId, videoSingleton, metaManager.getActiveMetaData(), mediaSource);
+  var codec = metaManager.getActiveMetaData().getMimeType(typeId);
+
+  var bufferEvents = sourceBuffer.setSourceBufferCallback(codec);
+  mediaSource.addEventListener('sourceopen', bufferEvents, false);
+
+  var resetBuffer = function() {
+    console.log(`Buffer of type: ${typeId} reset.`);
+    mediaSource.removeSourceBuffer(sourceBuffer.sourceBuffer);
+    mediaSource.removeEventListener('sourceopen', bufferEvents);
+    mediaSource.removeEventListener('sourceend', resetBuffer);
+  };
+
+  mediaSource.addEventListener('sourceended', resetBuffer);
+
+  return sourceBuffer;
+};
+
+var initializeVideo = function(videoSingleton, mediaSource) {
+  var onTimeUpdateState = function() {
+    clientSocket.sendRequest('state-time-update', new RequestFactory().buildVideoStateRequest(videoElement), false);
+  };
+
+  videoElement.addEventListener('timeupdate', onTimeUpdateState, false);
+
+  var videoUpdate = videoSingleton.onProgress(SourceBuffer.Enum.VIDEO);
+  var audioUpdate = videoSingleton.onProgress(SourceBuffer.Enum.AUDIO);
+  videoElement.addEventListener('timeupdate', videoUpdate, false);
+  videoElement.addEventListener('timeupdate', audioUpdate, false);
+
+  var videoSeek = videoSingleton.onSeek(SourceBuffer.Enum.VIDEO);
+  var audioSeek = videoSingleton.onSeek(SourceBuffer.Enum.AUDIO);
+  videoElement.addEventListener('seeking', videoSeek, false);
+  videoElement.addEventListener('seeking', audioSeek, false);
+
+  var resetVideo = function() {
+    console.log(`Video reset.`);
+    videoElement.removeEventListener('timeupdate', onTimeUpdateState, false);
+    videoElement.removeEventListener('timeupdate', videoUpdate, false);
+    videoElement.removeEventListener('timeupdate', audioUpdate, false);
+    videoElement.removeEventListener('seeking', videoSeek, false);
+    videoElement.removeEventListener('seeking', audioSeek, false);
+
+    mediaSource.removeEventListener('sourceend', resetVideo);
+  };
+
+  mediaSource.addEventListener('sourceended', resetVideo);
+};
 
 var setSocketEvents = function(videoSingleton, sourceBuffers, requestFactory) {
   clientSocket.setEvent('state-play', function(callback) {

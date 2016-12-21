@@ -9,17 +9,20 @@ var WebmParser      = require('./meta/WebmParser.js');
 
 var clientSocket = new ClientSocket();
 
+var _this = null;
+
 function MetaManager() {
   this.metaDataList   = null;
   this.activeMetaData = null;
+
+  _this = this;
 }
 
 util.inherits(MetaManager, EventEmitter);
 
 MetaManager.prototype.requestMetaData = function(fileBuffer) {
-  this.metaDataList = new Map();
+  _this.metaDataList = new Map();
 
-  var _this = this;
   var addMetaData = function(header, binaryFile) {
     console.log('MetaManager.addMetaData');
     var util = null;
@@ -45,32 +48,33 @@ MetaManager.prototype.requestMetaData = function(fileBuffer) {
 };
 
 MetaManager.prototype.setActiveMetaData = function(metaInfo) {
-  var metaData = this.metaDataList.get(metaInfo.key);
+  var metaData = _this.metaDataList.get(metaInfo.key);
+  console.log(_this);
 
   metaData.selectTrackQuality(SourceBuffer.Enum.VIDEO, metaInfo.video);
   metaData.selectTrackQuality(SourceBuffer.Enum.AUDIO, metaInfo.audio);
 
-  if(this.activeMetaData !== metaData) {
-    this.activeMetaData = metaData;
-    this.emit('meta-data-activated');
+  if(_this.activeMetaData !== metaData) {
+    _this.activeMetaData = metaData;
+    _this.emit('meta-data-activated');
   }
 };
 
 MetaManager.prototype.setBufferThreshold = function(threshold) {
-  for(var meta of this.metaDataList) {
+  for(var meta of _this.metaDataList) {
     meta[1].setThreshold(threshold);
   }
 };
 
 MetaManager.prototype.getActiveMetaData = function() {
-  return this.activeMetaData;
+  return _this.activeMetaData;
 };
 
 MetaManager.prototype.getTrackInfo = function() {
   var tracks = new Map();
   var activeKeys = null;
 
-  for(var meta of this.metaDataList) {
+  for(var meta of _this.metaDataList) {
     var videoTracks = [];
     var audioTracks = [];
 
@@ -87,7 +91,7 @@ MetaManager.prototype.getTrackInfo = function() {
       }
     }
 
-    if(meta[1] === this.activeMetaData) {
+    if(meta[1] === _this.activeMetaData) {
       var trackInfo = meta[1].getActiveTrackInfo();
       activeKeys = {};
       activeKeys.type = meta[0];
