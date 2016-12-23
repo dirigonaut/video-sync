@@ -17,13 +17,16 @@ var _this = null;
 function MediaController(video, fBuffer) {
   console.log("MediaController");
   this.initialized = false;
+  this.resetMetaData = true;
+
   this.metaManager = new MetaManager();
+  this.metaManager.initialize();
 
   fileBuffer = fBuffer;
   videoElement = video;
 
   _this = this;
-  
+
   this.on('initialized', function(mediaSource, window) {
     console.log("Attach MediaSource to the videoElement.")
     videoElement.src = window.URL.createObjectURL(mediaSource);
@@ -42,6 +45,7 @@ MediaController.prototype.initialize = function(mediaSource, window) {
   console.log("MediaController.initializePlayer");
   var changeActiveMeta = function(metaInfo) {
     console.log(metaInfo);
+    _this.resetMetaData = false;
     mediaSource.endOfStream();
     _this.on('readyToInitialize', function() {
       _this.metaManager.setActiveMetaData(metaInfo);
@@ -68,6 +72,12 @@ MediaController.prototype.initialize = function(mediaSource, window) {
       videoSingleton.reset();
       delete videoSingleton._events;
 
+      if(_this.resetMetaData) {
+        _this.metaManager.initialize();
+      } else {
+        _this.resetMetaData = true;
+      }
+
       mediaSource.removeEventListener('sourceend', resetMediaSource);
       _this.emit('readyToInitialize');
     };
@@ -81,7 +91,9 @@ MediaController.prototype.initialize = function(mediaSource, window) {
     _this.metaManager.on('meta-data-activated', buildVideoPlayer);
     _this.initialized = true;
   }
+};
 
+MediaController.prototype.requestMetaData = function() {
   _this.metaManager.requestMetaData(fileBuffer);
 };
 
@@ -179,6 +191,11 @@ var setSocketEvents = function(videoSingleton, sourceBuffers, requestFactory) {
   clientSocket.setEvent('segment-chunk', function(segment){
     console.log('segment-chunk');
     sourceBuffers[segment.typeId].bufferSegment(segment.data, videoSingleton);
+  });
+
+  clientSocket.setEvent('media-ready', function() {
+    console.log('media-ready');
+    _this.metaManager.requestMetaData(fileBuffer);
   });
 }
 

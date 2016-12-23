@@ -20,9 +20,12 @@ function MetaManager() {
 
 util.inherits(MetaManager, EventEmitter);
 
-MetaManager.prototype.requestMetaData = function(fileBuffer) {
-  _this.metaDataList = new Map();
+MetaManager.prototype.initialize = function() {
+  _this.metaDataList   = new Map();
+  _this.activeMetaData = null;
+};
 
+MetaManager.prototype.requestMetaData = function(fileBuffer) {
   var addMetaData = function(header, binaryFile) {
     console.log('MetaManager.addMetaData');
     var util = null;
