@@ -46,6 +46,7 @@ util.inherits(Client, EventEmitter);
 Client.prototype.initializeVideo = function(window, callback) {
   if(isConnected) {
     mediaController.initialize(callback(), window);
+    mediaController.requestMetaData();
 
     mediaController.on('readyToInitialize', function() {
       mediaController.initialize(callback(), window);
