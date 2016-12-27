@@ -22,7 +22,7 @@ MpdMeta.prototype.selectTrackQuality = function(typeId, index) {
   log.info(`MpdMeta.selectTrackQuality typeId: ${typeId}, index: ${index}`);
 
   if(this.active.get(typeId) === null || this.active.get(typeId) === undefined) {
-    var timeStep = this.util.getTimeStep(this.metaJson, index);
+    var timeStep = this.util.getTimeStep(this.metaJson, typeId, index);
     var metaState = new MetaState(timeStep);
     metaState.setTrackIndex(index);
 
@@ -35,15 +35,15 @@ MpdMeta.prototype.selectTrackQuality = function(typeId, index) {
 MpdMeta.prototype.getInit = function(typeId) {
   console.log('MpdMeta.getInit ' + typeId);
   var activeMeta = this.active.get(typeId);
-  var range = this.util.getInit(this.metaJson, activeMeta.trackIndex).split("-");
+  var range = this.util.getInit(this.metaJson, typeId, activeMeta.trackIndex).split("-");
   var segment = [range[0], range[1]];
-  return this._addPath(activeMeta.trackIndex, segment);
+  return this._addPath(typeId, activeMeta.trackIndex, segment);
 };
 
 MpdMeta.prototype.getNextSegment = function(typeId) {
   console.log('MpdMeta.getNextSegment');
   var activeMeta = this.active.get(typeId);
-  var segments = this.util.getSegmentList(this.metaJson, activeMeta.trackIndex);
+  var segments = this.util.getSegmentList(this.metaJson, typeId, activeMeta.trackIndex);
 
   var range = segments[activeMeta.next].split("-");
   var segment = [range[0], range[1]];
@@ -54,7 +54,7 @@ MpdMeta.prototype.getNextSegment = function(typeId) {
 MpdMeta.prototype.getSegment = function(typeId, timestamp) {
   console.log('MpdMeta.getSegment');
   var activeMeta = this.active.get(typeId);
-  var segments = this.util.getSegmentList(this.metaJson, activeMeta.trackIndex);
+  var segments = this.util.getSegmentList(this.metaJson, typeId, activeMeta.trackIndex);
 
   var index = this.getSegmentIndex(typeId, timestamp);
   var range = segments[index].split("-");
@@ -62,7 +62,7 @@ MpdMeta.prototype.getSegment = function(typeId, timestamp) {
 
   activeMeta.setSegmentBuffered(index);
   console.log(activeMeta);
-  return this._addPath(activeMeta.trackIndex, segment);
+  return this._addPath(typeId, activeMeta.trackIndex, segment);
 };
 
 MpdMeta.prototype.getSegmentIndex = function(typeId, timestamp) {
@@ -83,7 +83,7 @@ MpdMeta.prototype.updateActiveMeta = function(typeId, segmentIndex) {
 
 MpdMeta.prototype.isLastSegment = function(typeId) {
   var activeMeta = this.active.get(typeId);
-  return activeMeta.current < this.util.getSegmentList(this.metaJson, activeMeta.trackIndex).length;
+  return activeMeta.current < this.util.getSegmentList(this.metaJson, typeId, activeMeta.trackIndex).length;
 };
 
 MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
@@ -113,17 +113,17 @@ MpdMeta.prototype.getActiveTrackInfo = function() {
   return this.active;
 };
 
-MpdMeta.prototype._addPath = function(trackIndex, cluster) {
-  console.log([this.util.getBaseURL(this.metaJson, trackIndex), cluster])
-  return [this.util.getBaseURL(this.metaJson, trackIndex), cluster];
+MpdMeta.prototype._addPath = function(typeId, trackIndex, cluster) {
+  console.log([this.util.getBaseURL(this.metaJson, typeId, trackIndex), cluster])
+  return [this.util.getBaseURL(this.metaJson, typeId, trackIndex), cluster];
 };
 
 MpdMeta.prototype.getMimeType = function(typeId) {
-  return this.util.getMimeType(this.metaJson, this.active.get(typeId).trackIndex);
+  return this.util.getMimeType(this.metaJson, typeId);
 };
 
 MpdMeta.prototype.getTrackTimeStep = function(typeId) {
-  return this.util.getTimeStep(this.metaJson, this.active.get(typeId).trackIndex);
+  return this.util.getTimeStep(this.metaJson, typeId, this.active.get(typeId).trackIndex);
 };
 
 MpdMeta.prototype.getTracks = function() {
