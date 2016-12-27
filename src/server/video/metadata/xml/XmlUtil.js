@@ -23,11 +23,9 @@ XmlUtil.prototype.webmMetaToXml = function(meta) {
     }
 
     xml += xmlFactory.buildSegmentListEnd();
-
     xmlMap.set(manifest.path, new DOMParser().parseFromString(xml, "text/xml"));
   }
 
-  console.log(xmlMap)
   return xmlMap;
 };
 

@@ -76,6 +76,7 @@ MetaManager.prototype.getActiveMetaData = function() {
 MetaManager.prototype.getTrackInfo = function() {
   var tracks = new Map();
   var activeKeys = null;
+  console.log(_this.metaDataList);
 
   for(var meta of _this.metaDataList) {
     var videoTracks = [];
@@ -104,6 +105,7 @@ MetaManager.prototype.getTrackInfo = function() {
     }
 
     var trackSet = {'video' : videoTracks, 'audio': audioTracks};
+    console.log(trackSet);
     tracks.set(meta[0], trackSet);
   }
 

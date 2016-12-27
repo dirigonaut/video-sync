@@ -8,6 +8,7 @@ var fileUtil = new FileUtil();
 function MpdUtil() { }
 
 MpdUtil.prototype.addSegmentsToMpd = function(path, metaMap, callback) {
+  console.log('MpdUtil.prototype.addSegmentsToMpd');
   var processMpd = function(mpd) {
     insertMetaData(mpd, metaMap);
     cleanMpdPaths(mpd);
@@ -69,11 +70,14 @@ var insertMetaData = function(mpd, metaData) {
   var representationMap = new Map();
 
   for(var i = 0; i < adaptionSets.length; ++i) {
-    var id = adaptionSets[i].getElementsByTagName('BaseURL').item(0).childNodes.item(0).data;
-    var track = adaptionSets[i].getElementsByTagName('Representation').item(0);
-    var base = track.getElementsByTagName('SegmentBase').item(0);
-    track.removeChild(base);
-    representationMap.set(id, track);
+    var representationSets = adaptionSets[i].getElementsByTagName('Representation');
+
+    for(var j = 0; j < representationSets.length; ++j) {
+      var id = representationSets.item(j).getElementsByTagName('BaseURL').item(0).childNodes.item(0).data;
+      var base = representationSets.item(j).getElementsByTagName('SegmentBase').item(0);
+      representationSets.item(j).removeChild(base);
+      representationMap.set(id, representationSets.item(j));
+    }
   }
 
   for(var key of metaData.keys()) {

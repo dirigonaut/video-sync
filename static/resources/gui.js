@@ -240,22 +240,34 @@ $('#smtpList').on("click", "button", function(e) {
 $('#createEncoding').click(function createEncoding() {
   var input     = $('#encodeInput').val();
   var output    = $('#encodeOutput').val();
-  var vQuality  = $("input[name=video-quality]:checked").val();
-  var aQuality  = $("input[name=audio-quality]:checked").val();
+  var vQuality  = $("input[name=video-quality]:checked");
+  var aQuality  = $("input[name=audio-quality]:checked");
 
+  console.log(vQuality);
   var commands = [];
   var factory = client.getCommandFactory();
 
   if($("#codec-webm:checked").val()) {
-    commands.push(factory.buildFfmpegRequest("webm", "1", input, output, vQuality));
-    commands.push(factory.buildFfmpegRequest("webm", "2", input, output, aQuality));
+    for(var i = 0; i < vQuality.length; ++i) {
+      commands.push(factory.buildFfmpegRequest("webm", "1", input, output, $(vQuality[i]).val()));
+    }
+
+    for(var i = 0; i < aQuality.length; ++i) {
+      commands.push(factory.buildFfmpegRequest("webm", "2", input, output, $(aQuality[i]).val()));
+    }
+
     commands.push(factory.getWebmManifestCommand(commands,
             output + client.getFileUtil().splitNameFromPath(input) + "_webm.mpd"));
   }
 
   if($("#codec-mp4:checked").val()) {
-    commands.push(factory.buildFfmpegRequest("mp4", "1", input, output, vQuality));
-    commands.push(factory.buildFfmpegRequest("mp4", "2", input, output, aQuality));
+    for(var i = 0; i < vQuality.length; ++i) {
+      commands.push(factory.buildFfmpegRequest("mp4", "1", input, output, $(vQuality[i]).val()));
+    }
+    for(var i = 0; i < aQuality.length; ++i) {
+      commands.push(factory.buildFfmpegRequest("mp4", "2", input, output, $(aQuality[i]).val()));
+    }
+
     commands.push(factory.getMp4ManifestCommand(commands,
             output + client.getFileUtil().splitNameFromPath(input) + "_mp4.mpd"));
   }
@@ -416,6 +428,7 @@ $('#buffer-ahead').on("change", function (e) {
 
 client.getMediaController().on('meta-data-loaded', function(trackInfo) {
   console.log('meta-data-loaded');
+  console.log(trackInfo);
 
   var typeHtml = `<select name="select">`;
   var videoHtml = `<select name="select">`;
