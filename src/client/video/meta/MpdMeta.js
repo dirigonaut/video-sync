@@ -23,9 +23,9 @@ MpdMeta.prototype.selectTrackQuality = function(typeId, index) {
 
   if(this.active.get(typeId) === null || this.active.get(typeId) === undefined) {
     var timeStep = this.util.getTimeStep(this.metaJson, typeId, index);
-    var metaState = new MetaState(timeStep);
-    metaState.setTrackIndex(index);
+    var metaState = new MetaState(timeStep * 1000);
 
+    metaState.setTrackIndex(index);
     this.active.set(typeId, metaState);
   } else {
     this.active.get(typeId).setTrackIndex(index);
@@ -40,29 +40,22 @@ MpdMeta.prototype.getInit = function(typeId) {
   return this._addPath(typeId, activeMeta.trackIndex, segment);
 };
 
-MpdMeta.prototype.getNextSegment = function(typeId) {
-  console.log('MpdMeta.getNextSegment');
-  var activeMeta = this.active.get(typeId);
-  var segments = this.util.getSegmentList(this.metaJson, typeId, activeMeta.trackIndex);
-
-  var range = segments[activeMeta.next].split("-");
-  var segment = [range[0], range[1]];
-
-  return this._addPath(activeMeta.trackIndex, segment);
-};
-
 MpdMeta.prototype.getSegment = function(typeId, timestamp) {
   console.log('MpdMeta.getSegment');
+  var result = null;
   var activeMeta = this.active.get(typeId);
   var segments = this.util.getSegmentList(this.metaJson, typeId, activeMeta.trackIndex);
-
   var index = this.getSegmentIndex(typeId, timestamp);
-  var range = segments[index].split("-");
-  var segment = [range[0], range[1]];
 
-  activeMeta.setSegmentBuffered(index);
-  console.log(activeMeta);
-  return this._addPath(typeId, activeMeta.trackIndex, segment);
+  if(index < this.util.getSegmentsCount(this.metaJson, typeId, activeMeta.trackIndex)) {
+    var range = segments[index].split("-");
+    var segment = [range[0], range[1]];
+
+    activeMeta.setSegmentBuffered(index);
+    result = this._addPath(typeId, activeMeta.trackIndex, segment);
+  }
+
+  return result;
 };
 
 MpdMeta.prototype.getSegmentIndex = function(typeId, timestamp) {
@@ -73,40 +66,32 @@ MpdMeta.prototype.getSegmentIndex = function(typeId, timestamp) {
 
 MpdMeta.prototype.updateActiveMeta = function(typeId, segmentIndex) {
   log.info('MpdMeta.updateActiveMeta');
-  var activeMeta = this.active.get(typeId);
-
-  if(segmentIndex != activeMeta.current) {
-    activeMeta.current = parseInt(segmentIndex);
-    activeMeta.next    = activeMeta.current + 1;
-  }
+  this.active.get(typeId).bufferIndex = segmentIndex;
 };
 
-MpdMeta.prototype.isLastSegment = function(typeId) {
+MpdMeta.prototype.isLastSegment = function(typeId, currentTime) {
   var activeMeta = this.active.get(typeId);
-  return activeMeta.current < this.util.getSegmentList(this.metaJson, typeId, activeMeta.trackIndex).length;
+  return this.getSegmentIndex(typeId, currentTime) < this.util.getSegmentsCount(this.metaJson, typeId, activeMeta.trackIndex);
 };
 
 MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
-  var isReady = false;
+  var nextSegmentTime = null;
   var activeMeta = this.active.get(typeId);
   var index = this.getSegmentIndex(typeId, currentTime);
-  var threshold = this.threshold * activeMeta.timeStep;
 
-  console.log(`if(${activeMeta.current} * ${activeMeta.timeStep} < ${currentTime} + ${threshold} && ${!activeMeta.isSegmentBuffered(activeMeta.next)}) ==` +
-  `${activeMeta.current * activeMeta.timeStep < currentTime + threshold && !activeMeta.isSegmentBuffered(activeMeta.next)}`);
-  if(index != null) {
-    if(activeMeta.current * activeMeta.timeStep < currentTime + threshold && !activeMeta.isSegmentBuffered(activeMeta.next)) {
-      activeMeta.setSegmentBuffered(activeMeta.next);
-      isReady = true;
-    }
-
-    if((activeMeta.current + 1) * activeMeta.timeStep <= currentTime) {
-      console.log(`Updating meta for type ${typeId} for index ${activeMeta.current + 1}`);
-      this.updateActiveMeta(typeId, activeMeta.current + 1);
+  while(activeMeta.isSegmentBuffered(activeMeta.bufferIndex)) {
+    if(index + this.threshold > activeMeta.bufferIndex) {
+      activeMeta.bufferIndex++;
+    } else {
+      break;
     }
   }
 
-  return isReady;
+  if(!activeMeta.isSegmentBuffered(activeMeta.bufferIndex)) {
+    nextSegmentTime = this.getSegmentIndex(typeId, activeMeta.bufferIndex * activeMeta.timeStep) * activeMeta.timeStep;
+  }
+
+  return nextSegmentTime;
 };
 
 MpdMeta.prototype.getActiveTrackInfo = function() {

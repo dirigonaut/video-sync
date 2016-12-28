@@ -19,20 +19,13 @@ function SourceBuffer(enum_type, video, meta, mediaSource){
 
   video.on('get-init', getInit);
 
-  var getNext = function(typeId, timestamp) {
-    if(typeId == self.type) {
-      if(!isTimeRangeBuffered(timestamp)) {
-        requestVideoData(meta.getNextSegment(self.type));
-      }
-    }
-  };
-
-  video.on('get-next', getNext);
-
   var getSegment = function(typeId, timestamp) {
     if(typeId == self.type) {
       if(!isTimeRangeBuffered(timestamp)) {
-        requestVideoData(meta.getSegment(self.type, timestamp));
+        var segmentInfo = meta.getSegment(self.type, timestamp);
+        if(segmentInfo !== null) {
+          requestVideoData(segmentInfo);
+        }
       }
     }
   };
