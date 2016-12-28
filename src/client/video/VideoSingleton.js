@@ -34,10 +34,11 @@ VideoSingleton.prototype.getVideoElement = function() {
 VideoSingleton.prototype.onProgress = function(typeId) {
   var progress = function() {
     if(!self.videoElement.paused) {
-      if(self.meta.isLastSegment(typeId)){
-        if(self.meta.isReadyForNextSegment(typeId, self.videoElement.currentTime)){
-          console.log("VideoSingleton.onProgress - isReady");
-          self.emit("get-next", typeId, (self.videoElement.currentTime) + self.meta.getTrackTimeStep(typeId));
+      if(self.meta.isLastSegment(typeId, self.videoElement.currentTime)){
+        var timeToRequest = self.meta.isReadyForNextSegment(typeId, self.videoElement.currentTime);
+        if(timeToRequest !== null){
+          console.log(`VideoSingleton.onProgress - time: ${timeToRequest}`);
+          self.emit("get-segment", typeId, timeToRequest);
         }
       } else {
         console.log("VideoSingleton.onProgress - end of segments");

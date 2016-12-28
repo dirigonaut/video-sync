@@ -11,7 +11,6 @@ WebmParser.prototype.getBaseURL = function(mpd, adaptId, repId) {
 WebmParser.prototype.getTimeStep = function(mpd, adaptId, repId) {
   var adaptIndex = getAdationSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
-  console.log(rep);
   var $ = rep.SegmentList[0].$;
   return $.duration / $.timescale;
 };
@@ -29,6 +28,12 @@ WebmParser.prototype.getSegmentList = function(mpd, adaptId, repId) {
   return segments;
 };
 
+WebmParser.prototype.getSegmentsCount = function(mpd, adaptId, repId) {
+  var adaptIndex = getAdationSetIndex(mpd, adaptId);
+  var rep = getRepresentationSet(mpd, adaptIndex, repId);
+  return rep.SegmentList[0].SegmentURL.length;
+};
+
 WebmParser.prototype.getInit = function(mpd, adaptId, repId) {
   var adaptIndex = getAdationSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
@@ -38,7 +43,6 @@ WebmParser.prototype.getInit = function(mpd, adaptId, repId) {
 WebmParser.prototype.getMimeType = function(mpd, adaptId) {
   var adaptIndex = getAdationSetIndex(mpd, adaptId);
 
-  console.log(adaptIndex);
   var type = mpd.Period[0].AdaptationSet[adaptIndex].$.mimeType;
   var codec = mpd.Period[0].AdaptationSet[adaptIndex].$.codecs;
 
@@ -89,7 +93,6 @@ var getAdationSetIndex = function(mpd, adaptId) {
 var getRepresentationSet = function(mpd, adaptIndex, repId) {
   var reps = mpd.Period[0].AdaptationSet[adaptIndex].Representation;
   for(var i in reps) {
-    console.log(`id:${repId} == ${reps[i].$.id}`);
     if(reps[i].$.id == repId) {
       return reps[i];
     }
