@@ -5,7 +5,7 @@ var socket;
 function ClientSocket() {
 }
 
-ClientSocket.prototype.connect = function(callback, serverUrl) {
+ClientSocket.prototype.connect = function(serverUrl, callback) {
 	console.log("Socket connecting to: " + serverUrl);
 
 	socket = io.connect(serverUrl, {rejectUnauthorized: false});
@@ -37,6 +37,14 @@ ClientSocket.prototype.clearEvent = function(event, callback) {
 
 ClientSocket.prototype.getSocketId = function() {
 	return socket.id;
+};
+
+ClientSocket.prototype.buildServerUrl = function(window, port) {
+  if(port != null && port != undefined) {
+    return "https://127.0.0.1:" + port;
+  }
+
+  return window.location.host;
 };
 
 module.exports = ClientSocket;

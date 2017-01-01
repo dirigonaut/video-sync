@@ -5,9 +5,9 @@ function updateProgressBar(e) {
 
 $('#btnPlay').click(function() {
   if ($('#video')[0].paused) {
-    client.getClientSocket().sendRequest("state-req-play", client.getRequestFactory().buildStateRequest("play", $("#video")[0].currentTime));
+    clientSocket.sendRequest("state-req-play", client.getRequestFactory().buildStateRequest("play", $("#video")[0].currentTime));
   } else {
-    client.getClientSocket().sendRequest("state-req-pause", client.getRequestFactory().buildStateRequest("pause", $("#video")[0].currentTime));
+    clientSocket.sendRequest("state-req-pause", client.getRequestFactory().buildStateRequest("pause", $("#video")[0].currentTime));
   }
 });
 
@@ -26,7 +26,7 @@ $('#seek-bar').on('mouseup', function() {
   var length  = $('#video')[0].duration;
   var request = new Object();
   request.seektime = Math.round(length * (percent / 100));
-  client.getClientSocket().sendRequest('state-req-seek', request, false);
+  clientSocket.sendRequest('state-req-seek', request, false);
 
   $('#seek-bar').val(request.seektime / $("#video")[0].duration * 100);
   $("video").on("timeupdate", updateProgressBar);
@@ -78,7 +78,7 @@ $("#btnOptions").on("click", function (e) {
 $('#btnSessionMedia').click(function() {
   console.log("Load new video.")
     var media = $('#locationBar').val();
-    client.getClientSocket().sendRequest("admin-set-media", media);
+    clientSocket.sendRequest("admin-set-media", media);
 });
 
 //Session Events --------------------------------------------------------------
@@ -97,25 +97,25 @@ $('#createSession').click(function createSession() {
   var invitees  = ($('#sessionInvitees').val()).split(",");
 
   if(id == null || id == undefined || id == "") {
-    client.getClientSocket().sendRequest("db-create-session",
+    clientSocket.sendRequest("db-create-session",
       client.getRequestFactory().buildSessionRequest(title, address, invitees, mailOptions));
   } else {
-    client.getClientSocket().sendRequest("db-update-session", [id,
+    clientSocket.sendRequest("db-update-session", [id,
       client.getRequestFactory().buildSessionRequest(title, address, invitees, mailOptions)]);
   }
 });
 
 $('#readSessions').click(function readSessions() {
-  client.getClientSocket().sendRequest("db-read-sessions");
+  clientSocket.sendRequest("db-read-sessions");
 });
 
 $('#setSession').click(function setSession() {
   var sessionId = $('#sessionId').val();
-  client.getClientSocket().sendRequest("admin-load-session", sessionId);
+  clientSocket.sendRequest("admin-load-session", sessionId);
 });
 
 $('#sendInvitation').click(function readSessions() {
-  client.getClientSocket().sendRequest("admin-smtp-invite");
+  clientSocket.sendRequest("admin-smtp-invite");
 })
 
 $('#sessionList').on("click", "tr", function(e) {
@@ -159,7 +159,7 @@ $('#sessionList').on("click", "button", function(e) {
 
   session.remove();
 
-  client.getClientSocket().sendRequest("db-delete-session", id);
+  clientSocket.sendRequest("db-delete-session", id);
 });
 
 //Smtp Events -----------------------------------------------------------------
@@ -167,7 +167,7 @@ $('#createContact').click(function createContact() {
   var handle  = $('#contactHandle').val();
   var address = $('#contactAddress').val();
 
-  client.getClientSocket().sendRequest("db-create-contact",
+  clientSocket.sendRequest("db-create-contact",
     client.getRequestFactory().buildContactRequest(handle, address));
 });
 
@@ -179,20 +179,20 @@ $('#createSmtp').click(function createSmtp() {
   var password  = $('#smtpPassword').val();
 
   if(id == null || id == undefined || id == "") {
-    client.getClientSocket().sendRequest("db-create-smtp",
+    clientSocket.sendRequest("db-create-smtp",
       client.getRequestFactory().buildSmtpRequest(type, host, address, password));
   } else {
-    client.getClientSocket().sendRequest("db-update-smtp", [id,
+    clientSocket.sendRequest("db-update-smtp", [id,
       client.getRequestFactory().buildSmtpRequest(type, host, address, password)]);
   }
 });
 
 $('#readContacts').click(function readContacts() {
-  client.getClientSocket().sendRequest("db-read-contacts");
+  clientSocket.sendRequest("db-read-contacts");
 });
 
 $('#readSmtps').click(function readSmtps() {
-  client.getClientSocket().sendRequest("db-read-smtps");
+  clientSocket.sendRequest("db-read-smtps");
 });
 
 $('#smtpList').on("click", "tr", function(e) {
@@ -233,7 +233,7 @@ $('#smtpList').on("click", "button", function(e) {
 
   smtp.remove();
 
-  client.getClientSocket().sendRequest("db-delete-smtp", id);
+  clientSocket.sendRequest("db-delete-smtp", id);
 });
 
 //Encode Events ---------------------------------------------------------------
@@ -272,7 +272,7 @@ $('#createEncoding').click(function createEncoding() {
             output + client.getFileUtil().splitNameFromPath(input) + "_mp4.mpd"));
   }
 
-  client.getClientSocket().sendRequest('video-encode', commands);
+  clientSocket.sendRequest('video-encode', commands);
 });
 
 //Side Events -----------------------------------------------------------------
@@ -313,7 +313,7 @@ var loadSessions = function() {
   }
 };
 
-client.getClientSocket().setEvent("db-sessions", loadSessions);
+clientSocket.setEvent("db-sessions", loadSessions);
 
 $('#btnSmtp').click(function() {
   loadSmtps();
@@ -350,7 +350,7 @@ var loadSmtps = function() {
   }
 }
 
-client.getClientSocket().setEvent("db-smtps", loadSmtps);
+clientSocket.setEvent("db-smtps", loadSmtps);
 
 $('#btnEncode').click(function() {
   $('#encodeModal').modal('show');
@@ -372,9 +372,9 @@ $('#submitCreds').click(function readContacts() {
   var token    = $('#loginToken').val();
 
   if(token.length > 0) {
-    client.getClientSocket().sendRequest('auth-validate-token', client.getRequestFactory().buildLoginRequest(user, token));
+    clientSocket.sendRequest('auth-validate-token', client.getRequestFactory().buildLoginRequest(user, token));
   } else {
-    client.getClientSocket().sendRequest('auth-get-token', client.getRequestFactory().buildLoginRequest(user, token));
+    clientSocket.sendRequest('auth-get-token', client.getRequestFactory().buildLoginRequest(user, token));
   }
 });
 
@@ -383,16 +383,16 @@ $('#sendChat').click(function() {
   var message = client.getChatUtil().parseInput($('#chatMessage').val(), null);
   $('#chatMessage').val("");
 
-  client.getClientSocket().sendRequest('chat-broadcast', message);
+  clientSocket.sendRequest('chat-broadcast', message);
 });
 
-client.getClientSocket().setEvent('chat-broadcast-resp', function(message) {
+clientSocket.setEvent('chat-broadcast-resp', function(message) {
   console.log("chat-broadcast-resp");
   $('#chatManuscript').append('<p><span class="chat-message" title="' + message.from + '" style="color:blue; font-weight: bold;">' +
     new Date().toTimeString().split(" ")[0] + " " + client.getChatUtil().getUserHandle(message.from) + ': </span>' + message.text + '</p>');
 });
 
-client.getClientSocket().setEvent('chat-log-resp', function(message) {
+clientSocket.setEvent('chat-log-resp', function(message) {
   console.log("chat-log-resp");
   $('#logManuscript').append('<p><span class="chat-message" title="' + message.from + '" style="color:blue; font-weight: bold;">' +
     new Date().toTimeString().split(" ")[0] + " " + message.from + ': </span>' + message.text + '</p>');
@@ -404,6 +404,11 @@ client.getChatUtil().on('client-log', function(message) {
 });
 
 //Video Events -----------------------------------------------------------------
+clientSocket.setEvent("media-ready", function() {
+  var mediaController = client.getMediaController();
+  mediaController.initialize(new MediaSource(), window);
+});
+
 $('#meta-types').on("change", function (e) {
   console.log($(e.currentTarget.children.select).val());
   var mediaController = client.getMediaController();
@@ -418,17 +423,48 @@ $('#meta-types').on("change", function (e) {
   mediaController.setActiveMetaData(typeId, videoIndex, audioIndex, null);
 });
 
+$('#track-video').on("change", function (e) {
+  console.log($(e.currentTarget.children.select).val());
+  var mediaController = client.getMediaController();
+  var trackInfo = mediaController.getTrackInfo();
+
+  var typeId = $($('#meta-types').children()[0]).val();
+  var selectedTrack = trackInfo.get(typeId);
+
+  var vQuality = $(e.currentTarget.children.select).val();
+  var aQuality = $($('#track-audio').children()[0]).val();
+
+  mediaController.setActiveMetaData(typeId, vQuality, aQuality, null);
+});
+
+$('#track-audio').on("change", function (e) {
+  console.log($(e.currentTarget.children.select).val());
+  var mediaController = client.getMediaController();
+  var trackInfo = mediaController.getTrackInfo();
+
+  var typeId = $($('#meta-types').children()[0]).val();
+  var selectedTrack = trackInfo.get(typeId);
+
+  var vQuality = $($('#track-video').children()[0]).val();
+  var aQuality = $(e.currentTarget.children.select).val();
+
+  mediaController.setActiveMetaData(typeId, vQuality, aQuality, null);
+});
+
 $('#buffer-ahead').on("change", function (e) {
   var value = $(e.currentTarget.children[0]).val();
   var value = Math.trunc(value / 10);
-  console.log(value);
   $(e.currentTarget.children[0]).val(value * 10);
   client.getMediaController().setBufferAhead(value);
 });
 
+$('#force-buffer').on("change", function (e) {
+  var value = $(e.currentTarget.children[0]).is(':checked');
+  client.getMediaController().setForceBuffer(value);
+});
+
 client.getMediaController().on('meta-data-loaded', function(trackInfo) {
   console.log('meta-data-loaded');
-  console.log(trackInfo);
 
   var typeHtml = `<select name="select">`;
   var videoHtml = `<select name="select">`;

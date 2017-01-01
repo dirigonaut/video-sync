@@ -52,7 +52,6 @@ MetaManager.prototype.requestMetaData = function(fileBuffer) {
 
 MetaManager.prototype.setActiveMetaData = function(metaInfo) {
   var metaData = _this.metaDataList.get(metaInfo.key);
-  console.log(_this);
 
   metaData.selectTrackQuality(SourceBuffer.Enum.VIDEO, metaInfo.video);
   metaData.selectTrackQuality(SourceBuffer.Enum.AUDIO, metaInfo.audio);

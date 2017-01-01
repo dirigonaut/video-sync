@@ -71,7 +71,7 @@ MpdMeta.prototype.updateActiveMeta = function(typeId, segmentIndex) {
 
 MpdMeta.prototype.isLastSegment = function(typeId, currentTime) {
   var activeMeta = this.active.get(typeId);
-  return this.getSegmentIndex(typeId, currentTime) < this.util.getSegmentsCount(this.metaJson, typeId, activeMeta.trackIndex);
+  return this.getSegmentIndex(typeId, currentTime) < this.util.getSegmentsCount(this.metaJson, typeId, activeMeta.trackIndex) - 1;
 };
 
 MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
@@ -88,7 +88,7 @@ MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
   }
 
   if(!activeMeta.isSegmentBuffered(activeMeta.bufferIndex)) {
-    nextSegmentTime = this.getSegmentIndex(typeId, activeMeta.bufferIndex * activeMeta.timeStep) * activeMeta.timeStep;
+    nextSegmentTime = (this.getSegmentIndex(typeId, activeMeta.bufferIndex * activeMeta.timeStep) * activeMeta.timeStep).toFixed(0);
   }
 
   return nextSegmentTime;
@@ -117,6 +117,16 @@ MpdMeta.prototype.getTracks = function() {
 
 MpdMeta.prototype.setThreshold = function(threshold) {
   this.threshold = threshold;
+};
+
+MpdMeta.prototype.setForceBuffer = function(typeId, forceBuffer) {
+  var activeMeta = this.active.get(typeId);
+  activeMeta.setForceBuffer(forceBuffer);
+};
+
+MpdMeta.prototype.isForceBuffer = function(typeId) {
+  var activeMeta = this.active.get(typeId);
+  return activeMeta.isForceBuffer();
 };
 
 module.exports = MpdMeta;

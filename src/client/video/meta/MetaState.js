@@ -24,15 +24,30 @@ MetaState.prototype.getAdaptSetIndex = function() {
 
 MetaState.prototype.setSegmentBuffered = function(index) {
   console.log(`MetaState.prototype.setSegmentBuffered | index: ${index}`);
-  this.bufferSegments[index] = true;
+  this.bufferSegments[index] = this.trackIndex;
 };
 
 MetaState.prototype.isSegmentBuffered = function(index) {
-  return this.bufferSegments[index] !== undefined ? this.bufferSegments[index] && !this.forceBuffer : false;
+  var isBuffered = true;
+  var buffered = this.bufferSegments[index];
+
+  if(buffered === null || buffered == undefined) {
+    isBuffered = false;
+  } else if (this.forceBuffer) {
+    if(buffered !== this.trackIndex) {
+      isBuffered = false;
+    }
+  }
+
+  return isBuffered;
 };
 
 MetaState.prototype.setForceBuffer = function(force) {
   this.forceBuffer = force;
+};
+
+MetaState.prototype.isForceBuffer = function() {
+  return this.forceBuffer;
 };
 
 module.exports = MetaState;
