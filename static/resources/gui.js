@@ -406,7 +406,7 @@ client.getChatUtil().on('client-log', function(message) {
 //Video Events -----------------------------------------------------------------
 clientSocket.setEvent("media-ready", function() {
   var mediaController = client.getMediaController();
-  mediaController.initialize(new MediaSource(), window);
+  mediaController.initialize(new MediaSource(), window, true);
 });
 
 $('#meta-types').on("change", function (e) {
@@ -414,13 +414,18 @@ $('#meta-types').on("change", function (e) {
   var mediaController = client.getMediaController();
   var trackInfo = mediaController.getTrackInfo();
 
+  console.log(trackInfo);
   var typeId = $(e.currentTarget.children.select).val();
   var selectedTrack = trackInfo.get(typeId);
 
-  var videoIndex = selectedTrack.video[0].index;
-  var audioIndex = selectedTrack.audio[0].index;
+  console.log(selectedTrack);
+  var vQuality = selectedTrack.video[0].index;
+  var aQuality = selectedTrack.audio[0].index;
 
-  mediaController.setActiveMetaData(typeId, videoIndex, audioIndex, null);
+  var mediaController = client.getMediaController();
+  mediaController.initialize(new MediaSource(), window, false, function() {
+    mediaController.setActiveMetaData(typeId, vQuality, aQuality, null);
+  });
 });
 
 $('#track-video').on("change", function (e) {
