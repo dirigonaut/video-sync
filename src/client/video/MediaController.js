@@ -10,72 +10,70 @@ var RequestFactory  = require('../utils/RequestFactory.js');
 var clientSocket    = new ClientSocket();
 
 var videoElement    = null;
-var mediaSource     = null;
 var fileBuffer      = null;
-var _this           = null;
 
 function MediaController(video, fBuffer) {
   console.log("MediaController");
   this.metaManager = new MetaManager();
   this.metaManager.initialize();
 
+  this.initialized = false;
+
   fileBuffer = fBuffer;
   videoElement = video;
 
-  _this = this;
-
+  var _this = this;
   this.metaManager.on('meta-data-loaded', function() {
     _this.emit('meta-data-loaded', _this.metaManager.getTrackInfo());
+  });
+
+  clientSocket.setEvent('media-ready', function() {
+    if(!_this.initialized) {
+      _this.metaManager.requestMetaData(fileBuffer);
+    } else {
+      _this.once('download-media', function() {
+        console.log('requesting meta data');
+        _this.metaManager.requestMetaData(fileBuffer);
+      });
+    }
   });
 }
 
 util.inherits(MediaController, EventEmitter);
 
-MediaController.prototype.initialize = function(newMediaSource, window) {
+MediaController.prototype.initialize = function(mediaSource, window, downloadMeta, callback) {
   console.log("MediaController.initialize");
+  var _this = this;
 
-  var buildVideoPlayer = function() {
-    var videoSingleton = new VideoSingleton(videoElement, _this.metaManager.getActiveMetaData());
-    videoSingleton.initialize();
+  if(!this.initialized){
+    var setInitialized = function() {
+      _this.initialized = true;
 
-    var sourceBuffers = new Array(2);
-    sourceBuffers[SourceBuffer.Enum.VIDEO] = initializeBuffer(SourceBuffer.Enum.VIDEO,
-      videoSingleton, mediaSource, _this.metaManager);
-    sourceBuffers[SourceBuffer.Enum.AUDIO] = initializeBuffer(SourceBuffer.Enum.AUDIO,
-      videoSingleton, mediaSource, _this.metaManager);
-
-    initializeVideo(videoSingleton, mediaSource);
-
-    removeSocketEvents();
-    setSocketEvents(videoSingleton, sourceBuffers, new RequestFactory());
-
-    var resetMediaSource = function() {
-      console.log("MediaSource Reset");
-      videoSingleton.reset();
-      delete videoSingleton._events;
-
-      mediaSource.removeEventListener('sourceend', resetMediaSource);
-      _this.metaManager.removeAllListeners('meta-data-activated');
-
-      _this.emit('readyToInitialize');
+      if(callback !== null && callback !== undefined) {
+        callback();
+      }
     };
 
-    mediaSource.addEventListener('sourceended', resetMediaSource);
-    videoElement.src = window.URL.createObjectURL(newMediaSource);
-    videoElement.load();
-  };
-
-  var initializeMetaData = function() {
-    mediaSource = newMediaSource;
-    _this.metaManager.on('meta-data-activated', buildVideoPlayer);
-    _this.metaManager.requestMetaData(fileBuffer);
-  };
-
-  if(mediaSource !== undefined && mediaSource !== null) {
-    _this.once('readyToInitialize', initializeMetaData);
-    mediaSource.endOfStream();
+    initializeClientPlayer(this, mediaSource, window, setInitialized);
   } else {
-    initializeMetaData();
+    this.emit('end-media-source');
+
+    this.once('readyToInitialize', function() {
+      console.log('clientPlayerInitialized');
+
+      var getMedia = function() {
+        if(downloadMeta) {
+          _this.metaManager.initialize();
+          _this.emit('download-media');
+        }
+
+        if(callback !== null && callback !== undefined) {
+          callback();
+        }
+      };
+
+      initializeClientPlayer(_this, mediaSource, window, getMedia);
+    });
   }
 };
 
@@ -101,6 +99,48 @@ MediaController.prototype.setActiveMetaData = function(key, videoIndex, audioInd
 };
 
 module.exports = MediaController;
+
+var initializeClientPlayer = function(_this, mediaSource, window, callback) {
+  var buildClientPlayer = function() {
+    var videoSingleton = new VideoSingleton(videoElement, _this.metaManager.getActiveMetaData());
+    videoSingleton.initialize();
+
+    var sourceBuffers = new Array(2);
+    sourceBuffers[SourceBuffer.Enum.VIDEO] = initializeBuffer(SourceBuffer.Enum.VIDEO,
+      videoSingleton, mediaSource, _this.metaManager);
+    sourceBuffers[SourceBuffer.Enum.AUDIO] = initializeBuffer(SourceBuffer.Enum.AUDIO,
+      videoSingleton, mediaSource, _this.metaManager);
+
+    initializeVideo(videoSingleton, mediaSource);
+
+    removeSocketEvents();
+    setSocketEvents(_this, videoSingleton, sourceBuffers, new RequestFactory());
+
+    var resetMediaSource = function() {
+      console.log("MediaSource Reset");
+      videoSingleton.reset();
+      delete videoSingleton._events;
+
+      mediaSource.removeEventListener('sourceend', resetMediaSource);
+
+      _this.metaManager.removeAllListeners('meta-data-activated');
+
+      _this.emit('readyToInitialize');
+    };
+
+    mediaSource.addEventListener('sourceended', resetMediaSource);
+    videoElement.src = window.URL.createObjectURL(mediaSource);
+    videoElement.load();
+  };
+
+  _this.once('end-media-source', function() {
+    mediaSource.endOfStream();
+  });
+
+  _this.metaManager.on('meta-data-activated', buildClientPlayer);
+
+  callback();
+};
 
 var initializeBuffer = function(typeId, videoSingleton, mediaSource, metaManager) {
   var sourceBuffer = new SourceBuffer(typeId, videoSingleton, metaManager, mediaSource);
@@ -152,7 +192,7 @@ var initializeVideo = function(videoSingleton, mediaSource) {
   mediaSource.addEventListener('sourceended', resetVideo);
 };
 
-var setSocketEvents = function(videoSingleton, sourceBuffers, requestFactory) {
+var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFactory) {
   clientSocket.setEvent('state-play', function(callback) {
     console.log("state-play");
     var video = videoSingleton.getVideoElement();
@@ -181,11 +221,6 @@ var setSocketEvents = function(videoSingleton, sourceBuffers, requestFactory) {
   clientSocket.setEvent('segment-chunk', function(segment){
     console.log('segment-chunk');
     sourceBuffers[segment.typeId].bufferSegment(segment.data, videoSingleton);
-  });
-
-  clientSocket.setEvent('media-ready', function() {
-    console.log('media-ready');
-    _this.metaManager.requestMetaData(fileBuffer);
   });
 }
 
