@@ -62,14 +62,6 @@ RequestFactory.prototype.buildMailOptionsRequest = function(from, to, subject, t
 	return request;
 };
 
-RequestFactory.prototype.buildLoginRequest = function(address, token) {
-	console.log("RequestFactory.buildLoginRequest");
-	var request = new Object();
-	request.address	= address;
-	request.token	= token;
-	return request;
-};
-
 RequestFactory.prototype.buildVideoStateRequest = function(videoElement) {
 	var request = new Object();
 	request.timestamp	= videoElement.currentTime;

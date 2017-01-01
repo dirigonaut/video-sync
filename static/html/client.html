@@ -33,7 +33,8 @@
       <div id="loginOverlay"></div>
     </div>
     <script>
-      var client;
+    var client = null;
+    var clientSocket = null;
 
       window.onload = function() {
         window.URL = window.URL || window.webkitURL;
@@ -41,33 +42,28 @@
 
         $("#control-container").load("menu/controls.html");
         $("#chat-container").load("menu/chat.html");
-        $("#loginOverlay").load("menu/overlays/login.html", function(){
+        $("#loginOverlay").load("menu/overlays/login.html", function() {
           $('#loginModal').modal('show');
         });
 
-        $.getScript("../resources/gui.js");
-
-        var mediaSource = null;
-        client = new Client(document.getElementById('video'), window);
-        client.on('isConnected', function() {
-          $('#loginModal').modal('hide');
-          $('#btnLogin').remove();
-
-          client.getClientSocket().setEvent("media-ready", function() {
-
-            var initMedia = function() {
-              console.log("Init MediaSource");
-              mediaSource = new MediaSource();
-              return mediaSource;
-            };
-
-            if(mediaSource !== null) {
-              mediaSource.endOfStream();
-            } else {
-              client.initializeVideo(window, initMedia);
-            }
-          });
+        $.getScript("../resources/clientLogin.js", function() {
+          initClientLogin();
         });
+
+        var buildClient = function(callback) {
+          client = new Client(document.getElementById('video'));
+
+          $.getScript("../resources/gui.js", function() {
+            $('#loginModal').modal('hide');
+            $('#btnLogin').remove();
+
+            initGUI();
+            callback();
+          });
+        };
+
+        clientSocket = Client.GetClientSocket();
+        clientSocket.connect(clientSocket.buildServerUrl(window), buildClient);
       };
     </script>
   </body>
