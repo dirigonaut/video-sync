@@ -48,7 +48,10 @@
         $("#smtpOverlay").load("static/html/menu/overlays/smtp.html");
         $("#encodeOverlay").load("static/html/menu/overlays/encode.html");
 
-        $.getScript("static/resources/gui.js");
+        $.getScript("static/resources/gui.js", function() {
+          initGUI();
+        });
+        
         $.getScript("static/resources/tests.js");
       };
 

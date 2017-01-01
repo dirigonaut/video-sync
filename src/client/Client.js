@@ -1,3 +1,4 @@
+var ClientSocket = require('./socket/ClientSocket.js');
 var FormDataSingleton = require('./utils/FormDataSingleton');
 var MediaController = require('./video/MediaController');
 var RequestFactory = require('./utils/RequestFactory');
@@ -49,6 +50,10 @@ Client.prototype.getChatUtil = function() {
 
 Client.prototype.getFileUtil = function() {
   return fileUtil;
+};
+
+Client.GetClientSocket = function() {
+  return new ClientSocket();
 };
 
 module.exports = Client;

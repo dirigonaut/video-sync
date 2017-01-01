@@ -10,8 +10,8 @@ ClientSocket.prototype.connect = function(serverUrl, callback) {
 
 	socket = io.connect(serverUrl, {rejectUnauthorized: false});
 
-	socket.on('authenticated', function() {
-		callback();
+	socket.on('authenticated', function(acknowledge) {
+		callback(acknowledge);
 	});
 };
 

@@ -27,15 +27,8 @@ function MediaController(video, fBuffer) {
     _this.emit('meta-data-loaded', _this.metaManager.getTrackInfo());
   });
 
-  clientSocket.setEvent('media-ready', function() {
-    if(!_this.initialized) {
-      _this.metaManager.requestMetaData(fileBuffer);
-    } else {
-      _this.once('download-media', function() {
-        console.log('requesting meta data');
-        _this.metaManager.requestMetaData(fileBuffer);
-      });
-    }
+  _this.on('meta-manager-ready', function() {
+    _this.metaManager.requestMetaData(fileBuffer);
   });
 }
 
@@ -45,9 +38,11 @@ MediaController.prototype.initialize = function(mediaSource, window, downloadMet
   console.log("MediaController.initialize");
   var _this = this;
 
-  if(!this.initialized){
+  if(!this.initialized) {
     var setInitialized = function() {
+      console.log('we inited');
       _this.initialized = true;
+      _this.emit('meta-manager-ready');
 
       if(callback !== null && callback !== undefined) {
         callback();
@@ -64,7 +59,7 @@ MediaController.prototype.initialize = function(mediaSource, window, downloadMet
       var getMedia = function() {
         if(downloadMeta) {
           _this.metaManager.initialize();
-          _this.emit('download-media');
+          _this.emit('meta-manager-ready');
         }
 
         if(callback !== null && callback !== undefined) {

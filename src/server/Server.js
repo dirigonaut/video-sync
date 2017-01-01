@@ -135,13 +135,14 @@ function userAuthorized(socket, io) {
 
   var manager = new PlayerManager();
   manager.createPlayer(socket);
-  socket.emit('authenticated');
 
-  if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
-    socket.emit('media-ready');
-  }
+  socket.emit('authenticated', function() {
+    if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
+      socket.emit('media-ready');
+    }
 
-  io.emit('chat-handles', manager.getHandles());
+    io.emit('chat-handles', manager.getHandles());
+  });
 }
 
 function isAdministrator(socket, io) {
