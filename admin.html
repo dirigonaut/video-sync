@@ -30,10 +30,15 @@
     <script type="text/javascript" src="./static/resources/video-js/video.js"></script>
     <script type="text/javascript" src="./static/resources/bootstrap/js/bootstrap.min.js"></script>
     <script>
-    var client = null;
-    var server = null;
+      var Server = require('./src/server/Server.js');
+      var Client = require('./src/client/Client.js');
+      var ClientSocket = require('./src/client/socket/ClientSocket.js');
 
-      var loadGui = function(){
+      var server = null;
+      var client = null;
+      var clientSocket = null;
+
+      var loadGui = function() {
         $("#control-container").load("static/html/menu/controls.html");
         $("#location-container").load("static/html/menu/location.html");
         $("#side-container").load("static/html/menu/side.html");
@@ -45,36 +50,21 @@
 
         $.getScript("static/resources/gui.js");
         $.getScript("static/resources/tests.js");
-      }
+      };
+
+      var buildClient = function() {
+        client = new Client(document.getElementById('video'));
+        loadGui();
+      };
 
       var startServer = function(ip, port) {
-        var Server = require('./src/server/Server.js');
-        var Client = require('./src/client/Client.js');
-
-        var startClient = function() {
-          var mediaSource = null;
-          client = new Client(document.getElementById('video'), window, port);
-          client.on('isConnected', function() {
-              client.getClientSocket().setEvent("media-ready", function() {
-
-                var initMedia = function() {
-                  console.log("Init MediaSource");
-                  mediaSource = new MediaSource();
-                  return mediaSource;
-                };
-
-                if(mediaSource !== null) {
-                  mediaSource.endOfStream();
-                } else {
-                  client.initializeVideo(window, initMedia);
-                }
-              });
-          });
-          loadGui();
-        }
+        var clientSocketConnect = function() {
+          clientSocket = new ClientSocket();
+          clientSocket.connect(clientSocket.buildServerUrl(window, port), buildClient);
+        };
 
         var appData = require('nw.gui').App.dataPath;
-        server = new Server(ip, port, appData, startClient);
+        server = new Server(ip, port, appData, clientSocketConnect);
       };
 
       window.onload = function() {

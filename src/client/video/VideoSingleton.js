@@ -40,9 +40,6 @@ VideoSingleton.prototype.onProgress = function(typeId) {
           console.log(`VideoSingleton.onProgress - time: ${timeToRequest}`);
           self.emit("get-segment", typeId, timeToRequest);
         }
-      } else {
-        console.log("VideoSingleton.onProgress - end of segments");
-        self.videoElement.removeEventListener('timeupdate', progress, false);
       }
     }
   };

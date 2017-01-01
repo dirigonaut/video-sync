@@ -2,7 +2,7 @@ var log               = require('loglevel');
 var ClientSocket      = require('../socket/ClientSocket.js');
 var RequestFactory    = require('../utils/RequestFactory.js');
 
-function SourceBuffer(enum_type, video, meta, mediaSource){
+function SourceBuffer(enum_type, video, metaManager, mediaSource){
   var self = {};
 
   self.type = enum_type;
@@ -14,7 +14,7 @@ function SourceBuffer(enum_type, video, meta, mediaSource){
   log.info('SourceBuffer.initialize');
 
   var getInit = function(){
-    requestVideoData(meta.getInit(self.type));
+    requestVideoData(metaManager.getActiveMetaData().getInit(self.type));
   };
 
   video.on('get-init', getInit);
@@ -22,7 +22,8 @@ function SourceBuffer(enum_type, video, meta, mediaSource){
   var getSegment = function(typeId, timestamp) {
     if(typeId == self.type) {
       if(!isTimeRangeBuffered(timestamp)) {
-        var segmentInfo = meta.getSegment(self.type, timestamp);
+        console.log(metaManager.getActiveMetaData());
+        var segmentInfo = metaManager.getActiveMetaData().getSegment(self.type, timestamp);
         if(segmentInfo !== null) {
           requestVideoData(segmentInfo);
         }
@@ -54,7 +55,7 @@ function SourceBuffer(enum_type, video, meta, mediaSource){
     if(!self.hasInitSeg) {
       console.log("Init segment has been received.");
       self.hasInitSeg = true;
-      requestVideoData(meta.getSegment(self.type, 0));
+      requestVideoData(metaManager.getActiveMetaData().getSegment(self.type, 0));
     }
   };
 
@@ -96,12 +97,14 @@ function SourceBuffer(enum_type, video, meta, mediaSource){
     var buffered = false;
     var timeRanges = self.sourceBuffer.buffered;
 
-    for(var i = 0; i < timeRanges.length; ++i) {
-      if(timeRanges.start(i) > timestamp) {
-        break;
-      } else if (timeRanges.end(i) > timestamp) {
-        buffered = true;
-        break;
+    if(!metaManager.getActiveMetaData().isForceBuffer(self.type)) {
+      for(var i = 0; i < timeRanges.length; ++i) {
+        if(timeRanges.start(i) > timestamp) {
+          break;
+        } else if (timeRanges.end(i) > timestamp) {
+          buffered = true;
+          break;
+        }
       }
     }
 
@@ -111,6 +114,6 @@ function SourceBuffer(enum_type, video, meta, mediaSource){
   return self;
 }
 
-SourceBuffer.Enum = {"VIDEO" : 0, "AUDIO" : 1};
+SourceBuffer.Enum = { "VIDEO" : 0, "AUDIO" : 1 };
 
 module.exports = SourceBuffer;

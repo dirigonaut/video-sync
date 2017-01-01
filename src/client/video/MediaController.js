@@ -7,18 +7,15 @@ var VideoSingleton  = require('./VideoSingleton.js');
 var ClientSocket    = require('../socket/ClientSocket.js');
 var RequestFactory  = require('../utils/RequestFactory.js');
 
-var clientSocket = new ClientSocket();
+var clientSocket    = new ClientSocket();
 
-var videoElement  = null;
-var fileBuffer    = null;
-
-var _this = null;
+var videoElement    = null;
+var mediaSource     = null;
+var fileBuffer      = null;
+var _this           = null;
 
 function MediaController(video, fBuffer) {
   console.log("MediaController");
-  this.initialized = false;
-  this.resetMetaData = true;
-
   this.metaManager = new MetaManager();
   this.metaManager.initialize();
 
@@ -27,13 +24,6 @@ function MediaController(video, fBuffer) {
 
   _this = this;
 
-  this.on('initialized', function(mediaSource, window) {
-    console.log("Attach MediaSource to the videoElement.")
-    videoElement.src = window.URL.createObjectURL(mediaSource);
-    videoElement.load();
-    _this.emit("video-ready");
-  });
-
   this.metaManager.on('meta-data-loaded', function() {
     _this.emit('meta-data-loaded', _this.metaManager.getTrackInfo());
   });
@@ -41,16 +31,8 @@ function MediaController(video, fBuffer) {
 
 util.inherits(MediaController, EventEmitter);
 
-MediaController.prototype.initialize = function(mediaSource, window) {
-  console.log("MediaController.initializePlayer");
-  var changeActiveMeta = function(metaInfo) {
-    console.log(metaInfo);
-    _this.resetMetaData = false;
-    mediaSource.endOfStream();
-    _this.on('readyToInitialize', function() {
-      _this.metaManager.setActiveMetaData(metaInfo);
-    });
-  };
+MediaController.prototype.initialize = function(newMediaSource, window) {
+  console.log("MediaController.initialize");
 
   var buildVideoPlayer = function() {
     var videoSingleton = new VideoSingleton(videoElement, _this.metaManager.getActiveMetaData());
@@ -72,29 +54,29 @@ MediaController.prototype.initialize = function(mediaSource, window) {
       videoSingleton.reset();
       delete videoSingleton._events;
 
-      if(_this.resetMetaData) {
-        _this.metaManager.initialize();
-      } else {
-        _this.resetMetaData = true;
-      }
-
       mediaSource.removeEventListener('sourceend', resetMediaSource);
+      _this.metaManager.removeAllListeners('meta-data-activated');
+
       _this.emit('readyToInitialize');
     };
 
     mediaSource.addEventListener('sourceended', resetMediaSource);
-    _this.emit('initialized', mediaSource, window);
+    videoElement.src = window.URL.createObjectURL(newMediaSource);
+    videoElement.load();
   };
 
-  if(!_this.initialized) {
-    _this.on('change-meta-type', changeActiveMeta);
+  var initializeMetaData = function() {
+    mediaSource = newMediaSource;
     _this.metaManager.on('meta-data-activated', buildVideoPlayer);
-    _this.initialized = true;
-  }
-};
+    _this.metaManager.requestMetaData(fileBuffer);
+  };
 
-MediaController.prototype.requestMetaData = function() {
-  _this.metaManager.requestMetaData(fileBuffer);
+  if(mediaSource !== undefined && mediaSource !== null) {
+    _this.once('readyToInitialize', initializeMetaData);
+    mediaSource.endOfStream();
+  } else {
+    initializeMetaData();
+  }
 };
 
 MediaController.prototype.getTrackInfo = function() {
@@ -105,15 +87,23 @@ MediaController.prototype.setBufferAhead = function(bufferThreshold) {
   this.metaManager.setBufferThreshold(bufferThreshold);
 };
 
+MediaController.prototype.setForceBuffer = function(forceBuffer) {
+  console.log('MediaController.setForceBuffer')
+  var activeMeta = this.metaManager.getActiveMetaData();
+
+  activeMeta.setForceBuffer(SourceBuffer.Enum.VIDEO, forceBuffer);
+  activeMeta.setForceBuffer(SourceBuffer.Enum.AUDIO, forceBuffer);
+};
+
 MediaController.prototype.setActiveMetaData = function(key, videoIndex, audioIndex, subtitleIndex) {
   var metaInfo = this.metaManager.buildMetaInfo(key, videoIndex, audioIndex, subtitleIndex);
-  this.emit('change-meta-type', metaInfo);
+  this.metaManager.setActiveMetaData(metaInfo);
 };
 
 module.exports = MediaController;
 
 var initializeBuffer = function(typeId, videoSingleton, mediaSource, metaManager) {
-  var sourceBuffer = new SourceBuffer(typeId, videoSingleton, metaManager.getActiveMetaData(), mediaSource);
+  var sourceBuffer = new SourceBuffer(typeId, videoSingleton, metaManager, mediaSource);
   var codec = metaManager.getActiveMetaData().getMimeType(typeId);
 
   var bufferEvents = sourceBuffer.setSourceBufferCallback(codec);
