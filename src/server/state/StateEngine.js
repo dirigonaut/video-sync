@@ -1,11 +1,11 @@
-var PlayerManager = require('./player/PlayerManager');
+var PlayerManager = require('../player/PlayerManager');
 var Session       = require('../administration/Session');
 var Log           = require('../utils/Logger')
 var PlayRule      = require('./rules/PlayRule.js');
 var SyncRule      = require('./rules/SyncRule.js');
 var JoinRule      = require('./rules/JoinRule.js');
 var ResumeRule    = require('./rules/ResumeRule.js');
-var Player        = require('./player/Player');
+var Player        = require('../player/Player');
 
 var playerManager = new PlayerManager();
 var session       = new Session();

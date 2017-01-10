@@ -1,5 +1,5 @@
-var PlayerManager = require('../player/PlayerManager');
-var Player        = require('../player/Player');
+var PlayerManager = require('../../player/PlayerManager');
+var Player        = require('../../player/Player');
 var Session       = require('../../administration/Session');
 
 var playerManager = new PlayerManager();

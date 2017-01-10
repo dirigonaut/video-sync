@@ -51,13 +51,14 @@
         $.getScript("static/resources/gui.js", function() {
           initGUI();
         });
-        
+
         $.getScript("static/resources/tests.js");
       };
 
-      var buildClient = function() {
+      var buildClient = function(callback) {
         client = new Client(document.getElementById('video'));
         loadGui();
+        callback();
       };
 
       var startServer = function(ip, port) {
@@ -65,7 +66,7 @@
           clientSocket = new ClientSocket();
           clientSocket.connect(clientSocket.buildServerUrl(window, port), buildClient);
         };
-
+        
         var appData = require('nw.gui').App.dataPath;
         server = new Server(ip, port, appData, clientSocketConnect);
       };
@@ -74,7 +75,12 @@
         window.URL = window.URL || window.webkitURL;
         window.MediaSource = window.MediaSource || window.WebKitMediaSource;
 
-        var ipPort = window.prompt("Enter your Ip and port","xxx.xxx.xxx.xxx:8080");
+        var ipPort = null;
+
+        do {
+          ipPort = window.prompt("Enter your Ip and port","xxx.xxx.xxx.xxx:8080");
+        } while (ipPort === null);
+
         var split = ipPort.split(":");
 
         startServer(split[0], split[1]);
