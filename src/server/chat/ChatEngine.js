@@ -1,4 +1,4 @@
-var PlayerManager = require('../state/player/PlayerManager');
+var PlayerManager = require('../player/PlayerManager');
 
 var playerManager = new PlayerManager();
 

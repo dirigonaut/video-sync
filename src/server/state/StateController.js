@@ -1,7 +1,7 @@
 var Validator     = require('../authentication/Validator');
 var StateEngine   = require('./StateEngine.js');
 var Log           = require('../utils/Logger')
-var PlayerManager = require('./player/PlayerManager');
+var PlayerManager = require('../player/PlayerManager');
 
 var playerManager = new PlayerManager();
 var validator     = new Validator();

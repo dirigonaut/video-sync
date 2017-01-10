@@ -1,6 +1,6 @@
 var UserAdmin     = require('../administration/UserAdministration');
 var StateEngine   = require('../state/StateEngine.js');
-var PlayerManager = require('../state/player/PlayerManager');
+var PlayerManager = require('../player/PlayerManager');
 var ChatEngine    = require('./ChatEngine');
 
 var userAdmin     = new UserAdmin();

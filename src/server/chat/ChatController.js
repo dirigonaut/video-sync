@@ -1,4 +1,4 @@
-var PlayerManager = require('../state/player/PlayerManager');
+var PlayerManager = require('../player/PlayerManager');
 var CommandEngine = require('./CommandEngine');
 var ChatEngine    = require('./ChatEngine');
 var Session       = require('../administration/Session');
