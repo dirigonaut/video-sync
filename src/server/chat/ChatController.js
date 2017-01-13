@@ -25,23 +25,6 @@ function initialize(io, socket) {
     chatEngine.broadcast(ChatEngine.Enum.BROADCAST, message);
   });
 
-  socket.on('chat-private', function(data) {
-    Log.trace('chat-private');
-
-    var player = playerManager.getPlayer(data.to);
-
-    if(player != null && player != undefined) {
-      var message = data;
-      message.from = socket.id;
-
-      chatEngine.ping(ChatEngine.Enum.PING, player.socket, message);
-    } else {
-      var message = chatEngine.buildMessage(ChatEngine.SYSTEM,
-        "No such player by that name cannot send private message.");
-      chatEngine.ping(ChatEngine.Enum.PING, player.socket, message);
-    }
-  });
-
   socket.on('chat-command', function(data) {
     if(!session.isAdmin(socket.id)){
       console.Log('chat-command');
@@ -51,6 +34,7 @@ function initialize(io, socket) {
         chatEngine.broadcast(ChatEngine.Enum.BROADCAST, message);
       }
 
+      data.issuer = socket;
       commandEngine.processCommand(data, callback);
     }
   });

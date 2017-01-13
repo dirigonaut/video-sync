@@ -74,6 +74,7 @@ Validator.prototype.sterilizeUser = function(input) {
 
 	clean[json_keys.ADDRESS] 	= input[json_keys.ADDRESS]; //TODO normalizing takes out periods find new way
 	clean[json_keys.TOKEN] 	= validator.toString(input[json_keys.TOKEN]);
+	clean[json_keys.HANDLE] 	= validator.toString(input[json_keys.HANDLE]);
 
 	this.logDataCleaning(input, clean);
 	return clean;
