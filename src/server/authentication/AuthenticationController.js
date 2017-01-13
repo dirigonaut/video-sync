@@ -46,6 +46,7 @@ function initialize(io) {
         var sendInvitations = function(hostAddress) {
           var mailOptions = smtp.createMailOptions(session.getActiveSession().smtp, token.address, "Video-Sync Token", "Session token: " + token.token, "");
           smtp.sendMail(mailOptions);
+          socket.emit('login-token-sent');
         };
 
         smtp.initializeTransport(session.getActiveSession().smtp, sendInvitations);
@@ -57,9 +58,11 @@ function initialize(io) {
     socket.on('auth-validate-token', function (data) {
       Log.trace('auth-validate-token');
 
+      var cleanData = validator.sterilizeUser(data);
+
       var loginAttempt = function(authorized) {
         if(authorized) {
-          userAuthorized(socket, io);
+          userAuthorized(socket, io, cleanData.handle);
         } else {
           socket.logonAttempts += 1;
 
@@ -69,7 +72,7 @@ function initialize(io) {
         }
       };
 
-      authenticator.validateToken(socket.id, validator.sterilizeUser(data), loginAttempt);
+      authenticator.validateToken(socket.id, cleanData, loginAttempt);
     });
 
     socket.on('disconnect', function() {
@@ -91,7 +94,7 @@ function initialize(io) {
   });
 }
 
-function userAuthorized(socket, io) {
+function userAuthorized(socket, io, handle) {
   socket.auth = true;
 
   var video = new VideoController(io, socket);
@@ -99,7 +102,7 @@ function userAuthorized(socket, io) {
   var chat = new ChatController(io, socket);
 
   var manager = new PlayerManager();
-  manager.createPlayer(socket);
+  manager.createPlayer(socket, handle);
 
   socket.emit('authenticated', function() {
     if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
@@ -123,7 +126,7 @@ function isAdministrator(socket, io) {
       new AdminController(io, socket);
       new DatabaseController(io, socket);
 
-      userAuthorized(socket, io);
+      userAuthorized(socket, io, 'admin');
     }
   }
 }

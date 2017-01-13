@@ -5,41 +5,35 @@ var ClientSocket    = require('../socket/ClientSocket.js');
 
 var clientSocket = new ClientSocket();
 
-var self = null;
 var handleList = null;
 
 function ChatUtil() {
-  if(self == null) {
-    self = this;
-  }
+
 }
 
 util.inherits(ChatUtil, EventEmitter);
 
-ChatUtil.prototype.parseInput = function(input, from) {
-  var parsedInput = "regex parse input";
-
-  if(false) {
-    return this._createCommand(input);
-  } else {
-    return this._createMessage(input, from);
-  }
+ChatUtil.prototype.parseInput = function(input) {
+  var parsedInput = input.split(" ");
+  return this.createCommand(parsedInput.shift(), parsedInput);
 };
 
-ChatUtil.prototype._createMessage = function(text, from) {
-  var message = new Object();
+ChatUtil.prototype.createMessage = function(text) {
+  var message = {};
   message.text = text;
-  message.from = from;
   return message;
 };
 
-ChatUtil.prototype._createCommand = function() {
-
+ChatUtil.prototype.createCommand = function(command, param) {
+  var request = {};
+  request.command = command;
+  request.param = param;
+  return request;
 };
 
 ChatUtil.prototype.clientLog = function(caller, log) {
   this._createMessage(caller, log);
-  self.emit('client-log', log);
+  this.emit('client-log', log);
 };
 
 ChatUtil.prototype.setupEvents = function() {

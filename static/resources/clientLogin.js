@@ -1,6 +1,7 @@
 function initClientLogin() {
   $('#submitCreds').click(function readContacts() {
     var request = {};
+    request.handle	= $('#loginHandle').val();
     request.address	= $('#loginUser').val();
     request.token	= $('#loginToken').val();
 

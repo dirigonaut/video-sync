@@ -1,16 +1,24 @@
-function Player(socket){
+function Player(socket, handle){
     this.socket	  	= socket;
 
     this.state 	  	= null;
     this.sync       = 0;
     this.timestamp 	= 0;
 
-    this.handle     = "JohnDoe";
+    this.handle     = handle;
     this.auth       = Player.Auth.DEFAULT;
 };
 
 Player.prototype.isInit = function() {
   return this.sync == Player.Sync.SYNCING && this.timestamp == 0;
+};
+
+Player.prototype.setAuth = function(auth) {
+  this.auth = auth;
+};
+
+Player.prototype.getAuth = function() {
+  return this.auth;
 };
 
 Player.State = {"PLAY" : 0, "PAUSE" : 1};

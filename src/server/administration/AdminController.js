@@ -54,7 +54,7 @@ function initialize(io, socket) {
       console.log('admin-chat-command');
 
       var response = function(message) {
-        chatEngine.broadcast(message);
+        chatEngine.broadcast(ChatEngine.Enum.PING, message);
       }
 
       commandEngine.processAdminCommand(data, response);

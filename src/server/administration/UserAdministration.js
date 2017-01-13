@@ -11,6 +11,20 @@ var session       = new Session();
 
 function UserAdministration() { }
 
+UserAdministration.prototype.downgradeUser = function(user) {
+  if(!session.isAdmin(user)) {
+    var player = playerManager.getPlayer(user);
+    player.setAuth(Player.Auth.RESTRICTED);
+  }
+};
+
+UserAdministration.prototype.upgradeUser = function(user) {
+  if(!session.isAdmin(user)) {
+    var player = playerManager.getPlayer(user);
+    player.setAuth(Player.Auth.DEFAULT);
+  }
+};
+
 UserAdministration.prototype.kickUser = function(user) {
   session.getActiveSession().removeInvitee(user, session);
   database.deleteTokens(user, null);

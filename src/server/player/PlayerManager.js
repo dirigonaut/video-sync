@@ -5,8 +5,8 @@ var players = new Map();
 function PlayerManager (){
 };
 
-PlayerManager.prototype.createPlayer = function(socket){
-  var newPlayer = new Player(socket);
+PlayerManager.prototype.createPlayer = function(socket, handle){
+  var newPlayer = new Player(socket, handle);
   players.set(socket.id, newPlayer);
   console.log("Adding player, total players now: " + players.size);
 };

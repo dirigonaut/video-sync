@@ -362,10 +362,16 @@ function initGUI() {
 
   //Chat Events ------------------------------------------------------------------
   $('#sendChat').click(function() {
-    var message = client.getChatUtil().parseInput($('#chatMessage').val(), null);
+    var value = $('#chatMessage').val();
     $('#chatMessage').val("");
 
-    clientSocket.sendRequest('chat-broadcast', message);
+    if(value.match(/^\//)) {
+      var command = client.getChatUtil().parseInput(value);
+      clientSocket.sendRequest('chat-command', command);
+    } else {
+      var message = client.getChatUtil().createMessage(value);
+      clientSocket.sendRequest('chat-broadcast', message);
+    }
   });
 
   clientSocket.setEvent('chat-broadcast-resp', function(message) {
