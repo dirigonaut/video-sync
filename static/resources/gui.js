@@ -361,7 +361,7 @@ function initGUI() {
   });
 
   //Chat Events ------------------------------------------------------------------
-  $('#sendChat').click(function() {
+  function sendChat() {
     var value = $('#chatMessage').val();
     $('#chatMessage').val("");
 
@@ -372,12 +372,26 @@ function initGUI() {
       var message = client.getChatUtil().createMessage(value);
       clientSocket.sendRequest('chat-broadcast', message);
     }
+  }
+
+  $('#sendChat').click(function() {
+    sendChat()
+  });
+
+  $('#chatMessage').keydown(function(event) {
+    var keyId = event.keyCode || event.which;
+
+    if (keyId === 13) {
+      event.preventDefault();
+      sendChat();
+    }
   });
 
   clientSocket.setEvent('chat-broadcast-resp', function(message) {
     console.log("chat-broadcast-resp");
-    $('#chatManuscript').append('<p><span class="chat-message" title="' + message.from + '" style="color:blue; font-weight: bold;">' +
-      new Date().toTimeString().split(" ")[0] + " " + client.getChatUtil().getUserHandle(message.from) + ': </span>' + message.text + '</p>');
+    console.log(message);
+    $('#chatManuscript').append(`<p><span class="chat-message" title="${message.from}" style="color:blue; font-weight: bold;">
+      ${new Date().toTimeString().split(" ")[0]} ${client.getChatUtil().getUserHandle(message.from)}: </span>${message.text}</p>`);
   });
 
   clientSocket.setEvent('chat-log-resp', function(message) {
@@ -489,8 +503,8 @@ function initGUI() {
     }
 
     if(active !== null && active !== undefined) {
-      videoHtml += buildTrackHtml(track[1].video, type, active == null ? undefined : active.video);
-      audioHtml += buildTrackHtml(track[1].audio, type, active == null ? undefined : active.audio);
+      videoHtml += buildTrackHtml(track[1].video, type, active.video);
+      audioHtml += buildTrackHtml(track[1].audio, type, active.audio);
     }
 
     typeHtml += `</select">`;

@@ -53,11 +53,18 @@ function initialize(io, socket) {
     if(session.isAdmin(socket.id)){
       console.log('admin-chat-command');
 
-      var response = function(message) {
-        chatEngine.broadcast(ChatEngine.Enum.PING, message);
+      var response = function(event, text) {
+        var message = chatEngine.buildMessage(socket.id, text);
+
+        if(event === ChatEngine.Enum.PING) {
+          chatEngine.ping(event, message);
+        } else {
+          chatEngine.broadcast(event, message);
+        }
       }
 
-      commandEngine.processAdminCommand(data, response);
+      var admin = playerManager.getPlayer(socket.id);
+      commandEngine.processAdminCommand(admin, data, response);
     }
   });
 }

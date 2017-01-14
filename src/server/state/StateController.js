@@ -23,7 +23,7 @@ function initialize(io, socket) {
 
   socket.on('state-req-pause', function(data) {
     console.log('state-req-pause');
-    stateEngine.pause(socket);
+    stateEngine.pause(socket.id);
   });
 
   socket.on('state-req-seek', function(data) {
@@ -33,7 +33,7 @@ function initialize(io, socket) {
 
   socket.on('state-sync', function() {
     console.log('state-sync');
-    stateEngine.sync(socket);
+    stateEngine.sync(socket.id);
   });
 
   socket.on('state-time-update', function(data) {
