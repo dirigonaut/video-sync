@@ -6,11 +6,10 @@ function ChatEngine() { }
 
 ChatEngine.prototype.broadcast = function(event, message) {
   console.log("ChatEngine.prototype.broadcast");
-  if(event != null && message != null) {
+  if(event !== null && message !== null) {
     var players = playerManager.getPlayers();
     for(var p of players.keys()) {
       players.get(p).socket.emit(event, message);
-      console.log(players.get(p).socket.id);
     }
   }
 };
@@ -32,4 +31,4 @@ ChatEngine.prototype.buildMessage = function(from, text) {
 module.exports = ChatEngine;
 
 ChatEngine.SYSTEM = "system";
-ChatEngine.Enum = {"BROADCAST" : "chat-broadcast-resp", "LOG" : "chat-log-resp", "EVENT" : "chat-event-resp"};
+ChatEngine.Enum = {"BROADCAST" : "chat-broadcast-resp", "PING" : "chat-ping-resp", "LOG" : "chat-log-resp", "EVENT" : "chat-event-resp"};

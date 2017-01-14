@@ -10,66 +10,57 @@ var chatEngine    = new ChatEngine();
 
 function CommandEngine() { }
 
-CommandEngine.prototype.processAdminCommand = function(command, callback) {
+CommandEngine.prototype.processAdminCommand = function(admin, command, callback) {
   console.log("CommandEngine.prototype.processAdminCommand");
-  console.log(command);
   switch(command.command) {
     case CommandEngine.AdminEnum.INVITE:
-      var message = chatEngine.buildMessage(ChatEngine.SYSTEM, command.issuer, "admin invite response");
       userAdmin.inviteUser(command.param);
-      chatEngine.ping(ChatEngine.PING, message);
+      callback(ChatEngine.Enum.PING, "admin invite response");
       break;
     case CommandEngine.AdminEnum.KICK:
-      var message = chatEngine.buildMessage(ChatEngine.SYSTEM, command.issuer, "admin kick response");
       userAdmin.kickUser(command.param);
-      chatEngine.ping(ChatEngine.PING, message);
+      callback(ChatEngine.Enum.PING, "admin kick response");
       break;
     case CommandEngine.AdminEnum.DOWNGRADE:
-      var message = chatEngine.buildMessage(ChatEngine.SYSTEM, command.issuer, "admin downgrade response");
       userAdmin.downgradeUser(command.param);
-      chatEngine.ping(ChatEngine.PING, message);
+      callback(ChatEngine.Enum.PING, "admin downgrade response");
       break;
     case CommandEngine.AdminEnum.UPGRADE:
-      var message = chatEngine.buildMessage(ChatEngine.SYSTEM, command.issuer, "admin upgrade response");
       userAdmin.upgradeUser(command.param);
-      chatEngine.ping(ChatEngine.PING, message);
+      callback(ChatEngine.Enum.PING, "admin upgrade response");
       break;
     case CommandEngine.ClientEnum.HELP:
-      var message = chatEngine.buildMessage(ChatEngine.SYSTEM, command.issuer, "admin help response");
-      chatEngine.ping(ChatEngine.PING, message);
+      callback(ChatEngine.Enum.PING, "admin help response");
       break;
     default:
-      this.processCommand(command, callback);
+      this.processCommand(admin, command, callback);
       break;
   }
 };
 
-CommandEngine.prototype.processCommand = function(command, callback) {
+CommandEngine.prototype.processCommand = function(issuer, command, callback) {
   console.log("CommandEngine.prototype.processCommand");
   switch(command.command) {
     case CommandEngine.ClientEnum.PLAY:
-      callback("play response from " + command.issuer);
-      stateEngine.play(command.issuer);
+      stateEngine.play(issuer.socket.id);
+      callback(ChatEngine.Enum.BROADCAST, "issued play");
       break;
     case CommandEngine.ClientEnum.PAUSE:
-      callback("pause response from " + command.issuer);
-      stateEngine.pause();
+      stateEngine.pause(issuer.socket.id);
+      callback(ChatEngine.Enum.BROADCAST, "issued pause");
       break;
     case CommandEngine.ClientEnum.SEEK:
-      callback("seek response from " + command.issuer);
       stateEngine.seek(command.param);
+      callback(ChatEngine.Enum.BROADCAST, "issued seek");
       break;
     case CommandEngine.ClientEnum.USERS:
-      var message = chatEngine.buildMessage(ChatEngine.SYSTEM, command.issuer, "users response");
-      chatEngine.ping(ChatEngine.PING, message);
+      callback(ChatEngine.Enum.PING, playerManager.getHandles());
       break;
     case CommandEngine.ClientEnum.HELP:
-      var message = chatEngine.buildMessage(ChatEngine.SYSTEM, command.issuer, "help response");
-      chatEngine.ping(ChatEngine.PING, message);
+      callback(ChatEngine.Enum.PING, "help response");
       break;
     default:
-      var message = chatEngine.buildMessage(ChatEngine.SYSTEM, command.issuer, `${command.command} is not a recognized command, type /help for a list of commands.`);
-      chatEngine.ping(ChatEngine.PING, message);
+      callback(ChatEngine.Enum.PING, `${command.command} is not a recognized command, type /help for a list of commands.`);
       break;
   }
 };

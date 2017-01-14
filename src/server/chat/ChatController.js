@@ -20,22 +20,26 @@ function initialize(io, socket) {
   socket.on('chat-broadcast', function(data) {
     Log.trace('chat-broadcast');
 
-    var message = data;
-    message.from = socket.id;
+    var message = chatEngine.buildMessage(socket.id, data.text);
     chatEngine.broadcast(ChatEngine.Enum.BROADCAST, message);
   });
 
   socket.on('chat-command', function(data) {
     if(!session.isAdmin(socket.id)){
-      console.Log('chat-command');
+      console.log('chat-command');
 
-      var response = function(text) {
+      var response = function(event, text) {
         var message = chatEngine.buildMessage(socket.id, text);
-        chatEngine.broadcast(ChatEngine.Enum.BROADCAST, message);
+
+        if(event === ChatEngine.Enum.PING) {
+          chatEngine.ping(event, message);
+        } else {
+          chatEngine.broadcast(event, message);
+        }
       }
 
-      data.issuer = socket;
-      commandEngine.processCommand(data, callback);
+      var player = playerManager.getPlayer(socket.id);
+      commandEngine.processCommand(player, data, callback);
     }
   });
 }

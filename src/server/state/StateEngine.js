@@ -34,9 +34,9 @@ StateEngine.prototype.play = function(id) {
   }
 };
 
-StateEngine.prototype.pause = function(socket) {
+StateEngine.prototype.pause = function(id) {
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
-    var player = playerManager.getPlayer(socket.id);
+    var player = playerManager.getPlayer(id);
 
     if(player.sync == Player.Sync.DESYNCED) {
       player.socket.emit('state-pause', updatePlayerState);
@@ -59,7 +59,7 @@ StateEngine.prototype.seek = function(data) {
   }
 };
 
-StateEngine.prototype.sync = function(socket) {
+StateEngine.prototype.sync = function(id) {
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     if(playerManager.getPlayers().size > 1) {
       var syncTime = null;
