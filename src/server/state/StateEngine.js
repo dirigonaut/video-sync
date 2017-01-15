@@ -14,7 +14,7 @@ var accuracy      = 2;
 
 function StateEngine() { }
 
-StateEngine.prototype.play = function(id) {
+StateEngine.prototype.play = function(id, callback) {
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     var player = playerManager.getPlayer(id);
 
@@ -28,13 +28,17 @@ StateEngine.prototype.play = function(id) {
       }
 
       session.mediaStarted();
+
+      if(callback !== undefined && callback !== null) {
+        callback();
+      }
     }
 
     new PlayRule(accuracy).evaluate(player, broadcastEvent);
   }
 };
 
-StateEngine.prototype.pause = function(id) {
+StateEngine.prototype.pause = function(id, callback) {
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     var player = playerManager.getPlayer(id);
 
@@ -45,13 +49,17 @@ StateEngine.prototype.pause = function(id) {
         if(player[1].sync !== Player.Sync.DESYNCED) {
           player[1].sync = Player.Sync.SYNCED;
           player[1].socket.emit('state-pause', updatePlayerState);
+
+          if(callback !== undefined && callback !== null) {
+            callback();
+          }
         }
       }
     }
   }
 };
 
-StateEngine.prototype.seek = function(data) {
+StateEngine.prototype.seek = function(data, callback) {
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     for(var player of playerManager.getPlayers()) {
       player[1].socket.emit('state-seek', data, updatePlayerState);
@@ -59,7 +67,7 @@ StateEngine.prototype.seek = function(data) {
   }
 };
 
-StateEngine.prototype.sync = function(id) {
+StateEngine.prototype.sync = function(id, callback) {
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     if(playerManager.getPlayers().size > 1) {
       var syncTime = null;
@@ -74,24 +82,36 @@ StateEngine.prototype.sync = function(id) {
       response.seektime = syncTime;
 
       socket.emit('state-seek', response, updatePlayerState);
+
+      if(callback !== undefined && callback !== null) {
+        callback();
+      }
     }
   }
 };
 
-StateEngine.prototype.resync = function(socket) {
+StateEngine.prototype.resync = function(socket, callback) {
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     var player = playerManager.getPlayer(socket.id);
     if(player !== null && player !== undefined) {
       player.sync = Player.Sync.SYNCING;
+
+      if(callback !== undefined && callback !== null) {
+        callback();
+      }
     }
   }
 };
 
-StateEngine.prototype.desync = function(socket) {
+StateEngine.prototype.desync = function(socket, callback) {
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     var player = playerManager.getPlayer(socket.id);
     if(player !== null && player !== undefined) {
       player.sync = Player.Sync.DESYNCED;
+
+      if(callback !== undefined && callback !== null) {
+        callback();
+      }
     }
   }
 };

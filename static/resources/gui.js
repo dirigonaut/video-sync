@@ -1,4 +1,6 @@
 function initGUI() {
+  console.log("Gui initialized");
+
   //Control Bar Events ----------------------------------------------------------
   function updateProgressBar(e) {
     $('#seek-bar').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
@@ -292,9 +294,7 @@ function initGUI() {
 
     if(sessions.length > 0) {
       if($("#sessionId").val() == '') {
-        var session = sessions[0];
-
-        if(session !== null && session !== undefined) {
+        var session = sessions[0];        ();!== undefined) {
           $("#sessionId").val(session._id);
           $("#sessionTitle").val(session.title);
           $("#sessionAddress").val(session.smtp);
@@ -365,17 +365,23 @@ function initGUI() {
     var value = $('#chatMessage').val();
     $('#chatMessage').val("");
 
-    if(value.match(/^\//)) {
-      var command = client.getChatUtil().parseInput(value);
-      clientSocket.sendRequest('chat-command', command);
-    } else {
-      var message = client.getChatUtil().createMessage(value);
-      clientSocket.sendRequest('chat-broadcast', message);
+    if(value.trim().length > 0) {
+      if(value.match(/^\//)) {
+        var command = client.getChatUtil().parseInput(value);
+        clientSocket.sendRequest('chat-command', command);
+      } else {
+        var message = client.getChatUtil().createMessage(value);
+        clientSocket.sendRequest('chat-broadcast', message);
+      }
     }
   }
 
+  function autoScroll() {
+    $('#chatManuscript').scrollTop($('#chatManuscript')[0].scrollHeight);
+  }
+
   $('#sendChat').click(function() {
-    sendChat()
+    sendChat();
   });
 
   $('#chatMessage').keydown(function(event) {
@@ -387,11 +393,19 @@ function initGUI() {
     }
   });
 
+
   clientSocket.setEvent('chat-broadcast-resp', function(message) {
     console.log("chat-broadcast-resp");
-    console.log(message);
     $('#chatManuscript').append(`<p><span class="chat-message" title="${message.from}" style="color:blue; font-weight: bold;">
       ${new Date().toTimeString().split(" ")[0]} ${client.getChatUtil().getUserHandle(message.from)}: </span>${message.text}</p>`);
+    autoScroll();
+  });
+
+  clientSocket.setEvent('chat-event-resp', function(message) {
+    console.log("chat-event-resp");
+    $('#chatManuscript').append(`<p><span class="chat-message" title="System" style="color:gray; font-weight: bold;">
+      ${new Date().toTimeString().split(" ")[0]} System: </span>${client.getChatUtil().getUserHandle(message.from)} ${message.text}</p>`);
+    autoScroll();
   });
 
   clientSocket.setEvent('chat-log-resp', function(message) {

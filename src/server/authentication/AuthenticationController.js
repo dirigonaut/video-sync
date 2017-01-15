@@ -7,6 +7,7 @@ var Validator     = require('../authentication/Validator');
 var NeDatabase    = require('../database/NeDatabase');
 var PlayerManager = require('../player/PlayerManager.js');
 var Authenticator = require('../authentication/Authenticator');
+var ChatEngine    = require('../chat/ChatEngine');
 
 var AdminController     = require('../administration/AdminController');
 var VideoController     = require('../video/VideoController');
@@ -97,12 +98,14 @@ function initialize(io) {
 function userAuthorized(socket, io, handle) {
   socket.auth = true;
 
+  var manager = new PlayerManager();
+  manager.createPlayer(socket, handle);
+
   var video = new VideoController(io, socket);
   var state = new StateController(io, socket);
   var chat = new ChatController(io, socket);
 
-  var manager = new PlayerManager();
-  manager.createPlayer(socket, handle);
+  var chatEngine = new ChatEngine();
 
   socket.emit('authenticated', function() {
     if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
@@ -110,6 +113,7 @@ function userAuthorized(socket, io, handle) {
     }
 
     io.emit('chat-handles', manager.getHandles());
+    //chatEngine.broadcast(ChatEngine.Enum.BROADCAST, chatEngine.buildMessage(socket.id, `${handle} has joined the session.`));
   });
 }
 
