@@ -60,9 +60,13 @@ StateEngine.prototype.pause = function(id, callback) {
 };
 
 StateEngine.prototype.seek = function(data, callback) {
-  if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
+  if(session.getMediaPath() != null && session.getMediaPath().length > 0 && session.getMediaStarted()) {
     for(var player of playerManager.getPlayers()) {
       player[1].socket.emit('state-seek', data, updatePlayerState);
+    }
+
+    if(callback !== undefined && callback !== null) {
+      callback();
     }
   }
 };

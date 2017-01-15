@@ -39,17 +39,12 @@ UserAdministration.prototype.disconnectSocket = function(socket) {
   socket.disconnect('unauthorized');
 };
 
-UserAdministration.prototype.purgeUserInfo = function(user) {
-  database.deleteTokens(user, null);
-  playerManager.removePlayer(user);
-};
-
-UserAdministration.prototype.inviteUser = function(user) {
-  session.getActiveSession().addInvitee(user, session);
+UserAdministration.prototype.inviteUser = function(emailAddress) {
+  session.getActiveSession().addInvitee(emailAddress, session);
 
   var sendInvitations = function(address) {
     var mailOptions = session.getActiveSession().mailOptions;
-    mailOptions.invitees = [user];
+    mailOptions.invitees = [emailAddress];
 
     smtp.sendMail(addP2PLink(session.getActiveSession().mailOptions));
   };

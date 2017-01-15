@@ -21,7 +21,6 @@ function initialize(io, socket) {
   socket.on('state-req-play', function() {
     console.log('state-req-play');
     var onAllowed = function() {
-      console.log('hello');
       var message = chatEngine.buildMessage(socket.id, "issued play");
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
     };
@@ -42,7 +41,7 @@ function initialize(io, socket) {
   socket.on('state-req-seek', function(data) {
     console.log('state-req-seek');
     var onAllowed = function() {
-      var message = chatEngine.buildMessage(socket.id, "issued seek");
+      var message = chatEngine.buildMessage(socket.id, `issued seek to ${data.seektime}`);
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
     };
 

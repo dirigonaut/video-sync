@@ -13,6 +13,10 @@ Player.prototype.isInit = function() {
   return this.sync == Player.Sync.SYNCING && this.timestamp == 0;
 };
 
+Player.prototype.setHandle = function(handle) {
+  this.handle = handle;
+};
+
 Player.prototype.setAuth = function(auth) {
   this.auth = auth;
 };
