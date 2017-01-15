@@ -113,7 +113,7 @@ function userAuthorized(socket, io, handle) {
     }
 
     io.emit('chat-handles', manager.getHandles());
-    //chatEngine.broadcast(ChatEngine.Enum.BROADCAST, chatEngine.buildMessage(socket.id, `${handle} has joined the session.`));
+    chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has joined the session.`));
   });
 }
 

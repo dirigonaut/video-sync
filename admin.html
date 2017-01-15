@@ -38,27 +38,27 @@
       var client = null;
       var clientSocket = null;
 
-      var loadGui = function() {
-        $("#control-container").load("static/html/menu/controls.html");
-        $("#location-container").load("static/html/menu/location.html");
-        $("#side-container").load("static/html/menu/side.html");
-        $("#chat-container").load("static/html/menu/chat.html");
-
-        $("#sessionOverlay").load("static/html/menu/overlays/session.html");
-        $("#smtpOverlay").load("static/html/menu/overlays/smtp.html");
-        $("#encodeOverlay").load("static/html/menu/overlays/encode.html");
-
-        $.getScript("static/resources/gui.js", function() {
-          initGUI();
-        });
-
-        $.getScript("static/resources/tests.js");
-      };
-
       var buildClient = function(callback) {
+        var loadGui = function() {
+          $("#control-container").load("static/html/menu/controls.html");
+          $("#location-container").load("static/html/menu/location.html");
+          $("#side-container").load("static/html/menu/side.html");
+          $("#chat-container").load("static/html/menu/chat.html");
+
+          $("#sessionOverlay").load("static/html/menu/overlays/session.html");
+          $("#smtpOverlay").load("static/html/menu/overlays/smtp.html");
+          $("#encodeOverlay").load("static/html/menu/overlays/encode.html");
+
+          $.getScript("static/resources/gui.js", function() {
+            initGUI();
+            callback();
+          });
+
+          $.getScript("static/resources/tests.js");
+        };
+
         client = new Client(document.getElementById('video'));
         loadGui();
-        callback();
       };
 
       var startServer = function(ip, port) {
@@ -66,7 +66,7 @@
           clientSocket = new ClientSocket();
           clientSocket.connect(clientSocket.buildServerUrl(window, port), buildClient);
         };
-        
+
         var appData = require('nw.gui').App.dataPath;
         server = new Server(ip, port, appData, clientSocketConnect);
       };

@@ -294,7 +294,7 @@ function initGUI() {
 
     if(sessions.length > 0) {
       if($("#sessionId").val() == '') {
-        var session = sessions[0];        ();!== undefined) {
+        if(session !== null && session !== undefined) {
           $("#sessionId").val(session._id);
           $("#sessionTitle").val(session.title);
           $("#sessionAddress").val(session.smtp);
@@ -394,6 +394,13 @@ function initGUI() {
   });
 
 
+  function systemMessage(message) {
+    console.log("chat-event-resp");
+    $('#chatManuscript').append(`<p><span class="chat-message" title="System" style="color:gray; font-weight: bold;">
+      ${new Date().toTimeString().split(" ")[0]} System: </span>${client.getChatUtil().getUserHandle(message.from)} ${message.text}</p>`);
+    autoScroll();
+  }
+
   clientSocket.setEvent('chat-broadcast-resp', function(message) {
     console.log("chat-broadcast-resp");
     $('#chatManuscript').append(`<p><span class="chat-message" title="${message.from}" style="color:blue; font-weight: bold;">
@@ -402,10 +409,11 @@ function initGUI() {
   });
 
   clientSocket.setEvent('chat-event-resp', function(message) {
-    console.log("chat-event-resp");
-    $('#chatManuscript').append(`<p><span class="chat-message" title="System" style="color:gray; font-weight: bold;">
-      ${new Date().toTimeString().split(" ")[0]} System: </span>${client.getChatUtil().getUserHandle(message.from)} ${message.text}</p>`);
-    autoScroll();
+    systemMessage(message);
+  });
+
+  clientSocket.setEvent('chat-ping-resp', function(message) {
+    systemMessage(message);
   });
 
   clientSocket.setEvent('chat-log-resp', function(message) {
