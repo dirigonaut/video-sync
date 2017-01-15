@@ -15,6 +15,7 @@ ChatEngine.prototype.broadcast = function(event, message) {
 };
 
 ChatEngine.prototype.ping = function(event, message) {
+  console.log("ChatEngine.prototype.ping");
   var player = playerManager.getPlayer(message.from);
   if(player !== undefined && player !== null) {
     var socket = player.socket;
