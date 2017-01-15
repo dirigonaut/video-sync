@@ -43,15 +43,15 @@ CommandEngine.prototype.processCommand = function(issuer, command, callback) {
   switch(command.command) {
     case CommandEngine.ClientEnum.PLAY:
       stateEngine.play(issuer.socket.id);
-      callback(ChatEngine.Enum.BROADCAST, "issued play");
+      callback(ChatEngine.Enum.EVENT, "issued play");
       break;
     case CommandEngine.ClientEnum.PAUSE:
       stateEngine.pause(issuer.socket.id);
-      callback(ChatEngine.Enum.BROADCAST, "issued pause");
+      callback(ChatEngine.Enum.EVENT, "issued pause");
       break;
     case CommandEngine.ClientEnum.SEEK:
       stateEngine.seek(command.param);
-      callback(ChatEngine.Enum.BROADCAST, "issued seek");
+      callback(ChatEngine.Enum.EVENT, "issued seek");
       break;
     case CommandEngine.ClientEnum.USERS:
       callback(ChatEngine.Enum.PING, playerManager.getHandles());

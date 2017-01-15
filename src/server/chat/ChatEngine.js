@@ -14,10 +14,13 @@ ChatEngine.prototype.broadcast = function(event, message) {
   }
 };
 
-ChatEngine.prototype.ping = function(event, socket, message) {
-  console.log(socket);
-  if(event != null && message != null && socket != null) {
-    socket.emit(event, message);
+ChatEngine.prototype.ping = function(event, message) {
+  var player = playerManager.getPlayer(message.from);
+  if(player !== undefined && player !== null) {
+    var socket = player.socket;
+    if(event !== null && message !== null && socket !== null) {
+      socket.emit(event, message);
+    }
   }
 };
 
