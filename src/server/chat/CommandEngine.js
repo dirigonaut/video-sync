@@ -50,11 +50,12 @@ CommandEngine.prototype.processCommand = function(issuer, command, callback) {
       callback(ChatEngine.Enum.EVENT, "issued pause");
       break;
     case CommandEngine.ClientEnum.SEEK:
-      stateEngine.seek(command.param);
-      callback(ChatEngine.Enum.EVENT, "issued seek");
+      stateEngine.seek({'seektime': timestampToSeconds(command.param[0])});
+      callback(ChatEngine.Enum.EVENT, `issued seek to ${timestampToSeconds(command.param[0])}`);
       break;
-    case CommandEngine.ClientEnum.USERS:
-      callback(ChatEngine.Enum.PING, playerManager.getHandles());
+    case CommandEngine.ClientEnum.HANDLE:
+      callback(ChatEngine.Enum.EVENT, `ID: ${issuer.socket.id} changed their handle to ${command.param[0]}`);
+      playerManager.setPlayerHandle(issuer.socket.id, command.param[0]);
       break;
     case CommandEngine.ClientEnum.HELP:
       callback(ChatEngine.Enum.PING, "help response");
@@ -68,4 +69,15 @@ CommandEngine.prototype.processCommand = function(issuer, command, callback) {
 module.exports = CommandEngine;
 
 CommandEngine.AdminEnum = {"INVITE" : "/invite", "KICK" : "/kick", "DOWNGRADE" : "/downgrade", "UPGRADE" : "/upgrade"};
-CommandEngine.ClientEnum = {"PLAY" : "/play", "PAUSE" : "/pause", "SEEK" : "/seek", "USERS" : "/users", "HANDLE" : "/handle", "HELP" : "/help"};
+CommandEngine.ClientEnum = {"PLAY" : "/play", "PAUSE" : "/pause", "SEEK" : "/seek", "HANDLE" : "/handle", "HELP" : "/help"};
+
+function timestampToSeconds(timestamp) {
+  var timeArray = timestamp.split(':').reverse();
+  var seconds = 0;
+
+  for(var i in timeArray) {
+    seconds += parseInt(timeArray[i], 10) * Math.pow(60, i);
+  }
+
+  return seconds;
+}

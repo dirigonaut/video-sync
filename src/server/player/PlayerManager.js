@@ -36,7 +36,7 @@ PlayerManager.prototype.removePlayer = function(id){
 
 PlayerManager.prototype.getOtherPlayers = function(id){
   var temp = new Array();
-  for (var p of players.keys()) {
+  for(var p of players.keys()) {
     if(p != id){
       temp.push(players.get(p));
     }
@@ -46,7 +46,7 @@ PlayerManager.prototype.getOtherPlayers = function(id){
 
 PlayerManager.prototype.getPlayersWith = function(status){
   var temp = new Array();
-  for (var p of players.keys()) {
+  for(var p of players.keys()) {
     if(players.get(p).status == status){
       temp.push(players.get(p));
     }
@@ -56,7 +56,7 @@ PlayerManager.prototype.getPlayersWith = function(status){
 
 PlayerManager.prototype.getPlayersWithout = function(status){
   var temp = new Array();
-  for (var p of players.keys()) {
+  for(var p of players.keys()) {
     if(players.get(p).status != status){
       temp.push(players.get(p));
     }
@@ -66,7 +66,7 @@ PlayerManager.prototype.getPlayersWithout = function(status){
 
 PlayerManager.prototype.removePlayersWithStatus = function(playerArray, status){
   var temp = new Array();
-  for (var p in playerArray) {
+  for(var p in playerArray) {
     if(playerArray[p].status != status){
       temp.push(playerArray[p]);
     }
@@ -76,7 +76,7 @@ PlayerManager.prototype.removePlayersWithStatus = function(playerArray, status){
 
 PlayerManager.prototype.removePlayersWithId = function(playerArray, id){
   var temp = new Array();
-  for (var p in playerArray) {
+  for(var p in playerArray) {
     if(playerArray[p].id != id){
       temp.push(playerArray[p]);
     }
@@ -86,10 +86,32 @@ PlayerManager.prototype.removePlayersWithId = function(playerArray, id){
 
 PlayerManager.prototype.getHandles = function() {
   var temp = new Array();
-  for (var p of players.keys()) {
+  for(var p of players.keys()) {
     temp.push([players.get(p).socket.id, players.get(p).handle]);
   }
   return temp;
 };
 
+PlayerManager.prototype.setPlayerHandle = function(id, handle) {
+  for(var p of players.keys()) {
+    if(p === id) {
+      players.get(p).setHandle(handle);
+
+      var handles = new Array();
+      for(var p of players.keys()) {
+        handles.push([players.get(p).socket.id, players.get(p).handle]);
+      }
+
+      sendEventToAllPlayers('chat-handles', handles);
+      break;
+    }
+  }
+};
+
 module.exports = PlayerManager;
+
+function sendEventToAllPlayers(event, payload) {
+  for(var p of players.keys()) {
+    players.get(p).socket.emit(event, payload);
+  }
+}

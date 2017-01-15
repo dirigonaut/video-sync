@@ -377,7 +377,9 @@ function initGUI() {
   }
 
   function autoScroll() {
-    $('#chatManuscript').scrollTop($('#chatManuscript')[0].scrollHeight);
+    if($('#chatManuscript').hasClass("auto-scroll")) {
+      $('#chatManuscript').scrollTop($('#chatManuscript')[0].scrollHeight);
+    }
   }
 
   $('#sendChat').click(function() {
@@ -393,6 +395,16 @@ function initGUI() {
     }
   });
 
+  $('#chatManuscript').on('scroll', function() {
+    console.log($('#chatManuscript').scrollTop());
+    console.log($('#chatManuscript')[0].scrollHeight);
+    console.log($('#chatManuscript').height);
+    if($('#chatManuscript').scrollTop() === $('#chatManuscript')[0].scrollHeight) {
+      $('#chatManuscript').addClass("auto-scroll");
+    } else {
+      $('#chatManuscript').removeClass("auto-scroll");
+    }
+  });
 
   function systemMessage(message) {
     console.log("chat-event-resp");

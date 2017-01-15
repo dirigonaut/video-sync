@@ -206,10 +206,10 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
 
   clientSocket.setEvent('state-seek', function(data, callback) {
     console.log("state-seek");
+    console.log(data);
     var video = videoSingleton.getVideoElement();
     video.pause();
     video.currentTime = data.seektime;
-    console.log(data);
     callback(clientSocket.getSocketId(), video.currentTime, video.paused);
   });
 
