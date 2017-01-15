@@ -5,6 +5,7 @@ var activeSession = null;
 var mediaPath     = null;
 var mediaStarted  = false;
 var adminId       = null;
+var idToEmailMap  = null;
 
 var localIp       = null;
 
@@ -15,6 +16,7 @@ function Session() {
 Session.prototype.loadSession = function(id) {
   var setSession = function(session) {
     activeSession = session[0];
+    idToEmailMap = new Map();
     console.log(activeSession);
   }
 
@@ -33,14 +35,23 @@ Session.prototype.getInvitee = function(id, session) {
   }
 };
 
-Session.prototype.addInvitee = function(id, session) {
-  session.invitees.push(id);
+Session.prototype.addInvitee = function(email, session) {
+  session.invitees.push(email);
+};
+
+Session.prototype.associateIdToEmail = function(id, email) {
+  idToEmailMap.set(id, email);
 };
 
 Session.prototype.removeInvitee = function(id, session) {
+  console.log("Session.removeInvitee");
+  var email = idToEmailMap.get(id);
+
   for(var x in session.invitees) {
-    if(session.invitees[x] == id) {
-      session.invitees.slice(x, 1);
+    if(session.invitees[x] === email) {
+      session.invitees.splice(x, 1);
+      idToEmailMap.delete(id);
+      console.log(session.invitees);
     }
   }
 };

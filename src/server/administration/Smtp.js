@@ -11,7 +11,7 @@ function Smtp(){
 
 Smtp.prototype.initializeTransport = function(address, callback) {
 	console.log("Smtp.initializeTransport");
-	if(address != activeSmtp) {
+	if(address !== activeSmtp) {
 		this.closeTrasporter();
 
 		var loadSmtpOptions = function(result) {
@@ -55,7 +55,7 @@ Smtp.prototype.createMailOptions = function(from, to, subject, text, html) {
 
 Smtp.prototype.sendMail = function(mailOptions) {
 	console.log("Smtp.sendMail");
-	if(isTransportInitialized()) {
+	if(isTransportInitialized() && false) {
 		smtpTransport.sendMail(mailOptions, function(error, response) {
 		    if(error) {
 		        console.log(error);

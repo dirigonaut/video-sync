@@ -36,6 +36,9 @@ function initialize(io, socket) {
 
       var players = playerManager.getPlayers();
 
+      var message = chatEngine.buildMessage(socket.id, "video Has been initialized.");
+      chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
+
       for(var player of players) {
         player[1].socket.emit('media-ready');
       }

@@ -14,19 +14,19 @@ CommandEngine.prototype.processAdminCommand = function(admin, command, callback)
   console.log("CommandEngine.prototype.processAdminCommand");
   switch(command.command) {
     case CommandEngine.AdminEnum.INVITE:
-      userAdmin.inviteUser(command.param);
+      userAdmin.inviteUser(command.param[0]);
       callback(ChatEngine.Enum.PING, "admin invite response");
       break;
     case CommandEngine.AdminEnum.KICK:
-      userAdmin.kickUser(command.param);
+      userAdmin.kickUser(command.param[0]);
       callback(ChatEngine.Enum.PING, "admin kick response");
       break;
     case CommandEngine.AdminEnum.DOWNGRADE:
-      userAdmin.downgradeUser(command.param);
+      userAdmin.downgradeUser(command.param[0]);
       callback(ChatEngine.Enum.PING, "admin downgrade response");
       break;
     case CommandEngine.AdminEnum.UPGRADE:
-      userAdmin.upgradeUser(command.param);
+      userAdmin.upgradeUser(command.param[0]);
       callback(ChatEngine.Enum.PING, "admin upgrade response");
       break;
     case CommandEngine.ClientEnum.HELP:

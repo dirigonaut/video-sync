@@ -77,6 +77,9 @@ function initialize(io) {
     });
 
     socket.on('disconnect', function() {
+      var chatEngine = new ChatEngine();
+      chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has left the session.`));
+
       var manager = new PlayerManager();
       manager.removePlayer(socket.id);
       userAdmin.disconnectSocket(socket);
@@ -89,6 +92,8 @@ function initialize(io) {
     setTimeout(function(){
       //If the socket didn't authenticate, disconnect it
       if (!socket.auth) {
+        console.log(socket.auth);
+        console.log("timing out socket");
         userAdmin.disconnectSocket(socket);
       }
     }, 300000);

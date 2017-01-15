@@ -15,7 +15,7 @@ function ChatController(io, socket) {
 
 function initialize(io, socket) {
   Log.trace("Attaching ChatController");
-  
+
   socket.on('chat-broadcast', function(data) {
     Log.trace('chat-broadcast');
 
@@ -38,7 +38,7 @@ function initialize(io, socket) {
       }
 
       var player = playerManager.getPlayer(socket.id);
-      commandEngine.processCommand(player, data, callback);
+      commandEngine.processCommand(player, data, response);
     }
   });
 }

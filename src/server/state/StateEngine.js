@@ -60,24 +60,27 @@ StateEngine.prototype.pause = function(id, callback) {
 };
 
 StateEngine.prototype.seek = function(data, callback) {
+  console.log('StateEngine.seek');
   if(session.getMediaPath() != null && session.getMediaPath().length > 0 && session.getMediaStarted()) {
     for(var player of playerManager.getPlayers()) {
       player[1].socket.emit('state-seek', data, updatePlayerState);
     }
 
     if(callback !== undefined && callback !== null) {
+      console.log('we have a seek callback')
       callback();
     }
   }
 };
 
 StateEngine.prototype.sync = function(id, callback) {
+  console.log('StateEngine.sync');
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     if(playerManager.getPlayers().size > 1) {
       var syncTime = null;
 
       for(var player of playerManager.getPlayers().values()) {
-        if(syncTime == null || (player.sync == Player.Sync.SYNCED && syncTime > player.timestamp)) {
+        if(syncTime === null || (player.sync === Player.Sync.SYNCED && syncTime > player.timestamp)) {
           syncTime = player.timestamp;
         }
       }
@@ -85,6 +88,7 @@ StateEngine.prototype.sync = function(id, callback) {
       var response = new Object();
       response.seektime = syncTime;
 
+      var socket = playerManager.getPlayer(id).socket;
       socket.emit('state-seek', response, updatePlayerState);
 
       if(callback !== undefined && callback !== null) {
