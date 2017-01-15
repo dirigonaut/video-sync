@@ -294,6 +294,8 @@ function initGUI() {
 
     if(sessions.length > 0) {
       if($("#sessionId").val() == '') {
+        var session = sessions[0];
+        
         if(session !== null && session !== undefined) {
           $("#sessionId").val(session._id);
           $("#sessionTitle").val(session.title);
@@ -395,14 +397,21 @@ function initGUI() {
     }
   });
 
+  var scrollTimeOut = null;
   $('#chatManuscript').on('scroll', function() {
-    console.log($('#chatManuscript').scrollTop());
-    console.log($('#chatManuscript')[0].scrollHeight);
-    console.log($('#chatManuscript').height);
-    if($('#chatManuscript').scrollTop() === $('#chatManuscript')[0].scrollHeight) {
-      $('#chatManuscript').addClass("auto-scroll");
-    } else {
-      $('#chatManuscript').removeClass("auto-scroll");
+    if(!scrollTimeOut) {
+      scrollTimeOut = setTimeout(function(){
+        clearTimeout(scrollTimeOut);
+        scrollTimeOut = null;
+
+        var element = $('#chatManuscript');
+        var totalHeight = element.scrollTop() + element.innerHeight();
+        if(totalHeight === element[0].scrollHeight) {
+          element.addClass("auto-scroll");
+        } else {
+          element.removeClass("auto-scroll");
+        }
+      }, 250);
     }
   });
 

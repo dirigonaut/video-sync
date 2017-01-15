@@ -1,4 +1,5 @@
 var PlayerManager = require('../player/PlayerManager');
+var Player        = require('../player/Player');
 var NeDatabase    = require('../database/NeDatabase');
 var Smtp          = require('./Smtp');
 var Session       = require('./Session');
@@ -25,31 +26,32 @@ UserAdministration.prototype.upgradeUser = function(user) {
   }
 };
 
-UserAdministration.prototype.kickUser = function(user) {
-  session.getActiveSession().removeInvitee(user, session);
-  database.deleteTokens(user, null);
-  playerManager.removePlayer(user);
-
-  this.disconnectSocket();
+UserAdministration.prototype.kickUser = function(user, callback) {
+  console.log("UserAdministration.kickUser");
+  session.removeInvitee(user, session.getActiveSession());
+  var socket = playerManager.getPlayer(user).socket;
+  this.disconnectSocket(socket);
 };
 
 UserAdministration.prototype.disconnectSocket = function(socket) {
-  Log.trace("Disconnecting socket ", socket.id);
+  console.log("Disconnecting socket ", socket.id);
   database.deleteTokens(socket.id);
   socket.disconnect('unauthorized');
 };
 
 UserAdministration.prototype.inviteUser = function(emailAddress) {
-  session.getActiveSession().addInvitee(emailAddress, session);
+  console.log("UserAdministration.inviteUser");
+  var currentSession = session.getActiveSession();
+  session.addInvitee(emailAddress, currentSession);
 
-  var sendInvitations = function(address) {
-    var mailOptions = session.getActiveSession().mailOptions;
+  var sendInvitation = function(address) {
+    var mailOptions = currentSession.mailOptions;
     mailOptions.invitees = [emailAddress];
 
-    smtp.sendMail(addP2PLink(session.getActiveSession().mailOptions));
+    smtp.sendMail(addP2PLink(mailOptions));
   };
 
-  smtp.initializeTransport(session.getActiveSession().smtp, sendInvitations);
+  smtp.initializeTransport(currentSession.smtp, sendInvitation);
 };
 
 UserAdministration.prototype.inviteUsers = function() {

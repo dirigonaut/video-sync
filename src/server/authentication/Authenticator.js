@@ -37,6 +37,7 @@ Authenticator.prototype.validateToken = function(id, data, callback) {
         }
       }
 
+      session.associateIdToEmail(id, data.address);
       callback(authorized);
     }
 
