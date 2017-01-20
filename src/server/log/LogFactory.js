@@ -1,41 +1,47 @@
+var Winston = require('winston');
+
+var SocketTransport = require('./SocketTransport');
+
+
 function LogFactory() {
 
 }
 
-LogFactory.prototype.buildAdministrationContainer = function() {
+LogFactory.prototype.buildContainer = function(id, level, handleExceptions, exitOnError, transports) {
+  var container = new Winston.Container();
 
+  container.add(id, {
+    console: {
+      level: level,
+      handleExceptions: handleExceptions,
+      json: true
+    },
+    transports,
+    exitOnError: exitOnError
+  });
+
+  return container;
 };
 
-LogFactory.prototype.buildAuthenticationContainer = function() {
+LogFactory.prototype.buildFileTransport = function(path) {
+  var fileTransport = new (winston.transports.File)({
+    filename: path,
+    timestamp: function() {
+      return Date.now();
+    },
+    formatter: function(options) {
+      // Return string will be passed to logger.
+      return options.timestamp() +' '+ options.level.toUpperCase() +' '+ (options.message ? options.message : '') +
+        (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
+    }
+  });
 
+  return fileTransport;
 };
 
-LogFactory.prototype.buildChatContainer = function() {
-
-};
-
-LogFactory.prototype.buildDatabaseContainer = function() {
-
-};
-
-LogFactory.prototype.buildStateContainer = function() {
-
-};
-
-LogFactory.prototype.buildEncodingContainer = function() {
-
-};
-
-LogFactory.prototype.buildVideoContainer = function() {
-
-};
-
-LogFactory.prototype.buildMiscellaneousContainer = function() {
-
-};
-
-LogFactory.prototype.buildFormatter = function() {
-
+LogFactory.prototype.buildSocketTransport = function(socket) {
+  var socketTransport = new SocketTransport(socket);
+  return socketTransport;
 };
 
 module.exports = LogFactory;
