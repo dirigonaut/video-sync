@@ -31,6 +31,10 @@ NeDatabase.prototype.createCerts = function(json, callback){
 	createJson(json, callback);
 };
 
+NeDatabase.prototype.createLogOptions = function(json, callback){
+	createJson(json, callback);
+};
+
 //Read Calls
 NeDatabase.prototype.readSmtp = function(address, callback){
 	var query = { smtpAddress : address };
@@ -67,6 +71,11 @@ NeDatabase.prototype.readCerts = function(callback){
 	readJson(query, callback);
 };
 
+NeDatabase.prototype.readLogOptions = function(json, callback){
+	var query = { log : { $exists: true } };
+	readJson(query, callback);
+};
+
 //Update Calls
 NeDatabase.prototype.updateSmtp = function(id, json, callback){
 	var query = { _id : id };
@@ -79,6 +88,11 @@ NeDatabase.prototype.updateContact = function(id, json, callback){
 };
 
 NeDatabase.prototype.updateSession = function(id, json, callback){
+	var query = { _id: id };
+	updateJson(query, json, callback);
+};
+
+NeDatabase.prototype.updateLogOptions = function(id, json, callback){
 	var query = { _id: id };
 	updateJson(query, json, callback);
 };
@@ -111,6 +125,12 @@ NeDatabase.prototype.deleteTokens = function(id, callback){
 NeDatabase.prototype.deleteCerts = function(date, callback){
 	var query = { expire: { $gt: date } };
 	var option = { multi: true };
+	deleteJson(query, option, callback);
+};
+
+NeDatabase.prototype.deleteLogOptions = function(callback){
+	var query = { };
+	var option = {};
 	deleteJson(query, option, callback);
 };
 

@@ -1,4 +1,4 @@
-const util          = require('util');
+const Util          = require('util');
 const EventEmitter  = require('events');
 
 var MetaManager     = require('./MetaManager.js');
@@ -32,7 +32,7 @@ function MediaController(video, fBuffer) {
   });
 }
 
-util.inherits(MediaController, EventEmitter);
+Util.inherits(MediaController, EventEmitter);
 
 MediaController.prototype.initialize = function(mediaSource, window, downloadMeta, callback) {
   console.log("MediaController.initialize");

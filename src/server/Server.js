@@ -7,6 +7,7 @@ var Session       = require('./administration/Session');
 var Log           = require('./utils/Logger');
 var NeDatabase    = require('./database/NeDatabase');
 var Certificate   = require('./authentication/Certificate');
+var LogManager    = require('./log/LogManager');
 
 var AuthenticationController = require('./authentication/AuthenticationController');
 
@@ -15,6 +16,9 @@ var io  = null;
 var server  = null;
 
 function Server(ip, port, appData, callback) {
+  var logManager = new LogManager();
+  logManager.addFileLogging(appData);
+
   app = Express();
 
   var initHttpsServer = function(pem) {
@@ -33,11 +37,13 @@ function Server(ip, port, appData, callback) {
 
     var session = new Session();
     session.setLocalIp(ip + ":" + port);
+    session.on('admin-set', logManager.addSocketLogging);
 
     app.use(Express.static('static'));
     server.listen(port);
 
-    new AuthenticationController(io);
+    new AuthenticationController(io, setupLogs);
+
     callback();
   };
 
