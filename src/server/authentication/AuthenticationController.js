@@ -1,7 +1,9 @@
+var Winston = require('winston');
+
 var Smtp          = require('../administration/Smtp');
 var Bundler       = require('../utils/Bundler');
 var Session       = require('../administration/Session');
-var Log           = require('../utils/Logger');
+var LogManager    = require('../log/LogManager');
 var UserAdmin     = require('../administration/UserAdministration');
 var Validator     = require('../authentication/Validator');
 var NeDatabase    = require('../database/NeDatabase');
@@ -15,6 +17,7 @@ var StateController     = require('../state/StateController');
 var DatabaseController  = require('../database/DatabaseController');
 var ChatController      = require('../chat/ChatController');
 
+var log;
 var smtp;
 var session;
 var userAdmin;
@@ -22,6 +25,8 @@ var validator;
 var authenticator;
 
 function AuthenticationController(io) {
+  log = Winston.loggers.get('AUTHENTICATION');
+
   smtp            = new Smtp();
   session         = new Session();
   userAdmin       = new UserAdmin();
@@ -35,13 +40,15 @@ module.exports = AuthenticationController;
 
 function initialize(io) {
   io.on('connection', function (socket) {
-    Log.trace("socket has connected: " + socket.id + " ip:" + socket.handshake.address);
+    console.log('socket has connected');
+
+    log.error("socket has connected: " + socket.id + " ip:" + socket.handshake.address);
     socket.logonAttempts = 0;
     isAdministrator(socket, io);
     socket.emit('connected');
 
     socket.on('auth-get-token', function (data) {
-      Log.trace('auth-get-token');
+      //Log.trace('auth-get-token');
 
       var requestSmtp = function(token) {
         var sendInvitations = function(hostAddress) {
@@ -57,7 +64,7 @@ function initialize(io) {
     });
 
     socket.on('auth-validate-token', function (data) {
-      Log.trace('auth-validate-token');
+      //Log.trace('auth-validate-token');
 
       var cleanData = validator.sterilizeUser(data);
 
@@ -86,7 +93,7 @@ function initialize(io) {
     });
 
     socket.on('error', function (data) {
-      Log.trace(data);
+      console.log(data);
     });
 
     setTimeout(function(){
@@ -120,6 +127,8 @@ function userAuthorized(socket, io, handle) {
     io.emit('chat-handles', manager.getHandles());
     chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has joined the session.`));
   });
+
+  log.error("socket has connected:{");
 }
 
 function isAdministrator(socket, io) {
@@ -127,15 +136,11 @@ function isAdministrator(socket, io) {
 
   if(session.getAdmin() == null) {
     if(socket.handshake.address == "::ffff:127.0.0.1"){
-      session.setAdminId(socket.id);
-
-      new Log(socket);
-      Log.setLevel(Log.Enum.TRACE);
-
       new AdminController(io, socket);
       new DatabaseController(io, socket);
 
       userAuthorized(socket, io, 'admin');
+      session.setAdminId(socket.id);
     }
   }
 }

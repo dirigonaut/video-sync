@@ -40,7 +40,7 @@ MediaController.prototype.initialize = function(mediaSource, window, downloadMet
 
   if(!this.initialized) {
     var setInitialized = function() {
-      console.log('we inited');
+      console.log('clientPlayerInitialized');
       _this.initialized = true;
       _this.emit('meta-manager-ready');
 

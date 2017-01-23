@@ -4,7 +4,7 @@ var Validator     = require('../authentication/Validator');
 var PlayerManager = require('../player/PlayerManager');
 var CommandEngine = require('../chat/CommandEngine');
 var ChatEngine    = require('../chat/ChatEngine');
-var LogManager    = require('./log/LogManager');
+var LogManager    = require('../log/LogManager');
 var Logger        = require('../utils/Logger');
 
 var userAdmin     = new UserAdmin();

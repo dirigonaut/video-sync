@@ -1,19 +1,10 @@
 var Winston = require('winston');
 
+var Socket = require('./Socket');
+
 function LogFactory() {
 
 }
-
-LogFactory.prototype.buildContainer = function(id, exitOnError, fileTransport) {
-  var container = new Winston.Container();
-
-  container.add(id, {
-    file: fileTransport,
-    //exitOnError: exitOnError
-  });
-
-  return container;
-};
 
 LogFactory.prototype.buildFormatter = function() {
   return function(options) {
@@ -23,15 +14,14 @@ LogFactory.prototype.buildFormatter = function() {
   }
 };
 
-LogFactory.prototype.buildFileTransport = function(path, level, label) {
-  var fileTransport = new (Winston.transports.File)({
+LogFactory.prototype.buildFileTransport = function(path, level, label, handleExceptions) {
+  var fileTransport = new (Winston.transports.File) ({
     filename: path,
     level: level,
     showLevel:  true,
     label: label,
     silent: false,
-    handleExceptions: true,
-    humanReadableUnhandledException: true,
+    handleExceptions: handleExceptions,
     timestamp: function() {
       return Date.now();
     },
@@ -41,22 +31,17 @@ LogFactory.prototype.buildFileTransport = function(path, level, label) {
   return fileTransport;
 };
 
-LogFactory.prototype.buildSocketTransport = function(socket, level, label) {
-  var socketTransport = new (Winston.transports.SocketTransport)({
+LogFactory.prototype.buildSocketTransport = function(socket, level, label, handleExceptions) {
+  var socket = new Socket({
     socket: socket,
     level: level,
     showLevel:  true,
     label: label,
     silent: false,
-    handleExceptions: true,
-    humanReadableUnhandledException: true,
-    timestamp: function() {
-      return Date.now();
-    },
-    formatter: this.buildFormatter()
+    handleExceptions: handleExceptions,
   });
 
-  return socketTransport;
+  return socket;
 };
 
 module.exports = LogFactory;
