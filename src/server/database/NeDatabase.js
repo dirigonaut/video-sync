@@ -71,7 +71,7 @@ NeDatabase.prototype.readCerts = function(callback){
 	readJson(query, callback);
 };
 
-NeDatabase.prototype.readLogOptions = function(json, callback){
+NeDatabase.prototype.readLogOptions = function(callback){
 	var query = { log : { $exists: true } };
 	readJson(query, callback);
 };

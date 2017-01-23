@@ -15,32 +15,37 @@ function LogManager() {
 LogManager.prototype.addFileLogging = function(basePath) {
   var logFactory = new LogFactory();
 
-  var fileTransport = logFactory.buildFileTransport(`${basePath}/${FILE_NAME}`, 'info', 'file-logger');
-
-  for(var i in LogManager.LogEnum) {
-    Winston.loggers.add(i, logFactory.buildContainer(i, false, fileTransport));
-  }
+  var fileTransport = logFactory.buildFileTransport(`${basePath}/${FILE_NAME}`, 'info', 'gen-file-logger', true);
+  Winston.loggers.add('File_Logger', { transports: [fileTransport] });
 };
 
 LogManager.prototype.addSocketLogging = function(id) {
   var player = playerManager.getPlayer(id);
 
   var setupLogger = function(options) {
+    console.log("attaching socket logging");
     var logFactory = new LogFactory();
 
     for(var i in LogManager.LogEnum) {
       var level = options[i] ? options[i].level : null;
-      var exitOnError = options[i] ? options[i].exitOnError : null;
 
-      var socketTransport = logFactory.buildSocketTransport(player.socket, level || 'info', Object.keys(LogManager.LogEnum)[i]);
+      var socketTransport = logFactory.buildSocketTransport(player.socket, 'info', i, false);
 
-      var container = Winston.loggers.get(id);
-      container.exitOnError = exitOnError || false;
-      container.options.transports.push(socketTransport);
+      var container = Winston.loggers.get('File_Logger');
+      var fileTransport = container.transports.file;
+      var transports = [fileTransport, socketTransport];
+
+      var container = Winston.loggers.get(i);
+      container.configure({
+        transports: transports,
+      });
+
+      Winston.loggers.get(i).error('testing');
     }
   }
 
   if(player !== null && player !== undefined) {
+    console.log("query for options");
     loadOptions(setupLogger);
   }
 };

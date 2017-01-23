@@ -35,14 +35,19 @@ function Server(ip, port, appData, callback) {
 
     new Bundler();
 
+    var adminSocketLogging = function(id) {
+      console.log("Adding Socket Logging");
+      logManager.addSocketLogging(id);
+    };
+
     var session = new Session();
+    session.onAdminIdCallback(adminSocketLogging);
     session.setLocalIp(ip + ":" + port);
-    session.on('admin-set', logManager.addSocketLogging);
 
     app.use(Express.static('static'));
     server.listen(port);
 
-    new AuthenticationController(io, setupLogs);
+    new AuthenticationController(io);
 
     callback();
   };
