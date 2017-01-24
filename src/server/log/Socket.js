@@ -2,6 +2,7 @@ var Util = require('util');
 var Winston = require('winston');
 
 var Socket = exports.Socket = function (options) {
+  console.log('creating socket transport');
   this.name = 'socket';
 
   if(options.socket) {
@@ -11,17 +12,8 @@ var Socket = exports.Socket = function (options) {
   }
 
   this.level     = options.level || 'info';
-  this.timestamp = typeof options.timestamp !== 'undefined' ? options.timestamp : false;
-  this.formatter = options.formatter || null;
-  this.showLevel = options.showLevel === undefined ? true : options.showLevel;
   this.label     = options.label || null;
   this.silent    = options.silent || null;
-
-  if (this.json) {
-    this.stringify = options.stringify || function (obj) {
-      return JSON.stringify(obj, null, 2);
-    };
-  }
 };
 
 Util.inherits(Socket, Winston.Transport);
@@ -31,14 +23,15 @@ Socket.prototype.log = function (level, msg, meta, callback) {
     return callback(null, true);
   }
 
-  var self = this,
-      output;
+  var payload = {
+    log: this.label,
+    level: level,
+    message: msg,
+    meta: meta,
+    time: new Date().toTimeString().split(" ")[0],
+  };
 
-  console.log(output);
-  this.socket.emit('log', output);
-
-  //self.emit('logged');
-  //callback(null, true);
+  this.socket.emit('chat-log-resp', payload);
 };
 
 module.exports = Socket;

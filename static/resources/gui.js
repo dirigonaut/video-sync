@@ -295,7 +295,7 @@ function initGUI() {
     if(sessions.length > 0) {
       if($("#sessionId").val() == '') {
         var session = sessions[0];
-        
+
         if(session !== null && session !== undefined) {
           $("#sessionId").val(session._id);
           $("#sessionTitle").val(session.title);
@@ -437,10 +437,11 @@ function initGUI() {
     systemMessage(message);
   });
 
-  clientSocket.setEvent('chat-log-resp', function(message) {
+  clientSocket.setEvent('chat-log-resp', function(response) {
     console.log("chat-log-resp");
-    $('#logManuscript').append('<p><span class="chat-message" title="' + message.from + '" style="color:blue; font-weight: bold;">' +
-      new Date().toTimeString().split(" ")[0] + " " + message.from + ': </span>' + message.text + '</p>');
+    console.log(response);
+    $('#logManuscript').append('<p><span class="chat-message" title="' + response.log + '" style="color:blue; font-weight: bold;">' +
+      response.time + " " + response.level + ': </span>' + response.message + '</p>');
   });
 
   client.getChatUtil().on('client-log', function(message) {
