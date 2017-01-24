@@ -4,9 +4,9 @@ var SocketIO    = require('socket.io');
 
 var Bundler       = require('./utils/Bundler');
 var Session       = require('./administration/Session');
-var Log           = require('./utils/Logger');
 var NeDatabase    = require('./database/NeDatabase');
 var Certificate   = require('./authentication/Certificate');
+var PlayerManager = require('./player/PlayerManager.js');
 var LogManager    = require('./log/LogManager');
 
 var AuthenticationController = require('./authentication/AuthenticationController');
@@ -16,10 +16,13 @@ var io  = null;
 var server  = null;
 
 function Server(ip, port, appData, callback) {
+  app = Express();
+
   var logManager = new LogManager();
   logManager.addFileLogging(appData);
 
-  app = Express();
+  var database = new NeDatabase();
+  database.initialize(appData);
 
   var initHttpsServer = function(pem) {
     var options = {
@@ -37,7 +40,9 @@ function Server(ip, port, appData, callback) {
 
     var adminSocketLogging = function(id) {
       console.log("Adding Socket Logging");
-      logManager.addSocketLogging(id);
+      var playerManager = new PlayerManager();
+      var socket = playerManager.getPlayer(id).socket;
+      logManager.addSocketLogging(socket, database);
     };
 
     var session = new Session();
@@ -52,7 +57,6 @@ function Server(ip, port, appData, callback) {
     callback();
   };
 
-  var database = new NeDatabase(appData);
   new Certificate().getCertificates(initHttpsServer);
 }
 

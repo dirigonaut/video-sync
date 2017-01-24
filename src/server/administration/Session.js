@@ -1,3 +1,5 @@
+const EventEmitter  = require('events');
+
 var NeDatabase	= require("../database/NeDatabase");
 
 var database      = new NeDatabase();
@@ -8,7 +10,8 @@ var adminId       = null;
 var idToEmailMap  = null;
 
 var localIp       = null;
-var onAdminEvent  = null;
+
+var emitter = null;
 
 function Session() {
 }
@@ -84,17 +87,18 @@ Session.prototype.getAdmin = function() {
 };
 
 Session.prototype.onAdminIdCallback = function(callback) {
-  if(adminId === null || adminId === undefined) {
-    onAdminEvent = callback;
+  if(emitter === null || emitter === undefined) {
+    emitter = new EventEmitter();
   }
+
+  emitter.once('admin-set', callback);
 };
 
 Session.prototype.setAdminId = function(id) {
   if(adminId === null) {
     console.log("AdminId: " + id);
     adminId = id;
-    onAdminEvent(id);
-    delete onAdminEvent;
+    emitter.emit('admin-set', id);
   }
 };
 

@@ -51,18 +51,6 @@ function initialize(io, socket) {
     }
   });
 
-  socket.on('db-create-log', function(data) {
-    if(session.isAdmin(socket.id)) {
-      console.log('db-create-log');
-
-      var emitResults = function() {
-        //socket.emit("db-refresh");
-      }
-
-      database.createLogOptions(validator.sterilizeSession(data), emitResults);
-    }
-  });
-
   //Read
   socket.on('db-read-smpts', function() {
     if(session.isAdmin(socket.id)) {
@@ -101,18 +89,6 @@ function initialize(io, socket) {
     }
   });
 
-  socket.on('db-read-log', function(data) {
-    if(session.isAdmin(socket.id)) {
-      console.log('db-read-log');
-
-      var emitResults = function() {
-        //socket.emit("db-refresh");
-      }
-
-      database.readLogOptions(validator.sterilizeSession(data), emitResults);
-    }
-  });
-
   //Update
   socket.on('db-update-contact', function(data) {
     if(session.isAdmin(socket.id)) {
@@ -148,18 +124,6 @@ function initialize(io, socket) {
       };
 
       database.updateSession(data[0], validator.sterilizeSession(data[1]), emitResults);
-    }
-  });
-
-  socket.on('db-update-log', function(data) {
-    if(session.isAdmin(socket.id)) {
-      console.log('db-update-log');
-
-      var emitResults = function() {
-        //socket.emit("db-refresh");
-      }
-
-      database.updateLogOptions(validator.sterilizeSession(data), emitResults);
     }
   });
 
@@ -203,18 +167,6 @@ function initialize(io, socket) {
       }
 
       database.deleteSession(validator.sterilizeSession(data), emitResponse);
-    }
-  });
-
-  socket.on('db-delete-log', function(data) {
-    if(session.isAdmin(socket.id)) {
-      console.log('db-delete-log');
-
-      var emitResults = function() {
-        //socket.emit("db-refresh");
-      }
-
-      database.deleteLogOptions(validator.sterilizeSession(data), emitResults);
     }
   });
 }

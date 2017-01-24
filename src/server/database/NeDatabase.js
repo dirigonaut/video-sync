@@ -1,12 +1,24 @@
+var Winston = require('winston');
+
 var Path 				= require('path');
 var Datastore 	= require('nedb');
+
+var LogManager    = require('../log/LogManager');
 var	JsonKeys		= require('../utils/JsonKeys');
 
 var db;
 
-function NeDatabase(appData){
+var log = null;
+
+function NeDatabase(){
+};
+
+NeDatabase.prototype.initialize = function(appData) {
 	if((db === null || db === undefined) && appData !== undefined) {
 		db = new Datastore({ filename: Path.join(appData, 'database_inst'), autoload: true });
+	}
+	if(log === null) {
+		log = Winston.loggers.get(LogManager.LogEnum.DATABASE);
 	}
 };
 
@@ -28,10 +40,6 @@ NeDatabase.prototype.createToken = function(json, callback){
 };
 
 NeDatabase.prototype.createCerts = function(json, callback){
-	createJson(json, callback);
-};
-
-NeDatabase.prototype.createLogOptions = function(json, callback){
 	createJson(json, callback);
 };
 
@@ -71,11 +79,6 @@ NeDatabase.prototype.readCerts = function(callback){
 	readJson(query, callback);
 };
 
-NeDatabase.prototype.readLogOptions = function(callback){
-	var query = { log : { $exists: true } };
-	readJson(query, callback);
-};
-
 //Update Calls
 NeDatabase.prototype.updateSmtp = function(id, json, callback){
 	var query = { _id : id };
@@ -88,11 +91,6 @@ NeDatabase.prototype.updateContact = function(id, json, callback){
 };
 
 NeDatabase.prototype.updateSession = function(id, json, callback){
-	var query = { _id: id };
-	updateJson(query, json, callback);
-};
-
-NeDatabase.prototype.updateLogOptions = function(id, json, callback){
 	var query = { _id: id };
 	updateJson(query, json, callback);
 };
@@ -128,16 +126,10 @@ NeDatabase.prototype.deleteCerts = function(date, callback){
 	deleteJson(query, option, callback);
 };
 
-NeDatabase.prototype.deleteLogOptions = function(callback){
-	var query = { };
-	var option = {};
-	deleteJson(query, option, callback);
-};
-
 module.exports = NeDatabase;
 
 function createJson(json, callback) {
-	console.log("createJson", json);
+	log.info("createJson", json);
 
 	db.insert(json, function(err, newDoc){
 		console.log(newDoc);
@@ -148,10 +140,10 @@ function createJson(json, callback) {
 };
 
 function readJson(query, callback) {
-	console.log("readJson", query);
+	log.info("readJson", query);
 
 	db.find(query, function(err, docs){
-		console.log(docs);
+		log.info(docs);
 		if(callback) {
 			callback(docs);
 		}
@@ -159,10 +151,10 @@ function readJson(query, callback) {
 };
 
 function updateJson(query, json, callback) {
-	console.log("updateJson", query);
+	log.info("updateJson", query);
 
 	db.update(query, json, function(err, docs){
-		console.log(docs);
+		log.info(docs);
 		if(callback) {
 			callback(docs);
 		}
@@ -170,10 +162,10 @@ function updateJson(query, json, callback) {
 };
 
 function deleteJson(query, options, callback) {
-	console.log("removeJson", query);
+	log.info("removeJson", query);
 
 	db.remove(query, options, function (err, removed) {
-		console.log(removed);
+		log.info(removed);
 		if(callback) {
 			callback(removed);
 		}

@@ -1,3 +1,5 @@
+var Winston = require('winston');
+
 var UserAdmin     = require("./UserAdministration");
 var Session       = require('../administration/Session');
 var Validator     = require('../authentication/Validator');
@@ -5,7 +7,6 @@ var PlayerManager = require('../player/PlayerManager');
 var CommandEngine = require('../chat/CommandEngine');
 var ChatEngine    = require('../chat/ChatEngine');
 var LogManager    = require('../log/LogManager');
-var Logger        = require('../utils/Logger');
 
 var userAdmin     = new UserAdmin();
 var session       = new Session();
@@ -13,9 +14,10 @@ var validator     = new Validator();
 var playerManager = new PlayerManager();
 var commandEngine = new CommandEngine();
 var chatEngine    = new ChatEngine();
-var log           = new Logger();
+var log           = null;
 
 function AdminController(io, socket) {
+  log = Winston.loggers.get(LogManager.LogEnum.ADMINISTRATION);
   initialize(io, socket);
 }
 
@@ -31,7 +33,7 @@ function initialize(io, socket) {
 
   socket.on('admin-set-media', function(data) {
     if(session.isAdmin(socket.id)){
-      console.log('admin-set-media');
+      log.info('admin-set-media');
 
       session.setMediaPath(data);
 
@@ -48,14 +50,14 @@ function initialize(io, socket) {
 
   socket.on('admin-load-session', function(data) {
     if(session.isAdmin(socket.id)){
-      console.log('admin-load-session');
+      log.info('admin-load-session');
       session.loadSession(data);
     }
   });
 
   socket.on('chat-command', function(data) {
     if(session.isAdmin(socket.id)){
-      console.log('admin-chat-command');
+      log.info('admin-chat-command');
 
       var response = function(event, text) {
         var message = chatEngine.buildMessage(socket.id, text);
@@ -74,7 +76,7 @@ function initialize(io, socket) {
 
   socket.on('admin-change-log', function(data) {
     if(session.isAdmin(socket.id)){
-      console.log('admin-change-log');
+      log.info('admin-change-log');
       var logManager = new LogManager();
       logManager.changeLog(data);
     }

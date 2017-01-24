@@ -25,7 +25,7 @@ var validator;
 var authenticator;
 
 function AuthenticationController(io) {
-  log = Winston.loggers.get('AUTHENTICATION');
+  log = Winston.loggers.get(LogManager.LogEnum.AUTHENTICATION);
 
   smtp            = new Smtp();
   session         = new Session();
