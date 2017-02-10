@@ -31,11 +31,6 @@ ChatUtil.prototype.createCommand = function(command, param) {
   return request;
 };
 
-ChatUtil.prototype.clientLog = function(caller, log) {
-  this._createMessage(caller, log);
-  this.emit('client-log', log);
-};
-
 ChatUtil.prototype.setupEvents = function() {
   clientSocket.clearEvent('chat-handles', loadUserHandles);
   clientSocket.setEvent('chat-handles', loadUserHandles);

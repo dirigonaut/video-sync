@@ -229,7 +229,7 @@ function initGUI() {
         $("#createSmtp").html("Save");
       }
   });
-
+.getChatUtil()
   $('#smtpList').on("click", "button", function(e) {
     var smtp = $($(e.currentTarget).parent()).parent();
     var id = smtp[0].children[0].outerText;
@@ -444,11 +444,6 @@ function initGUI() {
       response.time + " " + response.level + ': </span>' + response.message + '</p>');
   });
 
-  client.getChatUtil().on('client-log', function(message) {
-    console.log("client-log");
-    $('#logManuscript').append(message.from + ": " + message.text + "\n");
-  });
-
   //Video Events -----------------------------------------------------------------
   clientSocket.setEvent("media-ready", function() {
     var mediaController = client.getMediaController();
@@ -573,7 +568,7 @@ function initGUI() {
     }
   });
 
-  function inactive() {
+  function inactive() {.getChatUtil()
       setTimeout(function() {
         opaque = false;
         hideUI();

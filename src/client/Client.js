@@ -1,4 +1,7 @@
+var Winston = require('winston');
+
 var ClientSocket = require('./socket/ClientSocket.js');
+var ClientLogManager = require('./log/ClientLogManager');
 var FormDataSingleton = require('./utils/FormDataSingleton');
 var MediaController = require('./video/MediaController');
 var RequestFactory = require('./utils/RequestFactory');
@@ -12,9 +15,11 @@ var fileBuffer;
 var formData;
 var chatUtil;
 var fileUtil;
+var clientLog;
 
 function Client(videoElement) {
-  console.log("Client");
+  clientLog = Winston.loggers.get(ClientLogManager.LogEnum.CLIENT);
+  clientLog.info("Client created");
 
   fileBuffer = new FileBuffer();
   formData = new FormDataSingleton();
@@ -54,6 +59,10 @@ Client.prototype.getFileUtil = function() {
 
 Client.GetClientSocket = function() {
   return new ClientSocket();
+};
+
+Client.ClientLogManager = function() {
+  return ClientLogManager;
 };
 
 module.exports = Client;
