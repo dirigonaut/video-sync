@@ -11,6 +11,8 @@ var LogManager    = require('./log/LogManager');
 
 var AuthenticationController = require('./authentication/AuthenticationController');
 
+const STATIC_PATH = 'static';
+
 var app = null;
 var io  = null;
 var server  = null;
@@ -49,7 +51,7 @@ function Server(ip, port, appData, callback) {
     session.onAdminIdCallback(adminSocketLogging);
     session.setLocalIp(ip + ":" + port);
 
-    app.use(Express.static('static'));
+    app.use(Express.static(STATIC_PATH));
     server.listen(port);
 
     new AuthenticationController(io);

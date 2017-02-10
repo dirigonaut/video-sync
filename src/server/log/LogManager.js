@@ -4,7 +4,7 @@ var LogFactory = require('./LogFactory');
 
 var log = null;
 
-const FILE_NAME = 'logs.txt';
+const FILE_NAME = "logs.txt";
 const EXCEPTION = "exception";
 
 function LogManager() {

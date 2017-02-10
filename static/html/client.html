@@ -50,6 +50,12 @@
           initClientLogin();
         });
 
+        $.getScript("../resources/clientLog.js", function() {
+          var clientLogManager = new ClientLogManager();
+          console.log(guiLog());
+          clientLogManager.addGUILogging(ClientLogManager.LogEnum.CLIENT, guiLog());
+        });
+
         var buildClient = function(callback) {
           client = new Client(document.getElementById('video'));
 
