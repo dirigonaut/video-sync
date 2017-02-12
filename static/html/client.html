@@ -51,9 +51,8 @@
         });
 
         $.getScript("../resources/clientLog.js", function() {
-          var clientLogManager = new ClientLogManager();
-          console.log(guiLog());
-          clientLogManager.addGUILogging(ClientLogManager.LogEnum.CLIENT, guiLog());
+          var clientLogManager = new (Client.ClientLogManager());
+          clientLogManager.addGUILogging(Client.ClientLogManager().LogEnum.CLIENT, guiLog());
         });
 
         var buildClient = function(callback) {
