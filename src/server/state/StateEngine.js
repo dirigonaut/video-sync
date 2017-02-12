@@ -1,18 +1,20 @@
 var PlayerManager = require('../player/PlayerManager');
 var Session       = require('../administration/Session');
-var Log           = require('../utils/Logger')
 var PlayRule      = require('./rules/PlayRule.js');
 var SyncRule      = require('./rules/SyncRule.js');
 var JoinRule      = require('./rules/JoinRule.js');
 var ResumeRule    = require('./rules/ResumeRule.js');
 var Player        = require('../player/Player');
+var LogManager    = require('../log/LogManager');
 
 var playerManager = new PlayerManager();
 var session       = new Session();
-
 var accuracy      = 2;
+var log;
 
-function StateEngine() { }
+function StateEngine() {
+  log = LogManager.getLog(LogManager.LogEnum.STATE);
+}
 
 StateEngine.prototype.play = function(id, callback) {
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
@@ -67,7 +69,6 @@ StateEngine.prototype.seek = function(data, callback) {
     }
 
     if(callback !== undefined && callback !== null) {
-      console.log('we have a seek callback')
       callback();
     }
   }
@@ -90,19 +91,6 @@ StateEngine.prototype.sync = function(id, callback) {
 
       var socket = playerManager.getPlayer(id).socket;
       socket.emit('state-seek', response, updatePlayerState);
-
-      if(callback !== undefined && callback !== null) {
-        callback();
-      }
-    }
-  }
-};
-
-StateEngine.prototype.resync = function(socket, callback) {
-  if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
-    var player = playerManager.getPlayer(socket.id);
-    if(player !== null && player !== undefined) {
-      player.sync = Player.Sync.SYNCING;
 
       if(callback !== undefined && callback !== null) {
         callback();

@@ -1,5 +1,3 @@
-var Winston = require('winston');
-
 var UserAdmin     = require("./UserAdministration");
 var Session       = require('../administration/Session');
 var Validator     = require('../authentication/Validator');
@@ -8,16 +6,16 @@ var CommandEngine = require('../chat/CommandEngine');
 var ChatEngine    = require('../chat/ChatEngine');
 var LogManager    = require('../log/LogManager');
 
+var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
+
 var userAdmin     = new UserAdmin();
 var session       = new Session();
 var validator     = new Validator();
 var playerManager = new PlayerManager();
 var commandEngine = new CommandEngine();
 var chatEngine    = new ChatEngine();
-var log           = null;
 
 function AdminController(io, socket) {
-  log = Winston.loggers.get(LogManager.LogEnum.ADMINISTRATION);
   initialize(io, socket);
 }
 

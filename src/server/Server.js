@@ -13,6 +13,9 @@ var AuthenticationController = require('./authentication/AuthenticationControlle
 
 const STATIC_PATH = 'static';
 
+var logManager = new LogManager();
+logManager.initialize();
+
 var app = null;
 var io  = null;
 var server  = null;
@@ -20,8 +23,8 @@ var server  = null;
 function Server(ip, port, appData, callback) {
   app = Express();
 
-  var logManager = new LogManager();
   logManager.addFileLogging(appData);
+  console.log('File logging added');
 
   var database = new NeDatabase();
   database.initialize(appData);
