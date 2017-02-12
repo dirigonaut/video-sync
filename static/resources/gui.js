@@ -439,9 +439,8 @@ function initGUI() {
 
   clientSocket.setEvent('chat-log-resp', function(message) {
     console.log("chat-log-resp");
-    console.log(message);
-    $('#logManuscript').append('<p><span class="chat-message" title="' + message.log + '" style="color:blue; font-weight: bold;">' +
-      message.time + " " + message.level + ': </span>' + message.message + " " + message.meta + '</p>');
+    $('#logManuscript').append(`<p><span class="chat-message" title="${message.log}" style="color:blue; font-weight: bold;">
+      ${message.time} ${message.level}: </span>${message.message} ${message.meta}</p>`);
   });
 
   //Video Events -----------------------------------------------------------------
@@ -507,6 +506,10 @@ function initGUI() {
   $('#force-buffer').on("change", function (e) {
     var value = $(e.currentTarget.children[0]).is(':checked');
     client.getMediaController().setForceBuffer(value);
+  });
+
+  $('#synchronize').on("change", function (e) {
+    clientSocket.sendRequest('state-change-sync');
   });
 
   client.getMediaController().on('meta-data-loaded', function(trackInfo) {

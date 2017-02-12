@@ -37,11 +37,10 @@ LogManager.prototype.addFileLogging = function(basePath) {
   Winston.loggers.add(EXCEPTION, { transports: [exceptionTransport] });
   Winston.loggers.get(EXCEPTION).exitOnError = false;
 
-  console.log(Winston.loggers);
+  log.info('Attached file logging.');
 };
 
 LogManager.prototype.addSocketLogging = function(socket) {
-  log.info("attaching socket logging");
   var logFactory = new LogFactory();
 
   var keys = Object.keys(LogManager.LogEnum);
@@ -64,6 +63,8 @@ LogManager.prototype.addSocketLogging = function(socket) {
   container.configure({
     transports: transports,
   });
+
+  log.info("Attached socket logging");
 };
 
 LogManager.prototype.changeLog = function(id, level) {

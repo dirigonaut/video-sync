@@ -24,7 +24,6 @@ function Server(ip, port, appData, callback) {
   app = Express();
 
   logManager.addFileLogging(appData);
-  console.log('File logging added');
 
   var database = new NeDatabase();
   database.initialize(appData);
@@ -52,7 +51,7 @@ function Server(ip, port, appData, callback) {
 
     var session = new Session();
     session.onAdminIdCallback(adminSocketLogging);
-    session.setLocalIp(ip + ":" + port);
+    session.setLocalIp(`${ip}:${port}`);
 
     app.use(Express.static(STATIC_PATH));
     server.listen(port);
