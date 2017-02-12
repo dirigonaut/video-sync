@@ -60,6 +60,16 @@ function initialize(io, socket) {
     stateEngine.sync(socket.id, onAllowed);
   });
 
+  socket.on('state-change-sync', function(data) {
+    log.info('state-change-sync');
+    var onAllowed = function(value) {
+      var message = chatEngine.buildMessage(socket.id, `is now in sync state ${value}`);
+      chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
+    };
+
+    stateEngine.changeSyncState(socket, onAllowed);
+  });
+
   socket.on('state-time-update', function(data) {
     stateEngine.timeUpdate(socket.id, data);
   });
