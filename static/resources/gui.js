@@ -229,7 +229,7 @@ function initGUI() {
         $("#createSmtp").html("Save");
       }
   });
-.getChatUtil()
+
   $('#smtpList').on("click", "button", function(e) {
     var smtp = $($(e.currentTarget).parent()).parent();
     var id = smtp[0].children[0].outerText;
@@ -437,11 +437,11 @@ function initGUI() {
     systemMessage(message);
   });
 
-  clientSocket.setEvent('chat-log-resp', function(response) {
+  clientSocket.setEvent('chat-log-resp', function(message) {
     console.log("chat-log-resp");
-    console.log(response);
-    $('#logManuscript').append('<p><span class="chat-message" title="' + response.log + '" style="color:blue; font-weight: bold;">' +
-      response.time + " " + response.level + ': </span>' + response.message + '</p>');
+    console.log(message);
+    $('#logManuscript').append('<p><span class="chat-message" title="' + message.log + '" style="color:blue; font-weight: bold;">' +
+      message.time + " " + message.level + ': </span>' + message.message + " " + message.meta + '</p>');
   });
 
   //Video Events -----------------------------------------------------------------
@@ -568,7 +568,7 @@ function initGUI() {
     }
   });
 
-  function inactive() {.getChatUtil()
+  function inactive() {
       setTimeout(function() {
         opaque = false;
         hideUI();

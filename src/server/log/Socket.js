@@ -27,7 +27,7 @@ Socket.prototype.log = function (level, msg, meta, callback) {
     log: this.label,
     level: level,
     message: msg,
-    meta: meta,
+    meta: Util.inspect(meta, { showHidden: true, depth: null }),
     time: new Date().toTimeString().split(" ")[0],
   };
 
