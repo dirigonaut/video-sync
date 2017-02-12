@@ -1,13 +1,15 @@
 var Validator     = require('../authentication/Validator');
 var StateEngine   = require('./StateEngine.js');
-var Log           = require('../utils/Logger')
 var PlayerManager = require('../player/PlayerManager');
 var ChatEngine    = require('../chat/ChatEngine');
+var LogManager    = require('../log/LogManager');
 
 var playerManager = new PlayerManager();
 var validator     = new Validator();
 var stateEngine   = new StateEngine();
 var chatEngine    = new ChatEngine();
+
+var log = LogManager.getLog(LogManager.LogEnum.STATE);
 
 function StateController(io, socket) {
   initialize(io, socket);
@@ -16,10 +18,10 @@ function StateController(io, socket) {
 module.exports = StateController;
 
 function initialize(io, socket) {
-  console.log("Attaching StateController");
+  log.info("Attaching StateController");
 
   socket.on('state-req-play', function() {
-    console.log('state-req-play');
+    log.info('state-req-play');
     var onAllowed = function() {
       var message = chatEngine.buildMessage(socket.id, "issued play");
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
@@ -29,7 +31,7 @@ function initialize(io, socket) {
   });
 
   socket.on('state-req-pause', function(data) {
-    console.log('state-req-pause');
+    log.info('state-req-pause');
     var onAllowed = function() {
       var message = chatEngine.buildMessage(socket.id, "issued pause");
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
@@ -39,7 +41,7 @@ function initialize(io, socket) {
   });
 
   socket.on('state-req-seek', function(data) {
-    console.log('state-req-seek');
+    log.info('state-req-seek');
     var onAllowed = function() {
       var message = chatEngine.buildMessage(socket.id, `issued seek to ${data.seektime}`);
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
@@ -49,7 +51,7 @@ function initialize(io, socket) {
   });
 
   socket.on('state-sync', function() {
-    console.log('state-sync');
+    log.info('state-sync');
     var onAllowed = function() {
       var message = chatEngine.buildMessage(socket.id, "issued sync");
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);

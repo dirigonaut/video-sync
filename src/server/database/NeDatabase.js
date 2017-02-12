@@ -1,5 +1,3 @@
-var Winston = require('winston');
-
 var Path 				= require('path');
 var Datastore 	= require('nedb');
 
@@ -8,7 +6,7 @@ var	JsonKeys		= require('../utils/JsonKeys');
 
 var db;
 
-var log = null;
+var log = LogManager.getLog(LogManager.LogEnum.DATABASE);
 
 function NeDatabase(){
 };
@@ -16,9 +14,6 @@ function NeDatabase(){
 NeDatabase.prototype.initialize = function(appData) {
 	if((db === null || db === undefined) && appData !== undefined) {
 		db = new Datastore({ filename: Path.join(appData, 'database_inst'), autoload: true });
-	}
-	if(log === null) {
-		log = Winston.loggers.get(LogManager.LogEnum.DATABASE);
 	}
 };
 

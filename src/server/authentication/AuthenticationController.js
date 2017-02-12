@@ -1,5 +1,3 @@
-var Winston = require('winston');
-
 var Smtp          = require('../administration/Smtp');
 var Bundler       = require('../utils/Bundler');
 var Session       = require('../administration/Session');
@@ -17,7 +15,8 @@ var StateController     = require('../state/StateController');
 var DatabaseController  = require('../database/DatabaseController');
 var ChatController      = require('../chat/ChatController');
 
-var log;
+var log = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
+
 var smtp;
 var session;
 var userAdmin;
@@ -25,8 +24,6 @@ var validator;
 var authenticator;
 
 function AuthenticationController(io) {
-  log = Winston.loggers.get(LogManager.LogEnum.AUTHENTICATION);
-
   smtp            = new Smtp();
   session         = new Session();
   userAdmin       = new UserAdmin();
@@ -40,10 +37,9 @@ module.exports = AuthenticationController;
 
 function initialize(io) {
   io.on('connection', function (socket) {
-    console.log('socket has connected');
-
-    log.error("socket has connected: " + socket.id + " ip:" + socket.handshake.address);
+    log.info("socket has connected: " + socket.id + " ip:" + socket.handshake.address);
     socket.logonAttempts = 0;
+
     isAdministrator(socket, io);
     socket.emit('connected');
 
@@ -128,14 +124,14 @@ function userAuthorized(socket, io, handle) {
     chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has joined the session.`));
   });
 
-  log.error("socket has connected:{");
+  log.info("socket has been authenticated.");
 }
 
 function isAdministrator(socket, io) {
   socket.auth = false;
 
   if(session.getAdmin() == null) {
-    if(socket.handshake.address == "::ffff:127.0.0.1"){
+    if(socket.handshake.address == "::ffff:127.0.0.1") {
       new AdminController(io, socket);
       new DatabaseController(io, socket);
 

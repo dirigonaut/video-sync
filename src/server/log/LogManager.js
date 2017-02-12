@@ -10,6 +10,15 @@ const EXCEPTION = "exception";
 function LogManager() {
 }
 
+LogManager.prototype.initialize = function() {
+  var keys = Object.keys(LogManager.LogEnum);
+  for(var i in keys) {
+    Winston.loggers.get(LogManager.LogEnum[keys[i]]);
+  }
+
+  log = Winston.loggers.get(LogManager.LogEnum.LOG);
+}
+
 LogManager.prototype.addFileLogging = function(basePath) {
   var logFactory = new LogFactory();
 
@@ -17,14 +26,18 @@ LogManager.prototype.addFileLogging = function(basePath) {
 
   var keys = Object.keys(LogManager.LogEnum);
   for(var i in keys) {
-    Winston.loggers.add(LogManager.LogEnum[keys[i]], { transports: [fileTransport] });
+    var container = Winston.loggers.get(LogManager.LogEnum[keys[i]]);
+
+    container.configure({
+      transports: [fileTransport]
+    });
   }
 
   var exceptionTransport = logFactory.buildFileTransport(`${basePath}/${FILE_NAME}`, 'error', 'exception-logger', true);
   Winston.loggers.add(EXCEPTION, { transports: [exceptionTransport] });
   Winston.loggers.get(EXCEPTION).exitOnError = false;
 
-  log = Winston.loggers.get(LogManager.LogEnum.LOG);
+  console.log(Winston.loggers);
 };
 
 LogManager.prototype.addSocketLogging = function(socket) {
@@ -59,7 +72,11 @@ LogManager.prototype.changeLog = function(id, level) {
   container.transports.socket.level = level;
 };
 
+LogManager.getLog = function(id) {
+  return Winston.loggers.get(id);
+};
+
 module.exports = LogManager;
 
 LogManager.LogEnum = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
-                        CHAT: 'chat', DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding' };
+                        CHAT: 'chat', DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state'};
