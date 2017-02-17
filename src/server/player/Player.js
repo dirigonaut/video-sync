@@ -2,7 +2,7 @@ function Player(socket, handle){
     this.socket	  	= socket;
 
     this.state 	  	= null;
-    this.sync       = 0;
+    this.sync       = Player.Sync.SYNCING;
     this.timestamp 	= 0;
 
     this.handle     = handle;
@@ -10,7 +10,7 @@ function Player(socket, handle){
 };
 
 Player.prototype.isInit = function() {
-  return this.sync == Player.Sync.SYNCING && this.timestamp == 0;
+  return this.sync === Player.Sync.SYNCING && this.timestamp === 0;
 };
 
 Player.prototype.setHandle = function(handle) {
