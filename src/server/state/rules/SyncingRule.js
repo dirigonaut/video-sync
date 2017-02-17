@@ -1,20 +1,22 @@
+var LogManager    = require('../../log/LogManager');
 var PlayerManager = require('../../player/PlayerManager');
 var Player        = require('../../player/Player');
 
+var log           = LogManager.getLog(LogManager.LogEnum.STATE);
 var playerManager = new PlayerManager();
 
-function JoinRule(fuzzyRange) {
+function SyncingRule(fuzzyRange) {
   this.fuzzyRange = fuzzyRange;
 }
 
-JoinRule.prototype.evaluate = function(issuer, callback) {
-  console.log("JoinRule.evaluate");
+SyncingRule.prototype.evaluate = function(issuer, callback) {
+  log.info("SyncingRule.evaluate");
 	var others = playerManager.getOtherPlayers(issuer.socket.id);
   var leader = null;
 
   for(var i in others){
-    if(issuer.sync == Player.Sync.SYNCING) {
-      if(leader == null || others[i].timestamp > leader.timestamp) {
+    if(issuer.sync === Player.Sync.SYNCING) {
+      if(leader === null || others[i].timestamp > leader.timestamp) {
         leader = others[i];
       }
     }
@@ -25,4 +27,4 @@ JoinRule.prototype.evaluate = function(issuer, callback) {
   }
 };
 
-module.exports = JoinRule;
+module.exports = SyncingRule;
