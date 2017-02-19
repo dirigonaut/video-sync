@@ -13,19 +13,21 @@ function Authenticator(){
 
 Authenticator.prototype.requestToken = function(id, data, callback) {
   console.log("Authenticator.requestToken");
-  var invitees = session.getActiveSession().invitees;
+  if(session.getActiveSession() !== null && session.getActiveSession() !== undefined) {
+    var invitees = session.getActiveSession().invitees;
 
-  for(var x in invitees) {
-    if(invitees[x] == data.address) {
-      var token = createToken(id, data.address);
-      database.createToken(token, callback);
+    for(var x in invitees) {
+      if(invitees[x] == data.address) {
+        var token = createToken(id, data.address);
+        database.createToken(token, callback);
+      }
     }
   }
 };
 
 Authenticator.prototype.validateToken = function(id, data, callback) {
   console.log("Authenticator.validateToken");
-  if(session.getActiveSession() != null) {
+  if(session.getActiveSession() !== null && session.getActiveSession() !== undefined) {
     var invitees = session.getActiveSession().invitees;
 
     var authorize = function(token) {
