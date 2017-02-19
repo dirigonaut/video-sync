@@ -16,15 +16,15 @@ ResumeRule.prototype.evaluate = function(issuer, callback) {
 
   for(var i in others){
     if(others[i].sync === Player.Sync.SYNCED) {
-      if(rearguard == null || parseFloat(others[i].timestamp) < parseFloat(rearguard.timestamp)) {
+      if(rearguard === null || parseFloat(others[i].timestamp) < parseFloat(rearguard.timestamp)) {
         rearguard = others[i];
       }
     }
 	}
 
   if(rearguard !== null) {
-    if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(rearguard.timestamp)) < this.fuzzyRange) {
-      callback(issuer, "state-play");
+    if((parseFloat(issuer.timestamp) - parseFloat(rearguard.timestamp)) < this.fuzzyRange) {
+      callback(issuer);
     }
   }
 };

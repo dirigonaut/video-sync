@@ -1,6 +1,7 @@
 var Validator     = require('../authentication/Validator');
 var StateEngine   = require('./StateEngine.js');
 var PlayerManager = require('../player/PlayerManager');
+var Player        = require('../player/Player');
 var ChatEngine    = require('../chat/ChatEngine');
 var LogManager    = require('../log/LogManager');
 
@@ -47,7 +48,7 @@ function initialize(io, socket) {
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
     };
 
-    stateEngine.seek(data, onAllowed);
+    stateEngine.seek(socket.id, data, onAllowed);
   });
 
   socket.on('state-sync', function() {
@@ -57,7 +58,7 @@ function initialize(io, socket) {
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
     };
 
-    stateEngine.sync(socket.id, onAllowed);
+    stateEngine.pauseSync(socket.id, onAllowed);
   });
 
   socket.on('state-change-sync', function(data) {
@@ -65,12 +66,22 @@ function initialize(io, socket) {
     var onAllowed = function(value) {
       var message = chatEngine.buildMessage(socket.id, `is now in sync state ${value}`);
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
+
+      if(value === Player.Sync.SYNCING) {
+        socket.emit('state-trigger-ping', true);
+      }
     };
 
-    stateEngine.changeSyncState(socket, onAllowed);
+    stateEngine.changeSyncState(socket.id, onAllowed);
+  });
+
+  socket.on('state-sync-ping', function() {
+    log.info('state-sync-ping');
+    stateEngine.syncingPing(socket.id);
   });
 
   socket.on('state-time-update', function(data) {
+    log.info('state-time-update');
     stateEngine.timeUpdate(socket.id, data);
   });
 

@@ -6,24 +6,25 @@ var log           = LogManager.getLog(LogManager.LogEnum.STATE);
 var playerManager = new PlayerManager();
 
 function SyncingRule(fuzzyRange) {
-  this.fuzzyRange = fuzzyRange;
 }
 
 SyncingRule.prototype.evaluate = function(issuer, callback) {
   log.info("SyncingRule.evaluate");
-	var others = playerManager.getOtherPlayers(issuer.socket.id);
-  var leader = null;
+  if(issuer.sync === Player.Sync.SYNCING) {
+  	var others = playerManager.getOtherPlayers(issuer.socket.id);
+    var leader = null;
 
-  for(var i in others){
-    if(issuer.sync === Player.Sync.SYNCING) {
+    for(var i in others){
       if(leader === null || others[i].timestamp > leader.timestamp) {
         leader = others[i];
       }
     }
-	}
 
-  if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(leader.timestamp)) > this.fuzzyRange) {
-    callback(leader, issuer, "state-seek");
+    if(leader !== null || leader !== undefined) {
+      callback(leader, issuer, "state-seek");
+    } else {
+      callback(issuer, issuer, "state-seek");
+    }
   }
 };
 
