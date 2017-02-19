@@ -13,7 +13,7 @@ var accuracy      = 2;
 var log;
 
 var interval = setInterval(function() {
-  resumseLogic(playerManager.getPlayers());
+  resumeLogic(playerManager.getPlayers());
 }, 500);
 
 function StateEngine() {
@@ -213,7 +213,7 @@ var updatePlayerSync = function(id, timestamp, state) {
   }
 };
 
-var resumseLogic = function(players) {
+var resumeLogic = function(players) {
   for(var waitingPlayer of players) {
     if(waitingPlayer[1].sync === Player.Sync.SYNCWAIT) {
       var broadcastResumeEvent = function(syncPlayer, event) {
