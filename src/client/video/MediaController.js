@@ -116,7 +116,7 @@ var initializeClientPlayer = function(_this, mediaSource, window, callback) {
       if(_this.syncPing) {
         clientSocket.sendRequest('state-sync-ping');
       }
-    }, 2000);
+    }, 1000);
 
     var resetMediaSource = function() {
       console.log("MediaSource Reset");
@@ -126,7 +126,7 @@ var initializeClientPlayer = function(_this, mediaSource, window, callback) {
       mediaSource.removeEventListener('sourceend', resetMediaSource);
 
       if(pingTimer) {
-        pingTimer.clearInterval();
+        clearInterval(pingTimer);
       }
 
       _this.metaManager.removeAllListeners('meta-data-activated');
@@ -223,14 +223,6 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     var video = videoSingleton.getVideoElement();
     video.pause();
     video.currentTime = data.seektime;
-    callback(clientSocket.getSocketId(), video.currentTime, video.paused);
-  });
-
-  clientSocket.setEvent('state-syncing', function(callback) {
-    console.log("state-syncing");
-    var video = videoSingleton.getVideoElement();
-    video.pause();
-    console.log(video.currentTime);
     callback(clientSocket.getSocketId(), video.currentTime, video.paused);
   });
 

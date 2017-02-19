@@ -12,6 +12,10 @@ var session       = new Session();
 var accuracy      = 2;
 var log;
 
+var interval = setInterval(function() {
+  resumseLogic(playerManager.getPlayers());
+}, 500);
+
 function StateEngine() {
   log = LogManager.getLog(LogManager.LogEnum.STATE);
 }
@@ -57,7 +61,7 @@ StateEngine.prototype.pause = function(id, callback) {
     } else {
       for(var player of playerManager.getPlayers().values()) {
         if(player.sync !== Player.Sync.DESYNCED) {
-          player.socket.emit('state-pause', player.sync === Player.Sync.SYNCED ? true : false, updatePlayerState);
+          player.socket.emit('state-pause', player.sync === Player.Sync.SYNCED || player.sync === Player.Sync.SYNCWAIT ? true : false, updatePlayerState);
           player.sync = Player.Sync.SYNCED;
 
           if(callback !== undefined && callback !== null) {
@@ -146,25 +150,9 @@ StateEngine.prototype.timeUpdate = function(id, data) {
 
     var players = playerManager.getPlayers();
     if(players.size > 1) {
-      for(var waitingPlayer of players) {
-        if(waitingPlayer[1].sync === Player.Sync.SYNCWAIT) {
-          var broadcastResumeEvent = function(syncPlayer, event) {
-            if(playerManager.getSyncedPlayersState() === Player.State.PLAY) {
-              syncPlayer.socket.emit('state-play', updatePlayerState);
-            } else {
-              syncPlayer.socket.emit('state-pause', false, updatePlayerState);
-            }
-            
-            syncPlayer.sync = Player.Sync.SYNCED;
-          }
-
-          new ResumeRule(accuracy/4).evaluate(waitingPlayer[1], broadcastResumeEvent);
-        }
-      }
-
       if(player.sync === Player.Sync.SYNCED) {
-        var broadcastSyncEvent = function(syncPlayer, syncState, event) {
-          syncPlayer.socket.emit(event, updatePlayerState);
+        var broadcastSyncEvent = function(syncPlayer, event) {
+          syncPlayer.socket.emit(event, false, updatePlayerState);
           syncPlayer.sync = Player.Sync.SYNCWAIT;
         }
 
@@ -188,7 +176,7 @@ StateEngine.prototype.syncingPing = function(id) {
           player.socket.emit(event, object, updatePlayerSync);
         }
 
-        new SyncingRule(accuracy).evaluate(player, broadcastSyncingEvent);
+        new SyncingRule().evaluate(player, broadcastSyncingEvent);
       }
     } else if(player.sync !== Player.Sync.DESYNCED) {
       player.socket.emit('state-trigger-ping', false);
@@ -204,7 +192,7 @@ var updatePlayerState = function(id, timestamp, state) {
   var player = playerManager.getPlayer(id);
 
   if(player !== null && player !== undefined) {
-    player.state      = state;
+    player.state      = state ? Player.State.PAUSE : Player.State.PLAY;
     player.timestamp  = timestamp;
   } else {
     console.log("Id: " + id);
@@ -216,11 +204,29 @@ var updatePlayerSync = function(id, timestamp, state) {
   var player = playerManager.getPlayer(id);
 
   if(player !== null && player !== undefined) {
-    player.state      = state;
+    player.state      = state ? Player.State.PAUSE : Player.State.PLAY;
     player.timestamp  = timestamp;
     player.sync       = Player.Sync.SYNCWAIT;
   } else {
     console.log("Id: " + id);
     console.log(playerManager.getPlayers());
+  }
+};
+
+var resumseLogic = function(players) {
+  for(var waitingPlayer of players) {
+    if(waitingPlayer[1].sync === Player.Sync.SYNCWAIT) {
+      var broadcastResumeEvent = function(syncPlayer, event) {
+        if(playerManager.getSyncedPlayersState() === Player.State.PLAY) {
+          syncPlayer.socket.emit('state-play', updatePlayerState);
+        } else {
+          syncPlayer.socket.emit('state-pause', false, updatePlayerState);
+        }
+
+        syncPlayer.sync = Player.Sync.SYNCED;
+      }
+
+      new ResumeRule(accuracy/4).evaluate(waitingPlayer[1], broadcastResumeEvent);
+    }
   }
 };

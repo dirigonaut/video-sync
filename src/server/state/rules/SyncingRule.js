@@ -5,7 +5,7 @@ var Player        = require('../../player/Player');
 var log           = LogManager.getLog(LogManager.LogEnum.STATE);
 var playerManager = new PlayerManager();
 
-function SyncingRule(fuzzyRange) {
+function SyncingRule() {
 }
 
 SyncingRule.prototype.evaluate = function(issuer, callback) {
@@ -15,12 +15,14 @@ SyncingRule.prototype.evaluate = function(issuer, callback) {
     var leader = null;
 
     for(var i in others){
-      if(leader === null || others[i].timestamp > leader.timestamp) {
-        leader = others[i];
+      if(others[i].sync === Player.Sync.SYNCED) {
+        if(leader === null || others[i].timestamp > leader.timestamp) {
+          leader = others[i];
+        }
       }
     }
 
-    if(leader !== null || leader !== undefined) {
+    if(leader !== null) {
       callback(leader, issuer, "state-seek");
     } else {
       callback(issuer, issuer, "state-seek");
