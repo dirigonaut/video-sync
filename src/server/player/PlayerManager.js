@@ -47,7 +47,7 @@ PlayerManager.prototype.getOtherPlayers = function(id){
 PlayerManager.prototype.getSyncedPlayersState = function(){
   var state = null;
   for(var p of players.keys()) {
-    if(players.get(p).synced === Player.Sync.SYNCED){
+    if(players.get(p).sync === Player.Sync.SYNCED){
       state = players.get(p).state;
       break;
     }

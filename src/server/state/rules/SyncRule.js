@@ -26,7 +26,8 @@ SyncRule.prototype.evaluate = function(issuer, callback) {
   }
 
   if(sync) {
-    callback(issuer, "state-syncing");
+    console.log(`sync triggered ${issuer.socket.id} ${issuer.timestamp}`);
+    callback(issuer, "state-pause");
   }
 };
 
