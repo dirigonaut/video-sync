@@ -10,22 +10,23 @@ function SyncRule(fuzzyRange) {
 }
 
 SyncRule.prototype.evaluate = function(issuer, callback) {
+  log.info("SyncRule.evaluate");
   var players = playerManager.getPlayers();
-  var issuees = [];
-  var synced = true;
+  var sync = false;
 
   if(issuer.sync !== Player.Sync.DESYNCED) {
     for(var player of players.values()){
-      if(player.sync === Player.Sync.SYNCED && player.state === Player.State.PLAY) {
-        if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(player.timestamp)) > this.fuzzyRange) {
-          issuees.push(player);
+      if(player.sync === Player.Sync.SYNCED) {
+        if(parseFloat(issuer.timestamp) - parseFloat(player.timestamp) > this.fuzzyRange) {
+          sync = true;
+          break;
         }
       }
   	}
   }
 
-  if(issuees.length > 0) {
-    callback(issuees, "state-pause");
+  if(sync) {
+    callback(issuer, "state-syncing");
   }
 };
 

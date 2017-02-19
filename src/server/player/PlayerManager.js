@@ -44,34 +44,15 @@ PlayerManager.prototype.getOtherPlayers = function(id){
   return temp;
 };
 
-PlayerManager.prototype.getPlayersWith = function(status){
-  var temp = new Array();
+PlayerManager.prototype.getSyncedPlayersState = function(){
+  var state = null;
   for(var p of players.keys()) {
-    if(players.get(p).status == status){
-      temp.push(players.get(p));
+    if(players.get(p).synced === Player.Sync.SYNCED){
+      state = players.get(p).state;
+      break;
     }
   }
-  return temp;
-};
-
-PlayerManager.prototype.getPlayersWithout = function(status){
-  var temp = new Array();
-  for(var p of players.keys()) {
-    if(players.get(p).status != status){
-      temp.push(players.get(p));
-    }
-  }
-  return temp;
-};
-
-PlayerManager.prototype.removePlayersWithStatus = function(playerArray, status){
-  var temp = new Array();
-  for(var p in playerArray) {
-    if(playerArray[p].status != status){
-      temp.push(playerArray[p]);
-    }
-  }
-  return temp;
+  return state;
 };
 
 PlayerManager.prototype.removePlayersWithId = function(playerArray, id){

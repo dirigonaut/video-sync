@@ -42,6 +42,7 @@ MediaController.prototype.initialize = function(mediaSource, window, downloadMet
     var setInitialized = function() {
       console.log('clientPlayerInitialized');
       _this.initialized = true;
+      _this.syncPing = true;
       _this.emit('meta-manager-ready');
 
       if(callback !== null && callback !== undefined) {
@@ -111,6 +112,12 @@ var initializeClientPlayer = function(_this, mediaSource, window, callback) {
     removeSocketEvents();
     setSocketEvents(_this, videoSingleton, sourceBuffers, new RequestFactory());
 
+    var pingTimer = setInterval(function() {
+      if(_this.syncPing) {
+        clientSocket.sendRequest('state-sync-ping');
+      }
+    }, 2000);
+
     var resetMediaSource = function() {
       console.log("MediaSource Reset");
       videoSingleton.reset();
@@ -118,8 +125,11 @@ var initializeClientPlayer = function(_this, mediaSource, window, callback) {
 
       mediaSource.removeEventListener('sourceend', resetMediaSource);
 
-      _this.metaManager.removeAllListeners('meta-data-activated');
+      if(pingTimer) {
+        pingTimer.clearInterval();
+      }
 
+      _this.metaManager.removeAllListeners('meta-data-activated');
       _this.emit('readyToInitialize');
     };
 
@@ -158,7 +168,7 @@ var initializeBuffer = function(typeId, videoSingleton, mediaSource, metaManager
 
 var initializeVideo = function(videoSingleton, mediaSource) {
   var onTimeUpdateState = function() {
-    clientSocket.sendRequest('state-time-update', new RequestFactory().buildVideoStateRequest(videoElement), false);
+    clientSocket.sendRequest('state-time-update', new RequestFactory().buildVideoStateRequest(videoElement));
   };
 
   videoElement.addEventListener('timeupdate', onTimeUpdateState, false);
@@ -195,13 +205,16 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     callback(clientSocket.getSocketId(), video.currentTime, video.paused);
   });
 
-  clientSocket.setEvent('state-pause', function(callback) {
+  clientSocket.setEvent('state-pause', function(isSynced, callback) {
     console.log("state-pause");
     var video = videoSingleton.getVideoElement();
     video.pause();
     console.log(video.currentTime);
     callback(clientSocket.getSocketId(), video.currentTime, video.paused);
-    clientSocket.sendRequest('state-sync');
+
+    if(isSynced) {
+      clientSocket.sendRequest('state-sync');
+    }
   });
 
   clientSocket.setEvent('state-seek', function(data, callback) {
@@ -211,6 +224,19 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     video.pause();
     video.currentTime = data.seektime;
     callback(clientSocket.getSocketId(), video.currentTime, video.paused);
+  });
+
+  clientSocket.setEvent('state-syncing', function(callback) {
+    console.log("state-syncing");
+    var video = videoSingleton.getVideoElement();
+    video.pause();
+    console.log(video.currentTime);
+    callback(clientSocket.getSocketId(), video.currentTime, video.paused);
+  });
+
+  clientSocket.setEvent('state-trigger-ping', function(data) {
+    console.log("state-trigger-ping");
+    _this.syncPing = data;
   });
 
   clientSocket.setEvent('segment-chunk', function(segment){
@@ -223,5 +249,6 @@ var removeSocketEvents = function () {
   clientSocket.clearEvent('state-play');
   clientSocket.clearEvent('state-pause');
   clientSocket.clearEvent('state-seek');
+  clientSocket.clearEvent('state-syncing');
   clientSocket.clearEvent('segment-chunk');
 }
