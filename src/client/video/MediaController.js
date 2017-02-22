@@ -241,6 +241,6 @@ var removeSocketEvents = function () {
   clientSocket.clearEvent('state-play');
   clientSocket.clearEvent('state-pause');
   clientSocket.clearEvent('state-seek');
-  clientSocket.clearEvent('state-syncing');
+  clientSocket.clearEvent('state-trigger-ping');
   clientSocket.clearEvent('segment-chunk');
 }

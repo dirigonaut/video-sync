@@ -1,10 +1,10 @@
-var DOMParser       = require('xmldom').DOMParser;
+var DOMParser   = require('xmldom').DOMParser;
 
-var VideoStream     = require('../VideoStream');
-var WebmParser      = require('./parser/WebmParser');
-var Manifest        = require('./Manifest');
-var Log             = require('../../utils/Logger');
-var FileUtil        = require('../../utils/FileSystemUtils');
+var FileIO      = require('../../utils/FileIO');
+var WebmParser  = require('./parser/WebmParser');
+var Manifest    = require('./Manifest');
+var LogManager    = require('../../log/LogManager');
+var FileUtil    = require('../../utils/FileSystemUtils');
 
 var fileUtil = new FileUtil();
 
@@ -14,10 +14,10 @@ function WebmMetaData() {
 
 WebmMetaData.prototype.generateWebmMeta = function(path, callback) {
   console.log("WebmMetaData.generateWebmMeta");
-  var videoStream = new VideoStream();
+  var fileIO = new FileIO();
   var buffer = [];
 
-  var readConfig = videoStream.createStreamConfig(path, function(data) {
+  var readConfig = fileIO.createStreamConfig(path, function(data) {
       buffer.push(data);
   });
 
@@ -26,7 +26,7 @@ WebmMetaData.prototype.generateWebmMeta = function(path, callback) {
     getClusters(fileUtil.splitDirFromPath(path), tracks, callback);
   }
 
-  videoStream.read(readConfig);
+  fileIO.read(readConfig);
 }
 
 module.exports = WebmMetaData;
@@ -71,7 +71,7 @@ var getClusters = function(dirPath, tracks, callback) {
     var metaRequest = new Object();
     var fileName = fileUtil.splitNameFromPath(tracks[i].baseUrl);
     var fileExt  = fileUtil.splitExtensionFromPath(tracks[i].baseUrl);
-    var readConfig = VideoStream.createStreamConfig(`${dirPath}${fileName}.${fileExt}`, parseEBML);
+    var readConfig = FileIO.createStreamConfig(`${dirPath}${fileName}.${fileExt}`, parseEBML);
 
     metaRequest.manifest = new Manifest(`${fileName}.${fileExt}`, tracks[i].initRange.split('-'));
     metaRequest.readConfig = readConfig;

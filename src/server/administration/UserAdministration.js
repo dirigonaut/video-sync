@@ -3,7 +3,7 @@ var Player        = require('../player/Player');
 var NeDatabase    = require('../database/NeDatabase');
 var Smtp          = require('./Smtp');
 var Session       = require('./Session');
-var Log           = require('../utils/Logger');
+var LogManager    = require('../log/LogManager');
 
 var playerManager = new PlayerManager();
 var database      = new NeDatabase();

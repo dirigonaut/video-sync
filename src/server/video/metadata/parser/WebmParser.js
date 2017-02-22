@@ -1,11 +1,11 @@
 var Fs      = require('fs');
 var Ebml    = require('ebml');
-var Logger  = require('../../../utils/Logger');
+var LogManager = require('../../../log/LogManager');
 
 const Util = require('util');
 const EventEmitter = require('events');
 
-var log = new Logger();
+var log = LogManager.getLog(LogManager.LogEnum.ENCODING);
 
 function WebmParser() {
   EventEmitter.call(this);

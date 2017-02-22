@@ -1,6 +1,6 @@
 var XmlDom   = require('xmldom');
 
-var VideoStream = require('../VideoStream');
+var FileIO = require('../../utils/FileIO');
 var FileUtil = require('../../utils/FileSystemUtils');
 
 var fileUtil = new FileUtil();
@@ -36,7 +36,7 @@ MpdUtil.prototype.removeFullPathsFromMpd = function(path) {
 module.exports = MpdUtil;
 
 var loadMpd = function(path, callback) {
-  var fileStream = new VideoStream();
+  var fileStream = new FileIO();
   var buffer = [];
 
   var bufferData = function(data) {
@@ -55,7 +55,7 @@ var loadMpd = function(path, callback) {
 };
 
 var saveMpd = function(path, mpd, callback) {
-  var fileStream = new VideoStream();
+  var fileStream = new FileIO();
   var writeConfig = fileStream.createStreamConfig(path, null);
 
   writeConfig.onFinish = function() {

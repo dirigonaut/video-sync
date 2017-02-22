@@ -1,13 +1,13 @@
 var Forge      = require('node-forge');
 var Moment     = require('moment');
 var NeDatabase = require('../database/NeDatabase');
-var Logger     = require('../utils/Logger');
+var LogManager  = require('../log/LogManager');
 
 var self;
 const EXPIR = 365;
 
 var database = new NeDatabase();
-var log      = new Logger();
+var log = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
 
 function Certificate() {
   Moment().format('YYYY MM DD');
@@ -15,18 +15,18 @@ function Certificate() {
 }
 
 Certificate.prototype.getCertificates = function(callback) {
-  console.log("Certificate.prototype.getCertificates");
+  log.debug("Certificate.prototype.getCertificates");
   var validateCerts = function(certs) {
     if(certs == null || certs == undefined || certs.length == 0) {
-      console.log("There are no SSL Certificates, signing new ones.");
+      log.debug("There are no SSL Certificates, signing new ones.");
       var cert = self._generate(self._getAttributes(), callback);
     } else {
-      console.log("Loading SSL Certificates.");
+      log.debug("Loading SSL Certificates.");
       var cert = certs[0];
       if(Moment().diff(cert.expire) < -1) {
         callback(cert.pem);
       } else {
-        console.log("SSL Certificates are expired, signing new ones.");
+        log.debug("SSL Certificates are expired, signing new ones.");
         database.deleteCerts(Moment().valueOf());
 
         var cert = self._generate(self._getAttributes(), callback);
@@ -37,7 +37,7 @@ Certificate.prototype.getCertificates = function(callback) {
 };
 
 Certificate.prototype._generate = function(attrs, callback) {
-  console.log("Certificate.prototype._generate");
+  log.debug("Certificate.prototype._generate");
   var pki = Forge.pki;
 
   var keypair = pki.rsa.generateKeyPair(2048);
