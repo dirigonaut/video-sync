@@ -2,7 +2,6 @@ var Path 				= require('path');
 var Datastore 	= require('nedb');
 
 var LogManager    = require('../log/LogManager');
-var	JsonKeys		= require('../utils/JsonKeys');
 
 var db;
 

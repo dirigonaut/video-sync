@@ -2,22 +2,23 @@ var PlayerManager = require('../player/PlayerManager');
 var CommandEngine = require('./CommandEngine');
 var ChatEngine    = require('./ChatEngine');
 var Session       = require('../administration/Session');
-var Log           = require('../utils/Logger');
+var LogManager    = require('../log/LogManager');
 
 var playerManager = new PlayerManager();
 var commandEngine = new CommandEngine();
 var chatEngine    = new ChatEngine();
 var session       = new Session();
+var log           = LogManager.getLog(LogManager.LogEnum.CHAT);
 
 function ChatController(io, socket) {
   initialize(io, socket);
 }
 
 function initialize(io, socket) {
-  Log.trace("Attaching ChatController");
+  log.debug("Attaching ChatController");
 
   socket.on('chat-broadcast', function(data) {
-    Log.trace('chat-broadcast');
+    log.debug('chat-broadcast');
 
     var message = chatEngine.buildMessage(socket.id, data.text);
     chatEngine.broadcast(ChatEngine.Enum.BROADCAST, message);

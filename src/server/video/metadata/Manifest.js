@@ -1,6 +1,6 @@
-var Logger = require('../../utils/Logger');
+var LogManager    = require('../../log/LogManager');
 
-var log = new Logger();
+var log           = LogManager.getLog(LogManager.LogEnum.ENCODING);
 
 function LinkedCluster() {
   this.next = null;

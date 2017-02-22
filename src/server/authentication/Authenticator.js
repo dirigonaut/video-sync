@@ -2,11 +2,11 @@ const crypto      = require('crypto');
 
 var NeDatabase    = require('../database/NeDatabase');
 var Session       = require('../administration/Session');
-var Logger        = require('../utils/Logger');
+var LogManager    = require('../log/LogManager');
 
 var database			= new NeDatabase();
 var session       = new Session();
-var log           = new Logger();
+var log           = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
 
 function Authenticator(){
 };

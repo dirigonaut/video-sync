@@ -1,7 +1,7 @@
 var NeDatabase  = require('./NeDatabase');
 var Session     = require('../administration/Session');
 var Validator   = require('../authentication/Validator');
-var Log         = require('../utils/Logger')
+var LogManager  = require('../log/LogManager');
 
 var database  = new NeDatabase();
 var validator = new Validator();

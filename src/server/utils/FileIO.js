@@ -1,17 +1,20 @@
-var Fs      = require('fs');
-var Logger  = require('../utils/Logger');
+var Fs          = require('fs');
+var LogManager  = require('../log/LogManager');
 
-var log = new Logger();
+var log = LogManager.getLog(LogManager.LogEnum.UTILS);
 
-function VideoStream() {
+function FileIO() {
 };
 
-VideoStream.prototype.read = function(readConfig) {
-  console.log('VideoStream.read');
+FileIO.prototype.read = function(readConfig) {
+  log.debug('FileIO.read');
   var readStream  = Fs.createReadStream(readConfig.path, readConfig.options);
 
+  readStream.on('error', function(e) {
+    log.error("FileIO.write, Server: Error: " + e);
+  });
   readStream.on('close', function() {
-    console.log("VideoStream.read, Server: Finished reading.");
+    log.debug("FileIO.read, Server: Finished reading.");
     if(readConfig.onFinish) {
       readConfig.onFinish();
     }
@@ -21,15 +24,15 @@ VideoStream.prototype.read = function(readConfig) {
   });
 };
 
-VideoStream.prototype.write = function(writeConfig, data) {
-  console.log('VideoStream.write');
+FileIO.prototype.write = function(writeConfig, data) {
+  log.debug('FileIO.write');
 	var writeStream = Fs.createWriteStream(writeConfig.path, writeConfig.options);
 
   writeStream.on('error', function(e) {
-		console.log("VideoStream.write, Server: Error: " + e);
+		log.error("FileIO.write, Server: Error: " + e);
 	});
   writeStream.on('close', function() {
-		console.log("VideoStream.write, Server: Finished writing file");
+		log.debug("FileIO.write, Server: Finished writing file");
     if(readConfig.onFinish) {
       writeConfig.onFinish();
     }
@@ -38,11 +41,11 @@ VideoStream.prototype.write = function(writeConfig, data) {
   writeStream.write(data);
 };
 
-VideoStream.prototype.readDir = function(readConfig) {
-  console.log('VideoStream.readDir');
+FileIO.prototype.readDir = function(readConfig) {
+  log.debug('FileIO.readDir');
   Fs.readdir(readConfig.path, function (err, files) {
     if (err) {
-      console.log(err);
+      log.error("FileIO.write, Server: Error:", err);
     }
 
     var mpdFiles = [];
@@ -66,7 +69,8 @@ VideoStream.prototype.readDir = function(readConfig) {
   });
 };
 
-VideoStream.prototype.ensureDirExists = function(path, mask, callback) {
+FileIO.prototype.ensureDirExists = function(path, mask, callback) {
+  log.debug('FileIO.ensureDirExists');
   Fs.mkdir(path, mask, function(err) {
     if (err) {
       if (err.code == 'EEXIST') {
@@ -80,8 +84,8 @@ VideoStream.prototype.ensureDirExists = function(path, mask, callback) {
   });
 }
 
-VideoStream.prototype.createStreamConfig = function(path, callback) {
-  console.log('VideoStream.streamConfig');
+FileIO.prototype.createStreamConfig = function(path, callback) {
+  log.debug('FileIO.streamConfig');
   var streamConfig = new Object();
   streamConfig.path = path;
   streamConfig.options = null;
@@ -91,8 +95,8 @@ VideoStream.prototype.createStreamConfig = function(path, callback) {
   return streamConfig;
 };
 
-VideoStream.createStreamConfig = function(path, callback) {
-  console.log('VideoStream.streamConfig');
+FileIO.createStreamConfig = function(path, callback) {
+  log.debug('FileIO.streamConfig');
   var streamConfig = new Object();
   streamConfig.path = path;
   streamConfig.options = null;
@@ -102,4 +106,4 @@ VideoStream.createStreamConfig = function(path, callback) {
   return streamConfig;
 };
 
-module.exports = VideoStream;
+module.exports = FileIO;

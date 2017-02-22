@@ -4,7 +4,7 @@ const util = require('util');
 var Command = require('./process/Command');
 var Ffmpeg = require('./process/FfmpegProcess');
 var Mp4Box = require('./process/Mp4BoxProcess');
-var Log    = require('../../utils/Logger')
+var LogManager = require('../../log/LogManager');
 
 const webm_manifest = "webm_dash_manifest";
 const mp4_manifest = "-frag-rap";
