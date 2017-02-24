@@ -5,10 +5,12 @@ var Session         = require('../administration/Session');
 var Validator       = require('../authentication/Validator');
 var XmlUtil         = require('./metadata/xml/XmlUtil');
 var MpdUtil         = require('./metadata/MpdUtil');
+var Cache           = require('../utils/Cache');
 var LogManager      = require('../log/LogManager');
 
 var validator       = new Validator();
 var session         = new Session();
+var cache           = new Cache();
 
 function VideoController(io, socket) {
   initialize(io, socket);
@@ -84,31 +86,14 @@ function initialize(io, socket) {
 
   socket.on('get-segment', function(data) {
     console.log('get-segment');
-    var fileIO = new FileIO();
     var data = validator.sterilizeVideoInfo(data);
-    var typeId = data.typeId;
 
     if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
-      var readConfig = FileIO.createStreamConfig(session.getMediaPath() + data.path, function(data) {
-        var segment = new Object();
-        segment.typeId = typeId;
-        segment.data = data;
-
+      var handleResponse = function(segment) {
         socket.emit("segment-chunk", segment);
-      });
-
-      if(data.segment) {
-        var options = {"start": parseInt(data.segment[0]), "end": parseInt(data.segment[1])};
-        readConfig.options = options;
-      } else {
-        console.log("No segment options passed in.");
-      }
-
-      readConfig.onFinish = function() {
-        socket.emit("segment-end");
       };
 
-      fileIO.read(readConfig);
+      cache.get(data, handleResponse);
     }
   });
 }
