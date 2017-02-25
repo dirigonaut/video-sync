@@ -76,12 +76,12 @@ function initialize(io, socket) {
   });
 
   socket.on('state-sync-ping', function() {
-    log.info('state-sync-ping');
+    log.silly('state-sync-ping');
     stateEngine.syncingPing(socket.id);
   });
 
   socket.on('state-time-update', function(data) {
-    log.info('state-time-update');
+    log.silly('state-time-update');
     stateEngine.timeUpdate(socket.id, data);
   });
 

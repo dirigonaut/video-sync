@@ -142,7 +142,7 @@ StateEngine.prototype.changeSyncState = function(id, callback) {
 };
 
 StateEngine.prototype.timeUpdate = function(id, data) {
-  log.info(`StateEngine.timeUpdate ${id}`);
+  log.silly(`StateEngine.timeUpdate ${id}`);
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
 
     var player = playerManager.getPlayer(id);
@@ -163,7 +163,7 @@ StateEngine.prototype.timeUpdate = function(id, data) {
 };
 
 StateEngine.prototype.syncingPing = function(id) {
-  log.info(`StateEngine.syncingPing ${id}`);
+  log.silly(`StateEngine.syncingPing ${id}`);
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     var players = playerManager.getPlayers();
     var player = playerManager.getPlayer(id);

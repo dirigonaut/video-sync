@@ -416,14 +416,12 @@ function initGUI() {
   });
 
   function systemMessage(message) {
-    console.log("chat-event-resp");
     $('#chatManuscript').append(`<p><span class="chat-message" title="System" style="color:gray; font-weight: bold;">
       ${new Date().toTimeString().split(" ")[0]} System: </span>${client.getChatUtil().getUserHandle(message.from)} ${message.text}</p>`);
     autoScroll();
   }
 
   clientSocket.setEvent('chat-broadcast-resp', function(message) {
-    console.log("chat-broadcast-resp");
     $('#chatManuscript').append(`<p><span class="chat-message" title="${message.from}" style="color:blue; font-weight: bold;">
       ${new Date().toTimeString().split(" ")[0]} ${client.getChatUtil().getUserHandle(message.from)}: </span>${message.text}</p>`);
     autoScroll();
@@ -438,7 +436,6 @@ function initGUI() {
   });
 
   clientSocket.setEvent('chat-log-resp', function(message) {
-    console.log("chat-log-resp");
     $('#logManuscript').append(`<p><span class="chat-message" title="${message.log}" style="color:blue; font-weight: bold;">
       ${message.time} ${message.level}: </span>${message.message} ${message.meta}</p>`);
   });

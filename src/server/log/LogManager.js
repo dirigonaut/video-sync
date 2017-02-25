@@ -4,6 +4,7 @@ var LogFactory = require('./LogFactory');
 
 var log = null;
 
+const LOG_LEVEL = "debug";
 const FILE_NAME = "logs.txt";
 const EXCEPTION = "exception";
 
@@ -22,7 +23,7 @@ LogManager.prototype.initialize = function() {
 LogManager.prototype.addFileLogging = function(basePath) {
   var logFactory = new LogFactory();
 
-  var fileTransport = logFactory.buildFileTransport(`${basePath}/${FILE_NAME}`, 'info', 'file-logger', false);
+  var fileTransport = logFactory.buildFileTransport(`${basePath}/${FILE_NAME}`, LOG_LEVEL, 'file-logger', false);
 
   var keys = Object.keys(LogManager.LogEnum);
   for(var i in keys) {
@@ -45,7 +46,7 @@ LogManager.prototype.addSocketLogging = function(socket) {
 
   var keys = Object.keys(LogManager.LogEnum);
   for(var i in keys) {
-    var socketTransport = logFactory.buildSocketTransport(socket, 'info', LogManager.LogEnum[keys[i]], false);
+    var socketTransport = logFactory.buildSocketTransport(socket, LOG_LEVEL, LogManager.LogEnum[keys[i]], false);
     var container = Winston.loggers.get(LogManager.LogEnum[keys[i]]);
     var fileTransport = container.transports.file;
     var transports = [fileTransport, socketTransport];
