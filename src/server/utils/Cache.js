@@ -22,16 +22,19 @@ var interval = setInterval(function() {
 function Cache() {
 }
 
-Cache.prototype.get = function(requestData, callback) {
-  log.debug('get-segment');
+Cache.prototype.getSegment = function(requestData, callback) {
   var key = `${requestData.path}-${requestData.segment[0]}-${requestData.segment[1]}-${requestData.typeId}`;
+  log.debug('get-segment', key);
 
-  if(!cacheMap.contains(key)) {
+  if(!cacheMap.has(key)) {
     requestMap.set(key, [callback]);
     readFile(key, requestData);
   } else {
-    if(cacheMap.get(key) !== undefined) {
-      callback(getCacheData(key));
+    var segmentArray = cacheMap.get(key);
+    if(segmentArray.length !== 0) {
+      for(var i in segmentArray) {
+        callback(segmentArray[i]);
+      }
     } else {
       requestMap.get(key).push(callback);
     }
@@ -41,59 +44,67 @@ Cache.prototype.get = function(requestData, callback) {
 module.exports = Cache;
 
 function readFile(key, requestData) {
+  log.debug('Cache.readFile');
   var fileIO = new FileIO();
 
   var readConfig = fileIO.createStreamConfig(session.getMediaPath() + requestData.path, function(data) {
     var segment = new Object();
     segment.typeId = requestData.typeId;
     segment.data = data;
+
+    cacheMap.get(key).push(segment);
+    heatMap.set(key, [Date.now()]);
     handleCallbacks(key, segment);
   });
 
   var options = {"start": parseInt(requestData.segment[0]), "end": parseInt(requestData.segment[1])};
   readConfig.options = options;
 
-  cacheMap.set(key, undefined);
+  readConfig.onFinish = function() {
+    requestMap.delete(key);
+  };
+
+  cacheMap.set(key, []);
   fileIO.read(readConfig);
 }
 
 function pruneCache() {
+  log.silly('Cache.pruneCache');
   var now = Date.now();
 
   for(var pair of heatMap) {
     var entry = pair[1];
 
-    var temp = [];
     for(var i in entry) {
-      //maybe parse float
-      if(entry[i] - now < LIFE_TIME) {
+      if(parseInt(now) - parseInt(entry[i]) > LIFE_TIME) {
+        log.debug("Removing entry: ", entry[i]);
         entry.shift();
       }
     }
 
     if(entry.length === 0) {
-      cacheMap.remove(pair[0]);
+      log.debug("Cache deleting entry: ", pair[0]);
+      cacheMap.delete(pair[0]);
+      heatMap.delete(pair[0]);
     }
   }
 }
 
 function getCacheData(key) {
+  log.debug('Cache.getCacheData', heatMap.get(key));
   var entry = heatMap.get(key);
 
   if(entry) {
     entry.push(Date.now());
-  } else {
-    entry = [Date.now()];
-    heatMap.set(key, entry);
   }
 
   return cacheMap.get(key);
 }
 
 function handleCallbacks(key, segment) {
-  for(var callback of requestMap.get(key)) {
-    callback(segment);
+  log.debug('Cache.handleCallbacks', key);
+  var callbacks = requestMap.get(key);
+  for(var i in callbacks) {
+    callbacks[i](segment);
   }
-
-  requestMap.remove(key);
 }

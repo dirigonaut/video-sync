@@ -93,7 +93,7 @@ function initialize(io, socket) {
         socket.emit("segment-chunk", segment);
       };
 
-      cache.get(data, handleResponse);
+      cache.getSegment(data, handleResponse);
     }
   });
 }
