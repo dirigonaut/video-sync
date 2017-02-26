@@ -1,84 +1,114 @@
-const EventEmitter  = require('events');
+var FileIO        = require('../utils/FileIO');
+var LogManager    = require('../log/LogManager');
+var PlayerManager = require('../player/PlayerManager');
+var Player        = require('../player/Player');
 
-var FileIO      = require('../utils/FileIO');
-var Session     = require('../administration/Session');
-var LogManager  = require('../log/LogManager');
+var basePath      = null;
+var cacheMap      = new Map();
+var heatMap       = new Map();
 
-var log = LogManager.getLog(LogManager.LogEnum.UTILS);
+var requestMap    = new Map();
 
-var cacheMap   = new Map();
-var heatMap    = new Map();
+var playerManager = new PlayerManager();
 
-var requestMap = new Map();
+var log           = LogManager.getLog(LogManager.LogEnum.UTILS);
 
-var session    = new Session();
+const LIFE_TIME   = 6000;
+const INTERVAL    = 1000;
 
-const LIFE_TIME = 6000;
-
-var interval = setInterval(function() {
-  pruneCache();
-}, 1000);
+var pruneInterval = setInterval(function pruneInterval() {
+  if(playerManager.getSyncedPlayersState() === Player.State.PLAY) {
+    pruneCache();
+  }
+}, INTERVAL);
 
 function Cache() {
 }
 
-Cache.prototype.getSegment = function(requestData, callback) {
+Cache.prototype.getSegment = function(player, requestData, callback) {
   var key = `${requestData.path}-${requestData.segment[0]}-${requestData.segment[1]}-${requestData.typeId}`;
-  log.debug('get-segment', key);
+  log.debug('Cache.getSegment', key);
 
   if(!cacheMap.has(key)) {
-    requestMap.set(key, [callback]);
-    readFile(key, requestData);
+    log.silly('Cache has no data', key);
+    if(player.sync !== Player.Sync.DESYNCED) {
+      requestMap.set(key, [callback]);
+    }
+    readFile(key, requestData, player.sync !== Player.Sync.DESYNCED);
   } else {
     var segmentArray = cacheMap.get(key);
     if(segmentArray.length !== 0) {
+      log.silly('Cache has data', key);
       for(var i in segmentArray) {
         callback(segmentArray[i]);
       }
     } else {
+      log.silly('Cache currently reading data', key);
       requestMap.get(key).push(callback);
     }
   }
 };
 
+Cache.prototype.setPath = function(path) {
+  basePath = path;
+};
+
+Cache.prototype.flush = function() {
+  var cacheMap      = new Map();
+  var heatMap       = new Map();
+  var requestMap    = new Map();
+};
+
 module.exports = Cache;
 
-function readFile(key, requestData) {
+function readFile(key, requestData, cache) {
   log.debug('Cache.readFile');
   var fileIO = new FileIO();
 
-  var readConfig = fileIO.createStreamConfig(session.getMediaPath() + requestData.path, function(data) {
+  var readConfig = fileIO.createStreamConfig(basePath + requestData.path, function onData(data) {
+    log.silly('Cache on data', key);
     var segment = new Object();
     segment.typeId = requestData.typeId;
     segment.data = data;
 
-    cacheMap.get(key).push(segment);
-    heatMap.set(key, [Date.now()]);
+    if(cache) {
+      log.silly('Cache adding Entry: ', {"key": key, "size": segment.data.length});
+      cacheMap.get(key).push(segment);
+      heatMap.set(key, [0]);
+    }
+
     handleCallbacks(key, segment);
   });
 
   var options = {"start": parseInt(requestData.segment[0]), "end": parseInt(requestData.segment[1])};
   readConfig.options = options;
 
-  readConfig.onFinish = function() {
-    requestMap.delete(key);
+  readConfig.onFinish = function onFinish() {
+    log.silly('Cache finished read: ', key);
+    if(cache) {
+      requestMap.delete(key);
+    }
   };
 
-  cacheMap.set(key, []);
+  if(cache) {
+    log.silly('Cache adding entry: ', key);
+    cacheMap.set(key, []);
+  }
+
   fileIO.read(readConfig);
 }
 
 function pruneCache() {
   log.silly('Cache.pruneCache');
-  var now = Date.now();
-
   for(var pair of heatMap) {
     var entry = pair[1];
 
     for(var i in entry) {
-      if(parseInt(now) - parseInt(entry[i]) > LIFE_TIME) {
-        log.debug("Removing entry: ", entry[i]);
+      if(parseInt(entry[i]) > LIFE_TIME) {
+        log.debug(`Removing entry: ${entry[i]} from: `, entry);
         entry.shift();
+      } else {
+        entry[i] += INTERVAL;
       }
     }
 
@@ -95,7 +125,7 @@ function getCacheData(key) {
   var entry = heatMap.get(key);
 
   if(entry) {
-    entry.push(Date.now());
+    entry.push([0]);
   }
 
   return cacheMap.get(key);
