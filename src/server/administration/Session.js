@@ -1,6 +1,7 @@
 const EventEmitter  = require('events');
 
-var NeDatabase	= require("../database/NeDatabase");
+var Cache       = require('../utils/Cache');
+var NeDatabase	= require('../database/NeDatabase');
 
 var database      = new NeDatabase();
 var activeSession = null;
@@ -72,6 +73,10 @@ Session.prototype.getMediaStarted = function() {
 Session.prototype.setMediaPath = function(path) {
   mediaPath = path;
   mediaStarted = false;
+
+  var cache = new Cache();
+  cache.setPath(path);
+  cache.flush();
 };
 
 Session.prototype.getMediaPath = function() {

@@ -7,7 +7,9 @@ var XmlUtil         = require('./metadata/xml/XmlUtil');
 var MpdUtil         = require('./metadata/MpdUtil');
 var Cache           = require('../utils/Cache');
 var LogManager      = require('../log/LogManager');
+var PlayerManager   = require('../player/PlayerManager');
 
+var playerManager   = new PlayerManager();
 var validator       = new Validator();
 var session         = new Session();
 var cache           = new Cache();
@@ -93,7 +95,7 @@ function initialize(io, socket) {
         socket.emit("segment-chunk", segment);
       };
 
-      cache.getSegment(data, handleResponse);
+      cache.getSegment(playerManager.getPlayer(socket.id), data, handleResponse);
     }
   });
 }
