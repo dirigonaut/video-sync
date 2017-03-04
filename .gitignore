@@ -1,4 +1,5 @@
 node_modules/
-static/media/bunny
+static/media/*
 static/resources/bundle.js
-database_inst
+npm-debug.log
+build/*
