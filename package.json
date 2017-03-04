@@ -1,17 +1,18 @@
 {
   "name": "video-sync",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "main": "admin.html",
   "window": {
     "title": "Video-Sync",
     "fullscreen": false,
-    "toolbar": true,
     "frame": true,
     "width": 1280,
     "height": 720
   },
   "scripts": {
-    "start": "nw"
+    "start": "nw",
+    "debug": "nw --remote-debugging-port=9999",
+    "build": "nwbuild -p win64,osx64,linux64 -v 0.20.3 ~/repo/video-sync-2.0/"
   },
   "dependencies": {
     "browserify": "13.1.0",
@@ -24,7 +25,7 @@
     "nedb": "1.8.0",
     "node-forge": "^0.6.41",
     "nodemailer": "2.5.0",
-    "nw": "^0.12.3",
+    "nw": "^0.20.3",
     "socket.io": "1.4.8",
     "socket.io-client": "1.4.8",
     "split": "1.0.0",
@@ -35,10 +36,10 @@
     "xml2js": "^0.4.17",
     "xmldom": "0.1.22"
   },
-  "description": "This README would normally document whatever steps are necessary to get your application up and running.",
   "devDependencies": {
-    "nw-dev": "^3.0.0"
+    "nw-builder": "^3.2.0"
   },
+  "description": "This README would normally document whatever steps are necessary to get your application up and running.",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@bitbucket.org/calkser/video-sync-2.0.git"
