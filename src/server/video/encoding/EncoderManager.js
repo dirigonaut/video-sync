@@ -9,6 +9,8 @@ var LogManager = require('../../log/LogManager');
 const webm_manifest = "webm_dash_manifest";
 const mp4_manifest = "-frag-rap";
 
+var log = LogManager.getLog(LogManager.LogEnum.ENCODING);
+
 function EncoderManager(data){
 	console.log("EncodingManager");
 	var self = this;
@@ -70,6 +72,7 @@ function setEvents(command, manager) {
 	command.on('start', function(command_line){
 		console.log("Server: Start encoding: " + new Date().getTime());
 	}).on('progress', function(percent) {
+		log.info("encoding", percent);
 		console.log(percent);
 		console.log(new Date().getTime());
 	}).on('close', function(exitCode) {
