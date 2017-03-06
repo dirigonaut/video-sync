@@ -1,8 +1,10 @@
 var xml2js = require('xml2js');
 
-var MetaState  = require('./MetaState.js');
-var log           = require('loglevel');
-var SourceBuffer  = require('../SourceBuffer.js');
+var MetaState  = require('./MetaState');
+var ClientLog = require('../../log/ClientLogManager');
+var SourceBuffer  = require('../SourceBuffer');
+
+var log = ClientLog.getLog();
 
 function MpdMeta(mpdXML, util) {
   log.info('MpdMeta');

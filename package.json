@@ -12,29 +12,27 @@
   "scripts": {
     "start": "nw",
     "debug": "nw --remote-debugging-port=9999",
-    "build": "nwbuild -p win64,osx64,linux64 -v 0.20.3 ~/repo/video-sync-2.0/"
+    "update-deps": "npm outdated --depth=0 | grep -v Package | awk '{print $1}' | xargs -I% npm install %@latest --save",
+    "build": "nwbuild -p win64,linux64,osx64 -v 0.20.3 ~/repo/video-sync-2.0/",
+    "build-win": "nwbuild -p win64 -v 0.20.3 ~/repo/video-sync-2.0/"
   },
   "dependencies": {
-    "browserify": "13.1.0",
-    "ebml": "2.2.0",
-    "express": "^4.14.0",
-    "iso-bmff": "^4.1.2",
-    "loglevel": "1.4.1",
+    "browserify": "^14.1.0",
+    "ebml": "^2.2.0",
+    "express": "^4.15.2",
     "moment": "^2.14.1",
-    "mp4box": "^0.3.15",
-    "nedb": "1.8.0",
-    "node-forge": "^0.6.41",
-    "nodemailer": "2.5.0",
+    "nedb": "^1.8.0",
+    "node-forge": "^0.7.0",
+    "nodemailer": "^3.1.4",
     "nw": "^0.20.3",
-    "socket.io": "1.4.8",
-    "socket.io-client": "1.4.8",
-    "split": "1.0.0",
-    "validator": "3.43.0",
-    "watchify": "3.7.0",
+    "socket.io": "^1.7.3",
+    "socket.io-client": "^1.7.3",
+    "split": "^1.0.0",
+    "validator": "^7.0.0",
+    "watchify": "^3.9.0",
     "winston": "^2.3.1",
-    "xml-query": "^1.4.0",
     "xml2js": "^0.4.17",
-    "xmldom": "0.1.22"
+    "xmldom": "^0.1.27"
   },
   "devDependencies": {
     "nw-builder": "^3.2.0"
@@ -44,7 +42,7 @@
     "type": "git",
     "url": "git+ssh://git@bitbucket.org/calkser/video-sync-2.0.git"
   },
-  "author": "sabo",
+  "author": "Sabo",
   "license": "ISC",
   "homepage": "https://bitbucket.org/calkser/video-sync-2.0#readme"
 }

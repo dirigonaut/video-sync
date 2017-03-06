@@ -1,14 +1,14 @@
 const util          = require('util');
 const EventEmitter  = require('events');
 
-var log             = require('loglevel');
-var ClientSocket    = require('../socket/ClientSocket.js');
+var ClientLog       = require('../log/ClientLogManager');
+var ClientSocket    = require('../socket/ClientSocket');
 
 var self = null;
 var clientSocket = new ClientSocket();
+var log = ClientLog.getLog();
 
 function VideoSingleton(video, meta) {
-  log.setDefaultLevel(0);
   log.info('VideoSingleton');
   this.videoElement = video;
   this.meta         = meta;
