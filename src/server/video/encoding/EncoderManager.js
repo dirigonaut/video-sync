@@ -25,7 +25,7 @@ function EncoderManager(data){
 				self.commands.push(ffmpeg);
 
 				if(data[i].input.includes(webm_manifest)) {
-					//self.postProcess.push(['webm', ffmpeg.command[ffmpeg.command.length - 1]]);
+					self.postProcess.push(['webm', ffmpeg.command[ffmpeg.command.length - 1]]);
 				}
 			break;
 			case "mp4Box" :
