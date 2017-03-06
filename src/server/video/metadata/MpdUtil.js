@@ -75,7 +75,11 @@ var insertMetaData = function(mpd, metaData) {
     for(var j = 0; j < representationSets.length; ++j) {
       var id = representationSets.item(j).getElementsByTagName('BaseURL').item(0).childNodes.item(0).data;
       var base = representationSets.item(j).getElementsByTagName('SegmentBase').item(0);
-      representationSets.item(j).removeChild(base);
+
+      if(base !== undefined && base !== null) {
+        representationSets.item(j).removeChild(base);
+      }
+
       representationMap.set(id, representationSets.item(j));
     }
   }
@@ -89,5 +93,16 @@ var insertMetaData = function(mpd, metaData) {
 };
 
 var cleanMpdPaths = function(mpd) {
-  return mpd;
+  var adaptionSets = mpd.documentElement.getElementsByTagName('AdaptationSet');
+  var representationMap = new Map();
+
+  for(var i = 0; i < adaptionSets.length; ++i) {
+    var representationSets = adaptionSets[i].getElementsByTagName('Representation');
+
+    for(var j = 0; j < representationSets.length; ++j) {
+      var baseUrlData = representationSets.item(j).getElementsByTagName('BaseURL').item(0).childNodes.item(0)
+      var path = baseUrlData.data;
+      baseUrlData.value = fileUtil.splitNameFromPath(path);
+    }
+  }
 };

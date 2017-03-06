@@ -1,5 +1,3 @@
-var Winston = require('winston');
-
 var ClientSocket = require('./socket/ClientSocket.js');
 var ClientLogManager = require('./log/ClientLogManager');
 var FormDataSingleton = require('./utils/FormDataSingleton');
@@ -15,11 +13,12 @@ var fileBuffer;
 var formData;
 var chatUtil;
 var fileUtil;
-var clientLog;
+
+var clientLog = ClientLogManager.getLog();
 
 function Client(videoElement) {
-  clientLog = Winston.loggers.get(ClientLogManager.LogEnum.CLIENT);
   clientLog.info("Client created");
+  console.log("create client");
 
   fileBuffer = new FileBuffer();
   formData = new FormDataSingleton();

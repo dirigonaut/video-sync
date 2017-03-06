@@ -1,14 +1,14 @@
-var log          = require('loglevel');
 var ClientSocket = require('../socket/ClientSocket.js');
+var ClientLog    = require('../log/ClientLogManager');
 
 var clientSocket = new ClientSocket();
+var log = ClientLog.getLog();
 
 function FileBuffer() {
-    log.setDefaultLevel(0);
-    log.info('FileBuffer');
+  log.info('FileBuffer');
 
-    this.fileRequests = new Map();
-    this.buffers = new Map();
+  this.fileRequests = new Map();
+  this.buffers = new Map();
 }
 
 FileBuffer.prototype.reinitialize = function() {
@@ -80,7 +80,7 @@ FileBuffer.prototype.setupEvents = function() {
   clientSocket.clearEvent('file-register-response');
   clientSocket.clearEvent('file-segment');
   clientSocket.clearEvent('file-end');
-  
+
   setSocketEvents(this);
 }
 

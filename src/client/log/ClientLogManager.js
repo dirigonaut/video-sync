@@ -9,10 +9,19 @@ function ClientLogManager() {
 
 ClientLogManager.prototype.addGUILogging = function(logName, callback) {
   var clientTransport = buildClientTransport(callback, 'info', logName, false);
-  Winston.loggers.add(logName, { transports: [clientTransport] });
 
-  clientLog = Winston.loggers.get(logName);
+  var container = Winston.loggers.get(logName);
+
+  container.configure({
+    transports: [clientTransport]
+  });
+
+  clientLog = container;
   clientLog.info("Client logging attached");
+};
+
+ClientLogManager.getLog = function() {
+  return Winston.loggers.get(ClientLogManager.LogEnum.CLIENT);
 };
 
 module.exports = ClientLogManager;

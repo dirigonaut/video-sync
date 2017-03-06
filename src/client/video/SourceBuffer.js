@@ -1,6 +1,8 @@
-var log               = require('loglevel');
+var ClientLog         = require('../log/ClientLogManager');
 var ClientSocket      = require('../socket/ClientSocket.js');
 var RequestFactory    = require('../utils/RequestFactory.js');
+
+var log = ClientLog.getLog();
 
 function SourceBuffer(enum_type, video, metaManager, mediaSource){
   var self = {};
@@ -10,7 +12,6 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
   self.queue = [];
   self.sourceBuffer = null;
 
-  log.setDefaultLevel(0);
   log.info('SourceBuffer.initialize');
 
   var getInit = function(){
