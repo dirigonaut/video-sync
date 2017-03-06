@@ -2,6 +2,9 @@ var XmlDom   = require('xmldom');
 
 var FileIO = require('../../utils/FileIO');
 var FileUtil = require('../../utils/FileSystemUtils');
+var LogManager = require('../../log/LogManager');
+
+var log = LogManager.getLog(LogManager.LogEnum.ENCODING);
 
 var fileUtil = new FileUtil();
 
@@ -66,6 +69,7 @@ var saveMpd = function(path, mpd, callback) {
 };
 
 var insertMetaData = function(mpd, metaData) {
+  log.debug("insertMetaData", metaData);
   var adaptionSets = mpd.documentElement.getElementsByTagName('AdaptationSet');
   var representationMap = new Map();
 
