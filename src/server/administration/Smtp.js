@@ -1,5 +1,8 @@
 var NodeMailer	= require("nodemailer");
 var NeDatabase	= require("../database/NeDatabase");
+var LogManager  = require('../log/LogManager');
+
+var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
 
 var database 			= new NeDatabase();
 var smtpTransport = null;
@@ -10,7 +13,7 @@ function Smtp(){
 };
 
 Smtp.prototype.initializeTransport = function(address, callback) {
-	console.log("Smtp.initializeTransport");
+	log.debug("Smtp.initializeTransport");
 	if(address !== activeSmtp) {
 		this.closeTrasporter();
 
@@ -20,7 +23,7 @@ Smtp.prototype.initializeTransport = function(address, callback) {
 				if(data.type == "Custom") {
 					//TODO: allow some basic custom smtp logic
 				} else {
-					console.log("Setting Smtp options.");
+					log.info("Setting Smtp options.");
 					smtpTransport = NodeMailer.createTransport({
 							service: data.smtpHost,
 							auth: {
@@ -41,7 +44,7 @@ Smtp.prototype.initializeTransport = function(address, callback) {
 };
 
 Smtp.prototype.createMailOptions = function(from, to, subject, text, html) {
-	console.log("Smtp.createMailOptions");
+	log.debug("Smtp.createMailOptions");
 	var mailOptions 		= new Object();
 
 	mailOptions.from 		= from;
@@ -54,14 +57,14 @@ Smtp.prototype.createMailOptions = function(from, to, subject, text, html) {
 };
 
 Smtp.prototype.sendMail = function(mailOptions) {
-	console.log("Smtp.sendMail");
+	log.debug("Smtp.sendMail");
 	if(isTransportInitialized()) {
 		smtpTransport.sendMail(mailOptions, function(error, response) {
 		    if(error) {
-		        console.log(error);
+		        log.error(error);
 		    }
 
-				console.log("Message sent: " + response);
+				log.info("Message sent: ", response);
 		});
 		return true;
 	}
@@ -70,7 +73,7 @@ Smtp.prototype.sendMail = function(mailOptions) {
 
 Smtp.prototype.closeTrasporter = function() {
 	if(isTransportInitialized()) {
-		console.log("Smtp.closeTrasporter");
+		log.debug("Smtp.closeTrasporter");
 		smtpTransport.close();
 		smtpTransport = null;
 	}

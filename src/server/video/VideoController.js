@@ -13,17 +13,18 @@ var playerManager   = new PlayerManager();
 var validator       = new Validator();
 var session         = new Session();
 var cache           = new Cache();
+var log             = LogManager.getLog(LogManager.LogEnum.VIDEO);
 
 function VideoController(io, socket) {
   initialize(io, socket);
 }
 
 function initialize(io, socket) {
-  console.log("Attaching VideoController");
+  log.info("Attaching VideoController");
 
   socket.on('video-encode', function(data) {
     if(session.isAdmin(socket.id)) {
-      console.log('video-encode');
+      log.debug('video-encode', data);
       var fileIO = new FileIO();
       var request = validator.sterilizeVideoInfo(data);
 
@@ -31,6 +32,7 @@ function initialize(io, socket) {
         var webmMetaData = new WebmMetaData();
 
         var saveMetaToMpd = function(meta) {
+          log.debug('Save webm metadata', meta);
           var xmlUtil = new XmlUtil();
           var xmlMeta = xmlUtil.webmMetaToXml(meta);
 
@@ -45,6 +47,7 @@ function initialize(io, socket) {
 
       var encoderManager = new EncoderManager(request);
       encoderManager.on('webm', function(path) {
+        log.debug('Generate webm metadata', data);
         genWebmMeta(path);
       }).on('finished', function(path) {
         socket.emit('video-encoded');
@@ -63,7 +66,7 @@ function initialize(io, socket) {
   });
 
   socket.on('get-meta-files', function(requestId) {
-    console.log('get-meta-files');
+    log.debug('get-meta-files', requestId);
     var fileIO = new FileIO();
 
     var readConfig = FileIO.createStreamConfig(session.getMediaPath(), function(file){
@@ -87,11 +90,12 @@ function initialize(io, socket) {
   });
 
   socket.on('get-segment', function(data) {
-    console.log('get-segment');
+    log.silly('get-segment', data);
     var data = validator.sterilizeVideoInfo(data);
 
     if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
       var handleResponse = function(segment) {
+        log.silly('Returning segment for request: ', data);
         socket.emit("segment-chunk", segment);
       };
 

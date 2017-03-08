@@ -12,7 +12,7 @@ const mp4_manifest = "-frag-rap";
 var log = LogManager.getLog(LogManager.LogEnum.ENCODING);
 
 function EncoderManager(data){
-	console.log("EncodingManager");
+	log.debug("EncodingManager", data);
 	var self = this;
 	self.commands = [];
 	self.postProcess = [];
@@ -20,6 +20,7 @@ function EncoderManager(data){
 	for(var i = 0; i < data.length; ++i){
 		switch (data[i].codec) {
 			case "ffmpeg" :
+				log.silly("Found ffmpeg encoding", data[i]);
 				var ffmpeg = new Ffmpeg(Command(data[i].input));
 				setEvents(ffmpeg, self);
 				self.commands.push(ffmpeg);
@@ -29,17 +30,19 @@ function EncoderManager(data){
 				}
 			break;
 			case "mp4Box" :
+				log.silly("Found mp4Box encoding", data[i]);
 				var mp4Box = new Mp4Box(Command(data[i].input));
 				setEvents(mp4Box, self);
 				self.commands.push(mp4Box);
 			break;
 			default:
-				console.log("EncoderManager: " + command.codec + " is not supported process.");
+				log.info("EncoderManager: " + command.codec + " is not supported process.");
 			break;
 		}
 	}
 
 	self.on('processed', function() {
+		log.debug("EncodingManager.processed");
 		if(self.commands.length > 0) {
 			var command = self.commands.shift();
 			command.process();
@@ -55,8 +58,8 @@ function EncoderManager(data){
 	});
 
 	self.encode = function() {
-		console.log("EncodingManager.encode");
 		var command = self.commands.shift();
+		log.debug("EncodingManager.encode", command);
 		command.process();
 	};
 
@@ -68,17 +71,15 @@ util.inherits(EncoderManager, EventEmitter);
 module.exports = EncoderManager;
 
 function setEvents(command, manager) {
-	console.log("EncodingManager - setEvents");
+	log.debug("EncodingManager - setEvents");
 	command.on('start', function(command_line){
-		console.log("Server: Start encoding: " + new Date().getTime());
+		log.debug("Server: Start encoding: " + new Date().getTime());
 	}).on('progress', function(percent) {
 		log.info("encoding", percent);
-		console.log(percent);
-		console.log(new Date().getTime());
 	}).on('close', function(exitCode) {
-		console.log('Server: file has been converted succesfully: ' + new Date().getTime());
+		log.info('Server: file has been converted succesfully: ' + new Date().getTime());
 		manager.emit('processed');
 	}).on('error', function(err) {
-		console.log(err);
+		log.error("There was an error encoding: ", err);
 	});
 }

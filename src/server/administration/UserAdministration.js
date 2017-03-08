@@ -5,6 +5,8 @@ var Smtp          = require('./Smtp');
 var Session       = require('./Session');
 var LogManager    = require('../log/LogManager');
 
+var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
+
 var playerManager = new PlayerManager();
 var database      = new NeDatabase();
 var smtp          = new Smtp();
@@ -13,34 +15,32 @@ var session       = new Session();
 function UserAdministration() { }
 
 UserAdministration.prototype.downgradeUser = function(user) {
-  if(!session.isAdmin(user)) {
-    var player = playerManager.getPlayer(user);
-    player.setAuth(Player.Auth.RESTRICTED);
-  }
+  log.debug("UserAdministration.downgradeUser");
+  var player = playerManager.getPlayer(user);
+  player.setAuth(Player.Auth.RESTRICTED);
 };
 
 UserAdministration.prototype.upgradeUser = function(user) {
-  if(!session.isAdmin(user)) {
-    var player = playerManager.getPlayer(user);
-    player.setAuth(Player.Auth.DEFAULT);
-  }
+  log.debug("UserAdministration.upgradeUser");
+  var player = playerManager.getPlayer(user);
+  player.setAuth(Player.Auth.DEFAULT);
 };
 
 UserAdministration.prototype.kickUser = function(user, callback) {
-  console.log("UserAdministration.kickUser");
+  log.debug("UserAdministration.kickUser");
   session.removeInvitee(user, session.getActiveSession());
   var socket = playerManager.getPlayer(user).socket;
   this.disconnectSocket(socket);
 };
 
 UserAdministration.prototype.disconnectSocket = function(socket) {
-  console.log("Disconnecting socket ", socket.id);
+  log.info("Disconnecting socket ", socket.id);
   database.deleteTokens(socket.id);
   socket.disconnect('unauthorized');
 };
 
 UserAdministration.prototype.inviteUser = function(emailAddress) {
-  console.log("UserAdministration.inviteUser");
+  log.debug("UserAdministration.inviteUser");
   var currentSession = session.getActiveSession();
   session.addInvitee(emailAddress, currentSession);
 
@@ -55,6 +55,7 @@ UserAdministration.prototype.inviteUser = function(emailAddress) {
 };
 
 UserAdministration.prototype.inviteUsers = function() {
+  log.debug("UserAdministration.inviteUsers");
   var sendInvitations = function(address) {
     smtp.sendMail(addP2PLink(session.getActiveSession().mailOptions));
   };
@@ -65,7 +66,7 @@ UserAdministration.prototype.inviteUsers = function() {
 module.exports = UserAdministration;
 
 function addP2PLink(mailOptions) {
-  console.log("adding Link");
+  log.silly("adding Link");
   var message = mailOptions.text;
   mailOptions.text = message + " \n\n Link: https://" + session.getLocalIp() + "/html/client.html";
   return mailOptions;

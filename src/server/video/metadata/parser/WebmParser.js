@@ -14,7 +14,7 @@ function WebmParser() {
 Util.inherits(WebmParser, EventEmitter);
 
 WebmParser.prototype.queuedDecode = function(metaRequests) {
-  console.log("WebmParser.queuedDecode");
+  log.debug("WebmParser.queuedDecode");
   var emitter = this;
   var counter = new EventEmitter();
   counter.queue = metaRequests.length - 1;
@@ -34,7 +34,7 @@ WebmParser.prototype.queuedDecode = function(metaRequests) {
 
 //Adjust to take requests with manifest file included
 WebmParser.prototype.readAndDecode = function(readConfig, manifest, counter) {
-  console.log("WebmParser.readAndDecode");
+  log.debug("WebmParser.readAndDecode");
   var readStream  = Fs.createReadStream(readConfig.path, readConfig.options);
   var decoder     = new Ebml.Decoder();
 
@@ -42,10 +42,10 @@ WebmParser.prototype.readAndDecode = function(readConfig, manifest, counter) {
     decoder.write(data);
   });
   readStream.on('error', function(e) {
-    console.log("WebmParser.readAndDecode, Server: Error: " + e);
+    log.error("WebmParser.readAndDecode, Server: Error: " + e);
   });
   readStream.on('end', function() {
-    console.log("WebmParser.readAndDecode, Server: Finished reading stream");
+    log.info("WebmParser.readAndDecode, Server: Finished reading stream");
     counter.emit('processed', manifest);
   });
 

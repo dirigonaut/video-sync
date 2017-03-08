@@ -32,7 +32,7 @@ function initialize(io, socket) {
   });
 
   socket.on('state-req-pause', function(data) {
-    log.info('state-req-pause');
+    log.debug('state-req-pause', data);
     var onAllowed = function() {
       var message = chatEngine.buildMessage(socket.id, "issued pause");
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
@@ -42,7 +42,7 @@ function initialize(io, socket) {
   });
 
   socket.on('state-req-seek', function(data) {
-    log.info('state-req-seek');
+    log.debug('state-req-seek', data);
     var onAllowed = function() {
       var message = chatEngine.buildMessage(socket.id, `issued seek to ${data.seektime}`);
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
@@ -52,7 +52,7 @@ function initialize(io, socket) {
   });
 
   socket.on('state-sync', function() {
-    log.info('state-sync');
+    log.debug('state-sync');
     var onAllowed = function() {
       var message = chatEngine.buildMessage(socket.id, "issued sync");
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
@@ -62,7 +62,7 @@ function initialize(io, socket) {
   });
 
   socket.on('state-change-sync', function(data) {
-    log.info('state-change-sync');
+    log.debug('state-change-sync', data);
     var onAllowed = function(value) {
       var message = chatEngine.buildMessage(socket.id, `is now in sync state ${value}`);
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
@@ -86,6 +86,7 @@ function initialize(io, socket) {
   });
 
   socket.on('state-initialized', function() {
+    log.debug('state-time-update');
     var player = playerManager.getPlayer(socket.id);
     player.isInit = true;
   });

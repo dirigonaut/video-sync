@@ -10,7 +10,7 @@ function SyncRule(fuzzyRange) {
 }
 
 SyncRule.prototype.evaluate = function(issuer, callback) {
-  log.info("SyncRule.evaluate");
+  log.silly("SyncRule.evaluate");
   var players = playerManager.getPlayers();
   var sync = false;
 
@@ -26,7 +26,7 @@ SyncRule.prototype.evaluate = function(issuer, callback) {
   }
 
   if(sync) {
-    console.log(`sync triggered ${issuer.socket.id} ${issuer.timestamp}`);
+    log.silly(`Sync triggered ${issuer.socket.id} ${issuer.timestamp}`);
     callback(issuer, "state-pause");
   }
 };

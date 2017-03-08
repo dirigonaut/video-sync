@@ -10,7 +10,7 @@ function ResumeRule(fuzzyRange) {
 }
 
 ResumeRule.prototype.evaluate = function(issuer, callback) {
-  log.info("ResumeRule.evaluate");
+  log.silly("ResumeRule.evaluate");
 	var others = playerManager.getOtherPlayers(issuer.socket.id);
   var rearguard = null;
   var waitguard = null;
@@ -26,14 +26,17 @@ ResumeRule.prototype.evaluate = function(issuer, callback) {
 	}
 
   if(rearguard === null) {
+    log.silly("There is no rearguard instead using waitguard.", waitguard);
     rearguard = waitguard;
   }
 
   if(rearguard !== null) {
     if((parseFloat(issuer.timestamp) - parseFloat(rearguard.timestamp)) < this.fuzzyRange) {
+      log.silly("ResumeRule triggered for", issuer);
       callback(issuer);
     }
   } else {
+    log.silly("ResumeRule triggered as there are no other users synced", issuer);
     callback(issuer);
   }
 };

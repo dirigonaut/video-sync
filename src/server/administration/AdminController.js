@@ -20,18 +20,18 @@ function AdminController(io, socket) {
 }
 
 function initialize(io, socket) {
-  console.log("Attaching AdminController");
+  log.info("Attaching AdminController");
 
   socket.on('admin-smtp-invite', function() {
     if(session.isAdmin(socket.id) && session.getActiveSession() != null){
-      console.log('admin-smtp-invite');
+      log.debug("admin-smtp-invite");
       userAdmin.inviteUsers();
     }
   });
 
   socket.on('admin-set-media', function(data) {
     if(session.isAdmin(socket.id)){
-      log.info('admin-set-media');
+      log.debug('admin-set-media');
 
       session.setMediaPath(data);
 
@@ -48,14 +48,14 @@ function initialize(io, socket) {
 
   socket.on('admin-load-session', function(data) {
     if(session.isAdmin(socket.id)){
-      log.info('admin-load-session');
+      log.debug('admin-load-session');
       session.loadSession(data);
     }
   });
 
   socket.on('chat-command', function(data) {
     if(session.isAdmin(socket.id)){
-      log.info('admin-chat-command');
+      log.debug('admin-chat-command');
 
       var response = function(event, text) {
         var message = chatEngine.buildMessage(socket.id, text);
@@ -74,7 +74,7 @@ function initialize(io, socket) {
 
   socket.on('admin-change-log', function(data) {
     if(session.isAdmin(socket.id)){
-      log.info('admin-change-log');
+      log.debug('admin-change-log');
       var logManager = new LogManager();
       logManager.changeLog(data);
     }

@@ -7,13 +7,14 @@ var LogManager    = require('../../log/LogManager');
 var FileUtil    = require('../../utils/FileSystemUtils');
 
 var fileUtil = new FileUtil();
+var log      = LogManager.getLog(LogManager.LogEnum.ENCODING);
 
 function WebmMetaData() {
 
 }
 
 WebmMetaData.prototype.generateWebmMeta = function(path, callback) {
-  console.log("WebmMetaData.generateWebmMeta");
+  log.debug("WebmMetaData.generateWebmMeta", path);
   var fileIO = new FileIO();
   var buffer = [];
 
@@ -32,7 +33,7 @@ WebmMetaData.prototype.generateWebmMeta = function(path, callback) {
 module.exports = WebmMetaData;
 
 var parseMpdForTracks = function(blob) {
-  console.log("WebmMetaData.parseMpdForSegments");
+  log.debug("WebmMetaData.parseMpdForSegments");
   var mpd = new DOMParser().parseFromString(blob.toString(), "text/xml");
   var period = mpd.documentElement.getElementsByTagName('Period');
   var elements = period.item(0).childNodes;
@@ -63,7 +64,7 @@ var parseMpdForTracks = function(blob) {
 };
 
 var getClusters = function(dirPath, tracks, callback) {
-  console.log("WebmMetaData._getClusters");
+  log.debug("WebmMetaData._getClusters");
   var webmParser = new WebmParser();
   var metaRequests = [];
 
@@ -89,11 +90,12 @@ var getClusters = function(dirPath, tracks, callback) {
     callback(metaData);
   });
 
+  log.debug("Meta requests: ", metaRequests);
   webmParser.queuedDecode(metaRequests);
 };
 
 var parseEBML = function(manifest, data) {
-  //console.log("WebmMetaData._parseCue");
+  log.silly("WebmMetaData.parseEBML", data);
   var tagType = data[0];
   var tagData = data[1];
 
@@ -110,7 +112,6 @@ var parseEBML = function(manifest, data) {
       cluster.time = tagData.data.readUIntBE(0, tagData.data.length);
     } else if(tagData.name === 'Duration') {
       var duration = tagData.data.readFloatBE(0, tagData.data.length);
-      console.log(`Duration: ${duration/1000}`);
       Manifest.setDuration(manifest, duration);
     } else if(tagData.name === 'TimecodeScale') {
       var timecodeScale = tagData.data.readUIntBE(0, tagData.data.length)

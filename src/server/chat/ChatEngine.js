@@ -1,11 +1,13 @@
 var PlayerManager = require('../player/PlayerManager');
+var LogManager    = require('../log/LogManager');
 
 var playerManager = new PlayerManager();
+var log           = LogManager.getLog(LogManager.LogEnum.CHAT);
 
 function ChatEngine() { }
 
 ChatEngine.prototype.broadcast = function(event, message) {
-  console.log("ChatEngine.prototype.broadcast");
+  log.debug("ChatEngine.prototype.broadcast");
   if(event !== null && message !== null) {
     var players = playerManager.getPlayers();
     for(var p of players.keys()) {
@@ -15,7 +17,7 @@ ChatEngine.prototype.broadcast = function(event, message) {
 };
 
 ChatEngine.prototype.ping = function(event, message) {
-  console.log("ChatEngine.prototype.ping");
+  log.debug("ChatEngine.prototype.ping");
   var player = playerManager.getPlayer(message.from);
   if(player !== undefined && player !== null) {
     var socket = player.socket;

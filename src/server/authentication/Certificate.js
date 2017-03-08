@@ -18,15 +18,15 @@ Certificate.prototype.getCertificates = function(callback) {
   log.debug("Certificate.prototype.getCertificates");
   var validateCerts = function(certs) {
     if(certs == null || certs == undefined || certs.length == 0) {
-      log.debug("There are no SSL Certificates, signing new ones.");
+      log.info("There are no SSL Certificates, signing new ones.");
       var cert = self._generate(self._getAttributes(), callback);
     } else {
-      log.debug("Loading SSL Certificates.");
+      log.info("Loading SSL Certificates.");
       var cert = certs[0];
       if(Moment().diff(cert.expire) < -1) {
         callback(cert.pem);
       } else {
-        log.debug("SSL Certificates are expired, signing new ones.");
+        log.info("SSL Certificates are expired, signing new ones.");
         database.deleteCerts(Moment().valueOf());
 
         var cert = self._generate(self._getAttributes(), callback);
@@ -92,6 +92,7 @@ Certificate.prototype._getAttributes = function() {
 };
 
 Certificate.prototype._save = function(certs, callback) {
+  log.debug("Certificate.prototype._save");
   var certificate = {expire: Moment().add(EXPIR, 'days').valueOf(), pem: certs};
   database.createCerts(certificate, callback);
 };

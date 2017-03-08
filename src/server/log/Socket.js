@@ -2,7 +2,6 @@ var Util = require('util');
 var Winston = require('winston');
 
 var Socket = exports.Socket = function (options) {
-  console.log('creating socket transport');
   this.name = 'socket';
 
   if(options.socket) {
@@ -31,6 +30,7 @@ Socket.prototype.log = function (level, msg, meta, callback) {
     time: new Date().toTimeString().split(" ")[0],
   };
 
+  console.log(payload);
   this.socket.emit('chat-log-resp', payload);
 };
 

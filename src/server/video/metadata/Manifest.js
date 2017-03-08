@@ -1,6 +1,6 @@
-var LogManager    = require('../../log/LogManager');
+var LogManager = require('../../log/LogManager');
 
-var log           = LogManager.getLog(LogManager.LogEnum.ENCODING);
+var log        = LogManager.getLog(LogManager.LogEnum.ENCODING);
 
 function LinkedCluster() {
   this.next = null;
@@ -9,7 +9,7 @@ function LinkedCluster() {
 }
 
 function Manifest(path, init) {
-  console.log('Manifest');
+  log.debug('Manifest', path);
   this.path = path;
   this.init = init;
   this.linkedClusters = new LinkedCluster();
@@ -25,14 +25,17 @@ Manifest.cluster = function() {
 };
 
 Manifest.setTimecodeScale = function(manifest, timecodeScale) {
+  log.silly('Manifest.setTimecodeScale', timecodeScale);
   manifest.timecodeScale = timecodeScale;
 };
 
 Manifest.setDuration = function(manifest, duration) {
+  log.silly('Manifest.setDuration', duration);
   manifest.duration = duration;
 };
 
 Manifest.addCluster = function(manifest, cluster) {
+  log.silly('Manifest.addCluster', cluster);
   var linkedCluster = new LinkedCluster();
   linkedCluster.cluster = cluster;
 
@@ -60,7 +63,7 @@ Manifest.getCluster = function(manifest, position) {
 };
 
 Manifest.flattenManifest = function(manifest) {
-  console.log('Manifest.flattenManifest');
+  log.debug('Manifest.flattenManifest');
   var clusterList = [];
 
   for(var pointer = manifest.linkedClusters.next; pointer; pointer = pointer.next) {

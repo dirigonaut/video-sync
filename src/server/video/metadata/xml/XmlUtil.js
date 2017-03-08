@@ -1,13 +1,16 @@
 var DOMParser  = require('xmldom').DOMParser;
 var XmlFactory = require('./XmlFactory');
+var LogManager = require('../../../log/LogManager');
 
 var xmlFactory = new XmlFactory();
+var log = LogManager.getLog(LogManager.LogEnum.ENCODING);
 
 function XmlUtil() {
 
 };
 
 XmlUtil.prototype.webmMetaToXml = function(meta) {
+  log.debug("XmlUtil.webmMetaToXml", meta);
   var xmlMap = new Map();
 
   for(var i in meta) {

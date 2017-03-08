@@ -1,17 +1,20 @@
-var Player = require('./Player');
+var Player      = require('./Player');
+var LogManager  = require('../log/LogManager');
 
 var players = new Map();
+var log     = LogManager.getLog(LogManager.LogEnum.STATE);
 
-function PlayerManager (){
+function PlayerManager () {
 };
 
-PlayerManager.prototype.createPlayer = function(socket, handle){
+PlayerManager.prototype.createPlayer = function(socket, handle) {
   var newPlayer = new Player(socket, handle);
   players.set(socket.id, newPlayer);
-  console.log("Adding player, total players now: " + players.size);
+  log.info("Adding player, total players now: " + players.size);
 };
 
-PlayerManager.prototype.getPlayer = function(id){
+PlayerManager.prototype.getPlayer = function(id) {
+  log.silly("PlayerManager.getPlayer", id);
   var player = players.get(id);
 
   if(player === null || player === undefined) {
@@ -20,11 +23,12 @@ PlayerManager.prototype.getPlayer = function(id){
   return player;
 };
 
-PlayerManager.prototype.getPlayers = function(){
+PlayerManager.prototype.getPlayers = function() {
   return players;
 };
 
-PlayerManager.prototype.removePlayer = function(id){
+PlayerManager.prototype.removePlayer = function(id) {
+  log.debug("PlayerManager.removePlayer", id);
   players.delete(id);
 
   var player = players.get(id);
@@ -34,7 +38,8 @@ PlayerManager.prototype.removePlayer = function(id){
   }
 };
 
-PlayerManager.prototype.getOtherPlayers = function(id){
+PlayerManager.prototype.getOtherPlayers = function(id) {
+  log.silly("PlayerManager.getOtherPlayers", id);
   var temp = new Array();
   for(var p of players.keys()) {
     if(p != id){
@@ -44,10 +49,11 @@ PlayerManager.prototype.getOtherPlayers = function(id){
   return temp;
 };
 
-PlayerManager.prototype.getSyncedPlayersState = function(){
+PlayerManager.prototype.getSyncedPlayersState = function() {
+  log.silly("PlayerManager.getSyncedPlayersState");
   var state = null;
   for(var p of players.keys()) {
-    if(players.get(p).sync === Player.Sync.SYNCED){
+    if(players.get(p).sync === Player.Sync.SYNCED) {
       state = players.get(p).state;
       break;
     }
@@ -55,10 +61,11 @@ PlayerManager.prototype.getSyncedPlayersState = function(){
   return state;
 };
 
-PlayerManager.prototype.removePlayersWithId = function(playerArray, id){
+PlayerManager.prototype.removePlayersWithId = function(playerArray, id) {
+  log.silly("PlayerManager.removePlayersWithId", id);
   var temp = new Array();
   for(var p in playerArray) {
-    if(playerArray[p].id != id){
+    if(playerArray[p].id != id) {
       temp.push(playerArray[p]);
     }
   }
@@ -66,6 +73,7 @@ PlayerManager.prototype.removePlayersWithId = function(playerArray, id){
 };
 
 PlayerManager.prototype.getHandles = function() {
+  log.silly("PlayerManager.getHandles");
   var temp = new Array();
   for(var p of players.keys()) {
     temp.push([players.get(p).socket.id, players.get(p).handle]);
@@ -74,6 +82,7 @@ PlayerManager.prototype.getHandles = function() {
 };
 
 PlayerManager.prototype.setPlayerHandle = function(id, handle) {
+  log.silly("PlayerManager.setPlayerHandle", id);
   for(var p of players.keys()) {
     if(p === id) {
       players.get(p).setHandle(handle);
