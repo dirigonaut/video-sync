@@ -26,14 +26,16 @@ function initialize(io, socket) {
 
   socket.on('chat-command', function(data) {
     if(!session.isAdmin(socket.id)){
-      console.log('chat-command');
+      log.debug('chat-command', data);
 
       var response = function(event, text) {
         var message = chatEngine.buildMessage(socket.id, text);
 
         if(event === ChatEngine.Enum.PING) {
+          log.silly('chat-command-response', data);
           chatEngine.ping(event, message);
         } else {
+          log.silly('chat-command-response', data);
           chatEngine.broadcast(event, message);
         }
       }

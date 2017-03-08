@@ -10,18 +10,18 @@ var LogManager    = require('../log/LogManager');
 var playerManager = new PlayerManager();
 var session       = new Session();
 var accuracy      = 2;
-var log;
+var log           = LogManager.getLog(LogManager.LogEnum.STATE);
 
 var interval = setInterval(function() {
   resumeLogic(playerManager.getPlayers());
 }, 500);
 
 function StateEngine() {
-  log = LogManager.getLog(LogManager.LogEnum.STATE);
+
 }
 
 StateEngine.prototype.play = function(id, callback) {
-  log.info('StateEngine.play');
+  log.debug('StateEngine.play');
   if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
     var player = playerManager.getPlayer(id);
 
@@ -52,7 +52,7 @@ StateEngine.prototype.play = function(id, callback) {
 };
 
 StateEngine.prototype.pause = function(id, callback) {
-  log.info('StateEngine.pause');
+  log.debug('StateEngine.pause');
   if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
     var player = playerManager.getPlayer(id);
 
@@ -74,7 +74,7 @@ StateEngine.prototype.pause = function(id, callback) {
 };
 
 StateEngine.prototype.seek = function(id, data, callback) {
-  log.info('StateEngine.seek');
+  log.debug('StateEngine.seek');
   if(session.getMediaPath() !== null && session.getMediaPath().length > 0 && session.getMediaStarted()) {
     var issuer = playerManager.getPlayer(id);
 
@@ -95,7 +95,7 @@ StateEngine.prototype.seek = function(id, data, callback) {
 };
 
 StateEngine.prototype.pauseSync = function(id, callback) {
-  log.info('StateEngine.sync');
+  log.debug('StateEngine.sync');
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     var player = playerManager.getPlayer(id);
 
@@ -124,7 +124,7 @@ StateEngine.prototype.pauseSync = function(id, callback) {
 };
 
 StateEngine.prototype.changeSyncState = function(id, callback) {
-  log.info('StateEngine.changeSyncState');
+  log.debug('StateEngine.changeSyncState');
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     var player = playerManager.getPlayer(id);
     if(player !== null && player !== undefined) {
@@ -188,19 +188,20 @@ StateEngine.prototype.syncingPing = function(id) {
 module.exports = StateEngine;
 
 var updatePlayerState = function(id, timestamp, state) {
-  log.info('StateEngine.sync', {Id: id, Timestamp: timestamp, State:state});
+  log.silly('StateEngine.updatePlayerState', {Id: id, Timestamp: timestamp, State:state});
   var player = playerManager.getPlayer(id);
 
   if(player !== null && player !== undefined) {
     player.state      = state ? Player.State.PAUSE : Player.State.PLAY;
     player.timestamp  = timestamp;
   } else {
-    console.log("Id: " + id);
-    console.log(playerManager.getPlayers());
+    log.silly("Could not find the player.");
+    log.silly("Current users: ", playerManager.getPlayers());
   }
 };
 
 var updatePlayerSync = function(id, timestamp, state) {
+  log.silly('StateEngine.updatePlayerSync', {Id: id, Timestamp: timestamp, State:state});
   var player = playerManager.getPlayer(id);
 
   if(player !== null && player !== undefined) {
@@ -208,8 +209,8 @@ var updatePlayerSync = function(id, timestamp, state) {
     player.timestamp  = timestamp;
     player.sync       = Player.Sync.SYNCWAIT;
   } else {
-    console.log("Id: " + id);
-    console.log(playerManager.getPlayers());
+    log.silly("Could not find the player.");
+    log.silly("Current users: ", playerManager.getPlayers());
   }
 };
 

@@ -1,9 +1,11 @@
 var FileUtils = require('../../../utils/FileSystemUtils');
+var LogManager  = require('../../../log/LogManager');
 
+var log = LogManager.getLog(LogManager.LogEnum.ENCODING);
 var fileUtils = new FileUtils();
 
 function Command(input) {
-  console.log("Command");
+  log.debug("Command", input);
   var args = [];
   var options = input.split(" -");
   var lastIndex = options.length-1;
@@ -19,11 +21,12 @@ function Command(input) {
     args = args.concat(keyless.split(" "));
   }
 
-  console.log(args);
+  log.debug("Parsed Arguments: ", args);
   return args;
 }
 
 Command._getKeyValuePair = function(pair) {
+  log.debug("Command._getKeyValuePair", pair);
   var keyValuePair = [];
   var command = pair.split(" ");
   var key = command.shift();
@@ -46,6 +49,7 @@ Command._getKeyValuePair = function(pair) {
 }
 
 Command._getTailKeylessPathValues = function(command) {
+  log.debug("Command._getTailKeylessPathValues", command)
   var keylessValues = "";
   var parms = command.split(" ");
 

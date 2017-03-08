@@ -2,7 +2,9 @@ const EventEmitter  = require('events');
 
 var Cache       = require('../utils/Cache');
 var NeDatabase	= require('../database/NeDatabase');
+var LogManager  = require('../log/LogManager');
 
+var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
 var database      = new NeDatabase();
 var activeSession = null;
 var mediaPath     = null;
@@ -18,10 +20,11 @@ function Session() {
 }
 
 Session.prototype.loadSession = function(id) {
+  log.debug("Session.loadSession");
   var setSession = function(session) {
     activeSession = session[0];
     idToEmailMap = new Map();
-    console.log(activeSession);
+    log.info("Loaded session",activeSession);
   }
 
   database.readSession(id, setSession);
@@ -32,14 +35,17 @@ Session.prototype.getActiveSession = function() {
 };
 
 Session.prototype.getInvitee = function(id, session) {
+  log.debug("Session.getInvitees");
   for(var x in session.invitees) {
     if(session.invitees[x] == id) {
+      log.silly("Invitee found at entry", x);
       return session.invitees[x];
     }
   }
 };
 
 Session.prototype.addInvitee = function(email, session) {
+  log.silly("Session.addInvitee");
   session.invitees.push(email);
 };
 
@@ -48,7 +54,7 @@ Session.prototype.associateIdToEmail = function(id, email) {
 };
 
 Session.prototype.removeInvitee = function(id, session) {
-  console.log("Session.removeInvitee");
+  log.debug("Session.removeInvitee");
   var email = idToEmailMap.get(id);
 
   for(var x in session.invitees) {
@@ -71,6 +77,7 @@ Session.prototype.getMediaStarted = function() {
 };
 
 Session.prototype.setMediaPath = function(path) {
+  log.info("Session.setMediaPath")
   mediaPath = path;
   mediaStarted = false;
 
@@ -92,6 +99,7 @@ Session.prototype.getAdmin = function() {
 };
 
 Session.prototype.onAdminIdCallback = function(callback) {
+  log.debug("Session.onAdminIdCallback");
   if(emitter === null || emitter === undefined) {
     emitter = new EventEmitter();
   }
@@ -101,7 +109,7 @@ Session.prototype.onAdminIdCallback = function(callback) {
 
 Session.prototype.setAdminId = function(id) {
   if(adminId === null) {
-    console.log("AdminId: " + id);
+    log.debug("AdminId: " + id);
     adminId = id;
     emitter.emit('admin-set', id);
   }

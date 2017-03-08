@@ -12,12 +12,13 @@ function Authenticator(){
 };
 
 Authenticator.prototype.requestToken = function(id, data, callback) {
-  console.log("Authenticator.requestToken");
+  log.debug("Authenticator.requestToken");
   if(session.getActiveSession() !== null && session.getActiveSession() !== undefined) {
     var invitees = session.getActiveSession().invitees;
 
     for(var x in invitees) {
       if(invitees[x] == data.address) {
+        log.silly("Created Token for Id: ", id);
         var token = createToken(id, data.address);
         database.createToken(token, callback);
       }
@@ -26,7 +27,7 @@ Authenticator.prototype.requestToken = function(id, data, callback) {
 };
 
 Authenticator.prototype.validateToken = function(id, data, callback) {
-  console.log("Authenticator.validateToken");
+  log.debug("Authenticator.validateToken");
   if(session.getActiveSession() !== null && session.getActiveSession() !== undefined) {
     var invitees = session.getActiveSession().invitees;
 
@@ -35,6 +36,7 @@ Authenticator.prototype.validateToken = function(id, data, callback) {
 
       if(token.length > 0) {
         if(token[0].token == data.token && token[0].address == data.address) {
+          log.silly("The following id has been authenticated: ", id);
           authorized = true;
         }
       }
@@ -54,6 +56,7 @@ Authenticator.prototype.validateToken = function(id, data, callback) {
 module.exports = Authenticator;
 
 var createToken = function(id, address) {
+  log.silly("createToken");
   var token = new Object();
 
   token._id     = id

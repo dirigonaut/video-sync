@@ -44,7 +44,7 @@ function initialize(io) {
     socket.emit('connected');
 
     socket.on('auth-get-token', function (data) {
-      //Log.trace('auth-get-token');
+    log.debug('auth-get-token');
 
       var requestSmtp = function(token) {
         var sendInvitations = function(hostAddress) {
@@ -60,7 +60,7 @@ function initialize(io) {
     });
 
     socket.on('auth-validate-token', function (data) {
-      //Log.trace('auth-validate-token');
+      log.debug('auth-validate-token');
 
       var cleanData = validator.sterilizeUser(data);
 
@@ -80,6 +80,7 @@ function initialize(io) {
     });
 
     socket.on('disconnect', function() {
+      log.info('disconnect', socket.id);
       var chatEngine = new ChatEngine();
       chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has left the session.`));
 
@@ -89,14 +90,14 @@ function initialize(io) {
     });
 
     socket.on('error', function (data) {
-      console.log(data);
+      log.error(data);
     });
 
     setTimeout(function(){
       //If the socket didn't authenticate, disconnect it
       if (!socket.auth) {
-        console.log(socket.auth);
-        console.log("timing out socket");
+        log.debug(socket.auth);
+        log.info("timing out socket", socket.id);
         userAdmin.disconnectSocket(socket);
       }
     }, 300000);
@@ -124,7 +125,7 @@ function userAuthorized(socket, io, handle) {
     chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has joined the session.`));
   });
 
-  log.info("socket has been authenticated.");
+  log.info("socket has been authenticated.", socket.id);
 }
 
 function isAdministrator(socket, io) {

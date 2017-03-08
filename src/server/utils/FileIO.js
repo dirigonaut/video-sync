@@ -7,25 +7,28 @@ function FileIO() {
 };
 
 FileIO.prototype.read = function(readConfig) {
-  log.debug('FileIO.read');
+  log.debug('FileIO.read', readConfig);
   var readStream  = Fs.createReadStream(readConfig.path, readConfig.options);
 
   readStream.on('error', function(e) {
     log.error("FileIO.write, Server: Error: " + e);
   });
+
   readStream.on('close', function() {
     log.debug("FileIO.read, Server: Finished reading.");
     if(readConfig.onFinish) {
       readConfig.onFinish();
     }
 	});
+
   readStream.on('data', function(chunk) {
+    log.silly("on data", readConfig);
     readConfig.callback(chunk);
   });
 };
 
 FileIO.prototype.write = function(writeConfig, data) {
-  log.debug('FileIO.write');
+  log.debug('FileIO.write', writeConfig);
 	var writeStream = Fs.createWriteStream(writeConfig.path, writeConfig.options);
 
   writeStream.on('error', function(e) {
@@ -42,7 +45,8 @@ FileIO.prototype.write = function(writeConfig, data) {
 };
 
 FileIO.prototype.readDir = function(readConfig) {
-  log.debug('FileIO.readDir');
+  log.debug('FileIO.readDir', readConfig);
+
   Fs.readdir(readConfig.path, function (err, files) {
     if (err) {
       log.error("FileIO.write, Server: Error:", err);
@@ -70,7 +74,8 @@ FileIO.prototype.readDir = function(readConfig) {
 };
 
 FileIO.prototype.ensureDirExists = function(path, mask, callback) {
-  log.debug('FileIO.ensureDirExists');
+  log.debug('FileIO.ensureDirExists', path);
+
   Fs.mkdir(path, mask, function(err) {
     if (err) {
       if (err.code == 'EEXIST') {

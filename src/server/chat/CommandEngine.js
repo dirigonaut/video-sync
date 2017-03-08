@@ -2,7 +2,9 @@ var UserAdmin     = require('../administration/UserAdministration');
 var StateEngine   = require('../state/StateEngine.js');
 var PlayerManager = require('../player/PlayerManager');
 var ChatEngine    = require('./ChatEngine');
+var LogManager    = require('../log/LogManager');
 
+var log           = LogManager.getLog(LogManager.LogEnum.CHAT);
 var userAdmin     = new UserAdmin();
 var stateEngine   = new StateEngine();
 var playerManager = new PlayerManager();
@@ -11,7 +13,7 @@ var chatEngine    = new ChatEngine();
 function CommandEngine() { }
 
 CommandEngine.prototype.processAdminCommand = function(admin, command, callback) {
-  console.log("CommandEngine.prototype.processAdminCommand");
+  log.debug("CommandEngine.prototype.processAdminCommand");
   switch(command.command) {
     case CommandEngine.AdminEnum.INVITE:
       userAdmin.inviteUser(command.param[0]);
@@ -39,7 +41,7 @@ CommandEngine.prototype.processAdminCommand = function(admin, command, callback)
 };
 
 CommandEngine.prototype.processCommand = function(issuer, command, callback) {
-  console.log("CommandEngine.prototype.processCommand");
+  log.debug("CommandEngine.prototype.processCommand");
   switch(command.command) {
     case CommandEngine.ClientEnum.PLAY:
       stateEngine.play(issuer.socket.id);

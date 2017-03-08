@@ -12,7 +12,7 @@ function PlayRule(fuzzyRange) {
 }
 
 PlayRule.prototype.evaluate = function(issuer, callback) {
-  console.log("PlayRule.evaluate");
+  log.silly("PlayRule.evaluate");
 	var players = playerManager.getPlayers();
   var issuees = [];
 
@@ -29,6 +29,7 @@ PlayRule.prototype.evaluate = function(issuer, callback) {
   }
 
   if(issuees.length > 0) {
+    log.silly("PlayRule triggered", issuees);
     callback(issuees);
   }
 };

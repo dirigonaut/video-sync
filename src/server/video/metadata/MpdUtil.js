@@ -11,7 +11,7 @@ var fileUtil = new FileUtil();
 function MpdUtil() { }
 
 MpdUtil.prototype.addSegmentsToMpd = function(path, metaMap, callback) {
-  console.log('MpdUtil.prototype.addSegmentsToMpd');
+  log.debug('MpdUtil.addSegmentsToMpd', metaMap);
   var processMpd = function(mpd) {
     cleanMpdPaths(mpd);
     insertMetaData(mpd, metaMap);
@@ -25,6 +25,7 @@ MpdUtil.prototype.addSegmentsToMpd = function(path, metaMap, callback) {
 };
 
 MpdUtil.prototype.removeFullPathsFromMpd = function(path) {
+  log.debug('MpdUtil.removeFullPathsFromMpd');
   var processMpd = function(mpd) {
     cleanMpdPaths(mpd);
 
@@ -39,6 +40,7 @@ MpdUtil.prototype.removeFullPathsFromMpd = function(path) {
 module.exports = MpdUtil;
 
 var loadMpd = function(path, callback) {
+  log.debug('MpdUtil.loadMpd');
   var fileStream = new FileIO();
   var buffer = [];
 
@@ -58,6 +60,7 @@ var loadMpd = function(path, callback) {
 };
 
 var saveMpd = function(path, mpd, callback) {
+  log.debug('MpdUtil.saveMpd');
   var fileStream = new FileIO();
   var writeConfig = fileStream.createStreamConfig(path, null);
 
@@ -69,7 +72,7 @@ var saveMpd = function(path, mpd, callback) {
 };
 
 var insertMetaData = function(mpd, metaData) {
-  log.debug("insertMetaData", metaData);
+  log.debug("MpdUtil.insertMetaData", metaData);
   var adaptionSets = mpd.documentElement.getElementsByTagName('AdaptationSet');
   var representationMap = new Map();
 
@@ -98,6 +101,7 @@ var insertMetaData = function(mpd, metaData) {
 };
 
 var cleanMpdPaths = function(mpd) {
+  log.debug('MpdUtil.cleanMpdPaths');
   var adaptionSets = mpd.documentElement.getElementsByTagName('AdaptationSet');
   var representationMap = new Map();
 
