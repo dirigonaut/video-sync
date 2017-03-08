@@ -7,11 +7,11 @@ var b = browserify({
   standalone: 'Client',
   cache: {},
   packageCache: {},
-  plugin: [watchify]
+  //plugin: [watchify]
 });
 
 function Bundler() {
-  b.on('update', bundle);
+  //b.on('update', bundle);
   bundle();
 }
 

@@ -11,18 +11,31 @@ WebmParser.prototype.getBaseURL = function(mpd, adaptId, repId) {
 WebmParser.prototype.getTimeStep = function(mpd, adaptId, repId) {
   var adaptIndex = getAdationSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
-  var $ = rep.SegmentList[0].$;
-  return $.duration / $.timescale;
+
+  var timeStep = null;
+  if(rep !== null && rep !== undefined) {
+    if(rep.SegmentList !== undefined && rep.SegmentList !== null) {
+      var $ = rep.SegmentList[0].$;
+      timeStep = $.duration / $.timescale;
+    }
+  }
+
+  return timeStep;
 };
 
 WebmParser.prototype.getSegmentList = function(mpd, adaptId, repId) {
   var adaptIndex = getAdationSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
-  var segmentURLs = rep.SegmentList[0].SegmentURL;
-  var segments = [];
 
-  for(var i in segmentURLs) {
-    segments.push(segmentURLs[i].$.mediaRange);
+  var segments = [];
+  if(rep !== null && rep !== undefined) {
+    if(rep.SegmentList !== undefined && rep.SegmentList !== null) {
+      var segmentURLs = rep.SegmentList[0].SegmentURL;
+
+      for(var i in segmentURLs) {
+        segments.push(segmentURLs[i].$.mediaRange);
+      }
+    }
   }
 
   return segments;
@@ -31,13 +44,29 @@ WebmParser.prototype.getSegmentList = function(mpd, adaptId, repId) {
 WebmParser.prototype.getSegmentsCount = function(mpd, adaptId, repId) {
   var adaptIndex = getAdationSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
-  return rep.SegmentList[0].SegmentURL.length;
+
+  var length;
+  if(rep !== null && rep !== undefined) {
+    if(rep.SegmentList !== undefined && rep.SegmentList !== null) {
+      length = rep.SegmentList[0].SegmentURL.length;
+    }
+  }
+
+  return length;
 };
 
 WebmParser.prototype.getInit = function(mpd, adaptId, repId) {
   var adaptIndex = getAdationSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
-  return rep.SegmentList[0].Initialization[0].$.range;
+
+  var init;
+  if(rep !== null && rep !== undefined) {
+    if(rep.SegmentList !== undefined && rep.SegmentList !== null) {
+      init = rep.SegmentList[0].Initialization[0].$.range;
+    }
+  }
+
+  return init;
 };
 
 WebmParser.prototype.getMimeType = function(mpd, adaptId) {

@@ -2,7 +2,6 @@ var Https       = require('https');
 var Express     = require('express');
 var SocketIO    = require('socket.io');
 
-var Bundler       = require('./utils/Bundler');
 var Session       = require('./administration/Session');
 var NeDatabase    = require('./database/NeDatabase');
 var Certificate   = require('./authentication/Certificate');
@@ -40,7 +39,6 @@ function Server(ip, port, appData, callback) {
     server = Https.createServer(options, app);
     io = SocketIO.listen(server);
 
-    new Bundler();
 
     var adminSocketLogging = function(id) {
       console.log("Adding Socket Logging");
