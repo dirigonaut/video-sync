@@ -8,7 +8,7 @@ function ClientLogManager() {
 }
 
 ClientLogManager.prototype.addGUILogging = function(logName, callback) {
-  var clientTransport = buildClientTransport(callback, 'info', logName, false);
+  var clientTransport = buildClientTransport(callback, 'info', logName, true);
 
   var container = Winston.loggers.get(logName);
 
@@ -36,6 +36,7 @@ function buildClientTransport(callback, level, label, handleExceptions) {
     label: label,
     silent: false,
     handleExceptions: handleExceptions,
+    exitOnError: false,
   });
 
   return clientTransport;

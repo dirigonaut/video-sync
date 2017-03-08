@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "nw",
-    "debug": "nw --remote-debugging-port=9999",
+    "debug": "node static/resources/devInit.js | nw --remote-debugging-port=9999",
     "update-deps": "npm outdated --depth=0 | grep -v Package | awk '{print $1}' | xargs -I% npm install %@latest --save",
     "build": "nwbuild -p win64,linux64,osx64 -v 0.20.3 ~/repo/video-sync-2.0/",
     "build-win": "nwbuild -p win64 -v 0.20.3 ~/repo/video-sync-2.0/"
