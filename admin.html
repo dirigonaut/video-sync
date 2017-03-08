@@ -49,7 +49,7 @@
         $("#encodeOverlay").load("static/html/menu/overlays/encode.html");
 
         var loadGui = function() {
-          $.getScript("static/resources/gui.js", function() {
+          $.getScript("static/javascript/gui.js", function() {
             initGUI();
             callback();
           });
@@ -62,7 +62,7 @@
           loadGui();
         };
 
-        $.getScript("static/resources/clientLog.js", function() {
+        $.getScript("static/javascript/clientLog.js", function() {
           var clientLogManager = new (Client.ClientLogManager());
           clientLogManager.addGUILogging(Client.ClientLogManager().LogEnum.CLIENT, guiLog());
           startClient();

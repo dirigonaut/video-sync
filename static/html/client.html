@@ -46,11 +46,11 @@
           $('#loginModal').modal('show');
         });
 
-        $.getScript("../resources/clientLogin.js", function() {
+        $.getScript("../javascript/clientLogin.js", function() {
           initClientLogin();
         });
 
-        $.getScript("../resources/clientLog.js", function() {
+        $.getScript("../javascript/clientLog.js", function() {
           var clientLogManager = new (Client.ClientLogManager());
           clientLogManager.addGUILogging(Client.ClientLogManager().LogEnum.CLIENT, guiLog());
         });
@@ -58,7 +58,7 @@
         var buildClient = function(callback) {
           client = new Client(document.getElementById('video'));
 
-          $.getScript("../resources/gui.js", function() {
+          $.getScript("../javascript/gui.js", function() {
             $('#loginModal').modal('hide');
             $('#btnLogin').remove();
 
