@@ -9,6 +9,12 @@ function Player(socket, handle){
     this.auth       = Player.Auth.DEFAULT;
 };
 
+Player.prototype.init = function() {
+  this.state 	  	= null;
+  this.sync       = Player.Sync.SYNCING;
+  this.timestamp 	= 0;
+};
+
 Player.prototype.isInit = function() {
   return this.sync === Player.Sync.SYNCING && this.timestamp === 0;
 };

@@ -1,11 +1,14 @@
 const EventEmitter  = require('events');
 
-var Cache       = require('../utils/Cache');
-var NeDatabase	= require('../database/NeDatabase');
-var LogManager  = require('../log/LogManager');
+var PlayerManager   = require('../player/PlayerManager');
+var Cache           = require('../utils/Cache');
+var NeDatabase	    = require('../database/NeDatabase');
+var LogManager      = require('../log/LogManager');
 
 var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
 var database      = new NeDatabase();
+var playerManager = new PlayerManager();
+
 var activeSession = null;
 var mediaPath     = null;
 var mediaStarted  = false;
@@ -84,6 +87,7 @@ Session.prototype.setMediaPath = function(path) {
   var cache = new Cache();
   cache.setPath(path);
   cache.flush();
+  playerManager.initPlayers();
 };
 
 Session.prototype.getMediaPath = function() {
