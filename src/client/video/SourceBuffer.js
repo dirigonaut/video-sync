@@ -23,7 +23,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
   var getSegment = function(typeId, timestamp) {
     if(typeId == self.type) {
       if(!isTimeRangeBuffered(timestamp)) {
-        console.log(metaManager.getActiveMetaData());
+        log.info("get-segment", [typeId, timestamp]);
         var segmentInfo = metaManager.getActiveMetaData().getSegment(self.type, timestamp);
         if(segmentInfo !== null) {
           requestVideoData(segmentInfo);
@@ -54,7 +54,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
     }
 
     if(!self.hasInitSeg) {
-      console.log("Init segment has been received.");
+      log.info("Init segment has been received.", self.type);
       self.hasInitSeg = true;
       requestVideoData(metaManager.getActiveMetaData().getSegment(self.type, 0));
     }
@@ -71,8 +71,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
   };
 
   self.objectState = function(e) {
-    console.log("SourceBuffer's objectState");
-    console.log(e);
+    log.error("SourceBuffer's objectState", e);
   };
 
   self.clearEvents = function(e) {
@@ -89,7 +88,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
   };
 
   var requestVideoData = function(requestDetails) {
-    log.info('SourceBuffer.requestVideoData');
+    log.info('SourceBuffer.requestVideoData', requestDetails);
     new ClientSocket().sendRequest("get-segment",
       new RequestFactory().buildVideoSegmentRequest(self.type, requestDetails[0], requestDetails[1]), false);
   };

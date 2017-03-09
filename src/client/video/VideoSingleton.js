@@ -37,9 +37,12 @@ VideoSingleton.prototype.onProgress = function(typeId) {
       if(self.meta.isLastSegment(typeId, self.videoElement.currentTime)){
         var timeToRequest = self.meta.isReadyForNextSegment(typeId, self.videoElement.currentTime);
         if(timeToRequest !== null){
-          console.log(`VideoSingleton.onProgress - time: ${timeToRequest}`);
+          log.silly(`VideoSingleton.onProgress - time: ${timeToRequest}`);
           self.emit("get-segment", typeId, timeToRequest);
         }
+      } else {
+        log.debug("VideoSingleton.onProgress - end of segments");
+        self.videoElement.removeEventListener('timeupdate', progress, false);
       }
     }
   };
@@ -59,8 +62,7 @@ VideoSingleton.prototype.onSeek = function(typeId) {
 module.exports = VideoSingleton;
 
 function onPlay() {
-  console.log("VideoSingleton.onPlay");
-  console.log(self);
+  log.info("VideoSingleton.onPlay");
   self.emit("get-init");
   self.videoElement.removeEventListener('play', onPlay, false);
 }

@@ -98,6 +98,12 @@ PlayerManager.prototype.setPlayerHandle = function(id, handle) {
   }
 };
 
+PlayerManager.prototype.initPlayers = function() {
+  for(var p of players.keys()) {
+    players.get(p).init();
+  }
+}
+
 module.exports = PlayerManager;
 
 function sendEventToAllPlayers(event, payload) {

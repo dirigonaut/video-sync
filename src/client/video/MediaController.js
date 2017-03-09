@@ -6,7 +6,9 @@ var SourceBuffer    = require('./SourceBuffer.js');
 var VideoSingleton  = require('./VideoSingleton.js');
 var ClientSocket    = require('../socket/ClientSocket.js');
 var RequestFactory  = require('../utils/RequestFactory.js');
+var ClientLog       = require('../log/ClientLogManager');
 
+var log             = ClientLog.getLog();
 var clientSocket    = new ClientSocket();
 
 var videoElement    = null;
@@ -35,12 +37,12 @@ function MediaController(video, fBuffer) {
 Util.inherits(MediaController, EventEmitter);
 
 MediaController.prototype.initialize = function(mediaSource, window, downloadMeta, callback) {
-  console.log("MediaController.initialize");
+  log.debug("MediaController.initialize");
   var _this = this;
 
   if(!this.initialized) {
     var setInitialized = function() {
-      console.log('clientPlayerInitialized');
+      log.info('clientPlayerInitialized');
       _this.initialized = true;
       _this.syncPing = true;
       _this.emit('meta-manager-ready');
@@ -55,7 +57,7 @@ MediaController.prototype.initialize = function(mediaSource, window, downloadMet
     this.emit('end-media-source');
 
     this.once('readyToInitialize', function() {
-      console.log('clientPlayerInitialized');
+      log.info('clientPlayerInitialized');
 
       var getMedia = function() {
         if(downloadMeta) {
@@ -82,7 +84,7 @@ MediaController.prototype.setBufferAhead = function(bufferThreshold) {
 };
 
 MediaController.prototype.setForceBuffer = function(forceBuffer) {
-  console.log('MediaController.setForceBuffer')
+  log.debug('MediaController.setForceBuffer')
   var activeMeta = this.metaManager.getActiveMetaData();
 
   activeMeta.setForceBuffer(SourceBuffer.Enum.VIDEO, forceBuffer);
@@ -119,7 +121,7 @@ var initializeClientPlayer = function(_this, mediaSource, window, callback) {
     }, 1000);
 
     var resetMediaSource = function() {
-      console.log("MediaSource Reset");
+      log.info("MediaSource Reset");
       videoSingleton.reset();
       delete videoSingleton._events;
 
@@ -155,7 +157,7 @@ var initializeBuffer = function(typeId, videoSingleton, mediaSource, metaManager
   mediaSource.addEventListener('sourceopen', bufferEvents, false);
 
   var resetBuffer = function() {
-    console.log(`Buffer of type: ${typeId} reset.`);
+    log.info(`Buffer of type: ${typeId} reset.`);
     mediaSource.removeSourceBuffer(sourceBuffer.sourceBuffer);
     mediaSource.removeEventListener('sourceopen', bufferEvents);
     mediaSource.removeEventListener('sourceend', resetBuffer);
@@ -184,7 +186,7 @@ var initializeVideo = function(videoSingleton, mediaSource) {
   videoElement.addEventListener('seeking', audioSeek, false);
 
   var resetVideo = function() {
-    console.log(`Video reset.`);
+    log.info(`Video reset.`);
     videoElement.removeEventListener('timeupdate', onTimeUpdateState, false);
     videoElement.removeEventListener('timeupdate', videoUpdate, false);
     videoElement.removeEventListener('timeupdate', audioUpdate, false);
@@ -199,17 +201,16 @@ var initializeVideo = function(videoSingleton, mediaSource) {
 
 var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFactory) {
   clientSocket.setEvent('state-play', function(callback) {
-    console.log("state-play");
+    log.debug("state-play");
     var video = videoSingleton.getVideoElement();
     video.play();
     callback(clientSocket.getSocketId(), video.currentTime, video.paused);
   });
 
   clientSocket.setEvent('state-pause', function(isSynced, callback) {
-    console.log("state-pause");
+    log.debug("state-pause");
     var video = videoSingleton.getVideoElement();
     video.pause();
-    console.log(video.currentTime);
     callback(clientSocket.getSocketId(), video.currentTime, video.paused);
 
     if(isSynced) {
@@ -218,8 +219,7 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
   });
 
   clientSocket.setEvent('state-seek', function(data, callback) {
-    console.log("state-seek");
-    console.log(data);
+    log.debug("state-seek", data);
     var video = videoSingleton.getVideoElement();
     video.pause();
     video.currentTime = data.seektime;
@@ -227,12 +227,12 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
   });
 
   clientSocket.setEvent('state-trigger-ping', function(data) {
-    console.log("state-trigger-ping");
+    log.debug("state-trigger-ping");
     _this.syncPing = data;
   });
 
   clientSocket.setEvent('segment-chunk', function(segment){
-    console.log('segment-chunk');
+    log.debug('segment-chunk');
     sourceBuffers[segment.typeId].bufferSegment(segment.data, videoSingleton);
   });
 }
