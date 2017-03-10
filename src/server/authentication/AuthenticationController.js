@@ -90,7 +90,7 @@ function initialize(io) {
     });
 
     socket.on('error', function (data) {
-      log.error(data);
+      log.error("error", data);
     });
 
     setTimeout(function(){

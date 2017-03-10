@@ -203,14 +203,14 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
   clientSocket.setEvent('state-play', function(callback) {
     log.debug("state-play");
     var video = videoSingleton.getVideoElement();
-    video.play();
+    videoSingleton.play();
     callback(clientSocket.getSocketId(), video.currentTime, video.paused);
   });
 
   clientSocket.setEvent('state-pause', function(isSynced, callback) {
     log.debug("state-pause");
     var video = videoSingleton.getVideoElement();
-    video.pause();
+    videoSingleton.pause();
     callback(clientSocket.getSocketId(), video.currentTime, video.paused);
 
     if(isSynced) {
@@ -221,7 +221,7 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
   clientSocket.setEvent('state-seek', function(data, callback) {
     log.debug("state-seek", data);
     var video = videoSingleton.getVideoElement();
-    video.pause();
+    videoSingleton.pause();
     video.currentTime = data.seektime;
     callback(clientSocket.getSocketId(), video.currentTime, video.paused);
   });
