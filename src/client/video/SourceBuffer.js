@@ -71,6 +71,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
   };
 
   self.objectState = function(e) {
+    console.log(e);
     log.error("SourceBuffer's objectState", e);
   };
 

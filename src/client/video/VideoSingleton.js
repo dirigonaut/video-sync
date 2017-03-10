@@ -12,6 +12,7 @@ function VideoSingleton(video, meta) {
   log.info('VideoSingleton');
   this.videoElement = video;
   this.meta         = meta;
+  this.onPlay       = false;
   self              = this;
 }
 
@@ -19,12 +20,12 @@ util.inherits(VideoSingleton, EventEmitter);
 
 VideoSingleton.prototype.initialize = function() {
   log.info('VideoSingleton.initialize');
-  self.videoElement.addEventListener('play', onPlay, false);
+  //self.videoElement.addEventListener('play', onPlay, false);
 };
 
 VideoSingleton.prototype.reset = function() {
   log.info('VideoSingleton.reset');
-  self.videoElement.removeEventListener('play', onPlay, false);
+  //self.videoElement.removeEventListener('play', onPlay, false);
 };
 
 VideoSingleton.prototype.getVideoElement = function() {
@@ -59,10 +60,36 @@ VideoSingleton.prototype.onSeek = function(typeId) {
   return seek;
 };
 
+VideoSingleton.prototype.play = function() {
+  var video = this.videoElement;
+  if (video.readyState === 4) {
+    log.debug("Set video to play");
+    video.play();
+  } else {
+    if(self.onPlay !== true) {
+      onPlay();
+    }
+    video.addEventListener('canplay', resume, {"once": true});
+  }
+};
+
+VideoSingleton.prototype.pause = function() {
+  var video = this.videoElement;
+  self.videoElement.removeEventListener('canplay', resume, {"once": true});
+  video.pause();
+};
+
 module.exports = VideoSingleton;
 
 function onPlay() {
   log.info("VideoSingleton.onPlay");
+  self.onPlay = true;
   self.emit("get-init");
   self.videoElement.removeEventListener('play', onPlay, false);
+}
+
+function resume() {
+  var video = self.videoElement;
+  log.debug("Set video to play");
+  video.play();
 }
