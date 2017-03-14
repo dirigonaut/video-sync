@@ -69,6 +69,7 @@ function readFile(key, requestData, cache) {
     log.silly('Cache on data', key);
     var segment = new Object();
     segment.typeId = requestData.typeId;
+    segment.name = key;
     segment.data = data;
 
     if(cache) {

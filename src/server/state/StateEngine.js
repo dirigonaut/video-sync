@@ -26,11 +26,13 @@ StateEngine.prototype.play = function(id, callback) {
     var player = playerManager.getPlayer(id);
 
     if(player.sync === Player.Sync.DESYNCED) {
+      log.silly('StateEngine issuing play', player);
       player.socket.emit('state-play', updatePlayerState);
     } else {
       var broadcastEvent = function(players) {
         for(var i in players) {
           if(players[i].sync !== Player.Sync.DESYNCED) {
+            log.silly('StateEngine issuing play', player);
             players[i].socket.emit('state-play', updatePlayerState);
 
             if(session.getMediaStarted() === false && players[i].isInit()) {
@@ -188,7 +190,6 @@ StateEngine.prototype.syncingPing = function(id) {
 module.exports = StateEngine;
 
 var updatePlayerState = function(id, timestamp, state) {
-  log.silly('StateEngine.updatePlayerState', {Id: id, Timestamp: timestamp, State:state});
   var player = playerManager.getPlayer(id);
 
   if(player !== null && player !== undefined) {
@@ -201,7 +202,6 @@ var updatePlayerState = function(id, timestamp, state) {
 };
 
 var updatePlayerSync = function(id, timestamp, state) {
-  log.silly('StateEngine.updatePlayerSync', {Id: id, Timestamp: timestamp, State:state});
   var player = playerManager.getPlayer(id);
 
   if(player !== null && player !== undefined) {

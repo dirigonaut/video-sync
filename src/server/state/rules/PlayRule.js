@@ -17,6 +17,7 @@ PlayRule.prototype.evaluate = function(issuer, callback) {
   var issuees = [];
 
   if(issuer.sync === Player.Sync.DESYNCED || (session.getMediaStarted() === true && issuer.isInit())) {
+    log.silly("PlayRule triggered", [issuer]);
     callback([issuer]);
   } else {
     for(var player of players) {

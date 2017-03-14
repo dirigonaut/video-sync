@@ -8,9 +8,10 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
   var self = {};
 
   self.type = enum_type;
-  self.hasInit = false;
-  self.queue = [];
+  self.hasInitSeg = false;
+  self.segmentsToBuffer = new Map();
   self.sourceBuffer = null;
+  self.loadingSegment = null;
 
   log.info('SourceBuffer.initialize');
 
@@ -46,11 +47,22 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
     };
   };
 
-  self.bufferSegment = function(data) {
-    if (self.sourceBuffer.updating || mediaSource.readyState != "open" || self.queue.length > 0) {
-      self.queue.push(new Uint8Array(data));
+  self.bufferSegment = function(key, data) {
+    if (self.sourceBuffer.updating || mediaSource.readyState != "open" || self.segmentsToBuffer.size > 0) {
+        var queue = self.segmentsToBuffer.get(key);
+        if(queue !== undefined && queue !== null) {
+          self.queue.push(new Uint8Array(data));
+        } else {
+          self.segmentsToBuffer.set(key, [new Uint8Array(data)]);
+        }
     } else if(!self.sourceBuffer.updating) {
-      self.sourceBuffer.appendBuffer(new Uint8Array(data));
+      if(self.loadingSegment === null) {
+        self.loadingSegment = key;
+      }
+
+      if(self.loadingSegment === key){
+        self.sourceBuffer.appendBuffer(new Uint8Array(data));
+      }
     }
 
     if(!self.hasInitSeg) {
@@ -63,15 +75,34 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
   self.getOnBufferUpdate = function() {
     return function(e) {
       if(!self.sourceBuffer.updating){
-        if (self.queue.length > 0) {
-          self.sourceBuffer.appendBuffer(self.queue.shift());
-        }
+        var bufferUpdated = false;
+
+        do {
+          var queue = self.segmentsToBuffer.get(self.loadingSegment);
+
+          if(queue === undefined || queue === null) {
+            if(self.segmentsToBuffer.size > 0) {
+              self.loadingSegment = self.segmentsToBuffer.keys().next().value;
+            } else {
+              self.loadingSegment = null;
+              break;
+            }
+          }
+
+          if(queue.length > 0) {
+            self.sourceBuffer.appendBuffer(queue.shift());
+            bufferUpdated = true;
+          } else {
+            self.segmentsToBuffer.delete(self.loadingSegment);
+          }
+        } while(!bufferUpdated);
       }
     }
   };
 
   self.objectState = function(e) {
     console.log(e);
+    console.log(self);
     log.error("SourceBuffer's objectState", e);
   };
 
