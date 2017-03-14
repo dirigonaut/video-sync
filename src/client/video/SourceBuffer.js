@@ -48,20 +48,35 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
   };
 
   self.bufferSegment = function(key, data) {
+    console.log(key);
     if (self.sourceBuffer.updating || mediaSource.readyState != "open" || self.segmentsToBuffer.size > 0) {
-        var queue = self.segmentsToBuffer.get(key);
-        if(queue !== undefined && queue !== null) {
-          self.queue.push(new Uint8Array(data));
-        } else {
-          self.segmentsToBuffer.set(key, [new Uint8Array(data)]);
-        }
+      console.log("Appending to list");
+      var queue = self.segmentsToBuffer.get(key);
+      var chunk = data !== null ? new Uint8Array(data) : null;
+
+      if(queue !== undefined && queue !== null) {
+        console.log("Queue found");
+        queue.push(chunk);
+      } else {
+        console.log("Creaging Queue");
+        self.segmentsToBuffer.set(key, [chunk]);
+      }
     } else if(!self.sourceBuffer.updating) {
       if(self.loadingSegment === null) {
+        console.log(`self.loadingSegment for bufferType: ${self.type} is null setting to: ${key}`);
+        console.log(self.segmentsToBuffer.entries());
         self.loadingSegment = key;
       }
 
-      if(self.loadingSegment === key){
-        self.sourceBuffer.appendBuffer(new Uint8Array(data));
+      if(self.loadingSegment === key) {
+        console.log(data);
+        if(data !== null) {
+          self.sourceBuffer.appendBuffer(new Uint8Array(data));
+        } else {
+          console.log(`Removing entry ${self.loadingSegment}`)
+          self.segmentsToBuffer.delete(self.loadingSegment);
+          isReadyForNextSegment();
+        }
       }
     }
 
@@ -74,30 +89,41 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
 
   self.getOnBufferUpdate = function() {
     return function(e) {
-      if(!self.sourceBuffer.updating){
-        var bufferUpdated = false;
-
-        do {
-          var queue = self.segmentsToBuffer.get(self.loadingSegment);
-
-          if(queue === undefined || queue === null) {
-            if(self.segmentsToBuffer.size > 0) {
-              self.loadingSegment = self.segmentsToBuffer.keys().next().value;
-            } else {
-              self.loadingSegment = null;
-              break;
-            }
-          }
-
-          if(queue.length > 0) {
-            self.sourceBuffer.appendBuffer(queue.shift());
-            bufferUpdated = true;
-          } else {
-            self.segmentsToBuffer.delete(self.loadingSegment);
-          }
-        } while(!bufferUpdated);
-      }
+      console.log("getOnBufferUpdate");
+      isReadyForNextSegment();
     }
+  };
+
+  var isReadyForNextSegment = function() {
+    log.debug(`SourceBuffer isReadyForNextSegment ${self.type}`);
+    var bufferUpdated = false;
+
+    do {
+      var queue = self.segmentsToBuffer.get(self.loadingSegment);
+
+      if(queue === undefined || queue === null) {
+        if(self.segmentsToBuffer.size > 0) {
+          self.loadingSegment = self.segmentsToBuffer.keys().next().value;
+          continue;
+        } else {
+          self.loadingSegment = null;
+          break;
+        }
+      }
+
+      if(queue.length > 0) {
+        var segment = queue.shift();
+        if(segment.data !== null) {
+          self.sourceBuffer.appendBuffer(queue.shift());
+          bufferUpdated = true;
+        } else {
+          console.log(`Removing entry ${self.loadingSegment}`)
+          self.segmentsToBuffer.delete(self.loadingSegment);
+        }
+      } else {
+        break;
+      }
+    } while(!bufferUpdated);
   };
 
   self.objectState = function(e) {
