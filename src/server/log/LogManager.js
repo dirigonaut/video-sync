@@ -36,7 +36,7 @@ LogManager.prototype.addFileLogging = function(basePath) {
     });
   }
 
-  var exceptionTransport = logFactory.buildFileTransport(`${basePath}/${FILE_NAME}`, 'error', 'exception-logger', true);
+  var exceptionTransport = logFactory.buildFileTransport(`${basePath}/${EXCEPTION}`, 'error', 'exception-logger', true);
   Winston.loggers.add(EXCEPTION, { transports: [exceptionTransport] });
   Winston.loggers.get(EXCEPTION).exitOnError = false;
 

@@ -85,8 +85,8 @@ Session.prototype.setMediaPath = function(path) {
   mediaStarted = false;
 
   var cache = new Cache();
-  cache.setPath(path);
   cache.flush();
+  cache.setPath(path);
   playerManager.initPlayers();
 };
 

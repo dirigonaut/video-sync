@@ -12,6 +12,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
   self.segmentsToBuffer = new Map();
   self.sourceBuffer = null;
   self.loadingSegment = null;
+  self.index = 0;
 
   log.info('SourceBuffer.initialize');
 
@@ -47,38 +48,20 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
     };
   };
 
-  self.bufferSegment = function(key, data) {
-    console.log(key);
-    if (self.sourceBuffer.updating || mediaSource.readyState != "open" || self.segmentsToBuffer.size > 0) {
-      console.log("Appending to list");
-      var queue = self.segmentsToBuffer.get(key);
-      var chunk = data !== null ? new Uint8Array(data) : null;
+  self.bufferSegment = function(key, index, data) {
+    var mapQueue = self.segmentsToBuffer.get(key);
+    var chunk = data !== null ? new Uint8Array(data) : null;
 
-      if(queue !== undefined && queue !== null) {
-        console.log("Queue found");
-        queue.push(chunk);
-      } else {
-        console.log("Creaging Queue");
-        self.segmentsToBuffer.set(key, [chunk]);
-      }
-    } else if(!self.sourceBuffer.updating) {
-      if(self.loadingSegment === null) {
-        console.log(`self.loadingSegment for bufferType: ${self.type} is null setting to: ${key}`);
-        console.log(self.segmentsToBuffer.entries());
-        self.loadingSegment = key;
-      }
-
-      if(self.loadingSegment === key) {
-        console.log(data);
-        if(data !== null) {
-          self.sourceBuffer.appendBuffer(new Uint8Array(data));
-        } else {
-          console.log(`Removing entry ${self.loadingSegment}`)
-          self.segmentsToBuffer.delete(self.loadingSegment);
-          isReadyForNextSegment();
-        }
-      }
+    if(mapQueue !== undefined && mapQueue !== null) {
+      console.log("Queue found");
+      mapQueue.set(index, chunk);
+    } else {
+      console.log("Creating Queue");
+      var mapQueue = new Map();
+      self.segmentsToBuffer.set(key, mapQueue.set(index, chunk));
     }
+
+    isReadyForNextSegment();
 
     if(!self.hasInitSeg) {
       log.info("Init segment has been received.", self.type);
@@ -96,34 +79,44 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
 
   var isReadyForNextSegment = function() {
     log.debug(`SourceBuffer isReadyForNextSegment ${self.type}`);
-    var bufferUpdated = false;
+    if(!self.sourceBuffer.updating) {
+      var bufferUpdated = false;
 
-    do {
-      var queue = self.segmentsToBuffer.get(self.loadingSegment);
+      do {
+        var mapQueue = self.segmentsToBuffer.get(self.loadingSegment);
 
-      if(queue === undefined || queue === null) {
-        if(self.segmentsToBuffer.size > 0) {
-          self.loadingSegment = self.segmentsToBuffer.keys().next().value;
-          continue;
+        if(mapQueue === undefined || mapQueue === null) {
+          if(self.segmentsToBuffer.size > 0) {
+            self.loadingSegment = self.segmentsToBuffer.keys().next().value;
+            console.log(`Set loadingSegment to ${self.loadingSegment} and continuing`);
+            continue;
+          } else {
+            self.loadingSegment = null;
+            console.log(`Set loadingSegment to ${self.loadingSegment} and breaking`);
+            break;
+          }
+        }
+
+        if(mapQueue.size > self.index) {
+          var segment = mapQueue.get(self.index);
+
+          if(segment !== null) {
+            console.log(`Appending from ${self.loadingSegment} mapQueue at index ${self.index} for buffer ${self.type}`);
+            self.sourceBuffer.appendBuffer(segment);
+            bufferUpdated = true;
+            self.index++;
+          } else {
+            //console.log(self.segmentsToBuffer.get(self.loadingSegment).entries());
+            console.log(`Removing entry ${self.loadingSegment} and resetting index`);
+            self.segmentsToBuffer.delete(self.loadingSegment);
+            self.index = 0;
+          }
         } else {
-          self.loadingSegment = null;
+          console.log(`mapQueue.size !> self.index breaking`);
           break;
         }
-      }
-
-      if(queue.length > 0) {
-        var segment = queue.shift();
-        if(segment.data !== null) {
-          self.sourceBuffer.appendBuffer(queue.shift());
-          bufferUpdated = true;
-        } else {
-          console.log(`Removing entry ${self.loadingSegment}`)
-          self.segmentsToBuffer.delete(self.loadingSegment);
-        }
-      } else {
-        break;
-      }
-    } while(!bufferUpdated);
+      } while(!bufferUpdated);
+    }
   };
 
   self.objectState = function(e) {
