@@ -71,6 +71,7 @@ function readFile(key, requestData, cache) {
     segment.typeId = requestData.typeId;
     segment.name = key;
     segment.data = data;
+    segment.index = cacheMap.get(key) !== null && cacheMap.get(key) !== undefined ? cacheMap.get(key).length : 0;
 
     if(cache) {
       log.silly('Cache adding Entry: ', {"key": key, "size": segment.data.length});
@@ -86,16 +87,18 @@ function readFile(key, requestData, cache) {
 
   readConfig.onFinish = function onFinish() {
     log.silly('Cache finished read: ', key);
+
+    var segment = new Object();
+    segment.typeId = requestData.typeId;
+    segment.name = key;
+    segment.data = null;
+    segment.index = cacheMap.get(key).length;
+    cacheMap.get(key).push(segment);
+
+    handleCallbacks(key, segment);
+
     if(cache) {
       requestMap.delete(key);
-
-      var segment = new Object();
-      segment.typeId = requestData.typeId;
-      segment.name = key;
-      segment.data = null;
-      cacheMap.get(key).push(segment);
-      
-      handleCallbacks(key, segment);
     }
   };
 

@@ -233,7 +233,7 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
 
   clientSocket.setEvent('segment-chunk', function(segment){
     log.debug('segment-chunk');
-    sourceBuffers[segment.typeId].bufferSegment(segment.name, segment.data);
+    sourceBuffers[segment.typeId].bufferSegment(segment.name, segment.index, segment.data);
   });
 }
 
