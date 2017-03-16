@@ -20,6 +20,7 @@ module.exports = StateController;
 
 function initialize(io, socket) {
   log.info("Attaching StateController");
+  socket.emit('state-trigger-ping', true);
 
   socket.on('state-req-play', function() {
     log.info('state-req-play');
@@ -70,9 +71,11 @@ function initialize(io, socket) {
       if(value === Player.Sync.SYNCING) {
         socket.emit('state-trigger-ping', true);
       }
+
+      socket.emit('state-sync-state', value);
     };
 
-    stateEngine.changeSyncState(socket.id, onAllowed);
+    stateEngine.changeSyncState(socket.id, data, onAllowed);
   });
 
   socket.on('state-sync-ping', function() {
