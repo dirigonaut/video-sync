@@ -88,17 +88,19 @@ function readFile(key, requestData, cache) {
   readConfig.onFinish = function onFinish() {
     log.silly('Cache finished read: ', key);
 
-    var segment = new Object();
-    segment.typeId = requestData.typeId;
-    segment.name = key;
-    segment.data = null;
-    segment.index = cacheMap.get(key).length;
-    cacheMap.get(key).push(segment);
+    if(cacheMap.get(key) !== null || cacheMap.get(key) !== undefined) {
+      var segment = new Object();
+      segment.typeId = requestData.typeId;
+      segment.name = key;
+      segment.data = null;
+      segment.index = cacheMap.get(key).length;
+      cacheMap.get(key).push(segment);
 
-    handleCallbacks(key, segment);
+      handleCallbacks(key, segment);
 
-    if(cache) {
-      requestMap.delete(key);
+      if(cache) {
+        requestMap.delete(key);
+      }
     }
   };
 

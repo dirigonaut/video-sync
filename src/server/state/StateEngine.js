@@ -125,12 +125,12 @@ StateEngine.prototype.pauseSync = function(id, callback) {
   }
 };
 
-StateEngine.prototype.changeSyncState = function(id, callback) {
-  log.debug('StateEngine.changeSyncState');
+StateEngine.prototype.changeSyncState = function(id, syncState, callback) {
+  log.debug(`StateEngine.changeSyncState for ${id}, to ${syncState}`);
   if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
     var player = playerManager.getPlayer(id);
     if(player !== null && player !== undefined) {
-      if(player.sync === Player.Sync.DESYNCED) {
+      if(syncState) {
         player.sync = Player.Sync.SYNCING;
       } else {
         player.sync = Player.Sync.DESYNCED;
@@ -174,7 +174,7 @@ StateEngine.prototype.syncingPing = function(id) {
       if(player.sync === Player.Sync.SYNCING && session.getMediaStarted()) {
         var broadcastSyncingEvent = function(leader, player, event) {
           var object = new Object();
-          object.seektime = leader.timestamp;
+          object.seektime = leader.timestamp + 1;
           player.socket.emit(event, object, updatePlayerSync);
         }
 

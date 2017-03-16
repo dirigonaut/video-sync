@@ -506,7 +506,7 @@ function initGUI() {
   });
 
   $('#synchronize').on("change", function (e) {
-    clientSocket.sendRequest('state-change-sync');
+    clientSocket.sendRequest('state-change-sync', $('#synchronize').find('input')[0].checked);
   });
 
   client.getMediaController().on('meta-data-loaded', function(trackInfo) {
