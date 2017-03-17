@@ -101,7 +101,6 @@ module.exports = MediaController;
 var initializeClientPlayer = function(_this, mediaSource, window, callback) {
   var buildClientPlayer = function() {
     var videoSingleton = new VideoSingleton(videoElement, _this.metaManager.getActiveMetaData());
-    videoSingleton.initialize();
 
     var sourceBuffers = new Array(2);
     sourceBuffers[SourceBuffer.Enum.VIDEO] = initializeBuffer(SourceBuffer.Enum.VIDEO,
@@ -122,7 +121,6 @@ var initializeClientPlayer = function(_this, mediaSource, window, callback) {
 
     var resetMediaSource = function() {
       log.info("MediaSource Reset");
-      videoSingleton.reset();
       delete videoSingleton._events;
 
       mediaSource.removeEventListener('sourceend', resetMediaSource);

@@ -18,16 +18,6 @@ function VideoSingleton(video, meta) {
 
 util.inherits(VideoSingleton, EventEmitter);
 
-VideoSingleton.prototype.initialize = function() {
-  log.info('VideoSingleton.initialize');
-  //self.videoElement.addEventListener('play', onPlay, false);
-};
-
-VideoSingleton.prototype.reset = function() {
-  log.info('VideoSingleton.reset');
-  //self.videoElement.removeEventListener('play', onPlay, false);
-};
-
 VideoSingleton.prototype.getVideoElement = function() {
   return self.videoElement;
 };
