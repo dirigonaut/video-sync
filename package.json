@@ -15,10 +15,9 @@
     "stats": "cloc --not-match-d resources --by-file ./src/ ./static/ admin.html",
     "update-deps": "npm outdated --depth=0 | grep -v Package | awk '{print $1}' | xargs -I% npm install %@latest --save",
     "build": "nwbuild -p win64,linux64,osx64 -v 0.20.3 ~/repo/video-sync-2.0/",
-    "build-win": "nwbuild -p win64 -v 0.20.3 ~/repo/video-sync-2.0/"
+    "build-win": "rm -rf ./build/video-sync/* && nwbuild -p win64 -v 0.20.3 ~/repo/video-sync-2.0/"
   },
   "dependencies": {
-    "browserify": "^14.1.0",
     "ebml": "^2.2.0",
     "express": "^4.15.2",
     "moment": "^2.14.1",
@@ -30,13 +29,14 @@
     "socket.io-client": "^1.7.3",
     "split": "^1.0.0",
     "validator": "^7.0.0",
-    "watchify": "^3.9.0",
     "winston": "^2.3.1",
     "xml2js": "^0.4.17",
     "xmldom": "^0.1.27"
   },
   "devDependencies": {
-    "nw-builder": "^3.2.0"
+    "nw-builder": "^3.2.0",
+    "browserify": "^14.1.0",
+    "watchify": "^3.9.0"
   },
   "description": "This README would normally document whatever steps are necessary to get your application up and running.",
   "repository": {
