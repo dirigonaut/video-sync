@@ -49,7 +49,11 @@ Session.prototype.getInvitee = function(id, session) {
 
 Session.prototype.addInvitee = function(email, session) {
   log.silly("Session.addInvitee");
-  session.invitees.push(email);
+  if(session !== null && session !== undefined) {
+    session.invitees.push(email);
+  } else {
+    log.error("There is no active session to add invitees to.");
+  }
 };
 
 Session.prototype.associateIdToEmail = function(id, email) {
@@ -58,14 +62,22 @@ Session.prototype.associateIdToEmail = function(id, email) {
 
 Session.prototype.removeInvitee = function(id, session) {
   log.debug("Session.removeInvitee");
-  var email = idToEmailMap.get(id);
+  if(idToEmailMap !== null && idToEmailMap !== undefined) {
+    var email = idToEmailMap.get(id);
 
-  for(var x in session.invitees) {
-    if(session.invitees[x] === email) {
-      session.invitees.splice(x, 1);
-      idToEmailMap.delete(id);
-      console.log(session.invitees);
+    if(email !== null && email !== undefined) {
+      for(var x in session.invitees) {
+        if(session.invitees[x] === email) {
+          session.invitees.splice(x, 1);
+          idToEmailMap.delete(id);
+          console.log(session.invitees);
+        }
+      }
+    } else {
+      log.error("There is no use with the this id: ", id);
     }
+  } else {
+    log.error("There is no active session to remove invitees from.");
   }
 };
 
