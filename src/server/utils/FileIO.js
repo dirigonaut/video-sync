@@ -89,6 +89,25 @@ FileIO.prototype.ensureDirExists = function(path, mask, callback) {
   });
 }
 
+FileIO.prototype.dirExists = function(path, callback) {
+  log.debug('FileIO.dirExists', path);
+  var isDir = true;
+
+  Fs.stat(path, function(err, stats) {
+    if (err) {
+      log.error('FileIO.dirExists err', err);
+      isDir = false;
+    } else if(!stats.isDirectory()) {
+      log.error('FileIO.dirExists is not dir', path);
+      isDir = false;
+    }
+
+    if(isDir) {
+      callback();
+    }
+  });
+}
+
 FileIO.prototype.createStreamConfig = function(path, callback) {
   log.debug('FileIO.streamConfig');
   var streamConfig = new Object();

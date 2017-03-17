@@ -17,20 +17,39 @@ function UserAdministration() { }
 UserAdministration.prototype.downgradeUser = function(user) {
   log.debug("UserAdministration.downgradeUser");
   var player = playerManager.getPlayer(user);
-  player.setAuth(Player.Auth.RESTRICTED);
+
+  if(player !== undefined && player !== null) {
+    player.setAuth(Player.Auth.RESTRICTED);
+  } else {
+    log.error("There is no player with the id: ", user);
+  }
 };
 
 UserAdministration.prototype.upgradeUser = function(user) {
   log.debug("UserAdministration.upgradeUser");
   var player = playerManager.getPlayer(user);
-  player.setAuth(Player.Auth.DEFAULT);
+
+  if(player !== undefined && player !== null) {
+    player.setAuth(Player.Auth.DEFAULT);
+  } else {
+    log.error("There is no player with the id: ", user);
+  }
 };
 
 UserAdministration.prototype.kickUser = function(user, callback) {
   log.debug("UserAdministration.kickUser");
   session.removeInvitee(user, session.getActiveSession());
-  var socket = playerManager.getPlayer(user).socket;
-  this.disconnectSocket(socket);
+  var player = playerManager.getPlayer(user);
+
+  if(player !== null && player !== undefined) {
+    var socket = player.socket;
+
+    if(socket !== undefined && socket !== null) {
+      this.disconnectSocket(socket);
+    }
+  } else {
+    log.error("There is no player with the id: ", user);
+  }
 };
 
 UserAdministration.prototype.disconnectSocket = function(socket) {
@@ -51,7 +70,11 @@ UserAdministration.prototype.inviteUser = function(emailAddress) {
     smtp.sendMail(addP2PLink(mailOptions));
   };
 
-  smtp.initializeTransport(currentSession.smtp, sendInvitation);
+  if(currentSession !== null && currentSession !== undefined) {
+    smtp.initializeTransport(currentSession.smtp, sendInvitation);
+  } else {
+    log.error("There is no active session to load smtp info from.");
+  }
 };
 
 UserAdministration.prototype.inviteUsers = function() {

@@ -4,6 +4,7 @@ var Validator     = require('../authentication/Validator');
 var PlayerManager = require('../player/PlayerManager');
 var CommandEngine = require('../chat/CommandEngine');
 var ChatEngine    = require('../chat/ChatEngine');
+var FileIO        = require('../utils/FileIO');
 var LogManager    = require('../log/LogManager');
 
 var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
@@ -32,17 +33,22 @@ function initialize(io, socket) {
   socket.on('admin-set-media', function(data) {
     if(session.isAdmin(socket.id)){
       log.debug('admin-set-media');
+      var fileIO = new FileIO();
 
-      session.setMediaPath(data);
+      var setMedia = function() {
+        session.setMediaPath(data);
 
-      var players = playerManager.getPlayers();
+        var players = playerManager.getPlayers();
 
-      var message = chatEngine.buildMessage(socket.id, "video Has been initialized.");
-      chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
+        var message = chatEngine.buildMessage(socket.id, "video Has been initialized.");
+        chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
 
-      for(var player of players) {
-        player[1].socket.emit('media-ready');
+        for(var player of players) {
+          player[1].socket.emit('media-ready');
+        }
       }
+
+      fileIO.dirExists(data, setMedia);
     }
   });
 
