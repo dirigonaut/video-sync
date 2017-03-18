@@ -1,3 +1,5 @@
+var Os = require('os');
+
 function FileSystemUtils() {
 
 }
@@ -41,6 +43,18 @@ FileSystemUtils.prototype.isPath = function(path) {
   }
 
   return isPath;
+};
+
+FileSystemUtils.prototype.ensureEOL = function(string) {
+  var lastChar = string.slice(-1);
+  if(lastChar !== '/' && lastChar !== '\\') {
+    string = process.platform === 'win32' ? string + '\\' : string + '/';
+  }
+  return string;
+}
+
+FileSystemUtils.prototype.getEOL = function() {
+  return Os.EOL;
 };
 
 module.exports = FileSystemUtils;
