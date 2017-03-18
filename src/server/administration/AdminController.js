@@ -1,11 +1,12 @@
-var UserAdmin     = require("./UserAdministration");
-var Session       = require('../administration/Session');
-var Validator     = require('../authentication/Validator');
-var PlayerManager = require('../player/PlayerManager');
-var CommandEngine = require('../chat/CommandEngine');
-var ChatEngine    = require('../chat/ChatEngine');
-var FileIO        = require('../utils/FileIO');
-var LogManager    = require('../log/LogManager');
+var UserAdmin       = require("./UserAdministration");
+var Session         = require('../administration/Session');
+var Validator       = require('../authentication/Validator');
+var PlayerManager   = require('../player/PlayerManager');
+var CommandEngine   = require('../chat/CommandEngine');
+var ChatEngine      = require('../chat/ChatEngine');
+var FileSystemUtils = require('../utils/FileSystemUtils');
+var FileIO          = require('../utils/FileIO');
+var LogManager      = require('../log/LogManager');
 
 var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
 
@@ -36,6 +37,9 @@ function initialize(io, socket) {
       var fileIO = new FileIO();
 
       var setMedia = function() {
+        var fileUtils = new FileSystemUtils();
+        data = fileUtils.ensureEOL(data);
+
         session.setMediaPath(data);
 
         var players = playerManager.getPlayers();
