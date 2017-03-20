@@ -39,11 +39,11 @@ EncoderCommandFactory.buildFfmpegRequest = function(codec, type, source, output,
 
 EncoderCommandFactory.getVideoWebmFfmpegCommand = function(source, output, scale){
   return ' -y -i ' + source + ' -c:v libvpx-vp9 -s ' + scale + ' -keyint_min 150 -b:v 0 -crf 42 ' +
-                  ' -g 150 -tile-columns 6 -frame-parallel 1 -an -f webm -dash 1 -speed 2 -threads 8 ' + output;
+                  ' -g 150 -tile-columns 6 -frame-parallel 1 -an -f webm -dash 1 -speed 1 -threads 8 ' + output;
 };
 
 EncoderCommandFactory.getAudioWebmFfmpegCommand = function(source, output, scale){
-  return ' -y -i ' + source + ' -vn -c:a libvorbis -b:a ' + scale + ' -f webm -dash 1 ' + output;
+  return ' -y -i ' + source + ' -vn -frame-parallel 1 -speed 1 -threads 8 -c:a libopus -b:a ' + scale + ' -f webm -dash 1 ' + output;
 };
 
 EncoderCommandFactory.getWebmManifestCommand = function(command_queue, output){
