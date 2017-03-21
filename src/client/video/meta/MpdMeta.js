@@ -90,7 +90,9 @@ MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
   }
 
   if(!activeMeta.isSegmentBuffered(activeMeta.bufferIndex)) {
-    nextSegmentTime = (this.getSegmentIndex(typeId, activeMeta.bufferIndex * activeMeta.timeStep) * activeMeta.timeStep).toFixed(0);
+    //Adding the remainder is to negate floating point arithmatic issues
+    var remainder = currentTime % activeMeta.timeStep;
+    nextSegmentTime = (activeMeta.bufferIndex * activeMeta.timeStep) + remainder;
   }
 
   return nextSegmentTime;
