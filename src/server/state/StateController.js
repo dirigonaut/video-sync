@@ -22,6 +22,11 @@ function initialize(io, socket) {
   log.info("Attaching StateController");
   socket.emit('state-trigger-ping', true);
 
+  socket.on('state-req-init', function() {
+    log.debug('state-req-init');
+    stateEngine.init(socket.id);
+  });
+  
   socket.on('state-req-play', function() {
     log.info('state-req-play');
     var onAllowed = function() {
@@ -86,11 +91,5 @@ function initialize(io, socket) {
   socket.on('state-time-update', function(data) {
     log.silly('state-time-update');
     stateEngine.timeUpdate(socket.id, data);
-  });
-
-  socket.on('state-initialized', function() {
-    log.debug('state-time-update');
-    var player = playerManager.getPlayer(socket.id);
-    player.isInit = true;
   });
 }

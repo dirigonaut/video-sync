@@ -27,6 +27,7 @@ function MediaController(video, fBuffer) {
   var _this = this;
   this.metaManager.on('meta-data-loaded', function() {
     _this.emit('meta-data-loaded', _this.metaManager.getTrackInfo());
+    clientSocket.sendRequest('state-req-init');
   });
 
   _this.on('meta-manager-ready', function() {
@@ -198,6 +199,12 @@ var initializeVideo = function(videoSingleton, mediaSource) {
 };
 
 var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFactory) {
+  clientSocket.setEvent('state-init', function(callback) {
+    log.debug("state-init");
+    var video = videoSingleton.getVideoElement();
+    videoSingleton.init(callback);
+  });
+
   clientSocket.setEvent('state-play', function(callback) {
     log.debug("state-play");
     var video = videoSingleton.getVideoElement();
@@ -219,7 +226,6 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
   clientSocket.setEvent('state-seek', function(data, callback) {
     log.debug("state-seek", data);
     var video = videoSingleton.getVideoElement();
-    videoSingleton.pause();
     video.currentTime = data.seektime;
     callback(clientSocket.getSocketId(), video.currentTime, video.paused);
   });
