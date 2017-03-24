@@ -20,6 +20,17 @@ function StateEngine() {
 
 }
 
+StateEngine.prototype.init = function(id) {
+  log.debug('StateEngine.init');
+  if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
+    var player = playerManager.getPlayer(id);
+
+    if(player !== null && player !== undefined) {
+      player.socket.emit('state-init', playerInit);
+    }
+  }
+}
+
 StateEngine.prototype.play = function(id, callback) {
   log.debug('StateEngine.play');
   if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
@@ -185,6 +196,12 @@ StateEngine.prototype.syncingPing = function(id) {
           var object = new Object();
           object.seektime = leader.timestamp + 1;
           player.socket.emit(event, object, updatePlayerSync);
+
+          if(playerManager.getSyncedPlayersState() === Player.State.PLAY) {
+            player.socket.emit('state-play', updatePlayerState);
+          } else {
+            player.socket.emit('state-pause', false, updatePlayerState);
+          }
         }
 
         new SyncingRule().evaluate(player, broadcastSyncingEvent);
@@ -197,6 +214,21 @@ StateEngine.prototype.syncingPing = function(id) {
 };
 
 module.exports = StateEngine;
+
+var playerInit = function(id) {
+  var player = playerManager.getPlayer(id);
+
+  if(player !== null && player !== undefined) {
+    log.debug(`Player: ${id} is initilaized`);
+    player.initialized = true;
+
+    var stateEngine = new StateEngine();
+    //stateEngine.syncingPing(id);
+  } else {
+    log.silly("Could not find the player.");
+    log.silly("Current users: ", playerManager.getPlayers());
+  }
+};
 
 var updatePlayerState = function(id, timestamp, state) {
   var player = playerManager.getPlayer(id);
@@ -226,7 +258,7 @@ var updatePlayerSync = function(id, timestamp, state) {
 var resumeLogic = function(players) {
   for(var waitingPlayer of players) {
     if(waitingPlayer[1].sync === Player.Sync.SYNCWAIT) {
-      var broadcastResumeEvent = function(syncPlayer, event) {
+      var broadcastResumeEvent = function(syncPlayer) {
         if(playerManager.getSyncedPlayersState() === Player.State.PLAY) {
           syncPlayer.socket.emit('state-play', updatePlayerState);
         } else {
