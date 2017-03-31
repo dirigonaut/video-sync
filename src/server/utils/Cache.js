@@ -37,19 +37,18 @@ Cache.prototype.getSegment = function(player, requestData, callback) {
     readFile(key, requestData, player.sync !== Player.Sync.DESYNCED);
   } else {
     var segmentArray = cacheMap.get(key);
-    if(segmentArray.length !== 0) {
-      log.silly('Cache has data', key);
-      log.debug('Cache has data', segmentArray.length);
-      for(var i in segmentArray) {
-        callback(segmentArray[i]);
+    if(segmentArray !== null && segmentArray !== undefined) {
+      if(segmentArray.length > 0) {
+        log.silly('Cache has data', key);
+        log.debug('Cache has data', segmentArray.length);
+        for(var i in segmentArray) {
+          callback(segmentArray[i]);
+        }
       }
 
-      if(segmentArray[length - 1].data !== null) {
+      if(segmentArray.length === 0 || segmentArray[segmentArray.length - 1].data !== null) {
         requestMap.get(key).push(callback);
       }
-    } else {
-      log.silly('Cache currently reading data', key);
-      requestMap.get(key).push(callback);
     }
   }
 };
