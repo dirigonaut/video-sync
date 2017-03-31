@@ -124,7 +124,7 @@ var initializeClientPlayer = function(_this, mediaSource, window, callback) {
       log.info("MediaSource Reset");
       delete videoSingleton._events;
 
-      mediaSource.removeEventListener('sourceend', resetMediaSource);
+      mediaSource.removeEventListener('sourceended', resetMediaSource);
 
       if(pingTimer) {
         clearInterval(pingTimer);
@@ -159,7 +159,8 @@ var initializeBuffer = function(typeId, videoSingleton, mediaSource, metaManager
     log.info(`Buffer of type: ${typeId} reset.`);
     mediaSource.removeSourceBuffer(sourceBuffer.sourceBuffer);
     mediaSource.removeEventListener('sourceopen', bufferEvents);
-    mediaSource.removeEventListener('sourceend', resetBuffer);
+    mediaSource.removeEventListener('sourceended', resetBuffer);
+    sourceBuffer.clearEvents();
   };
 
   mediaSource.addEventListener('sourceended', resetBuffer);
@@ -172,6 +173,7 @@ var initializeVideo = function(videoSingleton, mediaSource) {
     clientSocket.sendRequest('state-time-update', new RequestFactory().buildVideoStateRequest(videoElement));
   };
 
+  videoElement.currentTime = 0;
   videoElement.addEventListener('timeupdate', onTimeUpdateState, false);
 
   var videoUpdate = videoSingleton.onProgress(SourceBuffer.Enum.VIDEO);
@@ -192,7 +194,7 @@ var initializeVideo = function(videoSingleton, mediaSource) {
     videoElement.removeEventListener('seeking', videoSeek, false);
     videoElement.removeEventListener('seeking', audioSeek, false);
 
-    mediaSource.removeEventListener('sourceend', resetVideo);
+    mediaSource.removeEventListener('sourceended', resetVideo);
   };
 
   mediaSource.addEventListener('sourceended', resetVideo);
@@ -226,6 +228,7 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
   clientSocket.setEvent('state-seek', function(data, callback) {
     log.debug("state-seek", data);
     var video = videoSingleton.getVideoElement();
+    videoSingleton.pause();
     video.currentTime = data.seektime;
     callback(clientSocket.getSocketId(), video.currentTime, video.paused);
   });
@@ -242,6 +245,7 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
 }
 
 var removeSocketEvents = function () {
+  clientSocket.clearEvent('state-init');
   clientSocket.clearEvent('state-play');
   clientSocket.clearEvent('state-pause');
   clientSocket.clearEvent('state-seek');
