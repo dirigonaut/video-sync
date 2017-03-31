@@ -43,6 +43,10 @@ Cache.prototype.getSegment = function(player, requestData, callback) {
       for(var i in segmentArray) {
         callback(segmentArray[i]);
       }
+
+      if(segmentArray[length - 1].data !== null) {
+        requestMap.get(key).push(callback);
+      }
     } else {
       log.silly('Cache currently reading data', key);
       requestMap.get(key).push(callback);
