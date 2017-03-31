@@ -90,16 +90,43 @@ function initialize(io, socket) {
   });
 
   socket.on('get-segment', function(data) {
-    log.silly('get-segment', data);
+    console.log('get-segment');
+    var fileIO = new FileIO();
     var data = validator.sterilizeVideoInfo(data);
 
+    var key = `${data.path}-${data.segment[0]}-${data.segment[1]}-${data.typeId}`;
+    var typeId = data.typeId;
+    var counter = 0;
+
     if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
-      var handleResponse = function(segment) {
-        log.silly('Returning segment for request: ', data);
+      var readConfig = fileIO.createStreamConfig(session.getMediaPath() + data.path, function(data) {
+        var segment = new Object();
+        segment.typeId = typeId;
+        segment.name = key;
+        segment.data = data;
+        segment.index = counter;
+        socket.emit("segment-chunk", segment);
+        counter++;
+      });
+
+      if(data.segment) {
+        var options = {"start": parseInt(data.segment[0]), "end": parseInt(data.segment[1])};
+        readConfig.options = options;
+
+      } else {
+        console.log("No segment options passed in.");
+      }
+
+      readConfig.onFinish = function() {
+        var segment = new Object();
+        segment.typeId = data.typeId;
+        segment.name = key;
+        segment.data = null;
+        segment.index = counter;
         socket.emit("segment-chunk", segment);
       };
 
-      cache.getSegment(playerManager.getPlayer(socket.id), data, handleResponse);
+      fileIO.read(readConfig);
     }
   });
 }

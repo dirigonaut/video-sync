@@ -50,11 +50,14 @@ MpdMeta.prototype.getSegment = function(typeId, timestamp) {
   var index = this.getSegmentIndex(typeId, timestamp);
 
   if(index < this.util.getSegmentsCount(this.metaJson, typeId, activeMeta.trackIndex)) {
-    var range = segments[index].split("-");
-    var segment = [range[0], range[1]];
+    var segment = segments[index];
+    if(segment !== null && segment !== undefined) {
+      var range = segment.split("-");
+      segment = [range[0], range[1]];
 
-    activeMeta.setSegmentBuffered(index);
-    result = this._addPath(typeId, activeMeta.trackIndex, segment);
+      activeMeta.setSegmentBuffered(index);
+      result = this._addPath(typeId, activeMeta.trackIndex, segment);
+    }
   }
 
   return result;

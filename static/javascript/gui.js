@@ -29,6 +29,7 @@ function initGUI() {
     var length  = $('#video')[0].duration;
     var request = new Object();
     request.seektime = Math.round(length * (percent / 100));
+    request.seektime = request.seektime - (request.seektime % 10);
     clientSocket.sendRequest('state-req-seek', request, false);
 
     $('#seek-bar').val(request.seektime / $("#video")[0].duration * 100);

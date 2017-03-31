@@ -24,11 +24,11 @@ VideoSingleton.prototype.getVideoElement = function() {
 
 VideoSingleton.prototype.onProgress = function(typeId) {
   var progress = function() {
-    if(!self.videoElement.paused) {
+    if(self.initialized) {
       if(self.meta.isLastSegment(typeId, self.videoElement.currentTime)){
         var timeToRequest = self.meta.isReadyForNextSegment(typeId, self.videoElement.currentTime);
         if(timeToRequest !== null){
-          log.silly(`VideoSingleton.onProgress - time: ${timeToRequest}`);
+          log.debug(`VideoSingleton.onProgress - time: ${timeToRequest}`);
           self.emit("get-segment", typeId, timeToRequest);
         }
       } else {
@@ -54,29 +54,25 @@ VideoSingleton.prototype.init = function(callback) {
   log.info("VideoSingleton.init");
   self.initialized = true;
   self.emit("get-init");
-
-  this.videoElement.addEventListener('loadedmetadata',
-    function() {
-      console.log("loadedmetadata");
-      callback(clientSocket.getSocketId());
-    }, {"once": true});
+  callback(clientSocket.getSocketId());
 };
 
 VideoSingleton.prototype.play = function() {
   var video = this.videoElement;
 
+  console.log(video.readyState);
   if(video.readyState === 4) {
     log.debug("Set video to play");
     video.play();
   } else {
-    log.debug("Set video to play when canplaythrough");
-    video.addEventListener('canplaythrough', resume, {"once": true});
+    log.debug("Set video to play when canplay");
+    video.addEventListener('canplay', resume, {"once": true});
   }
 };
 
 VideoSingleton.prototype.pause = function() {
   var video = this.videoElement;
-  self.videoElement.removeEventListener('canplaythrough', resume, {"once": true});
+  self.videoElement.removeEventListener('canplay', resume, {"once": true});
   video.pause();
 };
 

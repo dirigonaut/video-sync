@@ -24,6 +24,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
 
   var getSegment = function(typeId, timestamp) {
     if(typeId == self.type) {
+      console.log(timestamp);
       if(!isTimeRangeBuffered(timestamp)) {
         log.info("get-segment", [typeId, timestamp]);
         var segmentInfo = metaManager.getActiveMetaData().getSegment(self.type, timestamp);
@@ -43,8 +44,6 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
       self.sourceBuffer.addEventListener('error',  self.objectState);
       self.sourceBuffer.addEventListener('abort',  self.objectState);
       self.sourceBuffer.addEventListener('update', self.getOnBufferUpdate());
-      self.sourceBuffer.addEventListener('sourceopen', self.objectState);
-      self.sourceBuffer.addEventListener('sourceend', self.clearEvents);
     };
   };
 
@@ -97,17 +96,19 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
           }
         }
 
-        console.log(`${mapQueue.size} > ${self.index} for type: ${self.type}`);
+        log.debug(`${mapQueue.size} > ${self.index} for type: ${self.type}`);
         if(mapQueue.size > self.index) {
-          console.log(`${mapQueue.get(self.index) === null}`);
           var segment = mapQueue.get(self.index);
-          console.log(segment);
 
           if(segment !== null) {
-            log.debug(`Appending from ${self.loadingSegment} mapQueue at index ${self.index} for buffer ${self.type}`);
-            self.sourceBuffer.appendBuffer(segment);
-            bufferUpdated = true;
-            self.index++;
+            if(segment !== undefined) {
+              log.debug(`Appending from ${self.loadingSegment} mapQueue at index ${self.index} for buffer ${self.type}`);
+              self.sourceBuffer.appendBuffer(segment);
+              bufferUpdated = true;
+              self.index++;
+            } else {
+              break;
+            }
           } else {
             log.debug(self.segmentsToBuffer.get(self.loadingSegment).entries());
             log.debug(`Removing entry ${self.loadingSegment} and resetting index`);
@@ -122,26 +123,18 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
     }
   };
 
-  self.objectState = function(e) {
-    console.log(e);
-    console.log(self);
-    console.log(mediaSource.readyState);
-    log.error(self.loadingSegment);
-    console.log(JSON.stringify(self.segmentsToBuffer));
+  self.objectState = function(e, p) {
     log.error("SourceBuffer's objectState", e);
   };
 
   self.clearEvents = function(e) {
     log.info("SourceBuffer's clearEvents");
     video.removeListener('get-init', getInit);
-    video.removeListener('get-next', getNext);
     video.removeListener('get-segment', getSegment);
 
     self.sourceBuffer.removeEventListener('error',  self.objectState);
     self.sourceBuffer.removeEventListener('abort',  self.objectState);
     self.sourceBuffer.removeEventListener('update', self.getOnBufferUpdate);
-    self.sourceBuffer.removeEventListener('sourceopen', self.objectState);
-    self.sourceBuffer.removeEventListener('sourceend', self.clearEvents);
   };
 
   var requestVideoData = function(requestDetails) {

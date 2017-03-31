@@ -39,6 +39,7 @@ Cache.prototype.getSegment = function(player, requestData, callback) {
     var segmentArray = cacheMap.get(key);
     if(segmentArray.length !== 0) {
       log.silly('Cache has data', key);
+      log.debug('Cache has data', segmentArray.length);
       for(var i in segmentArray) {
         callback(segmentArray[i]);
       }
@@ -95,6 +96,7 @@ function readFile(key, requestData, cache) {
       segment.data = null;
       segment.index = cacheMap.get(key).length;
       cacheMap.get(key).push(segment);
+      log.debug('Cache has data', cacheMap.get(key).length);
 
       handleCallbacks(key, segment);
 

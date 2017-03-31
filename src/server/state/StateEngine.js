@@ -44,7 +44,7 @@ StateEngine.prototype.play = function(id, callback) {
         var broadcastEvent = function(players) {
           for(var i in players) {
             if(players[i].sync !== Player.Sync.DESYNCED) {
-              log.silly('StateEngine issuing play', player);
+              log.silly('StateEngine issuing play', players[i]);
               players[i].socket.emit('state-play', updatePlayerState);
 
               if(session.getMediaStarted() === false && players[i].isInit()) {
@@ -178,7 +178,7 @@ StateEngine.prototype.timeUpdate = function(id, data) {
           syncPlayer.sync = Player.Sync.SYNCWAIT;
         }
 
-        new SyncRule(accuracy).evaluate(player, broadcastSyncEvent);
+        //new SyncRule(accuracy).evaluate(player, broadcastSyncEvent);
       }
     }
   }
