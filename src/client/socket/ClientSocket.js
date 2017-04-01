@@ -10,7 +10,13 @@ ClientSocket.prototype.connect = function(serverUrl, callback) {
 
 	socket = io.connect(serverUrl, {rejectUnauthorized: false});
 
+	socket.on('error', function (err) {
+		console.log("Socket reconnected to: " + serverUrl);
+		socket.socket.reconnect();
+	});
+
 	socket.on('authenticated', function(acknowledge) {
+		console.log("Socket connected to: " + serverUrl);
 		callback(acknowledge);
 	});
 };

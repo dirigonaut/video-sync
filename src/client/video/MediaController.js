@@ -230,6 +230,7 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     var video = videoSingleton.getVideoElement();
     videoSingleton.pause();
     video.currentTime = data.seektime;
+
     callback(clientSocket.getSocketId(), video.currentTime, video.paused);
   });
 
