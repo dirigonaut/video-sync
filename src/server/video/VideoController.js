@@ -93,7 +93,7 @@ function initialize(io, socket) {
     log.silly('get-segment', data);
     var data = validator.sterilizeVideoInfo(data);
 
-    if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
+    if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
       var handleResponse = function(segment) {
         log.silly('Returning segment for request: ', data);
         socket.emit("segment-chunk", segment);

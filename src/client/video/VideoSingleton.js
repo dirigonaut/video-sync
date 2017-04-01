@@ -60,7 +60,6 @@ VideoSingleton.prototype.init = function(callback) {
 VideoSingleton.prototype.play = function() {
   var video = this.videoElement;
 
-  console.log(video.readyState);
   if(video.readyState === 4) {
     log.debug("Set video to play");
     video.play();
@@ -82,4 +81,24 @@ function resume() {
   var video = self.videoElement;
   log.debug("Set video to play");
   video.play();
+}
+
+function goToBuffered() {
+  var video = self.videoElement;
+
+  var timeRanges = video.buffered;
+  var timestamp = video.currentTime;
+
+  for(var i = 0; i < timeRanges.length; ++i) {
+    console.log(timeRanges.start(i) - timestamp);
+    console.log(timeRanges.end(i) - timestamp);
+
+    if(Math.abs(timeRanges.start(i) - timestamp) <= 2) {
+      video.currentTime = timeRanges.start(i);
+      break;
+    } else if(Math.abs(timeRanges.end(i) - timestamp) <= 2) {
+      video.currentTime = timeRanges.end(i);
+      break;
+    }
+  }
 }

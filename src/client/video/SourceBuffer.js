@@ -24,7 +24,6 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
 
   var getSegment = function(typeId, timestamp) {
     if(typeId == self.type) {
-      console.log(timestamp);
       if(!isTimeRangeBuffered(timestamp)) {
         log.info("get-segment", [typeId, timestamp]);
         var segmentInfo = metaManager.getActiveMetaData().getSegment(self.type, timestamp);
@@ -110,7 +109,6 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
               break;
             }
           } else {
-            log.debug(self.segmentsToBuffer.get(self.loadingSegment).entries());
             log.debug(`Removing entry ${self.loadingSegment} and resetting index`);
             self.segmentsToBuffer.delete(self.loadingSegment);
             self.index = 0;
@@ -149,6 +147,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
 
     if(!metaManager.getActiveMetaData().isForceBuffer(self.type)) {
       for(var i = 0; i < timeRanges.length; ++i) {
+        console.log(`${timeRanges.start(i)} - ${timeRanges.end(i)}`);
         if(timeRanges.start(i) > timestamp) {
           break;
         } else if (timeRanges.end(i) > timestamp) {
