@@ -24,8 +24,10 @@ MpdMeta.prototype.selectTrackQuality = function(typeId, index) {
   log.info(`MpdMeta.selectTrackQuality typeId: ${typeId}, index: ${index}`);
 
   if(this.active.get(typeId) === null || this.active.get(typeId) === undefined) {
+    var metaState = null;
+
     var timeStep = this.util.getTimeStep(this.metaJson, typeId, index);
-    var metaState = new MetaState(timeStep * 1000);
+    metaState = new MetaState(timeStep * 1000);
 
     metaState.setTrackIndex(index);
     this.active.set(typeId, metaState);
@@ -49,14 +51,18 @@ MpdMeta.prototype.getSegment = function(typeId, timestamp) {
   var segments = this.util.getSegmentList(this.metaJson, typeId, activeMeta.trackIndex);
   var index = this.getSegmentIndex(typeId, timestamp);
 
-  if(index < this.util.getSegmentsCount(this.metaJson, typeId, activeMeta.trackIndex)) {
-    var segment = segments[index];
-    if(segment !== null && segment !== undefined) {
-      var range = segment.split("-");
-      segment = [range[0], range[1]];
+  if(index !== null) {
+    if(index < this.util.getSegmentsCount(this.metaJson, typeId, activeMeta.trackIndex)) {
+      var segment = segments[index];
+      if(segment !== null && segment !== undefined) {
+        var range = segment.split("-");
+        segment = [range[0], range[1]];
 
-      activeMeta.setSegmentBuffered(index);
-      result = this._addPath(typeId, activeMeta.trackIndex, segment);
+        activeMeta.setSegmentBuffered(index);
+        result = this._addPath(typeId, activeMeta.trackIndex, segment);
+        result.index = index;
+        result.timeStep = activeMeta.timeStep;
+      }
     }
   }
 
@@ -64,8 +70,20 @@ MpdMeta.prototype.getSegment = function(typeId, timestamp) {
 };
 
 MpdMeta.prototype.getSegmentIndex = function(typeId, timestamp) {
-  var activeMeta = this.active.get(typeId);
-  var index = Math.trunc(timestamp / activeMeta.timeStep);
+  var timeStep = this.active.get(typeId).timeStep;
+  var divisor = Math.trunc(timestamp / timeStep);
+  var index = null;
+
+  if(divisor * timeStep <= timestamp && timestamp < (divisor + 1) * timeStep) {
+    console.log(`${typeId} scenario 1`);
+    index = divisor;
+  } else if(divisor + 1 * timeStep <= timestamp && timestamp < (divisor + 2) * timeStep) {
+    console.log(`${typeId} scenario 2`);
+    index = divisor + 1;
+  }
+
+  console.log(`${typeId}-${index} : ${divisor} * ${timeStep} = ${divisor * timeStep} <= ${timestamp} && ${timestamp} < ${divisor + 1} * ${timeStep} = ${(divisor + 1) * timeStep}`);
+
   return index;
 };
 

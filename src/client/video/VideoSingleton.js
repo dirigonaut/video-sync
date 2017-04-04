@@ -44,7 +44,7 @@ VideoSingleton.prototype.onProgress = function(typeId) {
 VideoSingleton.prototype.onSeek = function(typeId) {
   var seek = function() {
     self.meta.updateActiveMeta(typeId, self.meta.getSegmentIndex(typeId, self.videoElement.currentTime));
-    self.emit("get-segment", typeId, self.videoElement.currentTime);
+    self.emit("seek-segment", typeId, self.videoElement.currentTime);
   };
 
   return seek;
