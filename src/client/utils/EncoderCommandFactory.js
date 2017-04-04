@@ -43,7 +43,7 @@ EncoderCommandFactory.getVideoWebmFfmpegCommand = function(source, output, scale
 };
 
 EncoderCommandFactory.getAudioWebmFfmpegCommand = function(source, output, scale){
-  return ' -y -i ' + source + ' -vn -keyint_min 150 -crf 42 -g 150 -tile-columns 6 -frame-parallel 1 -speed 1 -threads 8 -c:a libopus -b:a ' + scale + ' -f webm -dash 1 ' + output;
+  return ' -y -i ' + source + ' -vn -frame-parallel 1 -speed 1 -threads 8 -c:a libopus -b:a ' + scale + ' -f webm -dash 1 ' + output;
 };
 
 EncoderCommandFactory.getWebmManifestCommand = function(command_queue, output){
