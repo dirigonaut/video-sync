@@ -72,16 +72,7 @@ MpdMeta.prototype.getSegment = function(typeId, timestamp) {
 MpdMeta.prototype.getSegmentIndex = function(typeId, timestamp) {
   var timeStep = this.active.get(typeId).timeStep;
   var divisor = Math.trunc(timestamp / timeStep);
-  var index = null;
-
-  if(divisor * timeStep <= timestamp && timestamp < (divisor + 1) * timeStep) {
-    console.log(`${typeId} scenario 1`);
-    index = divisor;
-  } else if(divisor + 1 * timeStep <= timestamp && timestamp < (divisor + 2) * timeStep) {
-    console.log(`${typeId} scenario 2`);
-    index = divisor + 1;
-  }
-
+  var index = divisor;
   console.log(`${typeId}-${index} : ${divisor} * ${timeStep} = ${divisor * timeStep} <= ${timestamp} && ${timestamp} < ${divisor + 1} * ${timeStep} = ${(divisor + 1) * timeStep}`);
 
   return index;
@@ -103,6 +94,7 @@ MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
   var index = this.getSegmentIndex(typeId, currentTime);
 
   while(activeMeta.isSegmentBuffered(activeMeta.bufferIndex)) {
+    console.log(`${typeId}- index: ${index} + ${this.threshold} > ${activeMeta.bufferIndex}`);
     if(index + this.threshold > activeMeta.bufferIndex) {
       activeMeta.bufferIndex++;
     } else {

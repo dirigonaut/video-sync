@@ -8,14 +8,15 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
   var self = {};
 
   self.type = enum_type;
-  self.hasInitSeg = false;
-  self.segmentsToBuffer = new Map();
   self.sourceBuffer = null;
+  self.hasInitSeg = false;
+
+  self.segmentsToBuffer = new Map();
+  self.segmentsInfo = new Map();
   self.loadingSegment = null;
-  self.seekSegment = null;
   self.index = 0;
 
-  log.info('SourceBuffer.initialize');
+  log.info(`SourceBuffer.initialize type: ${self.type}`);
 
   var getInit = function(){
     requestVideoData(metaManager.getActiveMetaData().getInit(self.type));
@@ -29,30 +30,17 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
         log.info("get-segment", [typeId, timestamp]);
         var segmentInfo = metaManager.getActiveMetaData().getSegment(self.type, timestamp);
         if(segmentInfo !== null) {
-          requestVideoData(segmentInfo);
+          var key = `${segmentInfo[0]}-${segmentInfo[1][0]}-${segmentInfo[1][1]}-${self.type}`;
+          if(self.segmentsInfo.get(key) === null || self.segmentsInfo.get(key) === undefined) {
+            requestVideoData(segmentInfo);
+            self.segmentsInfo.set(key, segmentInfo);
+          }
         }
       }
     }
   };
 
   video.on('get-segment', getSegment);
-
-  var seekSegment = function(typeId, timestamp) {
-    if(typeId == self.type) {
-      if(!isTimeRangeBuffered(timestamp)) {
-        log.info("seek-segment", [typeId, timestamp]);
-        var segmentInfo = metaManager.getActiveMetaData().getSegment(self.type, timestamp);
-        if(segmentInfo !== null) {
-          requestVideoData(segmentInfo);
-          console.log(segmentInfo);
-          self.seekSegment = segmentInfo;
-          self.seekSegment.key = `${segmentInfo[0]}-${segmentInfo[1][0]}-${segmentInfo[1][1]}-${self.type}`;
-        }
-      }
-    }
-  };
-
-  video.on('seek-segment', seekSegment);
 
   self.setSourceBufferCallback = function(spec) {
     return function(e) {
@@ -102,9 +90,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
         var mapQueue = self.segmentsToBuffer.get(self.loadingSegment);
 
         if(mapQueue === undefined || mapQueue === null) {
-          if(self.seekSegment !== null && self.seekSegment.key === self.loadingSegment) {
-            isMissingTimeRange();
-          }
+          isMissingTimeRange();
 
           if(self.segmentsToBuffer.size > 0) {
             self.loadingSegment = self.segmentsToBuffer.keys().next().value;
@@ -151,7 +137,6 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
     log.info("SourceBuffer's clearEvents");
     video.removeListener('get-init', getInit);
     video.removeListener('get-segment', getSegment);
-    video.removeListener('seek-segment', seekSegment);
 
     self.sourceBuffer.removeEventListener('error',  self.objectState);
     self.sourceBuffer.removeEventListener('abort',  self.objectState);
@@ -168,6 +153,10 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
     var buffered = false;
     var timeRanges = self.sourceBuffer.buffered;
 
+    for(var i = 0; i < timeRanges.length; ++i) {
+      console.log(`${self.type}:${timeRanges.start(i)}-${timeRanges.end(i)}`);
+    }
+    
     if(!metaManager.getActiveMetaData().isForceBuffer(self.type)) {
       for(var i = 0; i < timeRanges.length; ++i) {
         if(timeRanges.start(i) > timestamp) {
@@ -189,31 +178,31 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
     log.info(`Current time: ${currentTime}`);
 
     if(isTimeRangeBuffered(currentTime)) {
-      log.info(`${currentTime} is buffered set seekSegment to null`);
-      self.seekSegment = null;
+      log.info(`${currentTime} is buffered for sourcebuffer type ${self.type}`);
     } else {
       var bufferedRange = getClosestTimeRange(currentTime);
-      log.info(`Closest range is: ${bufferedRange[0]}-${bufferedRange[1]} `);
+      var segmentInfo = self.segmentsInfo.get(self.loadingSegment);
 
-      if(bufferedRange !== null) {
-        var segmentRange = [self.seekSegment.index * self.seekSegment.timeStep,
-          ((self.seekSegment.index + 1) * self.seekSegment.timeStep) - 1];
+      if(bufferedRange !== null && segmentInfo !== null && segmentInfo !== undefined) {
+        var segmentRange = [segmentInfo.index * segmentInfo.timeStep,
+          ((segmentInfo.index + 1) * segmentInfo.timeStep) - 1];
 
-        log.info(`SegmentRange range is: ${segmentRange[0]}-${segmentRange[1]} `);
+        log.info(`Closest range is: ${bufferedRange[0]}-${bufferedRange[1]}`);
+        log.info(`SegmentRange range is: ${segmentRange[0]}-${segmentRange[1]}`);
         if(bufferedRange[0] > currentTime) {
           var difference = Math.abs(bufferedRange[0] - segmentRange[0]);
-          var offset = Math.trunc(difference / self.seekSegment.timeStep);
+          var offset = Math.trunc(difference / segmentInfo.timeStep);
 
           console.log(`${self.type} scenario 1 ${difference} ${offset}`);
-          console.log(currentTime - Math.abs((offset * self.seekSegment.timeStep) - (self.seekSegment.timeStep / 2)));
-          seekSegment(self.type, currentTime - Math.abs((offset * self.seekSegment.timeStep) - (self.seekSegment.timeStep / 2)));
+          console.log(currentTime - Math.abs((offset * segmentInfo.timeStep) - (segmentInfo.timeStep / 2)));
+          getSegment(self.type, currentTime - Math.abs((offset * segmentInfo.timeStep) - (segmentInfo.timeStep / 2)));
         } else if(bufferedRange[1] < currentTime) {
           var difference = Math.abs(bufferedRange[1] - segmentRange[1]);
-          var offset = Math.trunc(difference / self.seekSegment.timeStep);
+          var offset = Math.trunc(difference / segmentInfo.timeStep);
 
           console.log(`${self.type} scenario 2 ${difference} ${offset}`);
-          console.log(currentTime + Math.abs((offset * self.seekSegment.timeStep) - (self.seekSegment.timeStep / 2)));
-          seekSegment(self.type, currentTime + Math.abs((offset * self.seekSegment.timeStep) - (self.seekSegment.timeStep / 2)));
+          console.log(currentTime + Math.abs((offset * segmentInfo.timeStep) - (segmentInfo.timeStep / 2)));
+          getSegment(self.type, currentTime + Math.abs((offset * segmentInfo.timeStep) - (segmentInfo.timeStep / 2)));
         }
       }
     }
@@ -222,38 +211,37 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
   var getClosestTimeRange = function(currentTime) {
     log.info('getClosestTimeRange');
     var timeRanges = self.sourceBuffer.buffered;
-    var closestStart = null;
-    var closestEnd = null;
-
-    for(var i = 0; i < timeRanges.length; ++i) {
-      console.log(`${timeRanges.start(i)}-${timeRanges.end(i)}`);
-    }
-
-    for(var i = 0; i < timeRanges.length; ++i) {
-      if(timeRanges.start(i) > currentTime) {
-        if(Math.abs(timeRanges.start(i) - currentTime) < Math.abs(timeRanges.start(closestStart) - currentTime)) {
-          closestStart = i;
-        }
-      }
-      if (timeRanges.end(i) < currentTime) {
-        if(Math.abs(timeRanges.end(i) - currentTime) < Math.abs(timeRanges.end(closestEnd) - currentTime)) {
-          closestEnd = i;
-        }
-      }
-    }
-
     var closestRange = null;
-    if(closestStart !== null && closestEnd !== null) {
-      if(Math.abs(timeRanges.start(closestStart) - currentTime) < Math.abs(timeRanges.end(closestEnd) - currentTime)) {
-        closestRange = [timeRanges.start(closestStart), timeRanges.end(closestStart)];
-      } else {
-        closestRange = [timeRanges.start(closestEnd), timeRanges.end(closestEnd)];
+
+    if(timeRanges !== null && timeRanges !== undefined && timeRanges.length > 0) {
+      var closestStart = null;
+      var closestEnd = null;
+
+      for(var i = 0; i < timeRanges.length; ++i) {
+        if(timeRanges.start(i) > currentTime) {
+          if(Math.abs(timeRanges.start(i) - currentTime) < Math.abs(timeRanges.start(closestStart) - currentTime)) {
+            closestStart = i;
+          }
+        }
+        if (timeRanges.end(i) < currentTime) {
+          if(Math.abs(timeRanges.end(i) - currentTime) < Math.abs(timeRanges.end(closestEnd) - currentTime)) {
+            closestEnd = i;
+          }
+        }
       }
-    } else {
-      if(closestEnd !== null) {
-        closestRange = [timeRanges.start(closestEnd), timeRanges.end(closestEnd)];
+
+      if(closestStart !== null && closestEnd !== null) {
+        if(Math.abs(timeRanges.start(closestStart) - currentTime) < Math.abs(timeRanges.end(closestEnd) - currentTime)) {
+          closestRange = [timeRanges.start(closestStart), timeRanges.end(closestStart)];
+        } else {
+          closestRange = [timeRanges.start(closestEnd), timeRanges.end(closestEnd)];
+        }
       } else {
-        closestRange = [timeRanges.start(closestStart), timeRanges.end(closestStart)];
+        if(closestEnd !== null) {
+          closestRange = [timeRanges.start(closestEnd), timeRanges.end(closestEnd)];
+        } else {
+          closestRange = [timeRanges.start(closestStart), timeRanges.end(closestStart)];
+        }
       }
     }
 
