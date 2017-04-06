@@ -156,7 +156,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
     for(var i = 0; i < timeRanges.length; ++i) {
       console.log(`${self.type}:${timeRanges.start(i)}-${timeRanges.end(i)}`);
     }
-    
+
     if(!metaManager.getActiveMetaData().isForceBuffer(self.type)) {
       for(var i = 0; i < timeRanges.length; ++i) {
         if(timeRanges.start(i) > timestamp) {

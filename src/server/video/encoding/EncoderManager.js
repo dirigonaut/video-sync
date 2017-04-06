@@ -75,7 +75,7 @@ function setEvents(command, manager) {
 	command.on('start', function(command_line){
 		log.debug("Server: Start encoding: " + new Date().getTime());
 	}).on('progress', function(percent) {
-		log.info(`encoding ${percent}`, percent);
+		log.info(`encoding ${util.inspect(percent, { showHidden: false, depth: 1 })}`, percent);
 	}).on('close', function(exitCode) {
 		log.info('Server: file has been converted succesfully: ' + new Date().getTime());
 		manager.emit('processed');

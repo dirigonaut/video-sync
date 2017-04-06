@@ -101,15 +101,23 @@ module.exports = MediaController;
 
 var initializeClientPlayer = function(_this, mediaSource, window, callback) {
   var buildClientPlayer = function() {
-    var videoSingleton = new VideoSingleton(videoElement, _this.metaManager.getActiveMetaData());
+    var activeMeta = _this.metaManager.getActiveMetaData();
+    var videoSingleton = new VideoSingleton(videoElement, activeMeta);
 
-    var sourceBuffers = new Array(2);
-    sourceBuffers[SourceBuffer.Enum.VIDEO] = initializeBuffer(SourceBuffer.Enum.VIDEO,
-      videoSingleton, mediaSource, _this.metaManager);
-    sourceBuffers[SourceBuffer.Enum.AUDIO] = initializeBuffer(SourceBuffer.Enum.AUDIO,
-      videoSingleton, mediaSource, _this.metaManager);
+    var sourceBuffers = [];
+    var createVideo = activeMeta.active.get(SourceBuffer.Enum.VIDEO);
+    if(createVideo !== null && createVideo !== undefined) {
+      sourceBuffers[SourceBuffer.Enum.VIDEO] = initializeBuffer(SourceBuffer.Enum.VIDEO,
+        videoSingleton, mediaSource, _this.metaManager);
+    }
 
-    initializeVideo(videoSingleton, mediaSource);
+    var createAudio = activeMeta.active.get(SourceBuffer.Enum.AUDIO);
+    if(createAudio !== null && createAudio !== undefined) {
+      sourceBuffers[SourceBuffer.Enum.AUDIO] = initializeBuffer(SourceBuffer.Enum.AUDIO,
+        videoSingleton, mediaSource, _this.metaManager);
+    }
+
+    initializeVideo(_this, videoSingleton, mediaSource);
 
     removeSocketEvents();
     setSocketEvents(_this, videoSingleton, sourceBuffers, new RequestFactory());
@@ -149,6 +157,7 @@ var initializeClientPlayer = function(_this, mediaSource, window, callback) {
 };
 
 var initializeBuffer = function(typeId, videoSingleton, mediaSource, metaManager) {
+  log.info(`Buffer of type: ${typeId} initialized.`);
   var sourceBuffer = new SourceBuffer(typeId, videoSingleton, metaManager, mediaSource);
   var codec = metaManager.getActiveMetaData().getMimeType(typeId);
 
@@ -168,7 +177,7 @@ var initializeBuffer = function(typeId, videoSingleton, mediaSource, metaManager
   return sourceBuffer;
 };
 
-var initializeVideo = function(videoSingleton, mediaSource) {
+var initializeVideo = function(_this, videoSingleton, mediaSource) {
   var onTimeUpdateState = function() {
     clientSocket.sendRequest('state-time-update', new RequestFactory().buildVideoStateRequest(videoElement));
   };
@@ -176,29 +185,52 @@ var initializeVideo = function(videoSingleton, mediaSource) {
   videoElement.currentTime = 0;
   videoElement.addEventListener('timeupdate', onTimeUpdateState, false);
 
-  var videoUpdate = videoSingleton.onProgress(SourceBuffer.Enum.VIDEO);
-  var audioUpdate = videoSingleton.onProgress(SourceBuffer.Enum.AUDIO);
-  videoElement.addEventListener('timeupdate', videoUpdate, false);
-  videoElement.addEventListener('timeupdate', audioUpdate, false);
+  var videoEvents = [];
+  var audioEvents = [];
+  var activeMeta = _this.metaManager.getActiveMetaData();
 
-  var videoSeek = videoSingleton.onSeek(SourceBuffer.Enum.VIDEO);
-  var audioSeek = videoSingleton.onSeek(SourceBuffer.Enum.AUDIO);
-  videoElement.addEventListener('seeking', videoSeek, false);
-  videoElement.addEventListener('seeking', audioSeek, false);
+  if(activeMeta.active.get(SourceBuffer.Enum.VIDEO) !== undefined) {
+    videoEvents = createVideoEvents(videoSingleton, SourceBuffer.Enum.VIDEO);
+  }
+
+  if(activeMeta.active.get(SourceBuffer.Enum.AUDIO) !== undefined) {
+    audioEvents = createVideoEvents(videoSingleton, SourceBuffer.Enum.AUDIO);
+  }
 
   var resetVideo = function() {
     log.info(`Video reset.`);
     videoElement.removeEventListener('timeupdate', onTimeUpdateState, false);
-    videoElement.removeEventListener('timeupdate', videoUpdate, false);
-    videoElement.removeEventListener('timeupdate', audioUpdate, false);
-    videoElement.removeEventListener('seeking', videoSeek, false);
-    videoElement.removeEventListener('seeking', audioSeek, false);
+
+    if(videoEvents.length > 0) {
+      videoElement.removeEventListener('timeupdate', videoEvents[0], false);
+      videoElement.removeEventListener('seeking', videoEvents[1], false);
+    }
+
+    if(audioEvents.length > 0) {
+      videoElement.removeEventListener('timeupdate', audioEvents[0], false);
+      videoElement.removeEventListener('seeking', audioEvents[1], false);
+    }
 
     mediaSource.removeEventListener('sourceended', resetVideo);
   };
 
   mediaSource.addEventListener('sourceended', resetVideo);
 };
+
+var createVideoEvents = function(videoSingleton, typeEnum) {
+  log.info(`Creating video events for buffer of type: ${typeEnum}.`);
+  var bufferEvents = [];
+
+  var bufferUpdate = videoSingleton.onProgress(typeEnum);
+  videoElement.addEventListener('timeupdate', bufferUpdate, false);
+  bufferEvents.push(bufferUpdate);
+
+  var bufferSeek = videoSingleton.onSeek(typeEnum);
+  videoElement.addEventListener('seeking', bufferSeek, false);
+  bufferEvents.push(bufferSeek);
+
+  return bufferEvents;
+}
 
 var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFactory) {
   clientSocket.setEvent('state-init', function(callback) {

@@ -5,7 +5,13 @@ function WebmParser() {
 WebmParser.prototype.getBaseURL = function(mpd, adaptId, repId) {
   var adaptIndex = getAdationSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
-  return rep.BaseURL[0];
+  var baseUrl = null;
+
+  if(rep !== null) {
+    baseUrl = rep.BaseURL[0];
+  }
+
+  return baseUrl;
 };
 
 WebmParser.prototype.getTimeStep = function(mpd, adaptId, repId) {
@@ -45,7 +51,7 @@ WebmParser.prototype.getSegmentsCount = function(mpd, adaptId, repId) {
   var adaptIndex = getAdationSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
 
-  var length;
+  var length = null;
   if(rep !== null && rep !== undefined) {
     if(rep.SegmentList !== undefined && rep.SegmentList !== null) {
       length = rep.SegmentList[0].SegmentURL.length;
@@ -59,7 +65,7 @@ WebmParser.prototype.getInit = function(mpd, adaptId, repId) {
   var adaptIndex = getAdationSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
 
-  var init;
+  var init = null;
   if(rep !== null && rep !== undefined) {
     if(rep.SegmentList !== undefined && rep.SegmentList !== null) {
       init = rep.SegmentList[0].Initialization[0].$.range;
@@ -71,25 +77,33 @@ WebmParser.prototype.getInit = function(mpd, adaptId, repId) {
 
 WebmParser.prototype.getMimeType = function(mpd, adaptId) {
   var adaptIndex = getAdationSetIndex(mpd, adaptId);
+  var mimeType = null;
 
-  var type = mpd.Period[0].AdaptationSet[adaptIndex].$.mimeType;
-  var codec = mpd.Period[0].AdaptationSet[adaptIndex].$.codecs;
+  var adaptSets = getAdaptionSets(mpd);
+  if(adaptSets !== null && adaptSets[adaptIndex] !== null && adaptSets[adaptIndex] !== undefined) {
+    var type = adaptSets[adaptIndex].$.mimeType;
+    var codec = adaptSets[adaptIndex].$.codecs;
 
-  return `${type}; codecs="${codec}"`;
+    mimeType = `${type}; codecs="${codec}"`
+  }
+
+  return mimeType;
 };
 
 WebmParser.prototype.getTracks = function(mpd) {
   var representationSets = [];
 
-  var adaptSets = mpd.Period[0].AdaptationSet;
+  var adaptSets = getAdaptionSets(mpd);
   for(var i in adaptSets) {
-    var repSets = adaptSets[i].Representation;
+    if(adaptSets[i].Representation !== null && adaptSets[i].Representation !== undefined) {
+      var repSets = adaptSets[i].Representation;
 
-    for(var j in repSets) {
-      representationSets.push(this.getTrack(mpd, i, repSets[j].$.id));
+      for(var j in repSets) {
+        representationSets.push(this.getTrack(mpd, i, repSets[j].$.id));
+      }
     }
   };
-
+  
   return representationSets;
 };
 
@@ -103,27 +117,55 @@ WebmParser.prototype.getTrack = function(mpd, adaptIndex, repId) {
 };
 
 WebmParser.prototype.getTrackType = function(mpd, adaptIndex) {
-  var type = mpd.Period[0].AdaptationSet[adaptIndex].$.mimeType;
-  return type.split('/')[0];
+  var adaptSets = getAdaptionSets(mpd);
+  var type = null;
+
+  if(adaptSets !== null && adaptSets[adaptIndex] !== null && adaptSets[adaptIndex] !== undefined) {
+    type = adaptSets[adaptIndex].$.mimeType;
+    type = type.split('/')[0];
+  }
+
+  return type;
 };
 
 module.exports = WebmParser;
 
 var getAdationSetIndex = function(mpd, adaptId) {
-  var adapt = mpd.Period[0].AdaptationSet;
-  for(var i in adapt) {
-    if(adapt[i].$.id == adaptId) {
+  var adaptSets = getAdaptionSets(mpd);
+
+  for(var i in adaptSets) {
+    if(adaptSets[i].$.id == adaptId) {
       return i;
     }
   }
   return null;
 };
 
+var getAdaptionSets = function(mpd) {
+  var adaptionSets = null;
+
+  if(mpd !== null && mpd !== undefined) {
+    var period = mpd.Period;
+    if(period !== null && period !== undefined && period.length > 0) {
+      var adaptionSet = period[0].AdaptationSet;
+      if(adaptionSet !== null && adaptionSet !== undefined) {
+        adaptionSets = adaptionSet;
+      }
+    }
+  }
+
+  return adaptionSets;
+}
+
 var getRepresentationSet = function(mpd, adaptIndex, repId) {
-  var reps = mpd.Period[0].AdaptationSet[adaptIndex].Representation;
-  for(var i in reps) {
-    if(reps[i].$.id == repId) {
-      return reps[i];
+  var adaptSets = getAdaptionSets(mpd);
+
+  if(adaptSets !== null && adaptSets[adaptIndex] !== null && adaptSets[adaptIndex] !== undefined) {
+    var reps = adaptSets[adaptIndex].Representation;
+    for(var i in reps) {
+      if(reps[i].$.id === repId) {
+        return reps[i];
+      }
     }
   }
   return null;

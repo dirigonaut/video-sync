@@ -29,7 +29,7 @@ function initGUI() {
     var length  = $('#video')[0].duration;
     var request = new Object();
     request.seektime = Math.round(length * (percent / 100));
-    request.seektime = request.seektime - (request.seektime % 5);
+    request.seektime = request.seektime;
     clientSocket.sendRequest('state-req-seek', request, false);
 
     $('#seek-bar').val(request.seektime / $("#video")[0].duration * 100);
@@ -379,9 +379,9 @@ function initGUI() {
     }
   }
 
-  function autoScroll() {
-    if($('#chatManuscript').hasClass("auto-scroll")) {
-      $('#chatManuscript').scrollTop($('#chatManuscript')[0].scrollHeight);
+  function autoScroll(id) {
+    if($(id).hasClass("auto-scroll")) {
+      $(id).scrollTop($(id)[0].scrollHeight);
     }
   }
 
@@ -398,14 +398,32 @@ function initGUI() {
     }
   });
 
-  var scrollTimeOut = null;
+  var chatScrollTimeOut = null;
   $('#chatManuscript').on('scroll', function() {
-    if(!scrollTimeOut) {
-      scrollTimeOut = setTimeout(function(){
-        clearTimeout(scrollTimeOut);
-        scrollTimeOut = null;
+    if(!chatScrollTimeOut) {
+      chatScrollTimeOut = setTimeout(function(){
+        clearTimeout(chatScrollTimeOut);
+        chatScrollTimeOut = null;
 
         var element = $('#chatManuscript');
+        var totalHeight = element.scrollTop() + element.innerHeight();
+        if(totalHeight === element[0].scrollHeight) {
+          element.addClass("auto-scroll");
+        } else {
+          element.removeClass("auto-scroll");
+        }
+      }, 250);
+    }
+  });
+
+  var logScrollTimeOut = null;
+  $('#logManuscript').on('scroll', function() {
+    if(!logScrollTimeOut) {
+      logScrollTimeOut = setTimeout(function(){
+        clearTimeout(logScrollTimeOut);
+        logScrollTimeOut = null;
+
+        var element = $('#logManuscript');
         var totalHeight = element.scrollTop() + element.innerHeight();
         if(totalHeight === element[0].scrollHeight) {
           element.addClass("auto-scroll");
@@ -419,13 +437,13 @@ function initGUI() {
   function systemMessage(message) {
     $('#chatManuscript').append(`<p><span class="chat-message" title="System" style="color:gray; font-weight: bold;">
       ${new Date().toTimeString().split(" ")[0]} System: </span>${client.getChatUtil().getUserHandle(message.from)} ${message.text}</p>`);
-    autoScroll();
+    autoScroll('#chatManuscript');
   }
 
   clientSocket.setEvent('chat-broadcast-resp', function(message) {
     $('#chatManuscript').append(`<p><span class="chat-message" title="${message.from}" style="color:blue; font-weight: bold;">
       ${new Date().toTimeString().split(" ")[0]} ${client.getChatUtil().getUserHandle(message.from)}: </span>${message.text}</p>`);
-    autoScroll();
+    autoScroll('#chatManuscript');
   });
 
   clientSocket.setEvent('chat-event-resp', function(message) {
@@ -439,6 +457,7 @@ function initGUI() {
   clientSocket.setEvent('chat-log-resp', function(message) {
     $('#logManuscript').append(`<p><span class="chat-message" title="${message.log}" style="color:blue; font-weight: bold;">
       ${message.time} ${message.level}: </span>${message.message} ${message.meta !== undefined ? message.meta : ""}</p>`);
+      autoScroll('#logManuscript');
   });
 
   //Video Events -----------------------------------------------------------------
