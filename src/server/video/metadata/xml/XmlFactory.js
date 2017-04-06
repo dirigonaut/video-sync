@@ -2,8 +2,8 @@ function XmlFactory() {
 
 }
 
-XmlFactory.prototype.buildSegmentURL = function(mediaRange, indexRange) {
-  return `<SegmentURL mediaRange="${mediaRange[0]}-${mediaRange[1]}" indexRange="${indexRange[0]}-${indexRange[1]}"/>`;
+XmlFactory.prototype.buildSegmentURL = function(mediaRange, timeCode) {
+  return `<SegmentURL mediaRange="${mediaRange[0]}-${mediaRange[1]}" timeCode="${timeCode}"/>`;
 };
 
 

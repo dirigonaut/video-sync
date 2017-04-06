@@ -22,7 +22,7 @@ XmlUtil.prototype.webmMetaToXml = function(meta) {
 
     for(var j in manifest.clusters) {
       xml += xmlFactory.buildSegmentURL([manifest.clusters[j].start,
-         manifest.clusters[j].end], [0, 0]);
+         manifest.clusters[j].end], manifest.clusters[j].time);
     }
 
     xml += xmlFactory.buildSegmentListEnd();
