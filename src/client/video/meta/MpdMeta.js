@@ -22,7 +22,6 @@ function MpdMeta(mpdXML, util) {
 
 MpdMeta.prototype.selectTrackQuality = function(typeId, index) {
   log.info(`MpdMeta.selectTrackQuality typeId: ${typeId}, index: ${index}`);
-
   if(this.active.get(typeId) === null || this.active.get(typeId) === undefined) {
     var metaState = null;
 
@@ -37,7 +36,7 @@ MpdMeta.prototype.selectTrackQuality = function(typeId, index) {
 };
 
 MpdMeta.prototype.getInit = function(typeId) {
-  console.log('MpdMeta.getInit ' + typeId);
+  log.debug('MpdMeta.getInit ' + typeId);
   var activeMeta = this.active.get(typeId);
   var range = this.util.getInit(this.metaJson, typeId, activeMeta.trackIndex).split("-");
   var segment = [range[0], range[1]];
@@ -45,7 +44,7 @@ MpdMeta.prototype.getInit = function(typeId) {
 };
 
 MpdMeta.prototype.getSegment = function(typeId, timestamp) {
-  console.log('MpdMeta.getSegment');
+  log.debug('MpdMeta.getSegment');
   var result = null;
   var activeMeta = this.active.get(typeId);
   var segments = this.util.getSegmentList(this.metaJson, typeId, activeMeta.trackIndex);
@@ -71,9 +70,8 @@ MpdMeta.prototype.getSegment = function(typeId, timestamp) {
 
 MpdMeta.prototype.getSegmentIndex = function(typeId, timestamp) {
   var timeStep = this.active.get(typeId).timeStep;
-  var divisor = Math.trunc(timestamp / timeStep);
-  var index = divisor;
-  console.log(`${typeId}-${index} : ${divisor} * ${timeStep} = ${divisor * timeStep} <= ${timestamp} && ${timestamp} < ${divisor + 1} * ${timeStep} = ${(divisor + 1) * timeStep}`);
+  var index = Math.trunc(timestamp / timeStep);
+  console.log(`${typeId}-${index} : ${index} * ${timeStep} = ${index * timeStep} : ${timestamp}`);
 
   return index;
 };
@@ -105,7 +103,7 @@ MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
   if(!activeMeta.isSegmentBuffered(activeMeta.bufferIndex)) {
     //Adding the remainder is to negate floating point arithmatic issues
     var remainder = currentTime % activeMeta.timeStep;
-    nextSegmentTime = ((activeMeta.bufferIndex * activeMeta.timeStep) + remainder).toFixed(1);
+    nextSegmentTime = Math.ceil((activeMeta.bufferIndex * activeMeta.timeStep) + remainder);
   }
 
   return nextSegmentTime;

@@ -1,4 +1,4 @@
-const util          = require('util');
+const Util          = require('util');
 const EventEmitter  = require('events');
 
 var ClientSocket    = require('../socket/ClientSocket.js');
@@ -18,7 +18,7 @@ function MetaManager() {
   _this = this;
 }
 
-util.inherits(MetaManager, EventEmitter);
+Util.inherits(MetaManager, EventEmitter);
 
 MetaManager.prototype.initialize = function() {
   _this.metaDataList   = new Map();
@@ -40,7 +40,10 @@ MetaManager.prototype.requestMetaData = function(fileBuffer) {
 
     if(_this.activeMetaData === null && header.type === 'webm') {
       var trackInfo = _this.getTrackInfo().get(header.type);
-      var metaInfo = _this.buildMetaInfo(header.type, trackInfo.video[0].index, trackInfo.audio[0].index, trackInfo.subtitle);
+      var videoIndex = trackInfo.video !== null && trackInfo.video.length > 0 ? trackInfo.video[0].index : null;
+      var audioIndex = trackInfo.audio !== null && trackInfo.audio.length > 0 ? trackInfo.audio[0].index : null;
+
+      var metaInfo = _this.buildMetaInfo(header.type, videoIndex, audioIndex, trackInfo.subtitle);
       _this.setActiveMetaData(metaInfo);
     }
 
@@ -53,8 +56,13 @@ MetaManager.prototype.requestMetaData = function(fileBuffer) {
 MetaManager.prototype.setActiveMetaData = function(metaInfo) {
   var metaData = _this.metaDataList.get(metaInfo.key);
 
-  metaData.selectTrackQuality(SourceBuffer.Enum.VIDEO, metaInfo.video);
-  metaData.selectTrackQuality(SourceBuffer.Enum.AUDIO, metaInfo.audio);
+  if(metaInfo.video !== null) {
+    metaData.selectTrackQuality(SourceBuffer.Enum.VIDEO, metaInfo.video);
+  }
+
+  if(metaInfo.audio !== null) {
+    metaData.selectTrackQuality(SourceBuffer.Enum.AUDIO, metaInfo.audio);
+  }
 
   if(_this.activeMetaData !== metaData) {
     _this.activeMetaData = metaData;
@@ -75,9 +83,9 @@ MetaManager.prototype.getActiveMetaData = function() {
 MetaManager.prototype.getTrackInfo = function() {
   var tracks = new Map();
   var activeKeys = null;
-  console.log(_this.metaDataList);
 
   for(var meta of _this.metaDataList) {
+    console.log(meta);
     var videoTracks = [];
     var audioTracks = [];
 
@@ -98,13 +106,12 @@ MetaManager.prototype.getTrackInfo = function() {
       var trackInfo = meta[1].getActiveTrackInfo();
       activeKeys = {};
       activeKeys.type = meta[0];
-      activeKeys.video = trackInfo.get(SourceBuffer.Enum.VIDEO).getTrackIndex();
-      activeKeys.audio = trackInfo.get(SourceBuffer.Enum.AUDIO).getTrackIndex();
+      activeKeys.video = trackInfo.get(SourceBuffer.Enum.VIDEO) !== undefined ? trackInfo.get(SourceBuffer.Enum.VIDEO).getTrackIndex() : null;
+      activeKeys.audio = trackInfo.get(SourceBuffer.Enum.AUDIO) !== undefined ? trackInfo.get(SourceBuffer.Enum.AUDIO).getTrackIndex() : null;
       activeKeys.subtitle = null;
     }
 
     var trackSet = {'video' : videoTracks, 'audio': audioTracks};
-    console.log(trackSet);
     tracks.set(meta[0], trackSet);
   }
 
