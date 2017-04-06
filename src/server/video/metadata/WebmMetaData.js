@@ -1,3 +1,4 @@
+var Util = require('util');
 var DOMParser   = require('xmldom').DOMParser;
 
 var FileIO      = require('../../utils/FileIO');
@@ -98,6 +99,10 @@ var parseEBML = function(manifest, data) {
   log.silly("WebmMetaData.parseEBML", data);
   var tagType = data[0];
   var tagData = data[1];
+
+  if(tagData.name !== 'SimpleBlock') {
+    console.log(Util.inspect(tagData, { showHidden: false, depth: 1 }));
+  }
 
   if(tagType == "start") {
     if(tagData.name == 'Cluster') {

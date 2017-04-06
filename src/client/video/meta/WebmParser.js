@@ -39,7 +39,7 @@ WebmParser.prototype.getSegmentList = function(mpd, adaptId, repId) {
       var segmentURLs = rep.SegmentList[0].SegmentURL;
 
       for(var i in segmentURLs) {
-        segments.push(segmentURLs[i].$.mediaRange);
+        segments.push([segmentURLs[i].$.mediaRange, segmentURLs[i].$.timeCode]);
       }
     }
   }
@@ -103,7 +103,7 @@ WebmParser.prototype.getTracks = function(mpd) {
       }
     }
   };
-  
+
   return representationSets;
 };
 
