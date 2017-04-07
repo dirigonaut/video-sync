@@ -2,8 +2,7 @@ function WebmParser() {
 
 };
 
-WebmParser.prototype.getBaseURL = function(mpd, adaptId, repId) {
-  var adaptIndex = getAdationSetIndex(mpd, adaptId);
+WebmParser.prototype.getBaseURL = function(mpd, adaptIndex, repId) {
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
   var baseUrl = null;
 
@@ -15,7 +14,7 @@ WebmParser.prototype.getBaseURL = function(mpd, adaptId, repId) {
 };
 
 WebmParser.prototype.getTimeStep = function(mpd, adaptId, repId) {
-  var adaptIndex = getAdationSetIndex(mpd, adaptId);
+  var adaptIndex = getAdaptionSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
 
   var timeStep = null;
@@ -30,7 +29,7 @@ WebmParser.prototype.getTimeStep = function(mpd, adaptId, repId) {
 };
 
 WebmParser.prototype.getSegmentList = function(mpd, adaptId, repId) {
-  var adaptIndex = getAdationSetIndex(mpd, adaptId);
+  var adaptIndex = getAdaptionSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
 
   var segments = [];
@@ -48,7 +47,7 @@ WebmParser.prototype.getSegmentList = function(mpd, adaptId, repId) {
 };
 
 WebmParser.prototype.getSegmentsCount = function(mpd, adaptId, repId) {
-  var adaptIndex = getAdationSetIndex(mpd, adaptId);
+  var adaptIndex = getAdaptionSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
 
   var length = null;
@@ -62,7 +61,7 @@ WebmParser.prototype.getSegmentsCount = function(mpd, adaptId, repId) {
 };
 
 WebmParser.prototype.getInit = function(mpd, adaptId, repId) {
-  var adaptIndex = getAdationSetIndex(mpd, adaptId);
+  var adaptIndex = getAdaptionSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
 
   var init = null;
@@ -76,7 +75,7 @@ WebmParser.prototype.getInit = function(mpd, adaptId, repId) {
 };
 
 WebmParser.prototype.getMimeType = function(mpd, adaptId) {
-  var adaptIndex = getAdationSetIndex(mpd, adaptId);
+  var adaptIndex = getAdaptionSetIndex(mpd, adaptId);
   var mimeType = null;
 
   var adaptSets = getAdaptionSets(mpd);
@@ -128,9 +127,13 @@ WebmParser.prototype.getTrackType = function(mpd, adaptIndex) {
   return type;
 };
 
+WebmParser.prototype.getAdaptionSetIndex = function(mpd, adaptId) {
+  return getAdaptionSetIndex(mpd, adaptId);
+};
+
 module.exports = WebmParser;
 
-var getAdationSetIndex = function(mpd, adaptId) {
+var getAdaptionSetIndex = function(mpd, adaptId) {
   var adaptSets = getAdaptionSets(mpd);
 
   for(var i in adaptSets) {

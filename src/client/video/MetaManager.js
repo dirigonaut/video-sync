@@ -85,7 +85,6 @@ MetaManager.prototype.getTrackInfo = function() {
   var activeKeys = null;
 
   for(var meta of _this.metaDataList) {
-    console.log(meta);
     var videoTracks = [];
     var audioTracks = [];
 
