@@ -178,7 +178,7 @@ StateEngine.prototype.timeUpdate = function(id, data) {
           syncPlayer.sync = Player.Sync.SYNCWAIT;
         }
 
-        //new SyncRule(accuracy).evaluate(player, broadcastSyncEvent);
+        new SyncRule(accuracy).evaluate(player, broadcastSyncEvent);
       }
     }
   }
@@ -223,7 +223,7 @@ var playerInit = function(id) {
     player.initialized = true;
 
     var stateEngine = new StateEngine();
-    //stateEngine.syncingPing(id);
+    stateEngine.syncingPing(id);
   } else {
     log.silly("Could not find the player.");
     log.silly("Current users: ", playerManager.getPlayers());

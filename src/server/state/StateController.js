@@ -26,7 +26,7 @@ function initialize(io, socket) {
     log.debug('state-req-init');
     stateEngine.init(socket.id);
   });
-  
+
   socket.on('state-req-play', function() {
     log.info('state-req-play');
     var onAllowed = function() {

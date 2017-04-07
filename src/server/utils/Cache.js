@@ -32,7 +32,7 @@ Cache.prototype.getSegment = function(player, requestData, callback) {
   if(!cacheMap.has(key)) {
     log.silly('Cache has no data', key);
     requestMap.set(key, [callback]);
-    readFile(key, requestData);
+    readFile(key, requestData, player.sync !== Player.Sync.DESYNCED);
   } else {
     var segmentArray = cacheMap.get(key);
     if(segmentArray !== null && segmentArray !== undefined) {
@@ -63,21 +63,23 @@ Cache.prototype.flush = function() {
 
 module.exports = Cache;
 
-function readFile(key, requestData) {
+function readFile(key, requestData, cache) {
   log.debug('Cache.readFile');
   var fileIO = new FileIO();
 
-  var readConfig = fileIO.createStreamConfig(basePath + requestData.path, function onData(data) {
+  var readConfig = fileIO.createStreamConfig(basePath + requestData.path, function onData(data, index) {
     log.silly('Cache on data', key);
     var segment = new Object();
     segment.typeId = requestData.typeId;
     segment.name = key;
     segment.data = data;
-    segment.index = cacheMap.get(key) !== null && cacheMap.get(key) !== undefined ? cacheMap.get(key).length : 0;
+    segment.index = index;
 
-    log.silly('Cache adding Entry: ', {"key": key, "size": segment.data.length});
-    cacheMap.get(key).push(segment);
-    heatMap.set(key, [0]);
+    if(cache) {
+      log.silly('Cache adding Entry: ', {"key": key, "size": segment.data.length});
+      cacheMap.get(key).push(segment);
+      heatMap.set(key, [0]);
+    }
 
     handleCallbacks(key, segment);
   });
@@ -85,26 +87,33 @@ function readFile(key, requestData) {
   var options = {"start": parseInt(requestData.segment[0]), "end": parseInt(requestData.segment[1])};
   readConfig.options = options;
 
-  readConfig.onFinish = function onFinish() {
+  readConfig.onFinish = function onFinish(index) {
     log.silly('Cache finished read: ', key);
 
-    if(cacheMap.get(key) !== null || cacheMap.get(key) !== undefined) {
-      var segment = new Object();
-      segment.typeId = requestData.typeId;
-      segment.name = key;
-      segment.data = null;
-      segment.index = cacheMap.get(key).length;
-      cacheMap.get(key).push(segment);
-      log.debug('Cache has data', cacheMap.get(key).length);
+    var segment = new Object();
+    segment.typeId = requestData.typeId;
+    segment.name = key;
+    segment.data = null;
+    segment.index = index;
 
-      handleCallbacks(key, segment);
+    if(cache) {
+      if(cacheMap.get(key) !== null || cacheMap.get(key) !== undefined) {
+        cacheMap.get(key).push(segment);
+        log.debug('Cache has data', cacheMap.get(key).length);
+      }
+    }
 
+    handleCallbacks(key, segment);
+
+    if(cache) {
       requestMap.delete(key);
     }
   };
 
-  log.silly('Cache adding entry: ', key);
-  cacheMap.set(key, []);
+  if(cache) {
+    log.silly('Cache adding entry: ', key);
+    cacheMap.set(key, []);
+  }
 
   fileIO.read(readConfig);
 }
