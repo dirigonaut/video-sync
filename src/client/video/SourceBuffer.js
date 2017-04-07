@@ -10,6 +10,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
   self.type = enum_type;
   self.sourceBuffer = null;
   self.hasInitSeg = false;
+  self.forceStop = false;
 
   self.segmentsToBuffer = new Map();
   self.loadingSegment = null;
@@ -85,7 +86,9 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
         var mapQueue = self.segmentsToBuffer.get(self.loadingSegment);
 
         if(mapQueue === undefined || mapQueue === null) {
-          if(self.segmentsToBuffer.size > 0) {
+          if(self.forceStop) {
+            break;
+          } else if(self.segmentsToBuffer.size > 0) {
             self.loadingSegment = self.segmentsToBuffer.keys().next().value;
             log.debug(`Set loadingSegment to ${self.loadingSegment} and continuing`);
             continue;
@@ -121,6 +124,10 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
       } while(!bufferUpdated);
     }
   };
+
+  self.setForceStop = function() {
+    self.forceStop = true;
+  }
 
   self.objectState = function(e, p) {
     log.error("SourceBuffer's objectState", e);
