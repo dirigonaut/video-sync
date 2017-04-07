@@ -19,7 +19,11 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
   log.info(`SourceBuffer.initialize type: ${self.type}`);
 
   var getInit = function(){
-    requestVideoData(metaManager.getActiveMetaData().getInit(self.type));
+    var initInfo = metaManager.getActiveMetaData().getInit(self.type);
+    var key = `${initInfo[0]}-${initInfo[1][0]}-${initInfo[1][1]}-${self.type}`;
+    self.segmentsToBuffer.set(key, new Map());
+    self.loadingSegment = key;
+    requestVideoData(initInfo);
   };
 
   video.on('get-init', getInit);
@@ -30,17 +34,35 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
         log.info("get-segment", [typeId, timestamp]);
         var segmentInfo = metaManager.getActiveMetaData().getSegment(self.type, timestamp);
         if(segmentInfo !== null) {
+          var key = `${segmentInfo[0]}-${segmentInfo[1][0]}-${segmentInfo[1][1]}-${self.type}`;
+          self.segmentsToBuffer.set(key, new Map());
           requestVideoData(segmentInfo);
+          return key;
         }
       }
     }
+    return null;
   };
 
   video.on('get-segment', getSegment);
 
+  var seekSegment = function(typeId, timestamp) {
+    var seekKey = getSegment(typeId, timestamp);
+
+    if(seekKey !== null) {
+      self.segmentsToBuffer.forEach(function(value, key, map) {
+        if(key !== self.loadingSegment && key !== seekKey) {
+          map.delete(key);
+        }
+      });
+    }
+  };
+
+  video.on('seek-segment', seekSegment);
+
   self.setSourceBufferCallback = function(spec) {
     return function(e) {
-      console.log("SourceBuffer attached to MediaSource.")
+      log.info("SourceBuffer attached to MediaSource.")
       self.sourceBuffer = mediaSource.addSourceBuffer(spec);
       self.sourceBuffer.addEventListener('error',  self.objectState);
       self.sourceBuffer.addEventListener('abort',  self.objectState);
@@ -56,9 +78,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
       log.debug(`Queue found for key: ${key}`);
       mapQueue.set(index, chunk);
     } else {
-      log.debug(`Creating queue for key: ${key}`);
-      var mapQueue = new Map();
-      self.segmentsToBuffer.set(key, mapQueue.set(index, chunk));
+      log.debug(`Queue not found for key: ${key}`);
     }
 
     isReadyForNextSegment();
@@ -66,7 +86,10 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
     if(!self.hasInitSeg) {
       log.info("Init segment has been received.", self.type);
       self.hasInitSeg = true;
-      requestVideoData(metaManager.getActiveMetaData().getSegment(self.type, 0));
+      var segmentInfo = metaManager.getActiveMetaData().getSegment(self.type, 0);
+      var key = `${segmentInfo[0]}-${segmentInfo[1][0]}-${segmentInfo[1][1]}-${self.type}`;
+      self.segmentsToBuffer.set(key, new Map());
+      requestVideoData(segmentInfo);
     }
   };
 
@@ -137,6 +160,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
     log.info("SourceBuffer's clearEvents");
     video.removeListener('get-init', getInit);
     video.removeListener('get-segment', getSegment);
+    video.removeListener('seek-segment', seekSegment);
 
     self.sourceBuffer.removeEventListener('error',  self.objectState);
     self.sourceBuffer.removeEventListener('abort',  self.objectState);

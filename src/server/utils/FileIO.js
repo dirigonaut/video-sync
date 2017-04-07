@@ -9,6 +9,7 @@ function FileIO() {
 FileIO.prototype.read = function(readConfig) {
   log.debug('FileIO.read', readConfig);
   var readStream  = Fs.createReadStream(readConfig.path, readConfig.options);
+  var index = 0;
 
   readStream.on('error', function(e) {
     log.error("FileIO.write, Server: Error: " + e);
@@ -17,13 +18,14 @@ FileIO.prototype.read = function(readConfig) {
   readStream.on('close', function() {
     log.debug("FileIO.read, Server: Finished reading.");
     if(readConfig.onFinish) {
-      readConfig.onFinish();
+      readConfig.onFinish(index);
     }
 	});
 
   readStream.on('data', function(chunk) {
     log.silly("on data", readConfig);
-    readConfig.callback(chunk);
+    readConfig.callback(chunk, index);
+    index += 1;
   });
 };
 

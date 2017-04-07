@@ -39,7 +39,6 @@ function Server(ip, port, appData, callback) {
     server = Https.createServer(options, app);
     io = SocketIO.listen(server);
 
-
     var adminSocketLogging = function(id) {
       console.log("Adding Socket Logging");
       var playerManager = new PlayerManager();
