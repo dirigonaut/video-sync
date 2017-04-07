@@ -150,11 +150,31 @@ var initializeClientPlayer = function(_this, mediaSource, window, callback) {
     mediaSource.addEventListener('sourceended', resetMediaSource);
     videoElement.src = window.URL.createObjectURL(mediaSource);
     videoElement.load();
-  };
 
-  _this.once('end-media-source', function() {
-    mediaSource.endOfStream();
-  });
+    _this.once('end-media-source', function() {
+      for(var i in sourceBuffers) {
+        sourceBuffers[i].setForceStop();
+      }
+
+      var canEndStream = function() {
+        var isUpdating = false;
+
+        for(var i in sourceBuffers) {
+          if(sourceBuffers[i].sourceBuffer.updating) {
+            isUpdating = true;
+          }
+        }
+
+        if(!isUpdating) {
+          mediaSource.endOfStream();
+        } else {
+          setTimeout(canEndStream, 250);
+        }
+      };
+
+      setTimeout(canEndStream, 250);
+    });
+  };
 
   _this.metaManager.on('meta-data-activated', buildClientPlayer);
 
