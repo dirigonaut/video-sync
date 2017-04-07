@@ -31,10 +31,8 @@ Cache.prototype.getSegment = function(player, requestData, callback) {
 
   if(!cacheMap.has(key)) {
     log.silly('Cache has no data', key);
-    if(player.sync !== Player.Sync.DESYNCED) {
-      requestMap.set(key, [callback]);
-    }
-    readFile(key, requestData, player.sync !== Player.Sync.DESYNCED);
+    requestMap.set(key, [callback]);
+    readFile(key, requestData);
   } else {
     var segmentArray = cacheMap.get(key);
     if(segmentArray !== null && segmentArray !== undefined) {
@@ -65,7 +63,7 @@ Cache.prototype.flush = function() {
 
 module.exports = Cache;
 
-function readFile(key, requestData, cache) {
+function readFile(key, requestData) {
   log.debug('Cache.readFile');
   var fileIO = new FileIO();
 
@@ -77,11 +75,9 @@ function readFile(key, requestData, cache) {
     segment.data = data;
     segment.index = cacheMap.get(key) !== null && cacheMap.get(key) !== undefined ? cacheMap.get(key).length : 0;
 
-    if(cache) {
-      log.silly('Cache adding Entry: ', {"key": key, "size": segment.data.length});
-      cacheMap.get(key).push(segment);
-      heatMap.set(key, [0]);
-    }
+    log.silly('Cache adding Entry: ', {"key": key, "size": segment.data.length});
+    cacheMap.get(key).push(segment);
+    heatMap.set(key, [0]);
 
     handleCallbacks(key, segment);
   });
@@ -103,16 +99,12 @@ function readFile(key, requestData, cache) {
 
       handleCallbacks(key, segment);
 
-      if(cache) {
-        requestMap.delete(key);
-      }
+      requestMap.delete(key);
     }
   };
 
-  if(cache) {
-    log.silly('Cache adding entry: ', key);
-    cacheMap.set(key, []);
-  }
+  log.silly('Cache adding entry: ', key);
+  cacheMap.set(key, []);
 
   fileIO.read(readConfig);
 }

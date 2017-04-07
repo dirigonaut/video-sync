@@ -88,8 +88,13 @@ MediaController.prototype.setForceBuffer = function(forceBuffer) {
   log.debug('MediaController.setForceBuffer')
   var activeMeta = this.metaManager.getActiveMetaData();
 
-  activeMeta.setForceBuffer(SourceBuffer.Enum.VIDEO, forceBuffer);
-  activeMeta.setForceBuffer(SourceBuffer.Enum.AUDIO, forceBuffer);
+  if(activeMeta.active.get(SourceBuffer.Enum.VIDEO) !== undefined){
+    activeMeta.setForceBuffer(SourceBuffer.Enum.VIDEO, forceBuffer);
+  }
+
+  if(activeMeta.active.get(SourceBuffer.Enum.AUDIO) !== undefined){
+    activeMeta.setForceBuffer(SourceBuffer.Enum.AUDIO, forceBuffer);
+  }
 };
 
 MediaController.prototype.setActiveMetaData = function(key, videoIndex, audioIndex, subtitleIndex) {

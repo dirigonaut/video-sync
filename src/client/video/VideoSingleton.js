@@ -27,7 +27,7 @@ VideoSingleton.prototype.onProgress = function(typeId) {
     if(self.initialized) {
       if(self.meta.isLastSegment(typeId, self.videoElement.currentTime)){
         var timeToRequest = self.meta.isReadyForNextSegment(typeId, self.videoElement.currentTime);
-        if(timeToRequest !== null){
+        if(timeToRequest !== null && timeToRequest === timeToRequest){
           log.debug(`VideoSingleton.onProgress - time: ${timeToRequest} current: ${self.videoElement.currentTime}`);
           self.emit("get-segment", typeId, timeToRequest);
         }

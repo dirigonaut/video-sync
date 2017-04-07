@@ -65,8 +65,10 @@ EncoderCommandFactory.getWebmManifestCommand = function(command_queue, output){
     maps += ' -map ' + i;
   }
 
-  command.input = ' -y' + input + ' -c ' + 'copy' + maps + ' -f webm_dash_manifest -adaptation_sets ' + 'id=0,streams=' + video_streams;
-  command.input = command.input + (audio_streams.length > 0 ? ' id=1,streams=' + audio_streams + ' ' + output : ' ' + output);
+  command.input = ' -y' + input + ' -c ' + 'copy' + maps + ' -f webm_dash_manifest -adaptation_sets ';
+  command.input = command.input + (video_streams.length > 0 ? ' id=0,streams=' + video_streams : '');
+  command.input = command.input + (audio_streams.length > 0 ? ' id=1,streams=' + audio_streams : '');
+  command.input = command.input + ' ' + output
   command.codec = "ffmpeg";
   return command;
 };
