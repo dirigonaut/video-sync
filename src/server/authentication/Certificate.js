@@ -1,12 +1,13 @@
 var Forge      = require('node-forge');
 var Moment     = require('moment');
-var NeDatabase = require('../database/NeDatabase');
-var LogManager  = require('../log/LogManager');
+var LogManager = require('../log/LogManager');
+var Publisher  = require('../process/redis/redis/RedisPublisher');
+
+var publisher = new Publisher();
 
 var self;
 const EXPIR = 365;
 
-var database = new NeDatabase();
 var log = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
 
 function Certificate() {
@@ -27,14 +28,17 @@ Certificate.prototype.getCertificates = function(callback) {
         callback(cert.pem);
       } else {
         log.info("SSL Certificates are expired, signing new ones.");
-        database.deleteCerts(Moment().valueOf());
+
+        publisher.publish(Publisher.Enum.DATABASE, ['deleteCerts', [Moment().valueOf()]]);
 
         var cert = self._generate(self._getAttributes(), callback);
       }
     }
   }
-  database.readCerts(validateCerts);
+  publisher.publish(Publisher.Enum.DATABASE, ['readCerts', []], validateCerts);
 };
+
+module.exports = Certificate;
 
 Certificate.prototype._generate = function(attrs, callback) {
   log.debug("Certificate.prototype._generate");
@@ -94,7 +98,5 @@ Certificate.prototype._getAttributes = function() {
 Certificate.prototype._save = function(certs, callback) {
   log.debug("Certificate.prototype._save");
   var certificate = {expire: Moment().add(EXPIR, 'days').valueOf(), pem: certs};
-  database.createCerts(certificate, callback);
+  publisher.publish(Publisher.Enum.DATABASE, ['createCerts', certificate], callback);
 };
-
-module.exports = Certificate;

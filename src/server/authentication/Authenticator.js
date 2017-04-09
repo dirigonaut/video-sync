@@ -1,11 +1,11 @@
 const crypto      = require('crypto');
 
-var NeDatabase    = require('../database/NeDatabase');
 var Session       = require('../administration/Session');
+var Publisher     = require('../process/redis/RedisPublisher');
 var LogManager    = require('../log/LogManager');
 
-var database			= new NeDatabase();
 var session       = new Session();
+var publisher     = new Publisher();
 var log           = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
 
 function Authenticator(){
@@ -17,9 +17,9 @@ Authenticator.prototype.requestToken = function(id, data, callback) {
     var invitees = session.getActiveSession().invitees;
 
     for(var x in invitees) {
-      if(invitees[x] == data.address) {
+      if(invitees[x] === data.address) {
         var token = createToken(id, data.address);
-        database.createToken(token, callback);
+        publisher.publish(Publisher.Enum.DATABASE, ['createToken', [token]], callback);
         log.debug(`Created Token: ${token.token} for Address: ${data.address}`);
       }
     }
@@ -46,8 +46,8 @@ Authenticator.prototype.validateToken = function(id, data, callback) {
     }
 
     for(var x in invitees) {
-      if(invitees[x] == data.address) {
-        database.readToken(data.address, data.token, authorize);
+      if(invitees[x] === data.address) {
+        publisher.publish(Publisher.Enum.DATABASE, ['readToken', [data.address, data.token]], authorize);
       }
     }
   }

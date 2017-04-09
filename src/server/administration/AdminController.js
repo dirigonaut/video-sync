@@ -1,21 +1,21 @@
 var UserAdmin       = require("./UserAdministration");
 var Session         = require('../administration/Session');
 var Validator       = require('../authentication/Validator');
-var PlayerManager   = require('../player/PlayerManager');
 var CommandEngine   = require('../chat/CommandEngine');
 var ChatEngine      = require('../chat/ChatEngine');
 var FileSystemUtils = require('../utils/FileSystemUtils');
 var FileIO          = require('../utils/FileIO');
 var LogManager      = require('../log/LogManager');
+var Publisher       = require('../process/redis/RedisPublisher');
 
 var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
 
 var userAdmin     = new UserAdmin();
 var session       = new Session();
 var validator     = new Validator();
-var playerManager = new PlayerManager();
 var commandEngine = new CommandEngine();
 var chatEngine    = new ChatEngine();
+var publisher     = new Publisher();
 
 function AdminController(io, socket) {
   initialize(io, socket);
@@ -42,14 +42,16 @@ function initialize(io, socket) {
 
         session.setMediaPath(data);
 
-        var players = playerManager.getPlayers();
+        var emitMediaReady = function(players) {
+          var message = chatEngine.buildMessage(socket.id, "video Has been initialized.");
+          chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
 
-        var message = chatEngine.buildMessage(socket.id, "video Has been initialized.");
-        chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
+          for(var player of players) {
+            player[1].socket.emit('media-ready');
+          }
+        };
 
-        for(var player of players) {
-          player[1].socket.emit('media-ready');
-        }
+        publisher.publish(Publisher.Enum.PLAYER, ['getPlayers', []], emitMediaReady);
       }
 
       fileIO.dirExists(data, setMedia);
@@ -77,8 +79,11 @@ function initialize(io, socket) {
         }
       }
 
-      var admin = playerManager.getPlayer(socket.id);
-      commandEngine.processAdminCommand(admin, data, response);
+      var processCommand = function(admin) {
+        commandEngine.processAdminCommand(admin, data, response);
+      }
+
+      publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [socket.id]], processCommand);
     }
   });
 

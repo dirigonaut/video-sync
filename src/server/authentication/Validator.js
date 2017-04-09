@@ -80,9 +80,9 @@ Validator.prototype.sterilizeUser = function(input) {
 	return clean;
 };
 
-Validator.prototype.logDataCleaning = function(dirty_data, dirty_data){
+Validator.prototype.logDataCleaning = function(dirty_data, dirtier_data){
 	if(this.debug){
-		console.log("dirty: ", dirty_data, "clean: ", dirty_data);
+		console.log("dirty: ", dirty_data, "clean: ", dirtier_data);
 	}
 };
 

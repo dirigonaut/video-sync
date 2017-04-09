@@ -1,11 +1,11 @@
-var NeDatabase  = require('./NeDatabase');
 var Session     = require('../administration/Session');
 var Validator   = require('../authentication/Validator');
+var Publisher   = require('../process/redis/RedisPublisher');
 var LogManager  = require('../log/LogManager');
 
-var database  = new NeDatabase();
-var validator = new Validator();
 var session   = new Session();
+var validator = new Validator();
+var publisher = new Publisher();
 
 function DatabaseController(io, socket) {
   initialize(io, socket);
@@ -23,7 +23,8 @@ function initialize(io, socket) {
         socket.emit("db-refresh");
       }
 
-      database.createSmtp(validator.sterilizeSmtp(data), emitResults);
+      var cleanData = validator.sterilizeSmtp(data);
+      publisher.publish(Publisher.Enum.DATABASE, ['createSmtp', [cleanData]], emitResults);
     }
   });
 
@@ -35,7 +36,8 @@ function initialize(io, socket) {
         socket.emit("db-refresh");
       }
 
-  		database.createContact(validator.sterilizeContact(data), emitResults);
+      var cleanData = validator.sterilizeSmtp(data);
+      publisher.publish(Publisher.Enum.DATABASE, ['createContact', [cleanData]], emitResults);
     }
   });
 
@@ -47,7 +49,8 @@ function initialize(io, socket) {
         socket.emit("db-refresh");
       }
 
-      database.createSession(validator.sterilizeSession(data), emitResults);
+      var cleanData = validator.sterilizeSmtp(data);
+      publisher.publish(Publisher.Enum.DATABASE, ['createSession', [cleanData]], emitResults);
     }
   });
 
@@ -61,7 +64,7 @@ function initialize(io, socket) {
         socket.emit("db-smtps", smtp);
       }
 
-  		database.readAllSmtp(emitResults);
+      publisher.publish(Publisher.Enum.DATABASE, ['readAllSmtp', []], emitResults);
     }
   });
 
@@ -73,7 +76,7 @@ function initialize(io, socket) {
         socket.emit("db-contacts", contacts);
       };
 
-      database.readAllContacts(emitResults);
+      publisher.publish(Publisher.Enum.DATABASE, ['readAllContacts', []], emitResults);
     }
   });
 
@@ -85,7 +88,7 @@ function initialize(io, socket) {
         socket.emit("db-sessions", sessions);
       };
 
-      database.readAllSessions(emitResults);
+      publisher.publish(Publisher.Enum.DATABASE, ['readAllSessions', []], emitResults);
     }
   });
 
@@ -98,7 +101,8 @@ function initialize(io, socket) {
         socket.emit("db-refresh");
       };
 
-      database.updateContact(data[0], validator.sterilizeContact(data[1]), emitResults);
+      var cleanData = validator.sterilizeSmtp(data);
+      publisher.publish(Publisher.Enum.DATABASE, ['updateContact', [cleanData], emitResults);
     }
   });
 
@@ -110,8 +114,8 @@ function initialize(io, socket) {
         socket.emit("db-refresh");
       };
 
-      console.log(data);
-      database.updateSmtp(data[0], validator.sterilizeSmtp(data[1]), emitResults);
+      var cleanData = validator.sterilizeSmtp(data);
+      publisher.publish(Publisher.Enum.DATABASE, ['updateSmtp', [cleanData], emitResults);
     }
   });
 
@@ -123,7 +127,8 @@ function initialize(io, socket) {
         socket.emit("db-refresh");
       };
 
-      database.updateSession(data[0], validator.sterilizeSession(data[1]), emitResults);
+      var cleanData = validator.sterilizeSmtp(data);
+      publisher.publish(Publisher.Enum.DATABASE, ['updateSession', [cleanData], emitResults);
     }
   });
 
@@ -132,13 +137,14 @@ function initialize(io, socket) {
     if(session.isAdmin(socket.id)) {
       console.log('db-delete-smtp');
 
-      var emitResponse = function(deleted){
+      var emitResults = function(deleted){
         if(deleted > 0){
           socket.emit('db-refresh');
         }
       }
 
-      database.deleteSmtp(validator.sterilizeSmtp(data), emitResponse);
+      var cleanData = validator.sterilizeSmtp(data);
+      publisher.publish(Publisher.Enum.DATABASE, ['deleteSmtp', [cleanData], emitResults);
     }
   });
 
@@ -146,13 +152,14 @@ function initialize(io, socket) {
     if(session.isAdmin(socket.id)) {
   		console.log('db-delete-contact');
 
-      var emitResponse = function(deleted){
+      var emitResults = function(deleted){
         if(deleted > 0){
           socket.emit('db-refresh');
         }
       }
 
-  		database.deleteContact(validator.sterilizeEmail(data), emitResponse);
+      var cleanData = validator.sterilizeSmtp(data);
+      publisher.publish(Publisher.Enum.DATABASE, ['deleteContact', [cleanData], emitResults);
     }
   });
 
@@ -160,13 +167,14 @@ function initialize(io, socket) {
     if(session.isAdmin(socket.id)) {
       console.log('db-delete-session');
 
-      var emitResponse = function(deleted){
+      var emitResults = function(deleted){
         if(deleted > 0){
           socket.emit('db-refresh');
         }
       }
 
-      database.deleteSession(validator.sterilizeSession(data), emitResponse);
+      var cleanData = validator.sterilizeSmtp(data);
+      publisher.publish(Publisher.Enum.DATABASE, ['deleteSession', [cleanData], emitResults);
     }
   });
 }

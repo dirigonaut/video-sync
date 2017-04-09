@@ -6,9 +6,7 @@ var Validator       = require('../authentication/Validator');
 var XmlUtil         = require('./metadata/xml/XmlUtil');
 var MpdUtil         = require('./metadata/MpdUtil');
 var LogManager      = require('../log/LogManager');
-var PlayerManager   = require('../player/PlayerManager');
 
-var playerManager   = new PlayerManager();
 var validator       = new Validator();
 var session         = new Session();
 var log             = LogManager.getLog(LogManager.LogEnum.VIDEO);

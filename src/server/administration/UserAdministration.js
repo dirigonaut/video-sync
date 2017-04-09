@@ -1,61 +1,52 @@
-var PlayerManager = require('../player/PlayerManager');
-var Player        = require('../player/Player');
-var NeDatabase    = require('../database/NeDatabase');
-var Smtp          = require('./Smtp');
-var Session       = require('./Session');
-var LogManager    = require('../log/LogManager');
+var Smtp        = require('./Smtp');
+var Session     = require('./Session');
+var LogManager  = require('../log/LogManager');
+var Publisher   = require('../redis/process/RedisPublisher');
 
-var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
-
-var playerManager = new PlayerManager();
-var database      = new NeDatabase();
-var smtp          = new Smtp();
-var session       = new Session();
+var log         = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
+var publisher   = new Publisher();
+var smtp        = new Smtp();
+var session     = new Session();
 
 function UserAdministration() { }
 
 UserAdministration.prototype.downgradeUser = function(user) {
   log.debug("UserAdministration.downgradeUser");
-  var player = playerManager.getPlayer(user);
-
-  if(player !== undefined && player !== null) {
-    player.setAuth(Player.Auth.RESTRICTED);
-  } else {
-    log.error("There is no player with the id: ", user);
-  }
+  publisher.publish(Publisher.Enum.PLAYER, ['setAuth', [user, Player.Auth.RESTRICTED]]);
 };
 
 UserAdministration.prototype.upgradeUser = function(user) {
   log.debug("UserAdministration.upgradeUser");
-  var player = playerManager.getPlayer(user);
-
-  if(player !== undefined && player !== null) {
-    player.setAuth(Player.Auth.DEFAULT);
-  } else {
-    log.error("There is no player with the id: ", user);
-  }
+  publisher.publish(Publisher.Enum.PLAYER, ['setAuth', [user, Player.Auth.DEFAULT]]);
 };
 
 UserAdministration.prototype.kickUser = function(user, callback) {
   log.debug("UserAdministration.kickUser");
   session.removeInvitee(user, session.getActiveSession());
-  var player = playerManager.getPlayer(user);
 
-  if(player !== null && player !== undefined) {
-    var socket = player.socket;
+  var kick = function(player) {
+    if(player !== null && player !== undefined) {
+      var socket = player.socket;
 
-    if(socket !== undefined && socket !== null) {
-      this.disconnectSocket(socket);
+      if(socket !== undefined && socket !== null) {
+        this.disconnectSocket(socket);
+      }
+    } else {
+      log.error("There is no player with the id: ", user);
     }
-  } else {
-    log.error("There is no player with the id: ", user);
   }
+
+  publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [user]]);
 };
 
 UserAdministration.prototype.disconnectSocket = function(socket) {
   log.info("Disconnecting socket ", socket.id);
-  database.deleteTokens(socket.id);
-  socket.disconnect('unauthorized');
+
+  var disconnect = function() {
+    socket.disconnect('unauthorized');
+  };
+
+  publisher.publish(Publisher.Enum.DATABASE, ['deleteTokens', [socket.id]], disconnect);
 };
 
 UserAdministration.prototype.inviteUser = function(emailAddress) {

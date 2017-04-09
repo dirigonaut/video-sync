@@ -1,20 +1,17 @@
-const EventEmitter  = require('events');
+const EventEmitter = require('events');
 
-var PlayerManager   = require('../player/PlayerManager');
-var NeDatabase	    = require('../database/NeDatabase');
-var LogManager      = require('../log/LogManager');
+var Publisher     = require('../process/redis/RedisPublisher');
+var LogManager    = require('../log/LogManager');
 
+var publisher     = new Publisher();
 var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
-var database      = new NeDatabase();
-var playerManager = new PlayerManager();
 
 var activeSession = null;
 var mediaPath     = null;
-var mediaStarted  = false;
 var adminId       = null;
 var idToEmailMap  = null;
-
 var localIp       = null;
+var mediaStarted  = false;
 
 var emitter = null;
 
@@ -27,9 +24,10 @@ Session.prototype.loadSession = function(id) {
     activeSession = session[0];
     idToEmailMap = new Map();
     log.info("Loaded session",activeSession);
+    publisher.publish(Publisher.Enum.SESSION, ['redisSetSession', [session]]);
   }
 
-  database.readSession(id, setSession);
+  publisher.publish(Publisher.Enum.DATABASE, ['readSession', [id]], setSession);
 };
 
 Session.prototype.getActiveSession = function() {
@@ -50,6 +48,7 @@ Session.prototype.addInvitee = function(email, session) {
   log.silly("Session.addInvitee");
   if(session !== null && session !== undefined) {
     session.invitees.push(email);
+    publisher.publish(Publisher.Enum.SESSION, ['redisSetInvitees', [session.invitees]]);
   } else {
     log.error("There is no active session to add invitees to.");
   }
@@ -57,6 +56,7 @@ Session.prototype.addInvitee = function(email, session) {
 
 Session.prototype.associateIdToEmail = function(id, email) {
   idToEmailMap.set(id, email);
+  publisher.publish(Publisher.Enum.SESSION, ['redisSetIdToEmailMap', [idToEmailMap]]);
 };
 
 Session.prototype.removeInvitee = function(id, session) {
@@ -69,7 +69,9 @@ Session.prototype.removeInvitee = function(id, session) {
         if(session.invitees[x] === email) {
           session.invitees.splice(x, 1);
           idToEmailMap.delete(id);
-          console.log(session.invitees);
+
+          publisher.publish(Publisher.Enum.SESSION, ['redisSetInvitees', [session.invitees]]);
+          publisher.publish(Publisher.Enum.SESSION, ['redisSetIdToEmailMap', [idToEmailMap]]);
         }
       }
     } else {
@@ -83,6 +85,7 @@ Session.prototype.removeInvitee = function(id, session) {
 Session.prototype.mediaStarted = function() {
   if(mediaPath !== null && !mediaStarted) {
     mediaStarted = true;
+    publisher.publish(Publisher.Enum.SESSION, ['redisSetMediaStarted', []]);
   }
 };
 
@@ -91,11 +94,11 @@ Session.prototype.getMediaStarted = function() {
 };
 
 Session.prototype.setMediaPath = function(path) {
-  log.info("Session.setMediaPath")
+  log.info("Session.setMediaPath");
   mediaPath = path;
   mediaStarted = false;
 
-  playerManager.initPlayers();
+  publisher.publish(Publisher.Enum.SESSION, ['redisSetMediaPath', [path]]);
 };
 
 Session.prototype.getMediaPath = function() {
@@ -103,7 +106,7 @@ Session.prototype.getMediaPath = function() {
 };
 
 Session.prototype.isAdmin = function(id) {
-  return adminId == id;
+  return adminId === id;
 };
 
 Session.prototype.getAdmin = function() {
@@ -116,7 +119,7 @@ Session.prototype.onAdminIdCallback = function(callback) {
     emitter = new EventEmitter();
   }
 
-  emitter.once('admin-set', callback);
+  emitter.on('admin-set', callback);
 };
 
 Session.prototype.setAdminId = function(id) {
@@ -131,6 +134,37 @@ Session.prototype.setLocalIp = function(ip) {
 
 Session.prototype.getLocalIp = function() {
   return localIp;
+};
+
+//--------- Redis Functions ---------
+Session.prototype.redisSetAdminId = function(id) {
+  this.setAdminId(id);
+};
+
+Session.prototype.redisSetSession = function(session) {
+  activeSession = session[0];
+  idToEmailMap = new Map();
+  log.info("Loaded session", activeSession);
+};
+
+Session.prototype.redisSetInvitees = function(invitees) {
+  if(session !== null && session !== undefined) {
+    session.invitees = invitees;
+  }
+};
+
+Session.prototype.redisSetIdToEmailMap = function(emailMap) {
+  idToEmailMap = emailMap;
+};
+
+Session.prototype.redisSetMediaPath = function(path) {
+  log.info("Session.redisSetMediaPath");
+  mediaPath = path;
+  mediaStarted = false;
+};
+
+Session.prototype.redisSetMediaStarted = function() {
+  this.mediaStarted();
 };
 
 module.exports = Session;
