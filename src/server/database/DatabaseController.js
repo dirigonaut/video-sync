@@ -102,7 +102,7 @@ function initialize(io, socket) {
       };
 
       var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['updateContact', [cleanData], emitResults);
+      publisher.publish(Publisher.Enum.DATABASE, ['updateContact', [cleanData]], emitResults);
     }
   });
 
@@ -115,7 +115,7 @@ function initialize(io, socket) {
       };
 
       var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['updateSmtp', [cleanData], emitResults);
+      publisher.publish(Publisher.Enum.DATABASE, ['updateSmtp', [cleanData]], emitResults);
     }
   });
 
@@ -128,7 +128,7 @@ function initialize(io, socket) {
       };
 
       var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['updateSession', [cleanData], emitResults);
+      publisher.publish(Publisher.Enum.DATABASE, ['updateSession', [cleanData]], emitResults);
     }
   });
 
@@ -144,7 +144,7 @@ function initialize(io, socket) {
       }
 
       var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['deleteSmtp', [cleanData], emitResults);
+      publisher.publish(Publisher.Enum.DATABASE, ['deleteSmtp', [cleanData]], emitResults);
     }
   });
 
@@ -159,7 +159,7 @@ function initialize(io, socket) {
       }
 
       var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['deleteContact', [cleanData], emitResults);
+      publisher.publish(Publisher.Enum.DATABASE, ['deleteContact', [cleanData]], emitResults);
     }
   });
 
@@ -174,7 +174,7 @@ function initialize(io, socket) {
       }
 
       var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['deleteSession', [cleanData], emitResults);
+      publisher.publish(Publisher.Enum.DATABASE, ['deleteSession', [cleanData]], emitResults);
     }
   });
 }

@@ -1,21 +1,21 @@
-var Redis   = require("redis");
-var Session = require('./administration/Session');
-var Discover = require('./redis/Discover');
+var Redis     = require("redis");
+var Session   = require('../../administration/Session');
+var Discover  = require('./Discover');
 
-var session = new Session();
-var discover = new Discover();
+var session   = new Session();
+var discover  = new Discover();
 
 function ServerRedis() {
-  this.subcriber = Redis.createClient();
-  initialize(this.subcriber);
+  this.subscriber = Redis.createClient();
+  initialize(this.subscriber);
 
-  this.subcriber.subcribe("session");
+  this.subscriber.subscribe("session");
 }
 
 module.exports = ServerRedis;
 
-function initialize(subcriber) {
-  subcriber.on("session", function(channel, message, callback) {
-    discover(session, message, callback);
+function initialize(subscriber) {
+  subscriber.on("session", function(channel, message, callback) {
+    discover.discover(session, message, callback);
   });
 }

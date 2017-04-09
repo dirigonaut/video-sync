@@ -2,11 +2,13 @@ var Cluster = require('cluster');
 var Os      = require('os');
 var Path    = require('path');
 
+var RedisServer   = require('./src/server/process/redis/RedisServer.js');
 var ServerProcess = require('./src/server/process/ServerProcess.js');
-var StateProcess = require('./src/server/process/StateProcess.js');
+var StateProcess  = require('./src/server/process/StateProcess.js');
 
+var redisServer   = null;
 var serverProcess = null;
-var stateProcess = null;
+var stateProcess  = null;
 
 const STATIC_PATH = "static";
 
@@ -15,9 +17,12 @@ appData += '/video-sync/Default/';
 
 if (Cluster.isMaster) {
   console.log(`Master ${process.pid} is running`);
+  redisServer = new RedisServer();
+  redisServer.start();
+
   stateProcess = new StateProcess(appData);
 
-  for (let i = 0; i < Os.cpus().length - 1; i++) {
+  for (let i = 0; i < 1; i++) {
     Cluster.fork();
   }
 

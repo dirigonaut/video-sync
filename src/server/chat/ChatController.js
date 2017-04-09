@@ -2,7 +2,7 @@ var CommandEngine = require('./CommandEngine');
 var ChatEngine    = require('./ChatEngine');
 var Session       = require('../administration/Session');
 var LogManager    = require('../log/LogManager');
-var Publisher     = require('../process/redis/redis/RedisPublisher');
+var Publisher     = require('../process/redis/RedisPublisher');
 
 var log           = LogManager.getLog(LogManager.LogEnum.CHAT);
 var commandEngine = new CommandEngine();

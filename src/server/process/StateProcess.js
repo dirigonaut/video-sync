@@ -8,4 +8,4 @@ function StateProcess(appData) {
   this.stateRedis = new StateRedis();
 }
 
-modules.export = StateProcess;
+module.exports = StateProcess;
