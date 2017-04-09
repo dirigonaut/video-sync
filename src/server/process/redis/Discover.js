@@ -1,9 +1,14 @@
-function Discover(object, message, callback) {
+function Discover() {
+  
+}
+
+Discover.prototype.discover = function(object, message, callback) {
   if(object !== null && object !== undefined) {
     if(message !== null && message !== undefined) {
       var functionHandle = message[0];
       var functionParams = message[1] !== null && message[1] !== undefined ? message[1] : [];
 
+      console.log(`Discovering function ${functionHandle} for object ${object.constructor.name}`);
       if(callback !== null && callback !== undefined) {
         functionParams.push(callback);
       }
@@ -17,6 +22,6 @@ function Discover(object, message, callback) {
       }
     }
   }
-}
+};
 
-modules.exports = Discover;
+module.exports = Discover;

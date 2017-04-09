@@ -1,7 +1,7 @@
 var Forge      = require('node-forge');
 var Moment     = require('moment');
 var LogManager = require('../log/LogManager');
-var Publisher  = require('../process/redis/redis/RedisPublisher');
+var Publisher  = require('../process/redis/RedisPublisher');
 
 var publisher = new Publisher();
 

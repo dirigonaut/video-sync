@@ -1,7 +1,7 @@
 var Smtp        = require('./Smtp');
 var Session     = require('./Session');
 var LogManager  = require('../log/LogManager');
-var Publisher   = require('../redis/process/RedisPublisher');
+var Publisher   = require('../process/redis/RedisPublisher');
 
 var log         = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
 var publisher   = new Publisher();

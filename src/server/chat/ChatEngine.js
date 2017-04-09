@@ -1,4 +1,4 @@
-var Publisher  = require('../process/redis/redis/RedisPublisher');
+var Publisher  = require('../process/redis/RedisPublisher');
 var LogManager = require('../log/LogManager');
 
 var log       = LogManager.getLog(LogManager.LogEnum.CHAT);

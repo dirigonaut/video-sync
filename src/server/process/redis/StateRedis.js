@@ -1,6 +1,6 @@
 var Redis         = require("redis");
 
-var Discover      = require('./redis/Discover');
+var Discover      = require('./Discover');
 var NeDatabase    = require('../../database/NeDatabase');
 var StateEngine   = require('../../state/StateEngine.js');
 var PlayerManager = require('../../player/PlayerManager');
@@ -11,26 +11,29 @@ var stateEngine   = new StateEngine();
 var playerManager = new PlayerManager();
 
 function StateRedis() {
-  this.subcriber = Redis.createClient();
-  initialize(this.subcriber);
+  this.subscriber = Redis.createClient();
+  initialize(this.subscriber);
 
-  this.subcriber.subcribe("database");
-  this.subcriber.subcribe("state");
-  this.subcriber.subcribe("player");
+  this.subscriber.subscribe("database");
+  this.subscriber.subscribe("state");
+  this.subscriber.subscribe("player");
 }
 
 module.exports = StateRedis;
 
-function initialize(subcriber) {
-  subcriber.on("database", function(channel, message, callback) {
-    discover(database, message, callback);
+function initialize(subscriber) {
+  subscriber.on("database", function(channel, message, callback) {
+    console.log(channel);
+    discover.discover(database, message, callback);
   });
 
-  subcriber.on("state", function(channel, message, callback) {
-    discover(stateEngine, message, callback);
+  subscriber.on("state", function(channel, message, callback) {
+    console.log(channel);
+    discover.discover(stateEngine, message, callback);
   });
 
-  subcriber.on("player", function(channel, message, callback) {
-    discover(playerManager, message, callback);
+  subscriber.on("player", function(channel, message, callback) {
+    console.log(channel);
+    discover.discover(playerManager, message, callback);
   });
 }

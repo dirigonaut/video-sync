@@ -1,7 +1,7 @@
 var Validator     = require('../authentication/Validator');
 var Player        = require('../player/Player');
 var ChatEngine    = require('../chat/ChatEngine');
-var Publisher     = require('../process/redis/redis/RedisPublisher');
+var Publisher     = require('../process/redis/RedisPublisher');
 var LogManager    = require('../log/LogManager');
 
 var log = LogManager.getLog(LogManager.LogEnum.STATE);

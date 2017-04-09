@@ -9,6 +9,7 @@ var ServerRedis              = require('./redis/ServerRedis');
 var AuthenticationController = require('../authentication/AuthenticationController');
 
 var logManager = new LogManager();
+logManager.initialize();
 
 var app         = null;
 var io          = null;
@@ -20,6 +21,7 @@ function ServerProcess(ip, port, appData, staticPath) {
   logManager.addFileLogging(appData);
 
   var initHttpsServer = function(pem) {
+    console.log('initHttpsServer');
     var options = {
       key: pem.privateKey,
       cert: pem.certificate,

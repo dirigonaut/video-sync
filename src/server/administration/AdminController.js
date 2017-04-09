@@ -1,5 +1,5 @@
 var UserAdmin       = require("./UserAdministration");
-var Session         = require('../administration/Session');
+var Session         = require('./Session');
 var Validator       = require('../authentication/Validator');
 var CommandEngine   = require('../chat/CommandEngine');
 var ChatEngine      = require('../chat/ChatEngine');
