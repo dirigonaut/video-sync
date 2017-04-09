@@ -37,7 +37,8 @@ module.exports = AuthenticationController;
 
 function initialize(io) {
   io.on('connection', function (socket) {
-    log.info("socket has connected: " + socket.id + " ip:" + socket.handshake.address);
+    console.log(socket.handshake.address.toString());
+    log.info("socket has connected: " + socket.id + " ip: " + socket.handshake.address);
     socket.logonAttempts = 0;
 
     isAdministrator(socket, io);
@@ -84,6 +85,10 @@ function initialize(io) {
       var chatEngine = new ChatEngine();
       chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has left the session.`));
 
+      if(session.isAdmin(socket.id)) {
+        session.setAdminId(null);
+      }
+
       var manager = new PlayerManager();
       manager.removePlayer(socket.id);
       userAdmin.disconnectSocket(socket);
@@ -116,7 +121,9 @@ function userAuthorized(socket, io, handle) {
 
   var chatEngine = new ChatEngine();
 
+  console.log("should emit after this");
   socket.emit('authenticated', function() {
+    console.log("Auth callback")
     if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
       socket.emit('media-ready');
     }
@@ -131,8 +138,10 @@ function userAuthorized(socket, io, handle) {
 function isAdministrator(socket, io) {
   socket.auth = false;
 
-  if(session.getAdmin() == null) {
-    if(socket.handshake.address == "::ffff:127.0.0.1") {
+  console.log(session.getAdmin());
+  if(session.getAdmin() === null || session.getAdmin() === undefined) {
+    if(socket.handshake.address.includes("127.0.0.1")) {
+      console.log("isAdmin");
       new AdminController(io, socket);
       new DatabaseController(io, socket);
 

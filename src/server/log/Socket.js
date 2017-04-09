@@ -29,7 +29,9 @@ Socket.prototype.log = function (level, msg, meta, callback) {
     time: new Date().toTimeString().split(" ")[0],
   };
 
-  this.socket.emit('chat-log-resp', payload);
+  console.log(Util.inspect(payload, { depth: 1, showHidden: false}));
+
+  //this.socket.emit('chat-log-resp', payload);
 };
 
 module.exports = Socket;

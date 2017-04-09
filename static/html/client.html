@@ -50,11 +50,6 @@
           initClientLogin();
         });
 
-        $.getScript("../javascript/clientLog.js", function() {
-          var clientLogManager = new (Client.ClientLogManager());
-          clientLogManager.addGUILogging(Client.ClientLogManager().LogEnum.CLIENT, guiLog());
-        });
-
         var buildClient = function(callback) {
           client = new Client(document.getElementById('video'));
 
@@ -67,8 +62,13 @@
           });
         };
 
-        clientSocket = Client.GetClientSocket();
-        clientSocket.connect(clientSocket.buildServerUrl(window), buildClient);
+        $.getScript("../javascript/clientLog.js", function() {
+          var clientLogManager = new (Client.ClientLogManager());
+          clientLogManager.addGUILogging(Client.ClientLogManager().LogEnum.CLIENT, guiLog());
+
+          clientSocket = Client.GetClientSocket();
+          clientSocket.connect(clientSocket.buildServerUrl(window), buildClient);
+        });
       };
     </script>
   </body>
