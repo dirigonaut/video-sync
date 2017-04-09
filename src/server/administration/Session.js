@@ -1,7 +1,6 @@
 const EventEmitter  = require('events');
 
 var PlayerManager   = require('../player/PlayerManager');
-var Cache           = require('../utils/Cache');
 var NeDatabase	    = require('../database/NeDatabase');
 var LogManager      = require('../log/LogManager');
 
@@ -96,9 +95,6 @@ Session.prototype.setMediaPath = function(path) {
   mediaPath = path;
   mediaStarted = false;
 
-  var cache = new Cache();
-  cache.flush();
-  cache.setPath(path);
   playerManager.initPlayers();
 };
 
@@ -124,11 +120,9 @@ Session.prototype.onAdminIdCallback = function(callback) {
 };
 
 Session.prototype.setAdminId = function(id) {
-  if(adminId === null) {
-    log.debug("AdminId: " + id);
-    adminId = id;
-    emitter.emit('admin-set', id);
-  }
+  log.debug("AdminId: " + id);
+  adminId = id;
+  emitter.emit('admin-set', id);
 };
 
 Session.prototype.setLocalIp = function(ip) {

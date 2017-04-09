@@ -5,14 +5,12 @@ var Session         = require('../administration/Session');
 var Validator       = require('../authentication/Validator');
 var XmlUtil         = require('./metadata/xml/XmlUtil');
 var MpdUtil         = require('./metadata/MpdUtil');
-var Cache           = require('../utils/Cache');
 var LogManager      = require('../log/LogManager');
 var PlayerManager   = require('../player/PlayerManager');
 
 var playerManager   = new PlayerManager();
 var validator       = new Validator();
 var session         = new Session();
-var cache           = new Cache();
 var log             = LogManager.getLog(LogManager.LogEnum.VIDEO);
 
 function VideoController(io, socket) {

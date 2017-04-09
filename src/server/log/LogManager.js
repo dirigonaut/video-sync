@@ -21,7 +21,6 @@ LogManager.prototype.initialize = function() {
 }
 
 LogManager.prototype.addFileLogging = function(basePath) {
-  console.log(basePath);
   log.debug('LogManager.addFileLogging', basePath);
   var logFactory = new LogFactory();
 

@@ -1,3 +1,4 @@
+var Path        = require('path');
 var Https       = require('https');
 var Express     = require('express');
 var SocketIO    = require('socket.io');
@@ -5,12 +6,10 @@ var SocketIO    = require('socket.io');
 var Session       = require('./administration/Session');
 var NeDatabase    = require('./database/NeDatabase');
 var Certificate   = require('./authentication/Certificate');
-var PlayerManager = require('./player/PlayerManager.js');
+var PlayerManager = require('./player/PlayerManager');
 var LogManager    = require('./log/LogManager');
 
 var AuthenticationController = require('./authentication/AuthenticationController');
-
-const STATIC_PATH = 'static';
 
 var logManager = new LogManager();
 logManager.initialize();
@@ -19,8 +18,8 @@ var app = null;
 var io  = null;
 var server  = null;
 
-function Server(ip, port, appData, callback) {
-  app = Express();
+function Server(ip, port, appData, staticPath) {
+  var app = Express();
 
   logManager.addFileLogging(appData);
 
@@ -28,6 +27,7 @@ function Server(ip, port, appData, callback) {
   database.initialize(appData);
 
   var initHttpsServer = function(pem) {
+    console.log("initHttpsServer")
     var options = {
       key: pem.privateKey,
       cert: pem.certificate,
@@ -50,12 +50,10 @@ function Server(ip, port, appData, callback) {
     session.onAdminIdCallback(adminSocketLogging);
     session.setLocalIp(`${ip}:${port}`);
 
-    app.use(Express.static(STATIC_PATH));
+    app.use(Express.static(staticPath));
     server.listen(port);
 
     new AuthenticationController(io);
-
-    callback();
   };
 
   new Certificate().getCertificates(initHttpsServer);
