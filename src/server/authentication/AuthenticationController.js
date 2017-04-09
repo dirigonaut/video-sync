@@ -4,10 +4,9 @@ var Session       = require('../administration/Session');
 var LogManager    = require('../log/LogManager');
 var UserAdmin     = require('../administration/UserAdministration');
 var Validator     = require('../authentication/Validator');
-var NeDatabase    = require('../database/NeDatabase');
-var PlayerManager = require('../player/PlayerManager.js');
 var Authenticator = require('../authentication/Authenticator');
 var ChatEngine    = require('../chat/ChatEngine');
+var Publisher     = require('../process/redis/RedisPublisher');
 
 var AdminController     = require('../administration/AdminController');
 var VideoController     = require('../video/VideoController');
@@ -15,7 +14,8 @@ var StateController     = require('../state/StateController');
 var DatabaseController  = require('../database/DatabaseController');
 var ChatController      = require('../chat/ChatController');
 
-var log = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
+var log       = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
+var publisher = new Publisher();
 
 var smtp;
 var session;
@@ -89,9 +89,11 @@ function initialize(io) {
         session.setAdminId(null);
       }
 
-      var manager = new PlayerManager();
-      manager.removePlayer(socket.id);
-      userAdmin.disconnectSocket(socket);
+      var disconnect = function(socket) {
+        userAdmin.disconnectSocket(socket);
+      }
+
+      publisher.publish(Publisher.Enum.PLAYER, ['removePlayer', [socket.id]], disconnect);
     });
 
     socket.on('error', function (data) {
@@ -112,8 +114,7 @@ function initialize(io) {
 function userAuthorized(socket, io, handle) {
   socket.auth = true;
 
-  var manager = new PlayerManager();
-  manager.createPlayer(socket, handle);
+  publisher.publish(Publisher.Enum.PLAYER, ['createPlayer', [socket, handle]]);
 
   var video = new VideoController(io, socket);
   var state = new StateController(io, socket);
@@ -128,8 +129,12 @@ function userAuthorized(socket, io, handle) {
       socket.emit('media-ready');
     }
 
-    io.emit('chat-handles', manager.getHandles());
-    chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has joined the session.`));
+    var emitHandles = function(handles) {
+      io.emit('chat-handles', handles);
+      chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has joined the session.`));
+    }
+
+    publisher.publish(Publisher.Enum.PLAYER, ['getHandles', []], emitHandles);
   });
 
   log.info("socket has been authenticated.", socket.id);

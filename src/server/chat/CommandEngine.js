@@ -1,14 +1,12 @@
 var UserAdmin     = require('../administration/UserAdministration');
-var StateEngine   = require('../state/StateEngine.js');
-var PlayerManager = require('../player/PlayerManager');
 var ChatEngine    = require('./ChatEngine');
 var LogManager    = require('../log/LogManager');
+var Publisher     = require('../process/redis/RedisPublisher');
 
 var log           = LogManager.getLog(LogManager.LogEnum.CHAT);
 var userAdmin     = new UserAdmin();
-var stateEngine   = new StateEngine();
-var playerManager = new PlayerManager();
 var chatEngine    = new ChatEngine();
+var publisher     = new Publisher();
 
 function CommandEngine() { }
 
@@ -44,20 +42,20 @@ CommandEngine.prototype.processCommand = function(issuer, command, callback) {
   log.debug("CommandEngine.prototype.processCommand");
   switch(command.command) {
     case CommandEngine.ClientEnum.PLAY:
-      stateEngine.play(issuer.socket.id);
+      publisher.publish(Publisher.Enum.STATE, ['play', [issuer.socket.id]]);
       callback(ChatEngine.Enum.EVENT, "issued play");
       break;
     case CommandEngine.ClientEnum.PAUSE:
-      stateEngine.pause(issuer.socket.id);
+      publisher.publish(Publisher.Enum.STATE, ['pause', [issuer.socket.id]]);
       callback(ChatEngine.Enum.EVENT, "issued pause");
       break;
     case CommandEngine.ClientEnum.SEEK:
-      stateEngine.seek(issuer.socket.id, {'seektime': timestampToSeconds(command.param[0])});
+      publisher.publish(Publisher.Enum.STATE, ['seek', [issuer.socket.id, {'seektime': timestampToSeconds(command.param[0])}]]);
       callback(ChatEngine.Enum.EVENT, `issued seek to ${timestampToSeconds(command.param[0])}`);
       break;
     case CommandEngine.ClientEnum.HANDLE:
       callback(ChatEngine.Enum.EVENT, `ID: ${issuer.socket.id} changed their handle to ${command.param[0]}`);
-      playerManager.setPlayerHandle(issuer.socket.id, command.param[0]);
+      publisher.publish(Publisher.Enum.PLAYER, ['setPlayerHandle', [issuer.socket.id, command.param[0]]]);
       break;
     case CommandEngine.ClientEnum.HELP:
       callback(ChatEngine.Enum.PING, "help response");

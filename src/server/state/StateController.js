@@ -1,16 +1,13 @@
 var Validator     = require('../authentication/Validator');
-var StateEngine   = require('./StateEngine.js');
-var PlayerManager = require('../player/PlayerManager');
 var Player        = require('../player/Player');
 var ChatEngine    = require('../chat/ChatEngine');
+var Publisher     = require('../process/redis/redis/RedisPublisher');
 var LogManager    = require('../log/LogManager');
 
-var playerManager = new PlayerManager();
-var validator     = new Validator();
-var stateEngine   = new StateEngine();
-var chatEngine    = new ChatEngine();
-
 var log = LogManager.getLog(LogManager.LogEnum.STATE);
+var validator     = new Validator();
+var chatEngine    = new ChatEngine();
+var publisher     = new Publisher();
 
 function StateController(io, socket) {
   initialize(io, socket);
@@ -24,7 +21,7 @@ function initialize(io, socket) {
 
   socket.on('state-req-init', function() {
     log.debug('state-req-init');
-    stateEngine.init(socket.id);
+    publisher.publish(Publisher.Enum.STATE, ['init', [socket.id]]);
   });
 
   socket.on('state-req-play', function() {
@@ -34,7 +31,7 @@ function initialize(io, socket) {
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
     };
 
-    stateEngine.play(socket.id, onAllowed);
+    publisher.publish(Publisher.Enum.STATE, ['play', [socket.id]], onAllowed);
   });
 
   socket.on('state-req-pause', function(data) {
@@ -44,7 +41,7 @@ function initialize(io, socket) {
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
     };
 
-    stateEngine.pause(socket.id, onAllowed);
+    publisher.publish(Publisher.Enum.STATE, ['pause', [socket.id]], onAllowed);
   });
 
   socket.on('state-req-seek', function(data) {
@@ -54,7 +51,7 @@ function initialize(io, socket) {
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
     };
 
-    stateEngine.seek(socket.id, data, onAllowed);
+    publisher.publish(Publisher.Enum.STATE, ['seek', [socket.id, data]], onAllowed);
   });
 
   socket.on('state-sync', function() {
@@ -64,7 +61,7 @@ function initialize(io, socket) {
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
     };
 
-    stateEngine.pauseSync(socket.id, onAllowed);
+    publisher.publish(Publisher.Enum.STATE, ['pauseSync', [socket.id]], onAllowed);
   });
 
   socket.on('state-change-sync', function(data) {
@@ -80,16 +77,16 @@ function initialize(io, socket) {
       socket.emit('state-sync-state', value);
     };
 
-    stateEngine.changeSyncState(socket.id, data, onAllowed);
+    publisher.publish(Publisher.Enum.STATE, ['changeSyncState', [socket.id, data]], onAllowed);
   });
 
   socket.on('state-sync-ping', function() {
     log.silly('state-sync-ping');
-    stateEngine.syncingPing(socket.id);
+    publisher.publish(Publisher.Enum.STATE, ['syncingPing', [socket.id]]);
   });
 
   socket.on('state-time-update', function(data) {
     log.silly('state-time-update');
-    stateEngine.timeUpdate(socket.id, data);
+    publisher.publish(Publisher.Enum.STATE, ['timeUpdate', [socket.id, data]]);
   });
 }

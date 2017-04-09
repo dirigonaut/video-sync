@@ -1,28 +1,30 @@
-var cluster = require('cluster');
-var numCPUs = require('os').cpus().length;
+var Cluster = require('cluster');
+var Os      = require('os');
+var Path    = require('path');
 
-var Path = require('path');
-var Server = require('./src/server/Server.js');
-var server = null;
+var ServerProcess = require('./src/server/process/ServerProcess.js');
+var StateProcess = require('./src/server/process/StateProcess.js');
 
-if (cluster.isMaster) {
+var serverProcess = null;
+var stateProcess = null;
+
+const STATIC_PATH = "static";
+
+var appData = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + 'Library/Preferences' : process.env.HOME + '/.config')
+appData += '/video-sync/Default/';
+
+if (Cluster.isMaster) {
   console.log(`Master ${process.pid} is running`);
+  stateProcess = new StateProcess(appData);
 
-  for (let i = 0; i < 1; i++) {
-    cluster.fork();
+  for (let i = 0; i < Os.cpus().length - 1; i++) {
+    Cluster.fork();
   }
 
-  cluster.on('exit', (worker, code, signal) => {
+  Cluster.on('exit', (worker, code, signal) => {
     console.log(`worker ${worker.process.pid} died`);
   });
 } else {
-  var appData = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + 'Library/Preferences' : process.env.HOME + '/.config')
-  appData += '/video-sync/Default/';
-  console.log(appData);
-
-  var staticPath = Path.join(__dirname, "static");
-  console.log(staticPath);
-
-  server = new Server('192.168.1.149', 8080, appData, "static");
+  serverProcess = new ServerProcess('192.168.1.149', 8080, appData, STATIC_PATH);
   console.log(`Worker ${process.pid} started`);
 }

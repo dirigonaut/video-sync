@@ -1,14 +1,14 @@
-var PlayerManager = require('../player/PlayerManager');
 var CommandEngine = require('./CommandEngine');
 var ChatEngine    = require('./ChatEngine');
 var Session       = require('../administration/Session');
 var LogManager    = require('../log/LogManager');
+var Publisher     = require('../process/redis/redis/RedisPublisher');
 
-var playerManager = new PlayerManager();
+var log           = LogManager.getLog(LogManager.LogEnum.CHAT);
 var commandEngine = new CommandEngine();
 var chatEngine    = new ChatEngine();
 var session       = new Session();
-var log           = LogManager.getLog(LogManager.LogEnum.CHAT);
+var publisher     = new Publisher();
 
 function ChatController(io, socket) {
   initialize(io, socket);
@@ -40,8 +40,11 @@ function initialize(io, socket) {
         }
       }
 
-      var player = playerManager.getPlayer(socket.id);
-      commandEngine.processCommand(player, data, response);
+      var processCommand = function(player) {
+        commandEngine.processCommand(player, data, response);
+      }
+
+      publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [socket.id]], processCommand);
     }
   });
 }

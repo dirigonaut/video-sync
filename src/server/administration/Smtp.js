@@ -1,10 +1,10 @@
 var NodeMailer	= require("nodemailer");
-var NeDatabase	= require("../database/NeDatabase");
 var LogManager  = require('../log/LogManager');
+var Publisher   = require('../process/redis/RedisPublisher');
 
 var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
+var publisher 		= new Publisher();
 
-var database 			= new NeDatabase();
 var smtpTransport = null;
 var activeSmtp		= null;
 
@@ -37,7 +37,7 @@ Smtp.prototype.initializeTransport = function(address, callback) {
 			}
 		}
 
-		database.readSmtp(address, loadSmtpOptions);
+		publisher(Publisher.Enum.DATABASE, ['readSmtp', [address]], loadSmtpOptions);
 	} else {
 		callback();
 	}
