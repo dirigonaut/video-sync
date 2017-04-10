@@ -125,7 +125,7 @@ Session.prototype.onAdminIdCallback = function(callback) {
 Session.prototype.setAdminId = function(id) {
   log.debug("AdminId: " + id);
   adminId = id;
-  emitter.emit('admin-set', id);
+  publisher.publish(Publisher.Enum.SESSION, ['redisSetAdminId', [id]]);
 };
 
 Session.prototype.setLocalIp = function(ip) {
@@ -138,7 +138,8 @@ Session.prototype.getLocalIp = function() {
 
 //--------- Redis Functions ---------
 Session.prototype.redisSetAdminId = function(id) {
-  this.setAdminId(id);
+  log.debug("AdminId: " + id);
+  adminId = id;
 };
 
 Session.prototype.redisSetSession = function(session) {

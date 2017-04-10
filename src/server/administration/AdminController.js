@@ -6,6 +6,7 @@ var ChatEngine      = require('../chat/ChatEngine');
 var FileSystemUtils = require('../utils/FileSystemUtils');
 var FileIO          = require('../utils/FileIO');
 var LogManager      = require('../log/LogManager');
+var RedisSocket     = require('../process/redis/RedisSocket');
 var Publisher       = require('../process/redis/RedisPublisher');
 
 var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
@@ -15,6 +16,7 @@ var session       = new Session();
 var validator     = new Validator();
 var commandEngine = new CommandEngine();
 var chatEngine    = new ChatEngine();
+var redisSocket   = new RedisSocket();
 var publisher     = new Publisher();
 
 function AdminController(io, socket) {
@@ -42,16 +44,13 @@ function initialize(io, socket) {
 
         session.setMediaPath(data);
 
-        var emitMediaReady = function(players) {
-          var message = chatEngine.buildMessage(socket.id, "video Has been initialized.");
+        var emitMediaReady = function(playerIds) {
+          var message = chatEngine.buildMessage(socket.id, "Video has been initialized.");
           chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
-
-          for(var player of players) {
-            player[1].socket.emit('media-ready');
-          }
+          redisSocket.broadcastToIds(playerIds, 'media-ready');
         };
 
-        publisher.publish(Publisher.Enum.PLAYER, ['getPlayers', []], emitMediaReady);
+        publisher.publish(Publisher.Enum.PLAYER, ['getPlayerIds', []], emitMediaReady);
       }
 
       fileIO.dirExists(data, setMedia);

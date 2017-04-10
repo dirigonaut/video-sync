@@ -1,14 +1,15 @@
-var Redis         = require("redis");
+var Redis             = require("redis");
+var ReflectiveAdapter = require('./ReflectiveAdapter');
+var NeDatabase        = require('../../database/NeDatabase');
+var StateEngine       = require('../../state/StateEngine.js');
+var PlayerManager     = require('../../player/PlayerManager');
+var Session           = require('../../administration/Session');
 
-var Discover      = require('./Discover');
-var NeDatabase    = require('../../database/NeDatabase');
-var StateEngine   = require('../../state/StateEngine.js');
-var PlayerManager = require('../../player/PlayerManager');
-
-var discover      = new Discover();
+var adapter       = new ReflectiveAdapter();
 var database      = new NeDatabase();
 var stateEngine   = new StateEngine();
 var playerManager = new PlayerManager();
+var session       = new Session();
 
 function StateRedis() {
   this.subscriber = Redis.createClient();
@@ -17,20 +18,21 @@ function StateRedis() {
   this.subscriber.subscribe("database");
   this.subscriber.subscribe("state");
   this.subscriber.subscribe("player");
+  this.subscriber.subscribe("session");
 }
 
 module.exports = StateRedis;
 
 function initialize(subscriber) {
   subscriber.on("message", function(channel, message) {
-    console.log(channel);
-
     if(channel === "database") {
-      discover.discover(database, message);
+      adapter.callFunction(database, message);
     } else if(channel === "state") {
-      discover.discover(stateEngine, message);
+      adapter.callFunction(stateEngine, message);
     } else if(channel === "player") {
-      discover.discover(playerManager, message);
+      adapter.callFunction(playerManager, message);
+    } else if(channel === "session"){
+      adapter.callFunction(session, message);
     }
   });
 

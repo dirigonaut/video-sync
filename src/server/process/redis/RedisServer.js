@@ -1,6 +1,6 @@
 var Redis = require('redis-server');
 
-var server = new Redis({port: 6379});
+var server = new Redis();
 
 function RedisServer() {
 

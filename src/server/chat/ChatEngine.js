@@ -1,8 +1,10 @@
-var Publisher  = require('../process/redis/RedisPublisher');
-var LogManager = require('../log/LogManager');
+var Publisher   = require('../process/redis/RedisPublisher');
+var RedisSocket = require('../process/redis/RedisSocket');
+var LogManager  = require('../log/LogManager');
 
-var log       = LogManager.getLog(LogManager.LogEnum.CHAT);
-var publisher = new Publisher();
+var log         = LogManager.getLog(LogManager.LogEnum.CHAT);
+var redisSocket = new RedisSocket();
+var publisher   = new Publisher();
 
 function ChatEngine() {
 }
@@ -11,29 +13,22 @@ ChatEngine.prototype.broadcast = function(event, message) {
   log.debug("ChatEngine.prototype.broadcast");
   if(event !== null && message !== null) {
     var broadcast = function(players) {
-      for(var p of players.keys()) {
-        players.get(p).socket.emit(event, message);
-      }
+      redisSocket.broadcastToIds(players, event, message);
     }
 
-    publisher.publish(Publisher.Enum.PLAYER, ['getPlayers', []], broadcast);
+    publisher.publish(Publisher.Enum.PLAYER, ['getPlayerIds', []], broadcast);
   }
 };
 
 ChatEngine.prototype.ping = function(event, message) {
   log.debug("ChatEngine.prototype.ping");
-  var ping = function(player) {
-    if(player !== undefined && player !== null) {
-      var socket = player.socket;
-
-      if(event !== null && message !== null && socket !== null) {
-        socket.emit(event, message);
-      }
+  if(event !== null && event !== undefined && message !== null && message !== undefined) {
+    if(message.from !== undefined && message.from !== null) {
+      redisSocket.broadcastToIds(message.from, event, message);
     }
   }
-
-  publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [message.from]], ping);
 };
+
 
 ChatEngine.prototype.buildMessage = function(from, text) {
   var message = new Object();

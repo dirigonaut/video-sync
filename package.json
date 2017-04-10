@@ -3,8 +3,8 @@
   "version": "0.2.0",
   "main": "index.js",
   "scripts": {
-    "start": "node --use_strict index.js",
-    "debug": "node static/resources/devInit.js && node --use_strict --inspect=9999 index.js",
+    "start": "node index.js",
+    "debug": "node static/resources/devInit.js && node --inspect=9999 index.js",
     "stats": "cloc --not-match-d resources --by-file ./src/ ./static/ admin.html",
     "update-deps": "npm outdated --depth=0 | grep -v Package | awk '{print $1}' | xargs -I% npm install %@latest --save",
     "build": "nwbuild -p win64,linux64,osx64 -v 0.20.3 ~/repo/video-sync-2.0/",
@@ -21,6 +21,7 @@
     "redis-server": "^1.1.0",
     "socket.io": "^1.7.3",
     "socket.io-client": "^1.7.3",
+    "socket.io-redis": "^4.0.0",
     "split": "^1.0.0",
     "validator": "^7.0.0",
     "winston": "^2.3.1",

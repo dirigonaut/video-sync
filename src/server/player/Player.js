@@ -1,5 +1,5 @@
-function Player(socket, handle){
-    this.socket	  	  = socket;
+function Player(id, handle){
+    this.id	  	  = id;
 
     this.initialized  = false;
     this.state 	  	  = null;
