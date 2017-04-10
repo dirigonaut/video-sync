@@ -3,8 +3,8 @@ const EventEmitter = require('events');
 var Publisher     = require('../process/redis/RedisPublisher');
 var LogManager    = require('../log/LogManager');
 
-var publisher     = new Publisher();
 var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
+var publisher     = new Publisher();
 
 var activeSession = null;
 var mediaPath     = null;

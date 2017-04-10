@@ -8,7 +8,8 @@ var publisher   = new Publisher();
 var smtp        = new Smtp();
 var session     = new Session();
 
-function UserAdministration() { }
+function UserAdministration() {
+}
 
 UserAdministration.prototype.downgradeUser = function(user) {
   log.debug("UserAdministration.downgradeUser");

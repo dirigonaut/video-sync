@@ -24,7 +24,7 @@ LogManager.prototype.addFileLogging = function(basePath) {
   log.debug('LogManager.addFileLogging', basePath);
   var logFactory = new LogFactory();
 
-  var fileTransport = logFactory.buildFileTransport(`${basePath}/${FILE_NAME}`, LOG_LEVEL, 'file-logger', false);
+  var fileTransport = logFactory.buildFileTransport(`${basePath}/logs/${FILE_NAME}`, LOG_LEVEL, 'file-logger', false);
 
   var keys = Object.keys(LogManager.LogEnum);
   for(var i in keys) {
@@ -35,7 +35,7 @@ LogManager.prototype.addFileLogging = function(basePath) {
     });
   }
 
-  var exceptionTransport = logFactory.buildFileTransport(`${basePath}/${EXCEPTION}`, 'error', 'exception-logger', true);
+  var exceptionTransport = logFactory.buildFileTransport(`${basePath}/logs/${EXCEPTION}`, 'error', 'exception-logger', true);
   Winston.loggers.add(EXCEPTION, { transports: [exceptionTransport] });
   Winston.loggers.get(EXCEPTION).exitOnError = false;
 

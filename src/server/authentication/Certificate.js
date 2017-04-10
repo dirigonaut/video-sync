@@ -18,7 +18,7 @@ function Certificate() {
 Certificate.prototype.getCertificates = function(callback) {
   log.debug("Certificate.prototype.getCertificates");
   var validateCerts = function(certs) {
-    if(certs == null || certs == undefined || certs.length == 0) {
+    if(certs === null || certs === undefined || certs.length === 0) {
       log.info("There are no SSL Certificates, signing new ones.");
       var cert = self._generate(self._getAttributes(), callback);
     } else {
@@ -28,14 +28,14 @@ Certificate.prototype.getCertificates = function(callback) {
         callback(cert.pem);
       } else {
         log.info("SSL Certificates are expired, signing new ones.");
-
         publisher.publish(Publisher.Enum.DATABASE, ['deleteCerts', [Moment().valueOf()]]);
 
         var cert = self._generate(self._getAttributes(), callback);
       }
     }
   }
-  publisher.publish(Publisher.Enum.DATABASE, ['readCerts', []], validateCerts);
+
+  publisher.publish(Publisher.Enum.DATABASE, ['readCerts'], validateCerts);
 };
 
 module.exports = Certificate;
@@ -97,6 +97,6 @@ Certificate.prototype._getAttributes = function() {
 
 Certificate.prototype._save = function(certs, callback) {
   log.debug("Certificate.prototype._save");
-  var certificate = {expire: Moment().add(EXPIR, 'days').valueOf(), pem: certs};
-  publisher.publish(Publisher.Enum.DATABASE, ['createCerts', certificate], callback);
+  var certificate = { expire: Moment().add(EXPIR, 'days').valueOf(), pem: certs };
+  publisher.publish(Publisher.Enum.DATABASE, ['createCerts', [certificate]], callback);
 };

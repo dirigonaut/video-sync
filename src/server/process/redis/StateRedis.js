@@ -22,18 +22,31 @@ function StateRedis() {
 module.exports = StateRedis;
 
 function initialize(subscriber) {
-  subscriber.on("database", function(channel, message, callback) {
+  subscriber.on("message", function(channel, message) {
     console.log(channel);
-    discover.discover(database, message, callback);
+
+    if(channel === "database") {
+      discover.discover(database, message);
+    } else if(channel === "state") {
+      discover.discover(stateEngine, message);
+    } else if(channel === "player") {
+      discover.discover(playerManager, message);
+    }
   });
 
-  subscriber.on("state", function(channel, message, callback) {
-    console.log(channel);
-    discover.discover(stateEngine, message, callback);
+  subscriber.on("subscribe", function(channel, count) {
+    console.log(`Subscribed to ${channel}`);
   });
 
-  subscriber.on("player", function(channel, message, callback) {
-    console.log(channel);
-    discover.discover(playerManager, message, callback);
+  subscriber.on("connect", function(err) {
+    console.log("StateRedis is connected to redis server");
+  });
+
+  subscriber.on("reconnecting", function(err) {
+    console.log("StateRedis is connected to redis server");
+  });
+
+  subscriber.on("error", function(err) {
+    console.log(err);
   });
 }

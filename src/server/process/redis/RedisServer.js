@@ -1,14 +1,16 @@
-const Redis = require('redis-server');
-const server = new Redis({port: 6379});
+var Redis = require('redis-server');
+
+var server = new Redis({port: 6379});
 
 function RedisServer() {
 
 }
 
-RedisServer.prototype.start = function() {
+RedisServer.prototype.start = function(callback) {
   server.open((err) => {
     if (err === null) {
       console.log("Redis server is up.");
+      callback();
     } else {
       console.log(err);
     }
