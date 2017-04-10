@@ -8,7 +8,8 @@ var userAdmin     = new UserAdmin();
 var chatEngine    = new ChatEngine();
 var publisher     = new Publisher();
 
-function CommandEngine() { }
+function CommandEngine() {
+}
 
 CommandEngine.prototype.processAdminCommand = function(admin, command, callback) {
   log.debug("CommandEngine.prototype.processAdminCommand");

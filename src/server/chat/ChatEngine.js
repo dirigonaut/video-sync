@@ -4,7 +4,8 @@ var LogManager = require('../log/LogManager');
 var log       = LogManager.getLog(LogManager.LogEnum.CHAT);
 var publisher = new Publisher();
 
-function ChatEngine() { }
+function ChatEngine() {
+}
 
 ChatEngine.prototype.broadcast = function(event, message) {
   log.debug("ChatEngine.prototype.broadcast");

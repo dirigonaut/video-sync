@@ -6,6 +6,7 @@ var SocketIO    = require('socket.io');
 var LogManager               = require('../log/LogManager');
 var Session                  = require('../administration/Session');
 var ServerRedis              = require('./redis/ServerRedis');
+var Certificate              = require('../authentication/Certificate');
 var AuthenticationController = require('../authentication/AuthenticationController');
 
 var logManager = new LogManager();
@@ -17,6 +18,7 @@ var server      = null;
 var serverRedis = null;
 
 function ServerProcess(ip, port, appData, staticPath) {
+  console.log(`Starting ServerProcess on port ${port}`);
   serverRedis = new ServerRedis();
   logManager.addFileLogging(appData);
 
@@ -35,7 +37,6 @@ function ServerProcess(ip, port, appData, staticPath) {
     io = SocketIO.listen(server);
 
     var session = new Session();
-    session.onAdminIdCallback(adminSocketLogging);
     session.setLocalIp(`${ip}:${port}`);
 
     app.use(Express.static(staticPath));

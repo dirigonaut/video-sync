@@ -15,8 +15,8 @@ var DatabaseController  = require('../database/DatabaseController');
 var ChatController      = require('../chat/ChatController');
 
 var log       = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
-var publisher = new Publisher();
 
+var publisher;
 var smtp;
 var session;
 var userAdmin;
@@ -24,6 +24,7 @@ var validator;
 var authenticator;
 
 function AuthenticationController(io) {
+  publisher       = new Publisher();
   smtp            = new Smtp();
   session         = new Session();
   userAdmin       = new UserAdmin();

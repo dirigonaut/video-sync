@@ -12,6 +12,7 @@ function NeDatabase(){
 
 NeDatabase.prototype.initialize = function(appData) {
 	if((db === null || db === undefined) && appData !== undefined) {
+		console.log(`Loading db from path ${Path.join(appData, 'database_inst')}`);
 		db = new Datastore({ filename: Path.join(appData, 'database_inst'), autoload: true });
 	}
 };

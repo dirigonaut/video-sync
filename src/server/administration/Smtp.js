@@ -4,12 +4,10 @@ var Publisher   = require('../process/redis/RedisPublisher');
 
 var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
 var publisher 		= new Publisher();
-
 var smtpTransport = null;
 var activeSmtp		= null;
 
 function Smtp(){
-
 };
 
 Smtp.prototype.initializeTransport = function(address, callback) {
