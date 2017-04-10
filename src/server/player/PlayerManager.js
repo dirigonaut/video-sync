@@ -7,13 +7,13 @@ var log     = LogManager.getLog(LogManager.LogEnum.STATE);
 function PlayerManager () {
 };
 
-PlayerManager.prototype.createPlayer = function(socket, handle) {
-  var newPlayer = new Player(socket, handle);
-  players.set(socket.id, newPlayer);
-  log.info("Adding player, total players now: " + players.size);
+PlayerManager.prototype.createPlayer = function(id, handle) {
+  var newPlayer = new Player(id, handle);
+  players.set(id, newPlayer);
+  log.info(`Adding player ${id}, total players now: ${players.size}`);
 };
 
-PlayerManager.prototype.getPlayer = function(id) {
+PlayerManager.prototype.getPlayer = function(id, callback) {
   log.silly("PlayerManager.getPlayer", id);
   var player = players.get(id);
 
@@ -23,8 +23,25 @@ PlayerManager.prototype.getPlayer = function(id) {
   return player;
 };
 
-PlayerManager.prototype.getPlayers = function() {
-  return players;
+PlayerManager.prototype.getPlayerIds = function(callback) {
+  var temp = new Array();
+  for(var p of players.keys()) {
+    temp.push(players.get(p).id);
+  }
+
+  if(callback) {
+    callback(temp);
+  } else {
+    return temp;
+  }
+};
+
+PlayerManager.prototype.getPlayers = function(callback) {
+  if(callback) {
+    callback(players);
+  } else {
+    return players;
+  }
 };
 
 PlayerManager.prototype.removePlayer = function(id) {
@@ -38,7 +55,7 @@ PlayerManager.prototype.removePlayer = function(id) {
   }
 };
 
-PlayerManager.prototype.getOtherPlayers = function(id) {
+PlayerManager.prototype.getOtherPlayers = function(id, callback) {
   log.silly("PlayerManager.getOtherPlayers", id);
   var temp = new Array();
   for(var p of players.keys()) {
@@ -46,10 +63,15 @@ PlayerManager.prototype.getOtherPlayers = function(id) {
       temp.push(players.get(p));
     }
   }
-  return temp;
+
+  if(callback) {
+    callback(temp);
+  } else {
+    return temp;
+  }
 };
 
-PlayerManager.prototype.getSyncedPlayersState = function() {
+PlayerManager.prototype.getSyncedPlayersState = function(callback) {
   log.silly("PlayerManager.getSyncedPlayersState");
   var state = null;
   for(var p of players.keys()) {
@@ -58,10 +80,15 @@ PlayerManager.prototype.getSyncedPlayersState = function() {
       break;
     }
   }
-  return state;
+
+  if(callback) {
+    callback(state);
+  } else {
+    return state;
+  }
 };
 
-PlayerManager.prototype.removePlayersWithId = function(playerArray, id) {
+PlayerManager.prototype.removePlayersWithId = function(playerArray, id, callback) {
   log.silly("PlayerManager.removePlayersWithId", id);
   var temp = new Array();
   for(var p in playerArray) {
@@ -69,19 +96,29 @@ PlayerManager.prototype.removePlayersWithId = function(playerArray, id) {
       temp.push(playerArray[p]);
     }
   }
-  return temp;
+
+  if(callback) {
+    callback(temp);
+  } else {
+    return temp;
+  }
 };
 
-PlayerManager.prototype.getHandles = function() {
+PlayerManager.prototype.getHandles = function(callback) {
   log.silly("PlayerManager.getHandles");
   var temp = new Array();
   for(var p of players.keys()) {
-    temp.push([players.get(p).socket.id, players.get(p).handle]);
+    temp.push([players.get(p).id, players.get(p).handle]);
   }
-  return temp;
+
+  if(callback) {
+    callback(temp);
+  } else {
+    return temp;
+  }
 };
 
-PlayerManager.prototype.setPlayerHandle = function(id, handle) {
+PlayerManager.prototype.setPlayerHandle = function(id, handle, callback) {
   log.silly("PlayerManager.setPlayerHandle", id);
   for(var p of players.keys()) {
     if(p === id) {
@@ -89,10 +126,10 @@ PlayerManager.prototype.setPlayerHandle = function(id, handle) {
 
       var handles = new Array();
       for(var p of players.keys()) {
-        handles.push([players.get(p).socket.id, players.get(p).handle]);
+        handles.push([players.get(p).id, players.get(p).handle]);
       }
 
-      sendEventToAllPlayers('chat-handles', handles);
+      callback(handles);
       break;
     }
   }
@@ -105,9 +142,3 @@ PlayerManager.prototype.initPlayers = function() {
 }
 
 module.exports = PlayerManager;
-
-function sendEventToAllPlayers(event, payload) {
-  for(var p of players.keys()) {
-    players.get(p).socket.emit(event, payload);
-  }
-}

@@ -44,6 +44,7 @@ UserAdministration.prototype.disconnectSocket = function(socket) {
   log.info("Disconnecting socket ", socket.id);
 
   var disconnect = function() {
+    console.log(socket.id);
     socket.disconnect('unauthorized');
   };
 

@@ -1,10 +1,10 @@
-var Util      = require('util');
-var Redis     = require("redis");
-var Session   = require('../../administration/Session');
-var Discover  = require('./Discover');
+var Util              = require('util');
+var Redis             = require("redis");
+var Session           = require('../../administration/Session');
+var ReflectiveAdapter = require('./ReflectiveAdapter');
 
-var session   = new Session();
-var discover  = new Discover();
+var session = new Session();
+var adapter = new ReflectiveAdapter();
 
 function ServerRedis() {
   this.subscriber = Redis.createClient();
@@ -17,8 +17,9 @@ module.exports = ServerRedis;
 
 function initialize(subscriber) {
   subscriber.on("message", function(channel, message) {
-    console.log(channel);
-    discover.discover(session, message);
+    if(channel === "session"){
+      adapter.callFunction(session, message);
+    }
   });
 
   subscriber.on("subscribe", function(channel, count) {

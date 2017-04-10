@@ -46,7 +46,7 @@ function initialize(io) {
     socket.emit('connected');
 
     socket.on('auth-get-token', function (data) {
-    log.debug('auth-get-token');
+      log.debug('auth-get-token');
 
       var requestSmtp = function(token) {
         var sendInvitations = function(hostAddress) {
@@ -115,7 +115,8 @@ function initialize(io) {
 function userAuthorized(socket, io, handle) {
   socket.auth = true;
 
-  publisher.publish(Publisher.Enum.PLAYER, ['createPlayer', [socket, handle]]);
+  console.log(socket.id);
+  publisher.publish(Publisher.Enum.PLAYER, ['createPlayer', [socket.id, handle]]);
 
   var video = new VideoController(io, socket);
   var state = new StateController(io, socket);
@@ -123,14 +124,13 @@ function userAuthorized(socket, io, handle) {
 
   var chatEngine = new ChatEngine();
 
-  console.log("should emit after this");
   socket.emit('authenticated', function() {
-    console.log("Auth callback")
     if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
       socket.emit('media-ready');
     }
 
     var emitHandles = function(handles) {
+      console.log(handles);
       io.emit('chat-handles', handles);
       chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has joined the session.`));
     }
@@ -144,10 +144,9 @@ function userAuthorized(socket, io, handle) {
 function isAdministrator(socket, io) {
   socket.auth = false;
 
-  console.log(session.getAdmin());
+  log.info(`Admin is ${session.getAdmin()} new socket is ${socket.id}`);
   if(session.getAdmin() === null || session.getAdmin() === undefined) {
     if(socket.handshake.address.includes("127.0.0.1")) {
-      console.log("isAdmin");
       new AdminController(io, socket);
       new DatabaseController(io, socket);
 
