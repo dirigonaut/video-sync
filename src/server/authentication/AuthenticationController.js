@@ -130,7 +130,6 @@ function userAuthorized(socket, io, handle) {
     }
 
     var emitHandles = function(handles) {
-      console.log(handles);
       io.emit('chat-handles', handles);
       chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has joined the session.`));
     }

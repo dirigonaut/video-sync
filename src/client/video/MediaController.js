@@ -214,7 +214,7 @@ var initializeVideo = function(_this, videoSingleton, mediaSource) {
   var audioEvents = [];
   var activeMeta = _this.metaManager.getActiveMetaData();
 
-  if(activeMeta.active.get(SourceBuffer.Enum.VIDEO) !== undefined) {
+  if(activeMeta.active.get(SourceBuffer.Enum.VIDEO) !== undefined) {clientSocket
     videoEvents = createVideoEvents(videoSingleton, SourceBuffer.Enum.VIDEO);
   }
 
@@ -258,24 +258,44 @@ var createVideoEvents = function(videoSingleton, typeEnum) {
 }
 
 var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFactory) {
-  clientSocket.setEvent('state-init', function(callback) {
+  clientSocket.setEvent('state-init', function() {
     log.debug("state-init");
     var video = videoSingleton.getVideoElement();
-    videoSingleton.init(callback);
+
+    var onInit = function() {
+      var request = {};
+      request.id = clientSocket.id;
+
+      clientSocket.sendRequest('state-update-init', request);
+    };
+
+    videoSingleton.init(onInit);
   });
 
   clientSocket.setEvent('state-play', function(callback) {
     log.debug("state-play");
     var video = videoSingleton.getVideoElement();
     videoSingleton.play();
-    callback(clientSocket.getSocketId(), video.currentTime, video.paused);
+
+    var request = {};
+    request.id = clientSocket.id;
+    request.timestamp = video.currentTime;
+    request.state = video.paused;
+
+    clientSocket.sendRequest('state-update-state', request);
   });
 
   clientSocket.setEvent('state-pause', function(isSynced, callback) {
     log.debug("state-pause");
     var video = videoSingleton.getVideoElement();
     videoSingleton.pause();
-    callback(clientSocket.getSocketId(), video.currentTime, video.paused);
+
+    var request = {};
+    request.id = clientSocket.id;
+    request.timestamp = video.currentTime;
+    request.state = video.paused;
+
+    clientSocket.sendRequest('state-update-state', request);
 
     if(isSynced) {
       clientSocket.sendRequest('state-sync');
@@ -288,7 +308,18 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     videoSingleton.pause();
     video.currentTime = data.seektime;
 
-    callback(clientSocket.getSocketId(), video.currentTime, video.paused);
+    var request = {};
+    request.id = clientSocket.id;
+    request.timestamp = video.currentTime;
+    request.state = video.paused;
+
+    if(data.syncWait){
+      request.sync = 2;
+
+      clientSocket.sendRequest('state-update-sync', request);
+    } else {
+      clientSocket.sendRequest('state-update-state', request);
+    }
   });
 
   clientSocket.setEvent('state-trigger-ping', function(data) {

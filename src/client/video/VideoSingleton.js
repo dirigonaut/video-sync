@@ -54,7 +54,7 @@ VideoSingleton.prototype.init = function(callback) {
   log.info("VideoSingleton.init");
   self.initialized = true;
   self.emit("get-init");
-  callback(clientSocket.getSocketId());
+  callback();
 };
 
 VideoSingleton.prototype.play = function() {
