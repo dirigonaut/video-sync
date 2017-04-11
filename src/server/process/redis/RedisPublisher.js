@@ -1,4 +1,5 @@
 const crypto    = require('crypto');
+var Util        = require('util');
 var Redis       = require("redis");
 var RedisSocket = require('./RedisSocket');
 
@@ -55,7 +56,9 @@ var initialize = function(publisher, subscriber) {
 
         if(callback !== null && callback !== undefined) {
           var onData = function(data) {
-            callback(JSON.parse(data));
+            var data = JSON.parse(data);
+            //console.log(Util.inspect(data, { showHidden: false, depth: null }));
+            callback.apply(callback, data);
           }
           getRedisData(key, onData);
         }

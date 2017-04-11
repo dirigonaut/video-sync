@@ -30,7 +30,7 @@ PlayerManager.prototype.getPlayerIds = function(callback) {
   }
 
   if(callback) {
-    callback(temp);
+    callback([temp]);
   } else {
     return temp;
   }
@@ -65,7 +65,7 @@ PlayerManager.prototype.getOtherPlayers = function(id, callback) {
   }
 
   if(callback) {
-    callback(temp);
+    callback([temp]);
   } else {
     return temp;
   }
@@ -82,7 +82,7 @@ PlayerManager.prototype.getSyncedPlayersState = function(callback) {
   }
 
   if(callback) {
-    callback(state);
+    callback([state]);
   } else {
     return state;
   }
@@ -98,7 +98,7 @@ PlayerManager.prototype.removePlayersWithId = function(playerArray, id, callback
   }
 
   if(callback) {
-    callback(temp);
+    callback([temp]);
   } else {
     return temp;
   }
@@ -112,7 +112,7 @@ PlayerManager.prototype.getHandles = function(callback) {
   }
 
   if(callback) {
-    callback(temp);
+    callback([temp]);
   } else {
     return temp;
   }
@@ -129,7 +129,7 @@ PlayerManager.prototype.setPlayerHandle = function(id, handle, callback) {
         handles.push([players.get(p).id, players.get(p).handle]);
       }
 
-      callback(handles);
+      callback([handles]);
       break;
     }
   }

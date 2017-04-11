@@ -30,7 +30,7 @@ Certificate.prototype.getCertificates = function(callback) {
         log.info("SSL Certificates are expired, signing new ones.");
         publisher.publish(Publisher.Enum.DATABASE, ['deleteCerts', [Moment().valueOf()]]);
 
-        var cert = self._generate(self._getAttributes(), callback);
+        self._generate(self._getAttributes(), callback);
       }
     }
   }

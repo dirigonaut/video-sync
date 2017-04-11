@@ -14,7 +14,7 @@ ReflectiveAdapter.prototype.callFunction = function(object, message) {
       var functionHandle = message[0];
       var functionParams = message[1] !== null && message[1] !== undefined ? message[1] : [];
 
-      console.log(`Discovering function ${functionHandle} for object ${object.constructor.name}`);
+      //console.log(`Discovering function ${functionHandle} for object ${object.constructor.name}`);
       if(functionHandle !== null && functionHandle !== undefined) {
         if(typeof object[functionHandle] === 'function') {
           var pushDataToRedis = function(response) {

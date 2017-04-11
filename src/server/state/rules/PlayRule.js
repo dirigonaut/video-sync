@@ -21,7 +21,11 @@ PlayRule.prototype.evaluate = function(issuer, callback) {
     callback([issuer]);
   } else {
     for(var player of players) {
+      log.info(player)
+      log.info(session.getMediaStarted() === false);
       if(player[1].sync === Player.Sync.SYNCED || (session.getMediaStarted() === false && player[1].isInit())) {
+        log.info("in")
+        log.info(Math.abs(parseFloat(issuer.timestamp) - parseFloat(player[1].timestamp)));
         if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(player[1].timestamp)) < this.fuzzyRange) {
           issuees.push(player[1]);
         }
@@ -30,7 +34,7 @@ PlayRule.prototype.evaluate = function(issuer, callback) {
   }
 
   if(issuees.length > 0) {
-    log.silly("PlayRule triggered", issuees);
+    log.debug("PlayRule triggered", issuees);
     callback(issuees);
   }
 };

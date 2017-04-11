@@ -44,5 +44,6 @@ module.exports = ChatUtil;
 
 function loadUserHandles(data) {
   console.log('Got Handles');
+  console.log(data);
   handleList = new Map(data);
 }

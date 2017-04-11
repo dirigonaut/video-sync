@@ -129,7 +129,7 @@ function createJson(json, callback) {
 	db.insert(json, function(err, newDoc){
 		console.log(newDoc);
 		if(callback) {
-			callback(newDoc);
+			callback([newDoc]);
 		}
 	});
 };
@@ -140,7 +140,7 @@ function readJson(query, callback) {
 	db.find(query, function(err, docs){
 		log.info(docs);
 		if(callback) {
-			callback(docs);
+			callback([docs]);
 		}
 	});
 };
@@ -151,7 +151,7 @@ function updateJson(query, json, callback) {
 	db.update(query, json, function(err, docs){
 		log.info(docs);
 		if(callback) {
-			callback(docs);
+			callback([docs]);
 		}
 	});
 };
@@ -162,7 +162,7 @@ function deleteJson(query, options, callback) {
 	db.remove(query, options, function (err, removed) {
 		log.info(removed);
 		if(callback) {
-			callback(removed);
+			callback([removed]);
 		}
 	});
 };
