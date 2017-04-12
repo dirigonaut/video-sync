@@ -45,6 +45,8 @@ function initialize(io, socket) {
         session.setMediaPath(data);
 
         var emitMediaReady = function(playerIds) {
+          console.log("emitMediaReady");
+          console.log(playerIds);
           var message = chatEngine.buildMessage(socket.id, "Video has been initialized.");
           chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
           redisSocket.broadcastToIds(playerIds, 'media-ready');

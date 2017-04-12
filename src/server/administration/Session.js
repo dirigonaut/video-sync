@@ -6,10 +6,10 @@ var LogManager    = require('../log/LogManager');
 var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
 var publisher     = new Publisher();
 
+var idToEmailMap  = new Map();
 var activeSession = null;
 var mediaPath     = null;
 var adminId       = null;
-var idToEmailMap  = null;
 var localIp       = null;
 var mediaStarted  = false;
 
@@ -22,10 +22,8 @@ Session.prototype.loadSession = function(id) {
   log.debug("Session.loadSession");
   var setSession = function(session) {
     activeSession = session[0];
-    idToEmailMap = new Map();
-    log.info("Loaded session",activeSession);
-    publisher.publish(Publisher.Enum.SESSION, ['redisSetSession', [session]]);
-  }
+    publisher.publish(Publisher.Enum.SESSION, ['redisSetSession', [activeSession]]);
+  };
 
   publisher.publish(Publisher.Enum.DATABASE, ['readSession', [id]], setSession);
 };
@@ -84,7 +82,6 @@ Session.prototype.removeInvitee = function(id, session) {
 
 Session.prototype.mediaStarted = function() {
   if(mediaPath !== null && !mediaStarted) {
-    mediaStarted = true;
     publisher.publish(Publisher.Enum.SESSION, ['redisSetMediaStarted', []]);
   }
 };
@@ -95,9 +92,6 @@ Session.prototype.getMediaStarted = function() {
 
 Session.prototype.setMediaPath = function(path) {
   log.info("Session.setMediaPath");
-  mediaPath = path;
-  mediaStarted = false;
-
   publisher.publish(Publisher.Enum.SESSION, ['redisSetMediaPath', [path]]);
 };
 
@@ -123,8 +117,6 @@ Session.prototype.onAdminIdCallback = function(callback) {
 };
 
 Session.prototype.setAdminId = function(id) {
-  log.debug("AdminId: " + id);
-  adminId = id;
   publisher.publish(Publisher.Enum.SESSION, ['redisSetAdminId', [id]]);
 };
 
@@ -143,7 +135,7 @@ Session.prototype.redisSetAdminId = function(id) {
 };
 
 Session.prototype.redisSetSession = function(session) {
-  activeSession = session[0];
+  activeSession = session;
   idToEmailMap = new Map();
   log.info("Loaded session", activeSession);
 };
@@ -165,7 +157,7 @@ Session.prototype.redisSetMediaPath = function(path) {
 };
 
 Session.prototype.redisSetMediaStarted = function() {
-  this.mediaStarted();
+  mediaStarted = true;
 };
 
 module.exports = Session;

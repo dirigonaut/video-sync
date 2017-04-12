@@ -126,6 +126,7 @@ function userAuthorized(socket, io, handle) {
 
   socket.emit('authenticated', function() {
     if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
+      console.log("joining and emitting media ready");
       socket.emit('media-ready');
     }
 
