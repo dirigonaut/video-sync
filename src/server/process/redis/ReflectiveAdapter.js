@@ -14,12 +14,13 @@ ReflectiveAdapter.prototype.callFunction = function(object, message) {
       var functionHandle = message[0];
       var functionParams = message[1] !== null && message[1] !== undefined ? message[1] : [];
 
-      //console.log(`Discovering function ${functionHandle} for object ${object.constructor.name}`);
+      //console.log(`${key}: Discovering function ${functionHandle} for object ${object.constructor.name}`);
       if(functionHandle !== null && functionHandle !== undefined) {
         if(typeof object[functionHandle] === 'function') {
           var pushDataToRedis = function(response) {
             var onSuccess = function(err, data) {
               if(err === null) {
+                //console.log(`${key}: Response for ${functionHandle} for object ${object.constructor.name}`)
                 client.publish("stateRedisResponse", key);
               }
             };

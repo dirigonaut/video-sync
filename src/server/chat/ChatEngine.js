@@ -10,10 +10,10 @@ function ChatEngine() {
 }
 
 ChatEngine.prototype.broadcast = function(event, message) {
-  log.debug("ChatEngine.prototype.broadcast");
+  log.debug(`ChatEngine.prototype.broadcast ${event}`);
   if(event !== null && message !== null) {
-    var broadcast = function(players) {
-      redisSocket.broadcastToIds(players, event, message);
+    var broadcast = function(playerIds) {
+      redisSocket.broadcastToIds(playerIds, event, message);
     }
 
     publisher.publish(Publisher.Enum.PLAYER, ['getPlayerIds', []], broadcast);

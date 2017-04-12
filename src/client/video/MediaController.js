@@ -260,38 +260,36 @@ var createVideoEvents = function(videoSingleton, typeEnum) {
 var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFactory) {
   clientSocket.setEvent('state-init', function() {
     log.debug("state-init");
-    var video = videoSingleton.getVideoElement();
 
     var onInit = function() {
       var request = {};
-      request.id = clientSocket.id;
-
+      request.id = clientSocket.getSocketId();
       clientSocket.sendRequest('state-update-init', request);
     };
 
     videoSingleton.init(onInit);
   });
 
-  clientSocket.setEvent('state-play', function(callback) {
+  clientSocket.setEvent('state-play', function() {
     log.debug("state-play");
     var video = videoSingleton.getVideoElement();
     videoSingleton.play();
 
     var request = {};
-    request.id = clientSocket.id;
+    request.id = clientSocket.getSocketId();
     request.timestamp = video.currentTime;
     request.state = video.paused;
 
     clientSocket.sendRequest('state-update-state', request);
   });
 
-  clientSocket.setEvent('state-pause', function(isSynced, callback) {
-    log.debug("state-pause");
+  clientSocket.setEvent('state-pause', function(isSynced) {
+    log.debug(`state-pause sync: ${isSynced}`);
     var video = videoSingleton.getVideoElement();
     videoSingleton.pause();
 
     var request = {};
-    request.id = clientSocket.id;
+    request.id = clientSocket.getSocketId();
     request.timestamp = video.currentTime;
     request.state = video.paused;
 
@@ -302,14 +300,14 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     }
   });
 
-  clientSocket.setEvent('state-seek', function(data, callback) {
+  clientSocket.setEvent('state-seek', function(data) {
     log.debug("state-seek", data);
     var video = videoSingleton.getVideoElement();
     videoSingleton.pause();
     video.currentTime = data.seektime;
 
     var request = {};
-    request.id = clientSocket.id;
+    request.id = clientSocket.getSocketId();
     request.timestamp = video.currentTime;
     request.state = video.paused;
 

@@ -35,7 +35,7 @@ Smtp.prototype.initializeTransport = function(address, callback) {
 			}
 		}
 
-		publisher(Publisher.Enum.DATABASE, ['readSmtp', [address]], loadSmtpOptions);
+		publisher.publish(Publisher.Enum.DATABASE, ['readSmtp', [address]], loadSmtpOptions);
 	} else {
 		callback();
 	}

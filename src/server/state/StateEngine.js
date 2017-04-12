@@ -22,7 +22,7 @@ function StateEngine() {
 
 StateEngine.prototype.init = function(id, callback) {
   log.debug('StateEngine.init');
-  console.log(session.getMediaPath());
+
   if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
     var player = playerManager.getPlayer(id);
 
@@ -47,8 +47,8 @@ StateEngine.prototype.play = function(id, callback) {
           var playerIds = [];
           for(var i in players) {
             if(players[i].sync !== Player.Sync.DESYNCED) {
-              log.silly('StateEngine issuing play', players[i]);
-              playerIds.push(player.id);
+              log.info(`StateEngine issuing play ${players[i].id}`);
+              playerIds.push(players[i].id);
 
               if(session.getMediaStarted() === false && players[i].isInit()) {
                 players[i].sync = Player.Sync.SYNCED;
@@ -87,7 +87,7 @@ StateEngine.prototype.pause = function(id, callback) {
 
         log.info(playerIds);
         if(playerIds.length > 0) {
-          callback([playerIds, 'state-pause', false]);
+          callback([playerIds, 'state-pause', true]);
         }
       }
     }
@@ -212,6 +212,7 @@ StateEngine.prototype.syncingPing = function(id, callback) {
 };
 
 StateEngine.prototype.playerInit = function(id) {
+  log.info(`StateEngine.playerInit ${id}`);
   var player = playerManager.getPlayer(id);
 
   if(player !== null && player !== undefined) {
@@ -227,6 +228,7 @@ StateEngine.prototype.playerInit = function(id) {
 };
 
 StateEngine.prototype.updatePlayerState = function(id, timestamp, state) {
+  log.info(`StateEngine.updatePlayerState ${id}`);
   var player = playerManager.getPlayer(id);
 
   if(player !== null && player !== undefined) {
@@ -239,6 +241,7 @@ StateEngine.prototype.updatePlayerState = function(id, timestamp, state) {
 };
 
 StateEngine.prototype.updatePlayerSync = function(id, timestamp, state) {
+  log.info(`StateEngine.updatePlayerSync ${id}`);
   var player = playerManager.getPlayer(id);
 
   if(player !== null && player !== undefined) {
