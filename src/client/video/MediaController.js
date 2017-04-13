@@ -316,8 +316,6 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     request.state = video.paused;
 
     if(data.syncWait){
-      request.sync = 2;
-
       clientSocket.sendRequest('state-update-sync', request);
     } else {
       clientSocket.sendRequest('state-update-state', request);
