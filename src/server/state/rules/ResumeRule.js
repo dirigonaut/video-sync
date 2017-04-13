@@ -11,7 +11,7 @@ function ResumeRule(fuzzyRange) {
 
 ResumeRule.prototype.evaluate = function(issuer, callback) {
   log.silly("ResumeRule.evaluate");
-	var others = playerManager.getOtherPlayers(issuer.socket.id);
+	var others = playerManager.getOtherPlayers(issuer.id);
   var rearguard = null;
   var waitguard = null;
 

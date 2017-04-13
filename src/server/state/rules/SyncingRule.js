@@ -11,7 +11,7 @@ function SyncingRule() {
 SyncingRule.prototype.evaluate = function(issuer, callback) {
   log.silly("SyncingRule.evaluate");
   if(issuer.sync === Player.Sync.SYNCING) {
-  	var others = playerManager.getOtherPlayers(issuer.socket.id);
+  	var others = playerManager.getOtherPlayers(issuer.id);
     var leader = null;
 
     for(var i in others){
