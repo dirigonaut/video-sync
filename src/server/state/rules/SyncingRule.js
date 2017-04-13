@@ -9,7 +9,7 @@ function SyncingRule() {
 }
 
 SyncingRule.prototype.evaluate = function(issuer, callback) {
-  log.silly("SyncingRule.evaluate");
+  log.info("SyncingRule.evaluate", issuer);
   if(issuer.sync === Player.Sync.SYNCING) {
   	var others = playerManager.getOtherPlayers(issuer.id);
     var leader = null;
@@ -23,10 +23,10 @@ SyncingRule.prototype.evaluate = function(issuer, callback) {
     }
 
     if(leader !== null) {
-      log.silly("SyncingRule triggered syncing to user", leader);
+      log.info("SyncingRule triggered syncing to user", leader);
       callback(leader, issuer, "state-seek");
     } else {
-      log.silly("SyncingRule triggered as there is no leader syncing to user", issuer);
+      log.info("SyncingRule triggered as there is no leader syncing to user", issuer);
       callback(issuer, issuer, "state-seek");
     }
   }

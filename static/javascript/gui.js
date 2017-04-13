@@ -28,11 +28,11 @@ function initGUI() {
     var percent = parseInt($('#seek-bar').val());
     var length  = $('#video')[0].duration;
     var request = new Object();
-    request.seektime = Math.round(length * (percent / 100));
-    request.seektime = request.seektime;
+    request.seekTime = Math.round(length * (percent / 100));
+    request.seekTime = request.seekTime;
     clientSocket.sendRequest('state-req-seek', request, false);
 
-    $('#seek-bar').val(request.seektime / $("#video")[0].duration * 100);
+    $('#seek-bar').val(request.seekTime / $("#video")[0].duration * 100);
     $("video").on("timeupdate", updateProgressBar);
   });
 

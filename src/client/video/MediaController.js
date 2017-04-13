@@ -304,7 +304,11 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     log.debug("state-seek", data);
     var video = videoSingleton.getVideoElement();
     videoSingleton.pause();
-    video.currentTime = data.seektime;
+    video.currentTime = data.seekTime;
+
+    if(data.play) {
+      videoSingleton.play();
+    }
 
     var request = {};
     request.id = clientSocket.getSocketId();

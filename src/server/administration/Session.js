@@ -53,8 +53,9 @@ Session.prototype.addInvitee = function(email, session) {
 };
 
 Session.prototype.associateIdToEmail = function(id, email) {
+  idToEmailMap.delete(id);
   idToEmailMap.set(id, email);
-  publisher.publish(Publisher.Enum.SESSION, ['redisSetIdToEmailMap', [idToEmailMap]]);
+  publisher.publish(Publisher.Enum.SESSION, ['redisSetIdToEmailMap', [Array.from(idToEmailMap)]]);
 };
 
 Session.prototype.removeInvitee = function(id, session) {
@@ -107,15 +108,6 @@ Session.prototype.getAdmin = function() {
   return adminId;
 };
 
-Session.prototype.onAdminIdCallback = function(callback) {
-  log.debug("Session.onAdminIdCallback");
-  if(emitter === null || emitter === undefined) {
-    emitter = new EventEmitter();
-  }
-
-  emitter.on('admin-set', callback);
-};
-
 Session.prototype.setAdminId = function(id) {
   publisher.publish(Publisher.Enum.SESSION, ['redisSetAdminId', [id]]);
 };
@@ -147,7 +139,10 @@ Session.prototype.redisSetInvitees = function(invitees) {
 };
 
 Session.prototype.redisSetIdToEmailMap = function(emailMap) {
-  idToEmailMap = emailMap;
+  log.info("Session.redisSetIdToEmailMap");
+  console.log('here');
+  console.log(emailMap);
+  idToEmailMap = new Map(emailMap);
 };
 
 Session.prototype.redisSetMediaPath = function(path) {

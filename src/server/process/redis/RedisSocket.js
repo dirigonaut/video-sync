@@ -22,4 +22,12 @@ RedisSocket.prototype.broadcastToIds = function(ids, key, message) {
   }
 };
 
+RedisSocket.prototype.broadcastToId = function(id, key, message) {
+  log.silly(`RedisSocket.prototype.broadcastToId`);
+
+  if(io !== null) {
+    io.sockets.to(id).emit(key, message);
+  }
+};
+
 module.exports = RedisSocket;
