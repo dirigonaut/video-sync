@@ -1,4 +1,5 @@
-var Redis = require("redis");
+var Redis     = require("redis");
+var Publisher = require('./RedisPublisher');
 
 var client = Redis.createClient();
 
@@ -21,7 +22,7 @@ ReflectiveAdapter.prototype.callFunction = function(object, message) {
             var onSuccess = function(err, data) {
               if(err === null) {
                 //console.log(`${key}: Response for ${functionHandle} for object ${object.constructor.name}`)
-                client.publish("stateRedisResponse", key);
+                client.publish(Publisher.RespEnum.RESPONSE, key);
               }
             };
 

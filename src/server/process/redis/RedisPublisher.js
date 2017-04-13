@@ -31,6 +31,7 @@ RedisPublisher.prototype.publish = function(channel, args, callback) {
 };
 
 RedisPublisher.Enum = { DATABASE: 'database', STATE: 'state', PLAYER: 'player', SESSION: 'session'};
+RedisPublisher.RespEnum = { RESPONSE: 'stateRedisResponse', COMMAND: 'stateRedisCommand'};
 
 module.exports = RedisPublisher;
 
@@ -48,7 +49,7 @@ var initialize = function(publisher, subscriber) {
   });
 
   subscriber.on("message", function(channel, message) {
-    if(channel === "stateRedisResponse") {
+    if(channel === RedisPublisher.RespEnum.RESPONSE) {
       var key = message;
 
       if(key !== null && key !== undefined) {
@@ -63,11 +64,12 @@ var initialize = function(publisher, subscriber) {
           getRedisData(key, onData);
         }
       }
-    } else if(channel === "stateRedisCommand") {
+    } else if(channel === RedisPublisher.RespEnum.COMMAND) {
       var commands = message !== null && message !== undefined ? JSON.parse(message) : [];
 
       if(commands !== null && commands !== undefined) {
         for(var i in commands) {
+          //console.log(Util.inspect(commands[i], { showHidden: false, depth: null }));
           redisSocket.broadcastToId.apply(null, commands[i]);
         }
       }

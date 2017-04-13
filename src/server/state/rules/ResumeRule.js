@@ -32,7 +32,7 @@ ResumeRule.prototype.evaluate = function(issuer, callback) {
 
   if(rearguard !== null) {
     if((parseFloat(issuer.timestamp) - parseFloat(rearguard.timestamp)) < this.fuzzyRange) {
-      log.silly("ResumeRule triggered for", issuer);
+      log.info("ResumeRule triggered for", issuer);
       callback(issuer);
     }
   } else {

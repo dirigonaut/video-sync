@@ -16,7 +16,7 @@ var log           = LogManager.getLog(LogManager.LogEnum.STATE);
 
 var interval = setInterval(function() {
   resumeLogic(playerManager.getPlayers());
-}, 250);
+}, 500);
 
 function StateEngine() {
 
@@ -207,6 +207,7 @@ StateEngine.prototype.syncingPing = function(id, callback) {
         var broadcastSyncingEvent = function(leader, player, event) {
           var object = new Object();
           object.seekTime = leader.timestamp + 1;
+          object.syncWait = true;
 
           if(playerManager.getSyncedPlayersState() === Player.State.PLAY) {
             object.play = true;
@@ -280,11 +281,11 @@ var resumeLogic = function(players) {
         if(playerManager.getSyncedPlayersState() === Player.State.PLAY) {
           var commands = [];
           commands.push([waitingPlayer[1].id, 'state-play']);
-          publisher.publish('stateRedisCommand', [commands]);
+          publisher.publish(Publisher.RespEnum.COMMAND, commands);
         } else {
           var commands = [];
           commands.push([waitingPlayer[1].id, 'state-pause', false]);
-          publisher.publish('stateRedisCommand', [commands]);
+          publisher.publish(Publisher.RespEnum.COMMAND, commands);
         }
 
         syncPlayer.sync = Player.Sync.SYNCED;
