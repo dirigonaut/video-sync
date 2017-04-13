@@ -51,7 +51,7 @@ CommandEngine.prototype.processCommand = function(issuer, command, callback) {
       callback(ChatEngine.Enum.EVENT, "issued pause");
       break;
     case CommandEngine.ClientEnum.SEEK:
-      publisher.publish(Publisher.Enum.STATE, ['seek', [issuer.socket.id, {'seektime': timestampToSeconds(command.param[0])}]]);
+      publisher.publish(Publisher.Enum.STATE, ['seek', [issuer.socket.id, {'seekTime': timestampToSeconds(command.param[0])}]]);
       callback(ChatEngine.Enum.EVENT, `issued seek to ${timestampToSeconds(command.param[0])}`);
       break;
     case CommandEngine.ClientEnum.HANDLE:

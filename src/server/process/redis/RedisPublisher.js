@@ -22,7 +22,7 @@ RedisPublisher.prototype.publish = function(channel, args, callback) {
   args.push(key);
 
   var response = function(err, data) {
-    if(err === null) {
+    if(err === null && callback !== null && callback !== undefined) {
       requestMap.set(key, callback);
     }
   };
@@ -64,14 +64,12 @@ var initialize = function(publisher, subscriber) {
         }
       }
     } else if(channel === "stateRedisCommand") {
-      var response = message !== null && message !== undefined ? JSON.parse(message) : [];
-      var ids = response [0];
-      var command = response[1];
-      var parameters = response[2];
-      var callback = response[3];
+      var commands = message !== null && message !== undefined ? JSON.parse(message) : [];
 
-      if(command !== null && command !== undefined) {
-        redisSocket.broadcastToIds(ids, command, parameters);
+      if(commands !== null && commands !== undefined) {
+        for(var i in commands) {
+          redisSocket.broadcastToId.apply(null, commands[i]);
+        }
       }
     }
   });

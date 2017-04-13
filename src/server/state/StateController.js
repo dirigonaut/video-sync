@@ -33,8 +33,11 @@ function initialize(io, socket) {
   socket.on('state-req-play', function() {
     log.info('state-req-play');
 
-    var onPlay = function(ids, event) {
-      redisSocket.broadcastToIds(ids, event);
+    var onPlay = function(commands) {
+      for(var i in commands) {
+        redisSocket.broadcastToId.apply(null, commands[i]);
+      }
+
       var message = chatEngine.buildMessage(socket.id, "issued play");
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
     };
@@ -45,8 +48,11 @@ function initialize(io, socket) {
   socket.on('state-req-pause', function(data) {
     log.debug('state-req-pause', data);
 
-    var onPause = function(ids, event, data) {
-      redisSocket.broadcastToIds(ids, event, data);
+    var onPause = function(commands) {
+      for(var i in commands) {
+        redisSocket.broadcastToId.apply(null, commands[i]);
+      }
+
       var message = chatEngine.buildMessage(socket.id, "issued pause");
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
     };
@@ -57,9 +63,12 @@ function initialize(io, socket) {
   socket.on('state-req-seek', function(data) {
     log.debug('state-req-seek', data);
 
-    var onSeek = function(ids, event, data) {
-      redisSocket.broadcastToIds(ids, event, data);
-      var message = chatEngine.buildMessage(socket.id, `issued seek to ${data.seektime}`);
+    var onSeek = function(commands) {
+      for(var i in commands) {
+        redisSocket.broadcastToId.apply(null, commands[i]);
+      }
+
+      var message = chatEngine.buildMessage(socket.id, `issued seek to ${data.seekTime}`);
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
     };
 
@@ -69,8 +78,12 @@ function initialize(io, socket) {
   socket.on('state-sync', function() {
     log.debug('state-sync');
 
-    var onSync = function(ids, event, data) {
-      redisSocket.broadcastToIds(ids, event, data);
+    var onSync = function(commands) {
+      log.debug(`state-sync onSync ${commands}`);
+      for(var i in commands) {
+        redisSocket.broadcastToId.apply(null, commands[i]);
+      }
+
       var message = chatEngine.buildMessage(socket.id, "issued sync");
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
     };
@@ -98,35 +111,50 @@ function initialize(io, socket) {
   socket.on('state-sync-ping', function() {
     log.silly('state-sync-ping');
 
-    var onSync = function(ids, event, data) {
-      redisSocket.broadcastToIds(ids, event, data);
+    var onSync = function(commands) {
+      for(var i in commands) {
+        redisSocket.broadcastToId.apply(null, commands[i]);
+      }
     };
 
     publisher.publish(Publisher.Enum.STATE, ['syncingPing', [socket.id]], onSync);
   });
 
   socket.on('state-time-update', function(data) {
-    log.silly('state-time-update');
+    log.silly('state-time-update', data);
 
-    var onTime = function(ids, event, data) {
-      redisSocket.broadcastToIds(ids, event, data);
+    var onTime = function(commands) {
+      for(var i in commands) {
+        redisSocket.broadcastToId.apply(null, commands[i]);
+      }
     };
 
     publisher.publish(Publisher.Enum.STATE, ['timeUpdate', [socket.id, data]], onTime);
   });
 
   socket.on('state-update-init', function(data) {
-    log.info(`state-update-init ${data.id}`);
-    publisher.publish(Publisher.Enum.STATE, ['playerInit', [data.id]]);
+    log.info(`state-update-init`, data);
+
+    var onInit = function(id) {
+      var onSync = function(commands) {
+        for(var i in commands) {
+          redisSocket.broadcastToId.apply(null, commands[i]);
+        }
+      };
+
+      publisher.publish(Publisher.Enum.STATE, ['syncingPing', [id]], onSync);
+    }
+
+    publisher.publish(Publisher.Enum.STATE, ['playerInit', [data.id]], onInit);
   });
 
   socket.on('state-update-state', function(data) {
-    log.info('state-update-state');
+    log.info('state-update-state', data);
     publisher.publish(Publisher.Enum.STATE, ['updatePlayerState', [data.id, data.timestamp, data.state]]);
   });
 
   socket.on('state-update-sync', function(data) {
-    log.info('state-update-sync');
+    log.info('state-update-sync', data);
     publisher.publish(Publisher.Enum.STATE, ['updatePlayerSync', [data.id, data.timestamp, data.state]]);
   });
 }
