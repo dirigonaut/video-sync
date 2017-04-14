@@ -30,7 +30,7 @@ function initGUI() {
     var request = new Object();
     request.seekTime = Math.round(length * (percent / 100));
     request.seekTime = request.seekTime;
-    clientSocket.sendRequest('state-req-seek', request, false);
+    clientSocket.sendRequest('state-req-seek', request);
 
     $('#seek-bar').val(request.seekTime / $("#video")[0].duration * 100);
     $("video").on("timeupdate", updateProgressBar);

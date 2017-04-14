@@ -6,9 +6,9 @@ function initClientLogin() {
     request.token	= $('#loginToken').val();
 
     if(request.token.length > 0) {
-      clientSocket.sendRequest('auth-validate-token', request);
+      clientSocket.sendRequest('auth-validate-token', request, true);
     } else {
-      clientSocket.sendRequest('auth-get-token', request);
+      clientSocket.sendRequest('auth-get-token', request, true);
     }
   });
 

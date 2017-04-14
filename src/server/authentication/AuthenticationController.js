@@ -45,8 +45,9 @@ function initialize(io) {
     isAdministrator(socket, io);
     socket.emit('connected');
 
-    socket.on('auth-get-token', function (data) {
+    socket.on('auth-get-token', function (data, acknowledge) {
       log.debug('auth-get-token');
+      acknowledge(null, true);
 
       var requestSmtp = function(token) {
         var sendInvitations = function(hostAddress) {
@@ -61,8 +62,9 @@ function initialize(io) {
       authenticator.requestToken(socket.id, validator.sterilizeUser(data), requestSmtp);
     });
 
-    socket.on('auth-validate-token', function (data) {
+    socket.on('auth-validate-token', function (data, acknowledge) {
       log.debug('auth-validate-token');
+      acknowledge(null, true);
 
       var cleanData = validator.sterilizeUser(data);
 

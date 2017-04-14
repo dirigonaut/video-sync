@@ -1,3 +1,4 @@
+var Util = require('util');
 var Validator     = require('../authentication/Validator');
 var Player        = require('../player/Player');
 var ChatEngine    = require('../chat/ChatEngine');
@@ -132,8 +133,9 @@ function initialize(io, socket) {
     publisher.publish(Publisher.Enum.STATE, ['timeUpdate', [socket.id, data]], onTime);
   });
 
-  socket.on('state-update-init', function(data) {
+  socket.on('state-update-init', function(data, acknowledge) {
     log.info(`state-update-init`, data);
+    acknowledge(null, true);
 
     var onInit = function(id) {
       var onSync = function(commands) {
@@ -148,13 +150,15 @@ function initialize(io, socket) {
     publisher.publish(Publisher.Enum.STATE, ['playerInit', [data.id]], onInit);
   });
 
-  socket.on('state-update-state', function(data) {
+  socket.on('state-update-state', function(data, acknowledge) {
     log.info('state-update-state', data);
+    acknowledge(null, true);
     publisher.publish(Publisher.Enum.STATE, ['updatePlayerState', [data.id, data.timestamp, data.state]]);
   });
 
-  socket.on('state-update-sync', function(data) {
+  socket.on('state-update-sync', function(data, acknowledge) {
     log.info('state-update-sync', data);
+    acknowledge(null, true);
     publisher.publish(Publisher.Enum.STATE, ['updatePlayerSync', [data.id, data.timestamp, data.state]]);
   });
 }

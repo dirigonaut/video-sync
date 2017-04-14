@@ -102,7 +102,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
 
   var isReadyForNextSegment = function() {
     log.debug(`SourceBuffer isReadyForNextSegment ${self.type}`);
-    if(!self.sourceBuffer.updating) {
+    if(self.sourceBuffer !== undefined && self.sourceBuffer !== null && !self.sourceBuffer.updating) {
       var bufferUpdated = false;
 
       do {
