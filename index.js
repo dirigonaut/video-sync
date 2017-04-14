@@ -1,5 +1,6 @@
 var Cluster = require('cluster');
 var Os      = require('os');
+var Fs      = require('fs');
 var Path    = require('path');
 
 var RedisServer   = require('./src/server/process/redis/RedisServer');
@@ -14,6 +15,9 @@ const STATIC_PATH = "static";
 
 var appData = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + 'Library/Preferences' : process.env.HOME + '/.config')
 appData += '/video-sync/Default/';
+
+var config = Fs.readFileSync(`${appData}/config.json`);
+config = JSON.parse(config);
 
 if (Cluster.isMaster) {
   console.log(`Master ${process.pid} is running`);
@@ -32,6 +36,6 @@ if (Cluster.isMaster) {
   redisServer = new RedisServer();
   redisServer.start(startClusters);
 } else {
-  serverProcess = new ServerProcess('192.168.1.149', 8080, appData, STATIC_PATH);
+  serverProcess = new ServerProcess(config.host, config.port, appData, STATIC_PATH);
   console.log(`Worker ${process.pid} started`);
 }

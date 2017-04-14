@@ -7,6 +7,7 @@ var Validator     = require('../authentication/Validator');
 var Authenticator = require('../authentication/Authenticator');
 var ChatEngine    = require('../chat/ChatEngine');
 var Publisher     = require('../process/redis/RedisPublisher');
+var SocketLog     = require('../log/SocketLog');
 
 var AdminController     = require('../administration/AdminController');
 var VideoController     = require('../video/VideoController');
@@ -15,6 +16,7 @@ var DatabaseController  = require('../database/DatabaseController');
 var ChatController      = require('../chat/ChatController');
 
 var log       = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
+var socketLog = new SocketLog();
 
 var publisher;
 var smtp;
@@ -56,6 +58,7 @@ function initialize(io) {
           socket.emit('login-token-sent');
         };
 
+        socketLog.log("Login Info: ", token);
         smtp.initializeTransport(session.getActiveSession().smtp, sendInvitations);
       };
 

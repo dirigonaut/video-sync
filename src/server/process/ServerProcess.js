@@ -10,6 +10,7 @@ var ServerRedis              = require('./redis/ServerRedis');
 var Certificate              = require('../authentication/Certificate');
 var Publisher                = require('./redis/RedisPublisher');
 var RedisSocket              = require('./redis/RedisSocket');
+var SocketLog                = require('../log/SocketLog');
 var AuthenticationController = require('../authentication/AuthenticationController');
 
 var logManager = new LogManager();
@@ -53,6 +54,9 @@ function ServerProcess(ip, port, appData, staticPath) {
 
     app.use(Express.static(staticPath));
     server.listen(port);
+
+    var socketLog = new SocketLog();
+    socketLog.initialize(io);
 
     new AuthenticationController(io);
   }
