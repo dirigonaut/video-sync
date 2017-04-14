@@ -21,14 +21,13 @@ ChatEngine.prototype.broadcast = function(event, message) {
 };
 
 ChatEngine.prototype.ping = function(event, message) {
-  log.debug("ChatEngine.prototype.ping");
+  log.debug(`ChatEngine.prototype.ping ${event}`);
   if(event !== null && event !== undefined && message !== null && message !== undefined) {
     if(message.from !== undefined && message.from !== null) {
       redisSocket.broadcastToIds(message.from, event, message);
     }
   }
 };
-
 
 ChatEngine.prototype.buildMessage = function(from, text) {
   var message = new Object();
@@ -39,5 +38,5 @@ ChatEngine.prototype.buildMessage = function(from, text) {
 
 module.exports = ChatEngine;
 
-ChatEngine.SYSTEM = "system";
-ChatEngine.Enum = {"BROADCAST" : "chat-broadcast-resp", "PING" : "chat-ping-resp", "LOG" : "chat-log-resp", "EVENT" : "chat-event-resp"};
+ChatEngine.SYSTEM = "System";
+ChatEngine.Enum = {BROADCAST : "chat-broadcast-resp", PING : "chat-ping-resp", LOG : "chat-log-resp", EVENT : "chat-event-resp"};

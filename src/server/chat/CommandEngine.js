@@ -43,19 +43,19 @@ CommandEngine.prototype.processCommand = function(issuer, command, callback) {
   log.debug("CommandEngine.prototype.processCommand");
   switch(command.command) {
     case CommandEngine.ClientEnum.PLAY:
-      publisher.publish(Publisher.Enum.STATE, ['play', [issuer.socket.id]]);
+      publisher.publish(Publisher.Enum.STATE, ['play', [issuer.id]]);
       callback(ChatEngine.Enum.EVENT, "issued play");
       break;
     case CommandEngine.ClientEnum.PAUSE:
-      publisher.publish(Publisher.Enum.STATE, ['pause', [issuer.socket.id]]);
+      publisher.publish(Publisher.Enum.STATE, ['pause', [issuer.id]]);
       callback(ChatEngine.Enum.EVENT, "issued pause");
       break;
     case CommandEngine.ClientEnum.SEEK:
-      publisher.publish(Publisher.Enum.STATE, ['seek', [issuer.socket.id, {'seekTime': timestampToSeconds(command.param[0])}]]);
+      publisher.publish(Publisher.Enum.STATE, ['seek', [issuer.id, {'seekTime': timestampToSeconds(command.param[0])}]]);
       callback(ChatEngine.Enum.EVENT, `issued seek to ${timestampToSeconds(command.param[0])}`);
       break;
     case CommandEngine.ClientEnum.HANDLE:
-      callback(ChatEngine.Enum.EVENT, `ID: ${issuer.socket.id} changed their handle to ${command.param[0]}`);
+      callback(ChatEngine.Enum.EVENT, `ID: ${issuer.id} changed their handle to ${command.param[0]}`);
       publisher.publish(Publisher.Enum.PLAYER, ['setPlayerHandle', [issuer.socket.id, command.param[0]]]);
       break;
     case CommandEngine.ClientEnum.HELP:
