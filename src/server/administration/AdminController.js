@@ -45,8 +45,7 @@ function initialize(io, socket) {
         session.setMediaPath(data);
 
         var emitMediaReady = function(playerIds) {
-          console.log("emitMediaReady");
-          console.log(playerIds);
+          log.debug('media-ready');
           var message = chatEngine.buildMessage(socket.id, "Video has been initialized.");
           chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
           redisSocket.broadcastToIds(playerIds, 'media-ready');
@@ -82,7 +81,7 @@ function initialize(io, socket) {
 
       var processCommand = function(admin) {
         commandEngine.processAdminCommand(admin, data, response);
-      }
+      };
 
       publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [socket.id]], processCommand);
     }

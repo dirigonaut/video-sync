@@ -20,7 +20,12 @@ PlayerManager.prototype.getPlayer = function(id, callback) {
   if(player === null || player === undefined) {
     player = players.get("/#" + id);
   }
-  return player;
+
+  if(callback) {
+    callback([player]);
+  } else {
+    return player;
+  }
 };
 
 PlayerManager.prototype.getPlayerIds = function(callback) {
