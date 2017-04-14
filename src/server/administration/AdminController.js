@@ -81,8 +81,18 @@ function initialize(io, socket) {
         }
       };
 
-      var stateResponse = function(event, data) {
-        socket.emit(event, data);
+      var stateResponse = function(command, chat) {
+        log.debug(`admin-chat-command emitting event`);
+        var onState = function(commands) {
+          for(var i in commands) {
+            redisSocket.broadcastToId.apply(null, commands[i]);
+          }
+
+          chatResponse.apply(null, chat);
+        };
+
+        command.push(onState);
+        publisher.publish.apply(null, command);
       };
 
       var handleResponse = function(key, param) {

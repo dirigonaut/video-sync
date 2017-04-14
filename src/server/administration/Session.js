@@ -140,8 +140,6 @@ Session.prototype.redisSetInvitees = function(invitees) {
 
 Session.prototype.redisSetIdToEmailMap = function(emailMap) {
   log.info("Session.redisSetIdToEmailMap");
-  console.log('here');
-  console.log(emailMap);
   idToEmailMap = new Map(emailMap);
 };
 

@@ -160,13 +160,17 @@ var initializeClientPlayer = function(_this, mediaSource, window, callback) {
         var isUpdating = false;
 
         for(var i in sourceBuffers) {
-          if(sourceBuffers[i].sourceBuffer.updating) {
-            isUpdating = true;
+          if(sourceBuffers[i].sourceBuffer !== null && sourceBuffers[i].sourceBuffer !== undefined) {
+            if(sourceBuffers[i].sourceBuffer.updating) {
+              isUpdating = true;
+            }
           }
         }
 
         if(!isUpdating) {
-          mediaSource.endOfStream();
+          if(mediaSource.readyState === 'open') {
+            mediaSource.endOfStream();
+          }
         } else {
           setTimeout(canEndStream, 250);
         }
@@ -264,7 +268,7 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     var onInit = function() {
       var request = {};
       request.id = clientSocket.getSocketId();
-      clientSocket.sendRequest('state-update-init', request);
+      clientSocket.sendRequest('state-update-init', request, true);
     };
 
     videoSingleton.init(onInit);
@@ -280,7 +284,7 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     request.timestamp = video.currentTime;
     request.state = video.paused;
 
-    clientSocket.sendRequest('state-update-state', request);
+    clientSocket.sendRequest('state-update-state', request, true);
   });
 
   clientSocket.setEvent('state-pause', function(isSynced) {
@@ -293,7 +297,7 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     request.timestamp = video.currentTime;
     request.state = video.paused;
 
-    clientSocket.sendRequest('state-update-state', request);
+    clientSocket.sendRequest('state-update-state', request, true);
 
     if(isSynced) {
       clientSocket.sendRequest('state-sync');
@@ -316,9 +320,9 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     request.state = video.paused;
 
     if(data.syncWait){
-      clientSocket.sendRequest('state-update-sync', request);
+      clientSocket.sendRequest('state-update-sync', request, true);
     } else {
-      clientSocket.sendRequest('state-update-state', request);
+      clientSocket.sendRequest('state-update-state', request, true);
     }
   });
 

@@ -1,4 +1,5 @@
-var io = require('socket.io-client');
+var io 		= require('socket.io-client');
+var async = require('async');
 
 var socket;
 
@@ -16,12 +17,23 @@ ClientSocket.prototype.connect = function(serverUrl, callback) {
 	});
 };
 
-ClientSocket.prototype.sendRequest = function(event, request, noLogging) {
-	if(noLogging) {
-		console.log(event);
-		console.log(request);
+ClientSocket.prototype.sendRequest = function(event, request, isPromised) {
+	if(isPromised) {
+		async.retry({times: 10, interval: 250}, function (callback, result) {
+		  socket.emit(event, request, function (err, result) {
+		    if (err) {
+					return callback(err);
+				}
+
+		    callback(null, result);
+		  });
+		},
+		function (err, result) {
+		   console.log(result);
+		});
+	} else {
+		socket.emit(event, request);
 	}
-	socket.emit(event, request);
 };
 
 ClientSocket.prototype.setEvent = function(event, callback) {

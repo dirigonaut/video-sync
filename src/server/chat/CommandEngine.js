@@ -40,19 +40,22 @@ CommandEngine.prototype.processAdminCommand = function(admin, command, callback)
 };
 
 CommandEngine.prototype.processCommand = function(issuer, command, callback) {
-  log.debug("CommandEngine.prototype.processCommand");
+  log.debug("CommandEngine.prototype.processCommand", command);
   switch(command.command) {
     case CommandEngine.ClientEnum.PLAY:
-      var command = ['play'];
-      callback(CommandEngine.RespEnum.COMMAND, command);
+      var engineCommand = [Publisher.Enum.STATE, ['play', [issuer.id]]];
+      var chat = [ChatEngine.Enum.EVENT, "issued play"];
+      callback(CommandEngine.RespEnum.COMMAND, [engineCommand, chat]);
       break;
     case CommandEngine.ClientEnum.PAUSE:
-      var command = ['pause'];
-      callback(CommandEngine.RespEnum.COMMAND, command);
+      var engineCommand = [Publisher.Enum.STATE, ['pause', [issuer.id]]];
+      var chat = [ChatEngine.Enum.EVENT, "issued pause"];
+      callback(CommandEngine.RespEnum.COMMAND, [engineCommand, chat]);
       break;
     case CommandEngine.ClientEnum.SEEK:
-      var command = ['seek', {'seekTime': timestampToSeconds(command.param[0])}];
-      callback(CommandEngine.RespEnum.COMMAND, command);
+      var engineCommand = [Publisher.Enum.STATE, ['seek', [issuer.id, { seekTime: timestampToSeconds(command.param[0])}]]];
+      var chat = [ChatEngine.Enum.EVENT, `issued seek to ${timestampToSeconds(command.param[0])}`];
+      callback(CommandEngine.RespEnum.COMMAND, [engineCommand, chat]);
       break;
     case CommandEngine.ClientEnum.HANDLE:
       callback(CommandEngine.RespEnum.CHAT, [ChatEngine.Enum.EVENT, `ID: ${issuer.id} changed their handle to ${command.param[0]}`]);
