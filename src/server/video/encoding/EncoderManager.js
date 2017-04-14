@@ -5,11 +5,14 @@ var Command = require('./process/Command');
 var Ffmpeg = require('./process/FfmpegProcess');
 var Mp4Box = require('./process/Mp4BoxProcess');
 var LogManager = require('../../log/LogManager');
+var SocketLog = require('../../log/SocketLog');
 
 const webm_manifest = "webm_dash_manifest";
 const mp4_manifest = "-frag-rap";
 
 var log = LogManager.getLog(LogManager.LogEnum.ENCODING);
+
+var socketLog = new SocketLog();
 
 function EncoderManager(data){
 	log.debug("EncodingManager", data);
@@ -75,9 +78,10 @@ function setEvents(command, manager) {
 	command.on('start', function(command_line){
 		log.debug("Server: Start encoding: " + new Date().getTime());
 	}).on('progress', function(percent) {
-		log.info(`encoding ${util.inspect(percent, { showHidden: false, depth: 1 })}`, percent);
+		socketLog.log("encoding", percent);
 	}).on('close', function(exitCode) {
 		log.info('Server: file has been converted succesfully: ' + new Date().getTime());
+		socketLog.log('Server: file has been converted succesfully: ' + new Date().getTime());
 		manager.emit('processed');
 	}).on('error', function(err) {
 		log.error("There was an error encoding: ", err);
