@@ -1,6 +1,9 @@
 var io 		= require('socket.io-client');
 var async = require('async');
 
+var ClientLog 	= require('../log/ClientLogManager');
+var log         = ClientLog.getLog(ClientLog.LogEnum.CLIENT);
+
 var socket;
 
 function ClientSocket() {
@@ -29,7 +32,7 @@ ClientSocket.prototype.sendRequest = function(event, request, isPromised) {
 		  });
 		},
 		function (err, result) {
-		   console.log(result);
+		   log.silly(`${event} responded with err ${err} and result ${result}`);
 		});
 	} else {
 		socket.emit(event, request);
@@ -52,11 +55,7 @@ ClientSocket.prototype.getSocketId = function() {
 	return socket.id;
 };
 
-ClientSocket.prototype.buildServerUrl = function(window, port) {
-  if(port != null && port != undefined) {
-    return "https://127.0.0.1:" + port;
-  }
-
+ClientSocket.prototype.buildServerUrl = function(window) {
   return window.location.host;
 };
 

@@ -32,7 +32,7 @@ ClientTransport.prototype.log = function (level, msg, meta, callback) {
     time: new Date().toTimeString().split(" ")[0],
   };
 
-  //console.log(payload);
+  console.log(payload);
   this.callback(payload);
 };
 
