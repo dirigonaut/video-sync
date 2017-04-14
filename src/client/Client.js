@@ -18,7 +18,6 @@ var clientLog = ClientLogManager.getLog();
 
 function Client(videoElement) {
   clientLog.info("Client created");
-  console.log("create client");
 
   fileBuffer = new FileBuffer();
   formData = new FormDataSingleton();

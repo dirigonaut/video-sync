@@ -2,9 +2,9 @@ var Cluster = require('cluster');
 var Os      = require('os');
 var Path    = require('path');
 
-var RedisServer   = require('./src/server/process/redis/RedisServer.js');
-var ServerProcess = require('./src/server/process/ServerProcess.js');
-var StateProcess  = require('./src/server/process/StateProcess.js');
+var RedisServer   = require('./src/server/process/redis/RedisServer');
+var ServerProcess = require('./src/server/process/ServerProcess');
+var StateProcess  = require('./src/server/process/StateProcess');
 
 var redisServer   = null;
 var serverProcess = null;
