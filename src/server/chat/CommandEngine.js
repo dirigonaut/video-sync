@@ -16,22 +16,22 @@ CommandEngine.prototype.processAdminCommand = function(admin, command, callback)
   switch(command.command) {
     case CommandEngine.AdminEnum.INVITE:
       userAdmin.inviteUser(command.param[0]);
-      callback(ChatEngine.Enum.PING, "admin invite response");
+      callback(CommandEngine.RespEnum.CHAT, [ChatEngine.Enum.PING, "admin invite response"]);
       break;
     case CommandEngine.AdminEnum.KICK:
       userAdmin.kickUser(command.param[0]);
-      callback(ChatEngine.Enum.PING, "admin kick response");
+      callback(CommandEngine.RespEnum.CHAT, [ChatEngine.Enum.PING, "admin kick response"]);
       break;
     case CommandEngine.AdminEnum.DOWNGRADE:
       userAdmin.downgradeUser(command.param[0]);
-      callback(ChatEngine.Enum.PING, "admin downgrade response");
+      callback(CommandEngine.RespEnum.CHAT, [ChatEngine.Enum.PING, "admin downgrade response"]);
       break;
     case CommandEngine.AdminEnum.UPGRADE:
       userAdmin.upgradeUser(command.param[0]);
-      callback(ChatEngine.Enum.PING, "admin upgrade response");
+      callback(CommandEngine.RespEnum.CHAT, [ChatEngine.Enum.PING, "admin upgrade response"]);
       break;
     case CommandEngine.ClientEnum.HELP:
-      callback(ChatEngine.Enum.PING, "admin help response");
+      callback(CommandEngine.RespEnum.CHAT, [ChatEngine.Enum.PING, "admin help response"]);
       break;
     default:
       this.processCommand(admin, command, callback);
@@ -43,34 +43,35 @@ CommandEngine.prototype.processCommand = function(issuer, command, callback) {
   log.debug("CommandEngine.prototype.processCommand");
   switch(command.command) {
     case CommandEngine.ClientEnum.PLAY:
-      publisher.publish(Publisher.Enum.STATE, ['play', [issuer.id]]);
-      callback(ChatEngine.Enum.EVENT, "issued play");
+      var command = ['play'];
+      callback(CommandEngine.RespEnum.COMMAND, command);
       break;
     case CommandEngine.ClientEnum.PAUSE:
-      publisher.publish(Publisher.Enum.STATE, ['pause', [issuer.id]]);
-      callback(ChatEngine.Enum.EVENT, "issued pause");
+      var command = ['pause'];
+      callback(CommandEngine.RespEnum.COMMAND, command);
       break;
     case CommandEngine.ClientEnum.SEEK:
-      publisher.publish(Publisher.Enum.STATE, ['seek', [issuer.id, {'seekTime': timestampToSeconds(command.param[0])}]]);
-      callback(ChatEngine.Enum.EVENT, `issued seek to ${timestampToSeconds(command.param[0])}`);
+      var command = ['seek', {'seekTime': timestampToSeconds(command.param[0])}];
+      callback(CommandEngine.RespEnum.COMMAND, command);
       break;
     case CommandEngine.ClientEnum.HANDLE:
-      callback(ChatEngine.Enum.EVENT, `ID: ${issuer.id} changed their handle to ${command.param[0]}`);
+      callback(CommandEngine.RespEnum.CHAT, [ChatEngine.Enum.EVENT, `ID: ${issuer.id} changed their handle to ${command.param[0]}`]);
       publisher.publish(Publisher.Enum.PLAYER, ['setPlayerHandle', [issuer.socket.id, command.param[0]]]);
       break;
     case CommandEngine.ClientEnum.HELP:
-      callback(ChatEngine.Enum.PING, "help response");
+      callback(CommandEngine.RespEnum.CHAT, [ChatEngine.Enum.PING, "help response"]);
       break;
     default:
-      callback(ChatEngine.Enum.PING, `${command.command} is not a recognized command, type /help for a list of commands.`);
+      callback(CommandEngine.RespEnum.CHAT, [ChatEngine.Enum.PING, `${command.command} is not a recognized command, type /help for a list of commands.`]);
       break;
   }
 };
 
 module.exports = CommandEngine;
 
-CommandEngine.AdminEnum = {"INVITE" : "/invite", "KICK" : "/kick", "DOWNGRADE" : "/downgrade", "UPGRADE" : "/upgrade"};
-CommandEngine.ClientEnum = {"PLAY" : "/play", "PAUSE" : "/pause", "SEEK" : "/seek", "HANDLE" : "/handle", "HELP" : "/help"};
+CommandEngine.AdminEnum = { INVITE : "/invite", KICK : "/kick", DOWNGRADE : "/downgrade", UPGRADE : "/upgrade"};
+CommandEngine.ClientEnum = { PLAY : "/play", PAUSE : "/pause", SEEK : "/seek", HANDLE : "/handle", HELP : "/help"};
+CommandEngine.RespEnum = { COMMAND: "command", CHAT: "chat"};
 
 function timestampToSeconds(timestamp) {
   var timeArray = timestamp.split(':').reverse();

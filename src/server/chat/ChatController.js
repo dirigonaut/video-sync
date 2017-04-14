@@ -28,7 +28,7 @@ function initialize(io, socket) {
     if(!session.isAdmin(socket.id)){
       log.debug('chat-command', data);
 
-      var response = function(event, text) {
+      var chatResponse = function(event, text) {
         var message = chatEngine.buildMessage(socket.id, text);
 
         if(event === ChatEngine.Enum.PING) {
@@ -38,10 +38,22 @@ function initialize(io, socket) {
           log.silly('chat-command-response', data);
           chatEngine.broadcast(event, message);
         }
-      }
+      };
+
+      var stateResponse = function(event, data) {
+        socket.emit(event, data);
+      };
+
+      var handleResponse = function(key, param) {
+        if(key === CommandEngine.RespEnum.COMMAND) {
+          stateResponse.apply(null, param);
+        } else if(key === CommandEngine.RespEnum.CHAT){
+          chatResponse.apply(null, param);
+        }
+      };
 
       var processCommand = function(player) {
-        commandEngine.processCommand(player, data, response);
+        commandEngine.processCommand(player, data, handleResponse);
       }
 
       publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [socket.id]], processCommand);
