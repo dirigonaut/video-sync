@@ -115,7 +115,7 @@ function initialize(io, socket) {
       };
 
       var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['updateSmtp', [cleanData]], emitResults);
+      publisher.publish(Publisher.Enum.DATABASE, ['updateSmtp', [cleanData[0], cleanData[1]]], emitResults);
     }
   });
 
@@ -123,12 +123,12 @@ function initialize(io, socket) {
     if(session.isAdmin(socket.id)) {
       console.log('db-update-session');
 
-      var emitResults = function() {
+      var emitResults = function(docs) {
         socket.emit("db-refresh");
       };
 
       var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['updateSession', [cleanData]], emitResults);
+      publisher.publish(Publisher.Enum.DATABASE, ['updateSession', [cleanData[0], cleanData[1]]], emitResults);
     }
   });
 
