@@ -11,13 +11,14 @@ function Smtp(){
 };
 
 Smtp.prototype.initializeTransport = function(address, callback) {
-	log.debug("Smtp.initializeTransport");
+	log.debug(`Smtp.initializeTransport for ${address}`);
 	if(address !== activeSmtp) {
 		this.closeTrasporter();
 
 		var loadSmtpOptions = function(result) {
 			var data = result[0];
 			if(data != undefined && data != null) {
+				log.debug("loadSmtpOptions found options initializing smtp");
 				if(data.type == "Custom") {
 					//TODO: allow some basic custom smtp logic
 				} else {
