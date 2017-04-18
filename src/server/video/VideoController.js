@@ -5,10 +5,12 @@ var Session         = require('../administration/Session');
 var Validator       = require('../authentication/Validator');
 var XmlUtil         = require('./metadata/xml/XmlUtil');
 var MpdUtil         = require('./metadata/MpdUtil');
+var Cache           = require('../utils/Cache');
 var LogManager      = require('../log/LogManager');
 
 var validator       = new Validator();
 var session         = new Session();
+var cache           = new Cache();
 var log             = LogManager.getLog(LogManager.LogEnum.VIDEO);
 
 function VideoController(io, socket) {
@@ -86,42 +88,16 @@ function initialize(io, socket) {
   });
 
   socket.on('get-segment', function(data) {
-    log.silly('get-segment', data);
-    var requestData = validator.sterilizeVideoInfo(data);
-    var fileIO = new FileIO();
+    log.debug('get-segment', data);
+    var data = validator.sterilizeVideoInfo(data);
 
     if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
-      var key = `${requestData.path}-${requestData.segment[0]}-${requestData.segment[1]}-${requestData.typeId}`;
-
       var handleResponse = function(segment) {
-        log.silly('Returning segment for request: ', data);
+        log.info('Returning segment for request: ', data);
         socket.emit("segment-chunk", segment);
       };
 
-      var readConfig = fileIO.createStreamConfig(session.getMediaPath() + requestData.path, function onData(data, index) {
-        var segment = new Object();
-        segment.typeId = requestData.typeId;
-        segment.name = key;
-        segment.data = data;
-        segment.index = index;
-
-        handleResponse(segment);
-      });
-
-      var options = {"start": parseInt(requestData.segment[0]), "end": parseInt(requestData.segment[1])};
-      readConfig.options = options;
-
-      readConfig.onFinish = function onFinish(index) {
-        var segment = new Object();
-        segment.typeId = requestData.typeId;
-        segment.name = key;
-        segment.data = null;
-        segment.index = index;
-
-        handleResponse(segment);
-      };
-
-      fileIO.read(readConfig);
+      cache.getSegment(data, handleResponse);
     }
   });
 }
