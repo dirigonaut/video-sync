@@ -1,9 +1,11 @@
 const EventEmitter = require('events');
 
 var Publisher     = require('../process/redis/RedisPublisher');
+var Cache         = require('../utils/Cache');
 var LogManager    = require('../log/LogManager');
 
 var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
+var cache         = new Cache();
 var publisher     = new Publisher();
 
 var idToEmailMap  = new Map();
@@ -147,6 +149,7 @@ Session.prototype.redisSetMediaPath = function(path) {
   log.info("Session.redisSetMediaPath");
   mediaPath = path;
   mediaStarted = false;
+  cache.setPath(mediaPath);
 };
 
 Session.prototype.redisSetMediaStarted = function() {

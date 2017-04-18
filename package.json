@@ -30,7 +30,6 @@
     "xmldom": "^0.1.27"
   },
   "devDependencies": {
-    "nw-builder": "^3.2.0",
     "browserify": "^14.1.0",
     "watchify": "^3.9.0"
   },
