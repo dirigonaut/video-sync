@@ -22,15 +22,7 @@ NeDatabase.prototype.createSmtp = function(json, callback){
 	createJson(json, callback);
 };
 
-NeDatabase.prototype.createContact = function(json, callback){
-	createJson(json, callback);
-};
-
 NeDatabase.prototype.createSession = function(json, callback){
-	createJson(json, callback);
-};
-
-NeDatabase.prototype.createToken = function(json, callback){
 	createJson(json, callback);
 };
 
@@ -49,11 +41,6 @@ NeDatabase.prototype.readAllSmtp = function(callback){
 	readJson(query, callback);
 };
 
-NeDatabase.prototype.readAllContacts = function(callback){
-	var query = { email: { $exists: true } }
-	readJson(query, callback);
-};
-
 NeDatabase.prototype.readSession = function(id, callback){
 	var query = { _id: id };
 	readJson(query, callback);
@@ -61,11 +48,6 @@ NeDatabase.prototype.readSession = function(id, callback){
 
 NeDatabase.prototype.readAllSessions = function(callback){
 	var query = { title: { $exists: true } };
-	readJson(query, callback);
-};
-
-NeDatabase.prototype.readToken = function(address, token, callback){
-	var query = { address : address, token : token };
 	readJson(query, callback);
 };
 
@@ -77,11 +59,6 @@ NeDatabase.prototype.readCerts = function(callback){
 //Update Calls
 NeDatabase.prototype.updateSmtp = function(id, json, callback){
 	var query = { _id : id };
-	updateJson(query, json, callback);
-};
-
-NeDatabase.prototype.updateContact = function(id, json, callback){
-	var query = { _id: id };
 	updateJson(query, json, callback);
 };
 
@@ -97,19 +74,7 @@ NeDatabase.prototype.deleteSmtp = function(id, callback){
 	deleteJson(query, option, callback);
 };
 
-NeDatabase.prototype.deleteContact = function(id, callback){
-	var query = { _id: id };
-	var option = {};
-	deleteJson(query, option, callback);
-};
-
 NeDatabase.prototype.deleteSession = function(id, callback){
-	var query = { _id: id };
-	var option = {};
-	deleteJson(query, option, callback);
-};
-
-NeDatabase.prototype.deleteTokens = function(id, callback){
 	var query = { _id: id };
 	var option = {};
 	deleteJson(query, option, callback);

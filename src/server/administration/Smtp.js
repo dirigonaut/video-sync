@@ -17,22 +17,17 @@ Smtp.prototype.initializeTransport = function(address, callback) {
 
 		var loadSmtpOptions = function(result) {
 			var data = result[0];
-			if(data != undefined && data != null) {
+			if(data !== undefined && data !== null) {
 				log.debug("loadSmtpOptions found options initializing smtp");
-				if(data.type == "Custom") {
-					//TODO: allow some basic custom smtp logic
-				} else {
-					log.info("Setting Smtp options.");
-					smtpTransport = NodeMailer.createTransport({
-							service: data.smtpHost,
-							auth: {
-									user: data.smtpAddress,
-									pass: data.smtpPassword
-							}
-					});
-					activeSmtp = data.smtpAddress;
-					callback();
-				}
+				smtpTransport = NodeMailer.createTransport({
+						service: data.smtpHost,
+						auth: {
+								user: data.smtpAddress,
+								pass: data.smtpPassword
+						}
+				});
+				activeSmtp = data.smtpAddress;
+				callback();
 			}
 		}
 

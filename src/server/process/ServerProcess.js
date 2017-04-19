@@ -50,7 +50,7 @@ function ServerProcess(ip, port, appData, staticPath) {
     redisSocket.initialize(io);
 
     var session = new Session();
-    session.setLocalIp(`${ip}:${port}`);
+    session.setIP(`${ip}:${port}`);
 
     app.use(Express.static(staticPath));
     server.listen(port);
