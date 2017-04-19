@@ -25,49 +25,46 @@ function initialize(io, socket) {
   });
 
   socket.on('chat-command', function(data) {
-    if(!session.isAdmin(socket.id)){
-      log.debug('chat-command', data);
+    log.debug('chat-command', data);
+    var chatResponse = function(event, text) {
+      var message = chatEngine.buildMessage(socket.id, text);
 
-      var chatResponse = function(event, text) {
-        var message = chatEngine.buildMessage(socket.id, text);
-
-        if(event === ChatEngine.Enum.PING) {
-          log.silly('chat-command-response', data);
-          chatEngine.ping(event, message);
-        } else {
-          log.silly('chat-command-response', data);
-          chatEngine.broadcast(event, message);
-        }
-      };
-
-      var stateResponse = function(command, chat) {
-        log.debug(`chat-command emitting event`);
-        var onState = function(commands) {
-          for(var i in commands) {
-            redisSocket.broadcastToId.apply(null, commands[i]);
-          }
-
-          chatResponse.apply(null, chat);
-        };
-
-        command.push(onState);
-        publisher.publish.apply(null, command);
-      };
-
-      var handleResponse = function(key, param) {
-        if(key === CommandEngine.RespEnum.COMMAND) {
-          stateResponse.apply(null, param);
-        } else if(key === CommandEngine.RespEnum.CHAT){
-          chatResponse.apply(null, param);
-        }
-      };
-
-      var processCommand = function(player) {
-        commandEngine.processCommand(player, data, handleResponse);
+      if(event === ChatEngine.Enum.PING) {
+        log.silly('chat-command-response', data);
+        chatEngine.ping(event, message);
+      } else {
+        log.silly('chat-command-response', data);
+        chatEngine.broadcast(event, message);
       }
+    };
 
-      publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [socket.id]], processCommand);
+    var stateResponse = function(command, chat) {
+      log.debug(`chat-command emitting event`);
+      var onState = function(commands) {
+        for(var i in commands) {
+          redisSocket.broadcastToId.apply(null, commands[i]);
+        }
+
+        chatResponse.apply(null, chat);
+      };
+
+      command.push(onState);
+      publisher.publish.apply(null, command);
+    };
+
+    var handleResponse = function(key, param) {
+      if(key === CommandEngine.RespEnum.COMMAND) {
+        stateResponse.apply(null, param);
+      } else if(key === CommandEngine.RespEnum.CHAT){
+        chatResponse.apply(null, param);
+      }
+    };
+
+    var processCommand = function(player) {
+      commandEngine.processCommand(player, data, handleResponse);
     }
+
+    publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [socket.id]], processCommand);
   });
 }
 

@@ -27,96 +27,105 @@ function initialize(io, socket) {
   log.info("Attaching AdminController");
 
   socket.on('admin-smtp-invite', function() {
-    if(session.isAdmin(socket.id) && session.getActiveSession() != null){
+    var ifAdmin = function(isAdmin) {
       log.debug("admin-smtp-invite");
-      userAdmin.inviteUsers();
+
+      if(isAdmin) {
+        userAdmin.inviteUsers();
+      }
     }
+
+    session.isAdmin(socket.id, ifAdmin);
   });
 
   socket.on('admin-set-media', function(data) {
-    if(session.isAdmin(socket.id)){
-      log.debug('admin-set-media');
-      var fileIO = new FileIO();
+    var ifAdmin = function(isAdmin) {
+      if(isAdmin) {
+        log.debug('admin-set-media');
+        var fileIO = new FileIO();
 
-      var setMedia = function() {
-        var fileUtils = new FileSystemUtils();
-        data = fileUtils.ensureEOL(data);
+        var setMedia = function() {
+          var fileUtils = new FileSystemUtils();
+          data = fileUtils.ensureEOL(data);
 
-        session.setMediaPath(data);
+          session.setMediaPath(data);
 
-        var emitMediaReady = function(playerIds) {
-          log.debug('media-ready');
-          var message = chatEngine.buildMessage(socket.id, "Video has been initialized.");
-          chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
-          redisSocket.broadcastToIds(playerIds, 'media-ready');
-        };
+          var emitMediaReady = function(playerIds) {
+            log.debug('media-ready');
+            var message = chatEngine.buildMessage(socket.id, "Video has been initialized.");
+            chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
+            redisSocket.broadcastToIds(playerIds, 'media-ready');
+          };
 
-        publisher.publish(Publisher.Enum.PLAYER, ['getPlayerIds', []], emitMediaReady);
+          publisher.publish(Publisher.Enum.PLAYER, ['getPlayerIds', []], emitMediaReady);
+        }
+
+        fileIO.dirExists(data, setMedia);
       }
+    };
 
-      fileIO.dirExists(data, setMedia);
-    }
+    session.isAdmin(socket.id, ifAdmin);
   });
 
   socket.on('admin-load-session', function(data) {
-    if(session.isAdmin(socket.id)){
-      log.debug('admin-load-session');
-      session.loadSession(data);
+    var ifAdmin = function(isAdmin) {
+      if(isAdmin){
+        log.debug('admin-load-session');
+        session.setSession(data);
+      }
     }
+
+    session.isAdmin(socket.id, ifAdmin);
   });
 
   socket.on('chat-command', function(data) {
-    if(session.isAdmin(socket.id)){
-      log.debug('admin-chat-command');
+    var ifAdmin = function(isAdmin) {
+      if(isAdmin){
+        log.debug('admin-chat-command');
 
-      var chatResponse = function(event, text) {
-        var message = chatEngine.buildMessage(socket.id, text);
+        var chatResponse = function(event, text) {
+          var message = chatEngine.buildMessage(socket.id, text);
 
-        if(event === ChatEngine.Enum.PING) {
-          log.silly('chat-command-response', data);
-          chatEngine.ping(event, message);
-        } else {
-          log.silly('chat-command-response', data);
-          chatEngine.broadcast(event, message);
-        }
-      };
-
-      var stateResponse = function(command, chat) {
-        log.debug(`admin-chat-command emitting event`);
-        var onState = function(commands) {
-          for(var i in commands) {
-            redisSocket.broadcastToId.apply(null, commands[i]);
+          if(event === ChatEngine.Enum.PING) {
+            log.silly('chat-command-response', data);
+            chatEngine.ping(event, message);
+          } else {
+            log.silly('chat-command-response', data);
+            chatEngine.broadcast(event, message);
           }
-
-          chatResponse.apply(null, chat);
         };
 
-        command.push(onState);
-        publisher.publish.apply(null, command);
-      };
+        var stateResponse = function(command, chat) {
+          log.debug(`admin-chat-command emitting event`);
+          var onState = function(commands) {
+            for(var i in commands) {
+              redisSocket.broadcastToId.apply(null, commands[i]);
+            }
 
-      var handleResponse = function(key, param) {
-        if(key === CommandEngine.RespEnum.COMMAND) {
-          stateResponse.apply(null, param);
-        } else if(key === CommandEngine.RespEnum.CHAT){
-          chatResponse.apply(null, param);
-        }
-      };
+            chatResponse.apply(null, chat);
+          };
 
-      var processCommand = function(admin) {
-        commandEngine.processAdminCommand(admin, data, handleResponse);
-      };
+          command.push(onState);
+          publisher.publish.apply(null, command);
+        };
 
-      publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [socket.id]], processCommand);
-    }
-  });
+        var handleResponse = function(key, param) {
+          if(key === CommandEngine.RespEnum.COMMAND) {
+            stateResponse.apply(null, param);
+          } else if(key === CommandEngine.RespEnum.CHAT){
+            chatResponse.apply(null, param);
+          }
+        };
 
-  socket.on('admin-change-log', function(data) {
-    if(session.isAdmin(socket.id)){
-      log.debug('admin-change-log');
-      var logManager = new LogManager();
-      logManager.changeLog(data);
-    }
+        var processCommand = function(admin) {
+          commandEngine.processAdminCommand(admin, data, handleResponse);
+        };
+
+        publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [socket.id]], processCommand);
+      }
+    };
+
+    session.isAdmin(socket.id, ifAdmin);
   });
 }
 

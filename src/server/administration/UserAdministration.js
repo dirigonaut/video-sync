@@ -23,7 +23,7 @@ UserAdministration.prototype.upgradeUser = function(user) {
 
 UserAdministration.prototype.kickUser = function(user, callback) {
   log.debug("UserAdministration.kickUser");
-  session.removeInvitee(user, session.getActiveSession());
+  session.removeInvitee(user);
 
   var kick = function(player) {
     if(player !== null && player !== undefined) {
@@ -33,7 +33,7 @@ UserAdministration.prototype.kickUser = function(user, callback) {
         this.disconnectSocket(socket);
       }
     } else {
-      log.error("There is no player with the id: ", user);
+      log.warn("There is no player with the id: ", user);
     }
   }
 
@@ -53,37 +53,63 @@ UserAdministration.prototype.disconnectSocket = function(socket) {
 
 UserAdministration.prototype.inviteUser = function(emailAddress) {
   log.debug("UserAdministration.inviteUser");
-  var currentSession = session.getActiveSession();
-  session.addInvitee(emailAddress, currentSession);
+  var inviteUserIfSession = function(err, activeSession) {
+    if(err) {
+      log.error(err);
+    } else if(session !== null && session !== undefined) {
+      activeSession.addInvitee(emailAddress);
 
-  var sendInvitation = function(address) {
-    var mailOptions = currentSession.mailOptions;
-    mailOptions.invitees = [emailAddress];
+      var sendInvitation = function(address) {
+        var mailOptions = activeSession.mailOptions;
+        mailOptions.invitees = [emailAddress];
 
-    smtp.sendMail(addP2PLink(mailOptions));
-  };
+        smtp.sendMail(addP2PLink(mailOptions));
+      };
 
-  if(currentSession !== null && currentSession !== undefined) {
-    smtp.initializeTransport(currentSession.smtp, sendInvitation);
-  } else {
-    log.error("There is no active session to load smtp info from.");
+      smtp.initializeTransport(activeSession.smtp, sendInvitation);
+    } else {
+      log.warn("There is no active session to load smtp info from.");
+    }
   }
+
+  session.getSession(inviteUserIfSession);
 };
 
 UserAdministration.prototype.inviteUsers = function() {
-  log.debug("UserAdministration.inviteUsers");
-  var sendInvitations = function(address) {
-    smtp.sendMail(addP2PLink(session.getActiveSession().mailOptions));
-  };
+  var inviteUsersIfSession = function(err, activeSession) {
+    log.debug("UserAdministration.inviteUsers");
+    if(err) {
+      log.error(err);
+    } else if(activeSession !== null && activeSession !== undefined) {
+      var sendInvitations = function(address) {
+        var sendEmail = function(mailOptions) {
+          smtp.sendMail(mailOptions)
+        };
+        
+        addP2PLink(activeSession.mailOptions, sendEmail);
+      };
 
-  smtp.initializeTransport(session.getActiveSession().smtp, sendInvitations);
+      smtp.initializeTransport(activeSession.smtp, sendInvitations);
+    } else {
+      log.warn("There is no active session to load smtp info from.");
+    }
+  }
+
+  session.getSession(inviteUsersIfSession);
 };
 
 module.exports = UserAdministration;
 
-function addP2PLink(mailOptions) {
-  log.silly("adding Link");
-  var message = mailOptions.text;
-  mailOptions.text = message + " \n\n Link: https://" + session.getLocalIp() + "/html/client.html";
-  return mailOptions;
+function addP2PLink(mailOptions, callback) {
+  var addLink = function(err, baseUrl) {
+    if(err) {
+      log.error(err);
+    } else {
+      log.silly("adding Link");
+      mailOptions.text = `${mailOptions.text} \n\n Link: https://${baseUrl}/html/client.html`;
+      callback(mailOptions);
+    }
+  }
+
+  session.getIP(addLink);
 }

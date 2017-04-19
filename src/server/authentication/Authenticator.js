@@ -13,55 +13,50 @@ function Authenticator(){
 
 Authenticator.prototype.requestToken = function(id, data, callback) {
   log.debug("Authenticator.requestToken");
-  if(session.getActiveSession() !== null && session.getActiveSession() !== undefined) {
-    var invitees = session.getActiveSession().invitees;
+  var checkIfInvited = function(err, invitees) {
+    if(err) {
+      log.error(err);
+    } else {
+      for(var i in invitees) {
+        if(invitees[i].email === data.address) {
+          invitees[i].id = id;
+          invitees[i].pass = createToken();
 
-    for(var x in invitees) {
-      if(invitees[x] === data.address) {
-        var token = createToken(id, data.address);
-        publisher.publish(Publisher.Enum.DATABASE, ['createToken', [token]], callback);
-        log.debug(`Created Token: ${token.token} for Address: ${data.address}`);
+          log.debug(`Created Token: ${invitees[i].password} for Address: ${data.address}`);
+          session.setInvitees(invitees);
+          break;
+        }
       }
     }
   }
+
+  session.getInvitees(checkIfInvited);
 };
 
 Authenticator.prototype.validateToken = function(id, data, callback) {
   log.debug("Authenticator.validateToken");
-  if(session.getActiveSession() !== null && session.getActiveSession() !== undefined) {
-    var invitees = session.getActiveSession().invitees;
+  var authorized = false;
 
-    var authorize = function(token) {
-      var authorized = false;
-
-      if(token.length > 0) {
-        if(token[0].token == data.token && token[0].address == data.address) {
+  var checkIfValidToken = function(err, invitees) {
+    if(err) {
+      log.error(err);
+    } else {
+      for(var i in invitees) {
+        if(invitees[i].password === data.token && invitees[i].email === data.address) {
           log.silly("The following id has been authenticated: ", id);
           authorized = true;
+          break;
         }
       }
-
-      session.associateIdToEmail(id, data.address);
       callback(authorized);
     }
-
-    for(var x in invitees) {
-      if(invitees[x] === data.address) {
-        publisher.publish(Publisher.Enum.DATABASE, ['readToken', [data.address, data.token]], authorize);
-      }
-    }
   }
+
+  session.getInvitees(checkIfValidToken);
 };
 
 module.exports = Authenticator;
 
-var createToken = function(id, address) {
-  log.silly("createToken");
-  var token = new Object();
-
-  token._id     = id
-  token.address = address;
-  token.token   = crypto.randomBytes(24).toString('hex');
-
-  return token;
-}
+var createToken = function() {
+  return crypto.randomBytes(24).toString('hex');
+};

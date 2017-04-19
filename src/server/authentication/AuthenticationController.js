@@ -47,28 +47,29 @@ function initialize(io) {
     isAdministrator(socket, io);
     socket.emit('connected');
 
-    socket.on('auth-get-token', function (data, acknowledge) {
+    socket.on('auth-get-token', function (data) {
       log.debug('auth-get-token');
-      acknowledge(null, true);
-
       var requestSmtp = function(token) {
-        var sendInvitations = function(hostAddress) {
-          var mailOptions = smtp.createMailOptions(session.getActiveSession().smtp, token.address, "Video-Sync Token", "Session token: " + token.token, "");
-          smtp.sendMail(mailOptions);
-          socket.emit('login-token-sent');
+        var getSmtp = function(err, session) {
+
+          var sendInvitations = function(hostAddress) {
+            var mailOptions = smtp.createMailOptions(session.smtp, token.address, "Video-Sync Token", "Session token: " + token.token, "");
+            smtp.sendMail(mailOptions);
+            socket.emit('login-token-sent');
+          };
+
+          socketLog.log("Login Info: ", token);
+          smtp.initializeTransport(session.smtp, sendInvitations);
         };
 
-        socketLog.log("Login Info: ", token);
-        smtp.initializeTransport(session.getActiveSession().smtp, sendInvitations);
+        session.getActiveSession(getSmtp);
       };
 
       authenticator.requestToken(socket.id, validator.sterilizeUser(data), requestSmtp);
     });
 
-    socket.on('auth-validate-token', function (data, acknowledge) {
+    socket.on('auth-validate-token', function (data) {
       log.debug('auth-validate-token');
-      acknowledge(null, true);
-
       var cleanData = validator.sterilizeUser(data);
 
       var loginAttempt = function(authorized) {
@@ -91,9 +92,13 @@ function initialize(io) {
       var chatEngine = new ChatEngine();
       chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has left the session.`));
 
-      if(session.isAdmin(socket.id)) {
-        session.setAdminId(null);
-      }
+      var removeAdmin = function(isAdmin) {
+        if(isAdmin) {
+          session.setAdmin(null);
+        }
+      };
+
+      session.isAdmin(socket.id, removeAdmin);
 
       var disconnect = function(socket) {
         userAdmin.disconnectSocket(socket);
@@ -120,7 +125,6 @@ function initialize(io) {
 function userAuthorized(socket, io, handle) {
   socket.auth = true;
 
-  console.log(socket.id);
   publisher.publish(Publisher.Enum.PLAYER, ['createPlayer', [socket.id, handle]]);
 
   var video = new VideoController(io, socket);
@@ -130,10 +134,17 @@ function userAuthorized(socket, io, handle) {
   var chatEngine = new ChatEngine();
 
   socket.emit('authenticated', function() {
-    if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
-      console.log("joining and emitting media ready");
-      socket.emit('media-ready');
-    }
+    var emitMediaReady = function(err, mediaPath) {
+      if(err) {
+        log.error(err);
+      } else {
+      if(mediaPath !== null && mediaPath !== undefined && mediaPath.length > 0) {
+          socket.emit('media-ready');
+        }
+      }
+    };
+
+    session.getMediaPath(emitMediaReady);
 
     var emitHandles = function(handles) {
       io.emit('chat-handles', handles);
@@ -149,14 +160,22 @@ function userAuthorized(socket, io, handle) {
 function isAdministrator(socket, io) {
   socket.auth = false;
 
-  log.info(`Admin is ${session.getAdmin()} new socket is ${socket.id}`);
-  if(session.getAdmin() === null || session.getAdmin() === undefined) {
-    if(socket.handshake.address.includes("127.0.0.1")) {
-      new AdminController(io, socket);
-      new DatabaseController(io, socket);
+  var setAdminId = function(err, admin) {
+    if(err) {
+      log.error(err);
+    } else {
+      log.info(`Admin is ${admin} new socket is ${socket.id}`);
+      if(admin === null || admin === undefined) {
+        if(socket.handshake.address.includes("127.0.0.1")) {
+          new AdminController(io, socket);
+          new DatabaseController(io, socket);
 
-      userAuthorized(socket, io, 'admin');
-      session.setAdminId(socket.id);
+          userAuthorized(socket, io, 'admin');
+          session.setAdmin(socket.id);
+        }
+      }
     }
-  }
+  };
+
+  session.getAdmin(setAdminId);
 }

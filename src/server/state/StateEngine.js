@@ -25,210 +25,273 @@ function StateEngine() {
 StateEngine.prototype.init = function(id, callback) {
   log.debug('StateEngine.init');
 
-  if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
-    var player = playerManager.getPlayer(id);
+  var isMediaPathSet = function(err, basePath) {
+    if(err) {
+      log.error(err);
+    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+      var player = playerManager.getPlayer(id);
 
-    if(player !== null && player !== undefined) {
-      log.debug(`Init player ${player.id}`);
-      callback([[player.id], 'state-init']);
+      if(player !== null && player !== undefined) {
+        log.debug(`Init player ${player.id}`);
+        callback([[player.id], 'state-init']);
+      }
     }
-  }
+  };
+
+  session.getMediaPath(isMediaPathSet);
 }
 
 StateEngine.prototype.play = function(id, callback) {
   log.debug(`StateEngine.play ${id}`);
-  if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
-    var player = playerManager.getPlayer(id);
+  var isMediaPathSet = function(err, basePath) {
+    if(err) {
+      log.error(err);
+    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+      var player = playerManager.getPlayer(id);
 
-    if(player !== null && player !== undefined) {
-      if(player.sync === Player.Sync.DESYNCED) {
-        log.silly('StateEngine issuing play', player);
-        var commands = [];
-        commands.push([player.id, 'state-play']);
-        callback([commands]);
-      } else {
-        var broadcastEvent = function(players) {
+      if(player !== null && player !== undefined) {
+        if(player.sync === Player.Sync.DESYNCED) {
+          log.silly('StateEngine issuing play', player);
           var commands = [];
-          for(var i in players) {
-            if(players[i].sync !== Player.Sync.DESYNCED) {
-              log.info(`StateEngine issuing play ${players[i].id}`);
-              commands.push([players[i].id, 'state-play']);
+          commands.push([player.id, 'state-play']);
+          callback([commands]);
+        } else {
+          var broadcastEvent = function(players) {
+            var handleSessionResults = function(err, mediaStarted) {
+              if(err) {
+                log.error(err);
+              } else {
+                var commands = [];
+                for(var i in players) {
+                  if(players[i].sync !== Player.Sync.DESYNCED) {
+                    log.info(`StateEngine issuing play ${players[i].id}`);
+                    commands.push([players[i].id, 'state-play']);
 
-              if(session.getMediaStarted() === false && players[i].isInit()) {
-                players[i].sync = Player.Sync.SYNCED;
+                    if(mediaStarted === false && players[i].isInit()) {
+                      players[i].sync = Player.Sync.SYNCED;
+                    }
+                  }
+                }
+
+                if(commands.length > 0) {
+                  session.setMediaStarted(true);
+                  callback([commands]);
+                }
               }
-            }
+            };
+
+            session.getMediaStarted(handleSessionResults);
           }
 
-          if(commands.length > 0) {
-            session.mediaStarted();
-            callback([commands]);
-          }
+          new PlayRule(accuracy).evaluate(player, broadcastEvent);
         }
-
-        new PlayRule(accuracy).evaluate(player, broadcastEvent);
       }
     }
-  }
+  };
+
+  session.getMediaPath(isMediaPathSet);
 };
 
 StateEngine.prototype.pause = function(id, callback) {
   log.debug(`StateEngine.pause ${id}`);
-  if(session.getMediaPath() !== null && session.getMediaPath().length > 0) {
-    var issuer = playerManager.getPlayer(id);
+  var isMediaPathSet = function(err, basePath) {
+    if(err) {
+      log.error(err);
+    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+      var issuer = playerManager.getPlayer(id);
 
-    if(issuer !== null && issuer !== undefined) {
-      if(issuer.sync === Player.Sync.DESYNCED) {
-        log.silly('StateEngine issuing pause', issuer);
-        var commands = [];
-        commands.push([issuer.id, 'state-pause', false]);
-        callback([commands]);
-      } else {
-        var commands = [];
-        for(var player of playerManager.getPlayers().values()) {
-          if(player.sync !== Player.Sync.DESYNCED) {
-            var syncPause = player.sync === Player.Sync.SYNCED || player.sync === Player.Sync.SYNCWAIT ? true : false;
-            commands.push([player.id, 'state-pause', syncPause]);
-            player.sync = Player.Sync.SYNCED;
-          }
-        }
-
-        if(commands.length > 0) {
+      if(issuer !== null && issuer !== undefined) {
+        if(issuer.sync === Player.Sync.DESYNCED) {
+          log.silly('StateEngine issuing pause', issuer);
+          var commands = [];
+          commands.push([issuer.id, 'state-pause', false]);
           callback([commands]);
+        } else {
+          var commands = [];
+          for(var player of playerManager.getPlayers().values()) {
+            if(player.sync !== Player.Sync.DESYNCED) {
+              var syncPause = player.sync === Player.Sync.SYNCED || player.sync === Player.Sync.SYNCWAIT ? true : false;
+              commands.push([player.id, 'state-pause', syncPause]);
+              player.sync = Player.Sync.SYNCED;
+            }
+          }
+
+          if(commands.length > 0) {
+            callback([commands]);
+          }
         }
       }
     }
-  }
+  };
+
+  session.getMediaPath(isMediaPathSet);
 };
 
 StateEngine.prototype.seek = function(id, data, callback) {
   log.debug('StateEngine.seek');
-  if(session.getMediaPath() !== null && session.getMediaPath().length > 0 && session.getMediaStarted()) {
-    var issuer = playerManager.getPlayer(id);
+  var isMediaPathSet = function(err, basePath) {
+    if(err) {
+      log.error(err);
+    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+      var issuer = playerManager.getPlayer(id);
 
-    if(issuer !== null && issuer !== undefined) {
-      if(issuer.sync === Player.Sync.DESYNCED) {
-        log.silly('StateEngine issuing pause', issuer);
-        var commands = [];
-        commands.push([issuer.id, 'state-seek', data]);
-        callback([commands]);
-      } else {
-        var commands = [];
-        for(var player of playerManager.getPlayers().values()) {
-          if(player.sync !== Player.Sync.DESYNCED) {
-            commands.push([player.id, 'state-seek', data]);
-          }
-        }
-
-        if(commands.length > 0) {
+      if(issuer !== null && issuer !== undefined) {
+        if(issuer.sync === Player.Sync.DESYNCED) {
+          log.silly('StateEngine issuing pause', issuer);
+          var commands = [];
+          commands.push([issuer.id, 'state-seek', data]);
           callback([commands]);
+        } else {
+          var commands = [];
+          for(var player of playerManager.getPlayers().values()) {
+            if(player.sync !== Player.Sync.DESYNCED) {
+              commands.push([player.id, 'state-seek', data]);
+            }
+          }
+
+          if(commands.length > 0) {
+            callback([commands]);
+          }
         }
       }
     }
-  }
+  };
+
+  session.getMediaPath(isMediaPathSet);
 };
 
 StateEngine.prototype.pauseSync = function(id, callback) {
   log.debug(`StateEngine.pauseSync ${id}`);
-  if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
-    var player = playerManager.getPlayer(id);
+  var isMediaPathSet = function(err, basePath) {
+    if(err) {
+      log.error(err);
+    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+      var player = playerManager.getPlayer(id);
 
-    if(player !== null && player !== undefined) {
-      if(player.sync !== Player.Sync.DESYNCED) {
-        if(playerManager.getPlayers().size > 1) {
-          var syncTime = null;
+      if(player !== null && player !== undefined) {
+        if(player.sync !== Player.Sync.DESYNCED) {
+          if(playerManager.getPlayers().size > 1) {
+            var syncTime = null;
 
-          for(var player of playerManager.getPlayers().values()) {
-            if(syncTime === null || (player.sync === Player.Sync.SYNCED && syncTime > player.timestamp)) {
-              syncTime = player.timestamp;
+            for(var player of playerManager.getPlayers().values()) {
+              if(syncTime === null || (player.sync === Player.Sync.SYNCED && syncTime > player.timestamp)) {
+                syncTime = player.timestamp;
+              }
             }
+
+            var response = new Object();
+            response.seekTime = syncTime;
+            var command = [];
+            command.push([id, 'state-seek', response]);
+
+            callback([command]);
           }
-
-          var response = new Object();
-          response.seekTime = syncTime;
-          var command = [];
-          command.push([id, 'state-seek', response]);
-
-          callback([command]);
         }
       }
     }
-  }
+  };
+
+  session.getMediaPath(isMediaPathSet);
 };
 
 StateEngine.prototype.changeSyncState = function(id, syncState, callback) {
   log.debug(`StateEngine.changeSyncState for ${id}, to ${syncState}`);
-  if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
-    var player = playerManager.getPlayer(id);
+  var isMediaPathSet = function(err, basePath) {
+    if(err) {
+      log.error(err);
+    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+      var player = playerManager.getPlayer(id);
 
-    if(player !== null && player !== undefined) {
-      if(syncState) {
-        player.sync = Player.Sync.SYNCING;
-      } else {
-        player.sync = Player.Sync.DESYNCED;
+      if(player !== null && player !== undefined) {
+        if(syncState) {
+          player.sync = Player.Sync.SYNCING;
+        } else {
+          player.sync = Player.Sync.DESYNCED;
+        }
+
+        callback([player.sync]);
       }
-
-      callback([player.sync]);
     }
-  }
+  };
+
+  session.getMediaPath(isMediaPathSet);
 };
 
 StateEngine.prototype.timeUpdate = function(id, data, callback) {
   log.silly(`StateEngine.timeUpdate ${id}, ${data.timestamp}`);
-  if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
+  var isMediaPathSet = function(err, basePath) {
+    if(err) {
+      log.error(err);
+    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+      var player = playerManager.getPlayer(id);
+      player.timestamp = data.timestamp;
 
-    var player = playerManager.getPlayer(id);
-    player.timestamp = data.timestamp;
+      var players = playerManager.getPlayers();
+      if(players.size > 1 && player !== null && player !== undefined) {
+        if(player.sync === Player.Sync.SYNCED) {
+          var broadcastSyncEvent = function(syncPlayer, event) {
+            syncPlayer.sync = Player.Sync.SYNCWAIT;
+            var command = [];
+            command.push([player.id, event, false]);
+            callback([command]);
+          }
 
-    var players = playerManager.getPlayers();
-    if(players.size > 1 && player !== null && player !== undefined) {
-      if(player.sync === Player.Sync.SYNCED) {
-        var broadcastSyncEvent = function(syncPlayer, event) {
-          syncPlayer.sync = Player.Sync.SYNCWAIT;
-          var command = [];
-          command.push([player.id, event, false]);
-          callback([command]);
+          new SyncRule(accuracy).evaluate(player, broadcastSyncEvent);
         }
-
-        new SyncRule(accuracy).evaluate(player, broadcastSyncEvent);
       }
     }
-  }
+  };
+
+  session.getMediaPath(isMediaPathSet);
 };
 
 StateEngine.prototype.syncingPing = function(id, callback) {
   log.silly(`StateEngine.syncingPing ${id}`);
-  if(session.getMediaPath() != null && session.getMediaPath().length > 0) {
-    var players = playerManager.getPlayers();
-    var player = playerManager.getPlayer(id);
+  var isMediaPathSet = function(err, basePath) {
+    if(err) {
+      log.error(err);
+    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+      var players = playerManager.getPlayers();
+      var player = playerManager.getPlayer(id);
 
-    if(players.size > 1 && player !== null && player !== undefined) {
-      if(player.sync === Player.Sync.SYNCING && session.getMediaStarted()) {
-        var broadcastSyncingEvent = function(leader, player, event) {
-          var object = new Object();
-          object.seekTime = leader.timestamp + 1;
-          object.syncWait = true;
-
-          if(playerManager.getSyncedPlayersState() === Player.State.PLAY) {
-            object.play = true;
+      if(players.size > 1 && player !== null && player !== undefined) {
+        var handleSessionResults = function(err, isMediaStarted) {
+          if(err) {
+            log.error(err);
           } else {
-            object.play = false;
+            if(player.sync === Player.Sync.SYNCING && isMediaStarted) {
+              var broadcastSyncingEvent = function(leader, player, event) {
+                var object = new Object();
+                object.seekTime = leader.timestamp + 1;
+                object.syncWait = true;
+
+                if(playerManager.getSyncedPlayersState() === Player.State.PLAY) {
+                  object.play = true;
+                } else {
+                  object.play = false;
+                }
+
+                var command = [];
+                command.push([player.id, event, object]);
+                callback([command]);
+              }
+
+              new SyncingRule().evaluate(player, broadcastSyncingEvent);
+            }
           }
+        };
 
-          var command = [];
-          command.push([player.id, event, object]);
-          callback([command]);
-        }
-
-        new SyncingRule().evaluate(player, broadcastSyncingEvent);
+        session.getMediaStarted(handleSessionResults);
+      } else if(player.sync !== Player.Sync.DESYNCED) {
+        player.sync = Player.Sync.SYNCED;
+        var command = [];
+        command.push([player.id, 'state-trigger-ping', false]);
+        callback([command]);
       }
-    } else if(player.sync !== Player.Sync.DESYNCED) {
-      player.sync = Player.Sync.SYNCED;
-      var command = [];
-      command.push([player.id, 'state-trigger-ping', false]);
-      callback([command]);
     }
-  }
+  };
+
+  session.getMediaPath(isMediaPathSet);
 };
 
 StateEngine.prototype.playerInit = function(id, callback) {

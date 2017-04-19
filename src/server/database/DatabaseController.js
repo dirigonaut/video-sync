@@ -16,166 +16,131 @@ function initialize(io, socket) {
 
   //Create
   socket.on('db-create-smtp', function(data) {
-    if(session.isAdmin(socket.id)) {
-      console.log('db-create-smtp');
+    var ifAdmin = function(isAdmin) {
+      if(isAdmin) {
+        console.log('db-create-smtp');
 
-      var emitResults = function() {
-        socket.emit("db-refresh");
+        var emitResults = function() {
+          socket.emit("db-refresh");
+        }
+
+        var cleanData = validator.sterilizeSmtp(data);
+        publisher.publish(Publisher.Enum.DATABASE, ['createSmtp', [cleanData]], emitResults);
       }
-
-      var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['createSmtp', [cleanData]], emitResults);
     }
-  });
 
-  socket.on('db-create-contact', function(data) {
-    if(session.isAdmin(socket.id)) {
-  		console.log('db-add-contact');
-
-      var emitResults = function() {
-        socket.emit("db-refresh");
-      }
-
-      var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['createContact', [cleanData]], emitResults);
-    }
+    session.isAdmin(socket.id, ifAdmin);
   });
 
   socket.on('db-create-session', function(data) {
-    if(session.isAdmin(socket.id)) {
-      console.log('db-create-session');
+    var ifAdmin = function(isAdmin) {
+      if(isAdmin) {
+        var emitResults = function() {
+          socket.emit("db-refresh");
+        }
 
-      var emitResults = function() {
-        socket.emit("db-refresh");
+        var cleanData = validator.sterilizeSmtp(data);
+        publisher.publish(Publisher.Enum.DATABASE, ['createSession', [cleanData]], emitResults);
       }
-
-      var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['createSession', [cleanData]], emitResults);
     }
+
+    session.isAdmin(socket.id, ifAdmin);
   });
 
   //Read
   socket.on('db-read-smpts', function() {
-    if(session.isAdmin(socket.id)) {
-  		console.log('db-read-smtps');
+    var ifAdmin = function(isAdmin) {
+      if(isAdmin) {
+        var emitResults = function(smtp) {
+          //Remove everything but the address
+          socket.emit("db-smtps", smtp);
+        }
 
-      var emitResults = function(smtp) {
-        //Remove everything but the address
-        socket.emit("db-smtps", smtp);
+        publisher.publish(Publisher.Enum.DATABASE, ['readAllSmtp', []], emitResults);
       }
-
-      publisher.publish(Publisher.Enum.DATABASE, ['readAllSmtp', []], emitResults);
     }
-  });
 
-  socket.on('db-read-contacts', function() {
-    if(session.isAdmin(socket.id)) {
-      console.log('db-read-contacts');
-
-      var emitResults = function(contacts) {
-        socket.emit("db-contacts", contacts);
-      };
-
-      publisher.publish(Publisher.Enum.DATABASE, ['readAllContacts', []], emitResults);
-    }
+    session.isAdmin(socket.id, ifAdmin);
   });
 
   socket.on('db-read-sessions', function() {
-    if(session.isAdmin(socket.id)) {
-      console.log('db-read-sessions');
+    var ifAdmin = function(isAdmin) {
+      if(isAdmin) {
+        var emitResults = function(sessions) {
+          socket.emit("db-sessions", sessions);
+        };
 
-      var emitResults = function(sessions) {
-        socket.emit("db-sessions", sessions);
-      };
+        publisher.publish(Publisher.Enum.DATABASE, ['readAllSessions', []], emitResults);
+      }
+    };
 
-      publisher.publish(Publisher.Enum.DATABASE, ['readAllSessions', []], emitResults);
-    }
+    session.isAdmin(socket.id, ifAdmin);
   });
 
   //Update
-  socket.on('db-update-contact', function(data) {
-    if(session.isAdmin(socket.id)) {
-      console.log('db-update-contact');
-
-      var emitResults = function() {
-        socket.emit("db-refresh");
-      };
-
-      var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['updateContact', [cleanData]], emitResults);
-    }
-  });
-
   socket.on('db-update-smtp', function(data) {
-    if(session.isAdmin(socket.id)) {
-      console.log('db-update-smtp');
+    var ifAdmin = function(isAdmin) {
+      if(isAdmin) {
+        var emitResults = function() {
+          socket.emit("db-refresh");
+        };
 
-      var emitResults = function() {
-        socket.emit("db-refresh");
-      };
+        var cleanData = validator.sterilizeSmtp(data);
+        publisher.publish(Publisher.Enum.DATABASE, ['updateSmtp', [cleanData[0], cleanData[1]]], emitResults);
+      }
+    };
 
-      var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['updateSmtp', [cleanData[0], cleanData[1]]], emitResults);
-    }
+    session.isAdmin(socket.id, ifAdmin);
   });
 
   socket.on('db-update-session', function(data) {
-    if(session.isAdmin(socket.id)) {
-      console.log('db-update-session');
+    var ifAdmin = function(isAdmin) {
+      if(isAdmin) {
+        var emitResults = function(docs) {
+          socket.emit("db-refresh");
+        };
 
-      var emitResults = function(docs) {
-        socket.emit("db-refresh");
-      };
+        var cleanData = validator.sterilizeSmtp(data);
+        publisher.publish(Publisher.Enum.DATABASE, ['updateSession', [cleanData[0], cleanData[1]]], emitResults);
+      }
+    };
 
-      var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['updateSession', [cleanData[0], cleanData[1]]], emitResults);
-    }
+    session.isAdmin(socket.id, ifAdmin);
   });
 
   //Delete
   socket.on('db-delete-smtp', function(data) {
-    if(session.isAdmin(socket.id)) {
-      console.log('db-delete-smtp');
-
-      var emitResults = function(deleted){
-        if(deleted > 0){
-          socket.emit('db-refresh');
+    var ifAdmin = function(isAdmin) {
+      if(isAdmin) {
+        var emitResults = function(deleted){
+          if(deleted > 0){
+            socket.emit('db-refresh');
+          }
         }
+
+        var cleanData = validator.sterilizeSmtp(data);
+        publisher.publish(Publisher.Enum.DATABASE, ['deleteSmtp', [cleanData]], emitResults);
       }
+    };
 
-      var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['deleteSmtp', [cleanData]], emitResults);
-    }
-  });
-
-  socket.on('db-delete-contact', function(data) {
-    if(session.isAdmin(socket.id)) {
-  		console.log('db-delete-contact');
-
-      var emitResults = function(deleted){
-        if(deleted > 0){
-          socket.emit('db-refresh');
-        }
-      }
-
-      var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['deleteContact', [cleanData]], emitResults);
-    }
+    session.isAdmin(socket.id, ifAdmin);
   });
 
   socket.on('db-delete-session', function(data) {
-    if(session.isAdmin(socket.id)) {
-      console.log('db-delete-session');
-
-      var emitResults = function(deleted){
-        if(deleted > 0){
-          socket.emit('db-refresh');
+    var ifAdmin = function(isAdmin) {
+      if(isAdmin) {
+        var emitResults = function(deleted){
+          if(deleted > 0){
+            socket.emit('db-refresh');
+          }
         }
-      }
 
-      var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['deleteSession', [cleanData]], emitResults);
-    }
+        var cleanData = validator.sterilizeSmtp(data);
+        publisher.publish(Publisher.Enum.DATABASE, ['deleteSession', [cleanData]], emitResults);
+      }
+    };
+
+    session.isAdmin(socket.id, ifAdmin);
   });
 }
 

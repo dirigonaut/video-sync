@@ -24,9 +24,9 @@ client.on("message", function(channel, message) {
     }
 
     if(message.data === null) {
-      log.debug(`Unsubscribing key: ${key}`);
-      subCallbacks.delete(key);
-      client.unsubscribe(key);
+      log.debug(`Unsubscribing key: ${channel}`);
+      subCallbacks.delete(channel);
+      client.unsubscribe(channel);
     }
   }
 });
@@ -143,11 +143,7 @@ var getCacheData = function(key, callback) {
   log.debug('getCacheData for key: ', key);
   var publisher = client.duplicate();
   publisher.get(key, function(err, reply) {
-    if(err === null) {
-      callback(null, JSON.parse(reply));
-    } else {
-      callback(err);
-    }
+    callback(err, JSON.parse(reply));
   });
 };
 
