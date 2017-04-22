@@ -21,15 +21,12 @@ SocketLog.prototype.log = function (msg, meta) {
     time: new Date().toTimeString().split(" ")[0]
   };
 
-  var onAdminIds = function(err, ids) {
-    if(err) {
-      log.error(err);
-    } else {
-      if(ids !== null && ids !== undefined) {
-        io.sockets.to(id).emit('chat-log-resp', payload);
-      }
+  var onAdminIds = function(ids) {
+    if(ids !== null && ids !== undefined) {
+      console.log(ids);
+      io.sockets.to(ids).emit('chat-log-resp', payload);
     }
-  }
+  };
 
   session.getAdmin(onAdminIds);
 };

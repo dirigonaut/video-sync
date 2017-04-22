@@ -48,15 +48,13 @@ UserAdministration.prototype.disconnectSocket = function(socket) {
     socket.disconnect('unauthorized');
   };
 
-  publisher.publish(Publisher.Enum.DATABASE, ['deleteTokens', [socket.id]], disconnect);
+  session.removeInvitee(socket.id, disconnect);
 };
 
 UserAdministration.prototype.inviteUser = function(emailAddress) {
   log.debug("UserAdministration.inviteUser");
-  var inviteUserIfSession = function(err, activeSession) {
-    if(err) {
-      log.error(err);
-    } else if(session !== null && session !== undefined) {
+  var inviteUserIfSession = function(activeSession) {
+    if(session !== null && session !== undefined) {
       activeSession.addInvitee(emailAddress);
 
       var sendInvitation = function(address) {
@@ -76,16 +74,14 @@ UserAdministration.prototype.inviteUser = function(emailAddress) {
 };
 
 UserAdministration.prototype.inviteUsers = function() {
-  var inviteUsersIfSession = function(err, activeSession) {
+  var inviteUsersIfSession = function(activeSession) {
     log.debug("UserAdministration.inviteUsers");
-    if(err) {
-      log.error(err);
-    } else if(activeSession !== null && activeSession !== undefined) {
+    if(activeSession !== null && activeSession !== undefined) {
       var sendInvitations = function(address) {
         var sendEmail = function(mailOptions) {
           smtp.sendMail(mailOptions)
         };
-        
+
         addP2PLink(activeSession.mailOptions, sendEmail);
       };
 
