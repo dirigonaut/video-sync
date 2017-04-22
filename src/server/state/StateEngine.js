@@ -10,9 +10,10 @@ var LogManager    = require('../log/LogManager');
 
 var playerManager = new PlayerManager();
 var session       = new Session();
-var accuracy      = 2;
 var publisher     = new Publisher();
 var log           = LogManager.getLog(LogManager.LogEnum.STATE);
+
+var accuracy      = 2;
 
 var interval = setInterval(function() {
   resumeLogic(playerManager.getPlayers());
@@ -25,10 +26,8 @@ function StateEngine() {
 StateEngine.prototype.init = function(id, callback) {
   log.debug('StateEngine.init');
 
-  var isMediaPathSet = function(err, basePath) {
-    if(err) {
-      log.error(err);
-    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  var isMediaPathSet = function(basePath) {
+    if(basePath !== null && basePath !== undefined && basePath.length > 0) {
       var player = playerManager.getPlayer(id);
 
       if(player !== null && player !== undefined) {
@@ -43,10 +42,8 @@ StateEngine.prototype.init = function(id, callback) {
 
 StateEngine.prototype.play = function(id, callback) {
   log.debug(`StateEngine.play ${id}`);
-  var isMediaPathSet = function(err, basePath) {
-    if(err) {
-      log.error(err);
-    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  var isMediaPathSet = function(basePath) {
+    if(basePath !== null && basePath !== undefined && basePath.length > 0) {
       var player = playerManager.getPlayer(id);
 
       if(player !== null && player !== undefined) {
@@ -74,7 +71,10 @@ StateEngine.prototype.play = function(id, callback) {
                 }
 
                 if(commands.length > 0) {
-                  session.setMediaStarted(true);
+                  if(!mediaStarted) {
+                    session.setMediaStarted(!mediaStarted);
+                  }
+
                   callback([commands]);
                 }
               }
@@ -94,10 +94,8 @@ StateEngine.prototype.play = function(id, callback) {
 
 StateEngine.prototype.pause = function(id, callback) {
   log.debug(`StateEngine.pause ${id}`);
-  var isMediaPathSet = function(err, basePath) {
-    if(err) {
-      log.error(err);
-    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  var isMediaPathSet = function(basePath) {
+    if(basePath !== null && basePath !== undefined && basePath.length > 0) {
       var issuer = playerManager.getPlayer(id);
 
       if(issuer !== null && issuer !== undefined) {
@@ -129,10 +127,8 @@ StateEngine.prototype.pause = function(id, callback) {
 
 StateEngine.prototype.seek = function(id, data, callback) {
   log.debug('StateEngine.seek');
-  var isMediaPathSet = function(err, basePath) {
-    if(err) {
-      log.error(err);
-    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  var isMediaPathSet = function(basePath) {
+    if(basePath !== null && basePath !== undefined && basePath.length > 0) {
       var issuer = playerManager.getPlayer(id);
 
       if(issuer !== null && issuer !== undefined) {
@@ -162,10 +158,8 @@ StateEngine.prototype.seek = function(id, data, callback) {
 
 StateEngine.prototype.pauseSync = function(id, callback) {
   log.debug(`StateEngine.pauseSync ${id}`);
-  var isMediaPathSet = function(err, basePath) {
-    if(err) {
-      log.error(err);
-    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  var isMediaPathSet = function(basePath) {
+    if(basePath !== null && basePath !== undefined && basePath.length > 0) {
       var player = playerManager.getPlayer(id);
 
       if(player !== null && player !== undefined) {
@@ -196,10 +190,8 @@ StateEngine.prototype.pauseSync = function(id, callback) {
 
 StateEngine.prototype.changeSyncState = function(id, syncState, callback) {
   log.debug(`StateEngine.changeSyncState for ${id}, to ${syncState}`);
-  var isMediaPathSet = function(err, basePath) {
-    if(err) {
-      log.error(err);
-    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  var isMediaPathSet = function(basePath) {
+    if(basePath !== null && basePath !== undefined && basePath.length > 0) {
       var player = playerManager.getPlayer(id);
 
       if(player !== null && player !== undefined) {
@@ -219,10 +211,8 @@ StateEngine.prototype.changeSyncState = function(id, syncState, callback) {
 
 StateEngine.prototype.timeUpdate = function(id, data, callback) {
   log.silly(`StateEngine.timeUpdate ${id}, ${data.timestamp}`);
-  var isMediaPathSet = function(err, basePath) {
-    if(err) {
-      log.error(err);
-    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  var isMediaPathSet = function(basePath) {
+    if(basePath !== null && basePath !== undefined && basePath.length > 0) {
       var player = playerManager.getPlayer(id);
       player.timestamp = data.timestamp;
 
@@ -247,37 +237,31 @@ StateEngine.prototype.timeUpdate = function(id, data, callback) {
 
 StateEngine.prototype.syncingPing = function(id, callback) {
   log.silly(`StateEngine.syncingPing ${id}`);
-  var isMediaPathSet = function(err, basePath) {
-    if(err) {
-      log.error(err);
-    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  var isMediaPathSet = function(basePath) {
+    if(basePath !== null && basePath !== undefined && basePath.length > 0) {
       var players = playerManager.getPlayers();
       var player = playerManager.getPlayer(id);
 
       if(players.size > 1 && player !== null && player !== undefined) {
         var handleSessionResults = function(err, isMediaStarted) {
-          if(err) {
-            log.error(err);
-          } else {
-            if(player.sync === Player.Sync.SYNCING && isMediaStarted) {
-              var broadcastSyncingEvent = function(leader, player, event) {
-                var object = new Object();
-                object.seekTime = leader.timestamp + 1;
-                object.syncWait = true;
+          if(player.sync === Player.Sync.SYNCING && isMediaStarted) {
+            var broadcastSyncingEvent = function(leader, player, event) {
+              var object = new Object();
+              object.seekTime = leader.timestamp + 1;
+              object.syncWait = true;
 
-                if(playerManager.getSyncedPlayersState() === Player.State.PLAY) {
-                  object.play = true;
-                } else {
-                  object.play = false;
-                }
-
-                var command = [];
-                command.push([player.id, event, object]);
-                callback([command]);
+              if(playerManager.getSyncedPlayersState() === Player.State.PLAY) {
+                object.play = true;
+              } else {
+                object.play = false;
               }
 
-              new SyncingRule().evaluate(player, broadcastSyncingEvent);
+              var command = [];
+              command.push([player.id, event, object]);
+              callback([command]);
             }
+
+            new SyncingRule().evaluate(player, broadcastSyncingEvent);
           }
         };
 

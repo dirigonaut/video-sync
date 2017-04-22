@@ -47,15 +47,7 @@ Session.prototype.getSession = function(callback) {
 
 Session.prototype.getInvitees = function(callback) {
   log.debug("Session.getInvitees");
-  var handleResult = function(err, result) {
-    if(err) {
-      log.error(err);
-    } else {
-      callback(result);
-    }
-  }
-
-  getSessionData(Session.Enum.USERS, handleResult);
+  getSessionData(Session.Enum.USERS, callback);
 };
 
 Session.prototype.setInvitees = function(invitees) {
@@ -78,49 +70,43 @@ Session.prototype.addInvitee = function(email) {
   invitee.email = email;
   invitee.pass = null;
 
-  var handleResult = function(err, results) {
-    if(err) {
-      log.error(err);
-    } else {
-      var found = false;
-      for(var i in results) {
-        if(email === results.email) {
-          log.warn(`User ${email} already is in the session.`);
-          found = true;
-          break;
-        }
+  var handleResult = function(results) {
+    var found = false;
+    for(var i in results) {
+      if(email === results.email) {
+        log.warn(`User ${email} already is in the session.`);
+        found = true;
+        break;
       }
+    }
 
-      if(!found) {
-        results.push(invitee);
-        _this.setInvitees(results);
-      }
+    if(!found) {
+      results.push(invitee);
+      _this.setInvitees(results);
     }
   };
 
   this.getInvitees(handleResult);
 };
 
-Session.prototype.removeInvitee = function(id) {
+Session.prototype.removeInvitee = function(id, callback) {
   log.debug("Session.removeInvitee");
   _this = this;
 
-  var handleResults = function(err, result) {
-    if(err) {
-      log.error(err);
-    } else {
-      var invitees = result;
+  var handleResults = function(result) {
+    var invitees = result;
 
-      if(invitees !== null && invitees !== undefined) {
-        for(var i in invitees) {
-          if(invitees[i] === id) {
-            invitees.splice(i, 1);
-            _this.setInvitees(invitees);
-          }
+    if(invitees !== null && invitees !== undefined) {
+      for(var i in invitees) {
+        if(invitees[i] === id) {
+          invitees.splice(i, 1);
+          _this.setInvitees(invitees);
+          callback();
+          break;
         }
-      } else {
-        log.warn("There is no use with the this id: ", id);
       }
+    } else {
+      log.warn("There is no use with the this id: ", id);
     }
   };
 
@@ -129,10 +115,8 @@ Session.prototype.removeInvitee = function(id) {
 
 Session.prototype.setMediaStarted = function(started) {
   log.silly("Session.setMediaStarted");
-  var checkMediaPathSet = function(err, basePath) {
-    if(err) {
-      log.error(err);
-    } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  var checkMediaPathSet = function(basePath) {
+    if(basePath !== null && basePath !== undefined && basePath.length > 0) {
       var handleResult = function(err, result) {
         if(err) {
           log.error(err);
@@ -154,14 +138,9 @@ Session.prototype.getMediaStarted = function(callback) {
 Session.prototype.setMediaPath = function(path) {
   log.info("Session.setMediaPath");
   _this = this;
-
   var handleResult = function(err, result) {
-    if(err) {
-      log.error(err);
-    } else {
-      _this.setMediaStarted(false);
-      cache.setPath(path);
-    }
+    _this.setMediaStarted(false);
+    cache.setPath(path);
   };
 
   setSessionData(Session.Enum.MEDIA, path, handleResult);
@@ -175,22 +154,29 @@ Session.prototype.getMediaPath = function(callback) {
 Session.prototype.isAdmin = function(id, callback) {
   log.silly("Session.isAdmin");
   var compareResults = function(err, result) {
-    if(err) {
-      log.error(err);
-    } else {
-      callback(result === id);
-    }
+    callback(result === id);
   };
 
-  this.getAdmin(compareResults)
+  getSessionData(Session.Enum.ADMIN, compareResults);
 };
 
 Session.prototype.getAdmin = function(callback) {
   getSessionData(Session.Enum.ADMIN, callback);
 };
 
-Session.prototype.setAdmin = function(id) {
+Session.prototype.addAdmin = function(id) {
   log.info("Session.setAdmin");
+  var handleResult = function(err, result) {
+    if(err) {
+      log.error(err);
+    }
+  };
+
+  setSessionData(Session.Enum.ADMIN, id, handleResult);
+};
+
+Session.prototype.removeAdmin = function(id) {
+  log.info("Session.removeAdmin");
   var handleResult = function(err, result) {
     if(err) {
       log.error(err);
@@ -228,7 +214,10 @@ var setSessionData = function(key, data, callback) {
 var getSessionData = function(key, callback) {
   log.debug('getSessionData for key:', key);
   client.get(key, function(err, result) {
-    console.log(result);
-    callback(err, JSON.parse(result));
+    if(err) {
+      log.error(err);
+    } else {
+      callback(JSON.parse(result));
+    }
   });
 };

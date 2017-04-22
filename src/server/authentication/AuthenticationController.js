@@ -50,18 +50,17 @@ function initialize(io) {
     socket.on('auth-get-token', function (data) {
       log.debug('auth-get-token');
       var requestSmtp = function(token) {
-        var getSmtp = function(err, session) {
-
+        var getSmtp = function(session) {
           var sendInvitations = function(hostAddress) {
             var mailOptions = smtp.createMailOptions(session.smtp, token.address, "Video-Sync Token", "Session token: " + token.token, "");
             smtp.sendMail(mailOptions);
             socket.emit('login-token-sent');
           };
 
-          socketLog.log("Login Info: ", token);
           smtp.initializeTransport(session.smtp, sendInvitations);
         };
 
+        socketLog.log("Login Info: ", token);
         session.getActiveSession(getSmtp);
       };
 
@@ -94,7 +93,7 @@ function initialize(io) {
 
       var removeAdmin = function(isAdmin) {
         if(isAdmin) {
-          session.setAdmin(null);
+          session.removeAdmin();
         }
       };
 
@@ -134,13 +133,9 @@ function userAuthorized(socket, io, handle) {
   var chatEngine = new ChatEngine();
 
   socket.emit('authenticated', function() {
-    var emitMediaReady = function(err, mediaPath) {
-      if(err) {
-        log.error(err);
-      } else {
+    var emitMediaReady = function(mediaPath) {
       if(mediaPath !== null && mediaPath !== undefined && mediaPath.length > 0) {
-          socket.emit('media-ready');
-        }
+        socket.emit('media-ready');
       }
     };
 
@@ -160,19 +155,15 @@ function userAuthorized(socket, io, handle) {
 function isAdministrator(socket, io) {
   socket.auth = false;
 
-  var setAdminId = function(err, admin) {
-    if(err) {
-      log.error(err);
-    } else {
-      log.info(`Admin is ${admin} new socket is ${socket.id}`);
-      if(admin === null || admin === undefined) {
-        if(socket.handshake.address.includes("127.0.0.1")) {
-          new AdminController(io, socket);
-          new DatabaseController(io, socket);
+  var setAdminId = function(admin) {
+    log.info(`Admin is ${admin} new socket is ${socket.id}`);
+    if(admin === null || admin === undefined) {
+      if(socket.handshake.address.includes("127.0.0.1")) {
+        new AdminController(io, socket);
+        new DatabaseController(io, socket);
 
-          userAuthorized(socket, io, 'admin');
-          session.setAdmin(socket.id);
-        }
+        userAuthorized(socket, io, 'admin');
+        session.addAdmin(socket.id);
       }
     }
   };
