@@ -1,7 +1,9 @@
 var RequestFactory  = require('../utils/RequestFactory.js');
 var ClientSocket    = require('../socket/ClientSocket.js');
+var ClientLog       = require('../log/ClientLogManager');
 
-var clientSocket = new ClientSocket();
+var log             = ClientLog.getLog();
+var clientSocket    = new ClientSocket();
 
 var sessionList = [];
 var smtpList = [];
@@ -11,6 +13,7 @@ function FormDataSingleton() {
 };
 
 FormDataSingleton.prototype.setupEvents = function() {
+  log.debug("FormDataSingleton.setupEvents");
   clientSocket.clearEvent('db-smtps', dbSmtps);
   clientSocket.clearEvent('db-sessions', dbSessions);
   clientSocket.clearEvent('db-refresh', dbRefresh);
@@ -21,6 +24,7 @@ FormDataSingleton.prototype.setupEvents = function() {
 };
 
 FormDataSingleton.prototype.initializeData = function() {
+  log.debug("FormDataSingleton.initializeData");
   clientSocket.sendRequest('db-read-smpts');
   clientSocket.sendRequest('db-read-sessions');
 };
@@ -46,6 +50,7 @@ var dbSessions = function(response) {
 };
 
 var dbRefresh = function() {
+  log.debug("FormDataSingleton._dbRefresh");
   clientSocket.sendRequest('db-read-smpts');
   clientSocket.sendRequest('db-read-sessions');
 }

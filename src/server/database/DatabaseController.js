@@ -3,6 +3,7 @@ var Validator   = require('../authentication/Validator');
 var Publisher   = require('../process/redis/RedisPublisher');
 var LogManager  = require('../log/LogManager');
 
+var log       = LogManager.getLog(LogManager.LogEnum.DATABASE);
 var session   = new Session();
 var validator = new Validator();
 var publisher = new Publisher();
@@ -12,14 +13,13 @@ function DatabaseController(io, socket) {
 }
 
 function initialize(io, socket) {
-  console.log("Attaching DatabaseController");
+  log.debug("Attaching DatabaseController");
 
   //Create
   socket.on('db-create-smtp', function(data) {
+    log.debug('db-create-smtp');
     var ifAdmin = function(isAdmin) {
       if(isAdmin) {
-        console.log('db-create-smtp');
-
         var emitResults = function() {
           socket.emit("db-refresh");
         }
@@ -33,6 +33,7 @@ function initialize(io, socket) {
   });
 
   socket.on('db-create-session', function(data) {
+    log.debug('db-create-session');
     var ifAdmin = function(isAdmin) {
       if(isAdmin) {
         var emitResults = function() {
@@ -49,6 +50,7 @@ function initialize(io, socket) {
 
   //Read
   socket.on('db-read-smpts', function() {
+    log.debug('db-read-smpts');
     var ifAdmin = function(isAdmin) {
       if(isAdmin) {
         var emitResults = function(smtp) {
@@ -64,6 +66,7 @@ function initialize(io, socket) {
   });
 
   socket.on('db-read-sessions', function() {
+    log.debug('db-read-sessions');
     var ifAdmin = function(isAdmin) {
       if(isAdmin) {
         var emitResults = function(sessions) {
@@ -79,6 +82,7 @@ function initialize(io, socket) {
 
   //Update
   socket.on('db-update-smtp', function(data) {
+    log.debug('db-update-smtp');
     var ifAdmin = function(isAdmin) {
       if(isAdmin) {
         var emitResults = function() {
@@ -94,6 +98,7 @@ function initialize(io, socket) {
   });
 
   socket.on('db-update-session', function(data) {
+    log.debug('db-update-session');
     var ifAdmin = function(isAdmin) {
       if(isAdmin) {
         var emitResults = function(docs) {
@@ -110,6 +115,7 @@ function initialize(io, socket) {
 
   //Delete
   socket.on('db-delete-smtp', function(data) {
+    log.debug('db-delete-smtp');
     var ifAdmin = function(isAdmin) {
       if(isAdmin) {
         var emitResults = function(deleted){
@@ -127,6 +133,7 @@ function initialize(io, socket) {
   });
 
   socket.on('db-delete-session', function(data) {
+    log.debug('db-delete-session');
     var ifAdmin = function(isAdmin) {
       if(isAdmin) {
         var emitResults = function(deleted){

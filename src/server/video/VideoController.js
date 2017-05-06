@@ -70,10 +70,8 @@ function initialize(io, socket) {
   socket.on('get-meta-files', function(requestId) {
     log.debug('get-meta-files', requestId);
 
-    var handleMediaPath = function(err, basePath) {
-      if(err) {
-        log.error(err);
-      } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+    var handleMediaPath = function(basePath) {
+      if(basePath !== null && basePath !== undefined && basePath.length > 0) {
         var fileIO = new FileIO();
 
         var readConfig = FileIO.createStreamConfig(basePath, function(file){
@@ -102,10 +100,8 @@ function initialize(io, socket) {
     log.debug('get-segment', data);
     var data = validator.sterilizeVideoInfo(data);
 
-    var handleMediaPath = function(err, basePath) {
-      if(err) {
-        log.error(err);
-      } else if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+    var handleMediaPath = function(basePath) {
+      if(basePath !== null && basePath !== undefined && basePath.length > 0) {
         var handleResponse = function(segment) {
           log.info('Returning segment for request: ', data);
           socket.emit("segment-chunk", segment);

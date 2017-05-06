@@ -61,7 +61,7 @@ function initialize(io) {
         };
 
         socketLog.log("Login Info: ", token);
-        session.getActiveSession(getSmtp);
+        session.getSession(getSmtp);
       };
 
       authenticator.requestToken(socket.id, validator.sterilizeUser(data), requestSmtp);
@@ -162,8 +162,8 @@ function isAdministrator(socket, io) {
         new AdminController(io, socket);
         new DatabaseController(io, socket);
 
-        userAuthorized(socket, io, 'admin');
         session.addAdmin(socket.id);
+        userAuthorized(socket, io, 'admin');
       }
     }
   };

@@ -97,14 +97,10 @@ UserAdministration.prototype.inviteUsers = function() {
 module.exports = UserAdministration;
 
 function addP2PLink(mailOptions, callback) {
-  var addLink = function(err, baseUrl) {
-    if(err) {
-      log.error(err);
-    } else {
-      log.silly("adding Link");
-      mailOptions.text = `${mailOptions.text} \n\n Link: https://${baseUrl}/html/client.html`;
-      callback(mailOptions);
-    }
+  var addLink = function(baseUrl) {
+    log.silly("adding Link");
+    mailOptions.text = `${mailOptions.text} \n\n Link: https://${baseUrl}/html/client.html`;
+    callback(mailOptions);
   }
 
   session.getIP(addLink);

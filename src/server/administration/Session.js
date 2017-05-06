@@ -16,22 +16,18 @@ Session.prototype.setSession = function(id) {
   _this = this;
 
   var setSession = function(session) {
-    var handleResult = function(err, result) {
-      if(err) {
-        log.error(err);
-      } else {
-        var invitees = [];
-        for(var i in session[0].invitees) {
-          var invitee = {};
-          invitee.id = null;
-          invitee.email = session[0].invitees[i];
-          invitee.pass = null;
+    var handleResult = function(result) {
+      var invitees = [];
+      for(var i in session[0].invitees) {
+        var invitee = {};
+        invitee.id = null;
+        invitee.email = session[0].invitees[i];
+        invitee.pass = null;
 
-          invitees.push(invitee);
-        }
-
-        _this.setInvitees(invitees);
+        invitees.push(invitee);
       }
+
+      _this.setInvitees(invitees);
     };
 
     setSessionData(Session.Enum.ACTIVE, session[0], handleResult);
@@ -41,7 +37,7 @@ Session.prototype.setSession = function(id) {
 };
 
 Session.prototype.getSession = function(callback) {
-  log.silly("Session.getActiveSession");
+  log.debug("Session.getActiveSession");
   getSessionData(Session.Enum.ACTIVE, callback);
 };
 
@@ -52,13 +48,7 @@ Session.prototype.getInvitees = function(callback) {
 
 Session.prototype.setInvitees = function(invitees) {
   log.debug("Session.setInvitees");
-  var handleResult = function(err, result) {
-    if(err) {
-      log.error(err);
-    }
-  };
-
-  setSessionData(Session.Enum.USERS, invitees, handleResult);
+  setSessionData(Session.Enum.USERS, invitees, undefined);
 };
 
 Session.prototype.addInvitee = function(email) {
@@ -71,9 +61,10 @@ Session.prototype.addInvitee = function(email) {
   invitee.pass = null;
 
   var handleResult = function(results) {
+    var invitees = results;
     var found = false;
-    for(var i in results) {
-      if(email === results.email) {
+    for(var i in invitees) {
+      if(email === invitees.email) {
         log.warn(`User ${email} already is in the session.`);
         found = true;
         break;
@@ -81,8 +72,8 @@ Session.prototype.addInvitee = function(email) {
     }
 
     if(!found) {
-      results.push(invitee);
-      _this.setInvitees(results);
+      invitees.push(invitee);
+      _this.setInvitees(invitees);
     }
   };
 
@@ -106,7 +97,7 @@ Session.prototype.removeInvitee = function(id, callback) {
         }
       }
     } else {
-      log.warn("There is no use with the this id: ", id);
+      log.warn("There is no user with the id: ", id);
     }
   };
 
@@ -117,13 +108,7 @@ Session.prototype.setMediaStarted = function(started) {
   log.silly("Session.setMediaStarted");
   var checkMediaPathSet = function(basePath) {
     if(basePath !== null && basePath !== undefined && basePath.length > 0) {
-      var handleResult = function(err, result) {
-        if(err) {
-          log.error(err);
-        }
-      }
-
-      setSessionData(Session.Enum.STARTED, started, handleResult);
+      setSessionData(Session.Enum.STARTED, started, undefined);
     }
   };
 
@@ -138,7 +123,7 @@ Session.prototype.getMediaStarted = function(callback) {
 Session.prototype.setMediaPath = function(path) {
   log.info("Session.setMediaPath");
   _this = this;
-  var handleResult = function(err, result) {
+  var handleResult = function(result) {
     _this.setMediaStarted(false);
     cache.setPath(path);
   };
@@ -147,13 +132,13 @@ Session.prototype.setMediaPath = function(path) {
 };
 
 Session.prototype.getMediaPath = function(callback) {
-  log.silly("Session.getMediaPath");
+  log.debug("Session.getMediaPath");
   getSessionData(Session.Enum.MEDIA, callback);
 };
 
 Session.prototype.isAdmin = function(id, callback) {
-  log.silly("Session.isAdmin");
-  var compareResults = function(err, result) {
+  log.debug("Session.isAdmin");
+  var compareResults = function(result) {
     callback(result === id);
   };
 
@@ -166,35 +151,17 @@ Session.prototype.getAdmin = function(callback) {
 
 Session.prototype.addAdmin = function(id) {
   log.info("Session.setAdmin");
-  var handleResult = function(err, result) {
-    if(err) {
-      log.error(err);
-    }
-  };
-
-  setSessionData(Session.Enum.ADMIN, id, handleResult);
+  setSessionData(Session.Enum.ADMIN, id, undefined);
 };
 
 Session.prototype.removeAdmin = function(id) {
   log.info("Session.removeAdmin");
-  var handleResult = function(err, result) {
-    if(err) {
-      log.error(err);
-    }
-  };
-
-  setSessionData(Session.Enum.ADMIN, id, handleResult);
+  setSessionData(Session.Enum.ADMIN, id, undefined);
 };
 
 Session.prototype.setIP = function(ip) {
   log.info("Session.setIP");
-  var handleResult = function(err, result) {
-    if(err) {
-      log.error(err);
-    }
-  }
-
-  setSessionData(Session.Enum.IP, ip, handleResult);
+  setSessionData(Session.Enum.IP, ip, undefined);
 };
 
 Session.prototype.getIP = function(callback) {
@@ -214,6 +181,7 @@ var setSessionData = function(key, data, callback) {
 var getSessionData = function(key, callback) {
   log.debug('getSessionData for key:', key);
   client.get(key, function(err, result) {
+    log.debug(`getSessionData ${key} result:`, result);
     if(err) {
       log.error(err);
     } else {
