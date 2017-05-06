@@ -4,15 +4,13 @@ var Winston = require('winston');
 const EVENT = "client-log";
 
 var ClientTransport = exports.ClientTransport = function (options) {
-  console.log('Creating client transport');
-
   if(options.callback) {
     this.callback = options.callback;
   } else {
     throw new Error('Cannot log to the ui without a callback to process the payload.');
   }
 
-  this.level     = options.level || 'info';
+  this.level     = options.level || 'debug';
   this.label     = options.label || null;
   this.silent    = options.silent || null;
 };

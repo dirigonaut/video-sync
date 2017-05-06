@@ -54,29 +54,25 @@ StateEngine.prototype.play = function(id, callback) {
           callback([commands]);
         } else {
           var broadcastEvent = function(players) {
-            var handleSessionResults = function(err, mediaStarted) {
-              if(err) {
-                log.error(err);
-              } else {
-                var commands = [];
-                for(var i in players) {
-                  if(players[i].sync !== Player.Sync.DESYNCED) {
-                    log.info(`StateEngine issuing play ${players[i].id}`);
-                    commands.push([players[i].id, 'state-play']);
+            var handleSessionResults = function(mediaStarted) {
+              var commands = [];
+              for(var i in players) {
+                if(players[i].sync !== Player.Sync.DESYNCED) {
+                  log.info(`StateEngine issuing play ${players[i].id}`);
+                  commands.push([players[i].id, 'state-play']);
 
-                    if(mediaStarted === false && players[i].isInit()) {
-                      players[i].sync = Player.Sync.SYNCED;
-                    }
+                  if(mediaStarted === false && players[i].isInit()) {
+                    players[i].sync = Player.Sync.SYNCED;
                   }
                 }
+              }
 
-                if(commands.length > 0) {
-                  if(!mediaStarted) {
-                    session.setMediaStarted(!mediaStarted);
-                  }
-
-                  callback([commands]);
+              if(commands.length > 0) {
+                if(!mediaStarted) {
+                  session.setMediaStarted(!mediaStarted);
                 }
+
+                callback([commands]);
               }
             };
 
@@ -243,7 +239,7 @@ StateEngine.prototype.syncingPing = function(id, callback) {
       var player = playerManager.getPlayer(id);
 
       if(players.size > 1 && player !== null && player !== undefined) {
-        var handleSessionResults = function(err, isMediaStarted) {
+        var handleSessionResults = function(isMediaStarted) {
           if(player.sync === Player.Sync.SYNCING && isMediaStarted) {
             var broadcastSyncingEvent = function(leader, player, event) {
               var object = new Object();
