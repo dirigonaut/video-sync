@@ -24,9 +24,13 @@ client.on("message", function(channel, message) {
     }
 
     if(message.data === null) {
-      log.debug(`Unsubscribing key: ${channel}`);
-      subCallbacks.delete(channel);
-      client.unsubscribe(channel);
+      var cleanUp = function() {
+        log.debug(`Unsubscribing key: ${channel}`);
+        subCallbacks.delete(channel);
+        client.unsubscribe(channel);
+      };
+
+      setTimeout(cleanUp, 4000);
     }
   }
 });
