@@ -22,16 +22,6 @@ client.on("message", function(channel, message) {
     for(var i in callbacks) {
       callbacks[i](message);
     }
-
-    if(message.data === null) {
-      var cleanUp = function() {
-        log.debug(`Unsubscribing key: ${channel}`);
-        subCallbacks.delete(channel);
-        client.unsubscribe(channel);
-      };
-
-      setTimeout(cleanUp, 4000);
-    }
   }
 });
 
@@ -156,11 +146,34 @@ var subscribeToRead = function(key, callback) {
   var callbacks = subCallbacks.get(key);
 
   if(callbacks !== undefined && callbacks !== null) {
-    callbacks.push(callback);
+    callbacks.splice(callbacks.length - 1, 0, callback)
   } else {
-    callbacks = [ callback ];
+    callbacks = [ callback, createUnsubscribeListener(key)];
+    client.subscribe(key);
   }
 
   subCallbacks.set(key, callbacks);
-  client.subscribe(key);
+};
+
+var createUnsubscribeListener = function(key) {
+  var lastIndex;
+  var countIndex = 0;
+
+  var unsubscribe = function(message) {
+    if(message !== null && message !== undefined) {
+      if(message.data === null) {
+        lastIndex = message.index;
+      }
+
+      if(lastIndex && lastIndex === countIndex) {
+        log.debug(`Unsubscribing key: ${key} lastIndex: ${lastIndex}, countIndex: ${countIndex}`);
+        subCallbacks.delete(key);
+        client.unsubscribe(key);
+      }
+
+      ++countIndex;
+    }
+  };
+
+  return unsubscribe;
 };
