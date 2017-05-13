@@ -46,7 +46,7 @@ FileIO.prototype.write = function(writeConfig, data) {
   writeStream.write(data);
 };
 
-FileIO.prototype.readDir = function(readConfig) {
+FileIO.prototype.readDir = function(readConfig, extType) {
   log.debug('FileIO.readDir', readConfig);
 
   Fs.readdir(readConfig.path, function (err, files) {
@@ -54,24 +54,25 @@ FileIO.prototype.readDir = function(readConfig) {
       log.error("FileIO.write, Server: Error:", err);
     }
 
-    var mpdFiles = [];
-    for(var x = 0; x < files.length; ++x) {
-      var splitExt = files[x].split(".");
-      var splitPath = splitExt[0].split("_");
+    var matchingFiles = [];
+    if(extType !== undefined && extType !== null) {
+      for(var x = 0; x < files.length; ++x) {
+        var splitExt = files[x].split(".");
 
-      var extension = splitExt[splitExt.length - 1];
-      var type = splitPath[splitPath.length - 1];
-      if(extension == "mpd") {
-        var file = new Object();
-        file.path = readConfig.path + files[x];
-        file.type = type;
-        mpdFiles.push(file);
+        var extension = splitExt[splitExt.length - 1];
+        if(extension === extType) {
+          matchingFiles.push(files[x]);
+        }
       }
+    } else {
+      matchingFiles = files;
     }
 
-    for(x in mpdFiles){
-      readConfig.callback(mpdFiles[x]);
+    for(var i in matchingFiles) {
+      readConfig.callback(matchingFiles[i]);
     }
+    
+    readConfig.callback(null);
   });
 };
 

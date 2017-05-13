@@ -35,14 +35,22 @@ Authenticator.prototype.validateToken = function(id, data, callback) {
   var authorized = false;
 
   var checkIfValidToken = function(invitees) {
-    for(var i in invitees) {
-      if(invitees[i].pass === data.token && invitees[i].email === data.address) {
-        log.silly("The following id has been authenticated: ", id);
-        authorized = true;
-        break;
+    var checkIfLoggedIn = function(loggedInIds) {
+      for(var i in invitees) {
+        if(invitees[i].pass === data.token && invitees[i].email === data.address && !loggedInIds.includes(invitees[i].id)) {
+          log.info("The following id has been authenticated: ", id);
+          authorized = true;
+          invitees[i].id = id;
+
+          session.setInvitees(invitees);
+          break;
+        }
       }
-    }
-    callback(authorized);
+
+      callback(authorized);
+    };
+
+    publisher.publish(Publisher.Enum.PLAYER, ['getPlayerIds', []], checkIfLoggedIn);
   };
 
   session.getInvitees(checkIfValidToken);
