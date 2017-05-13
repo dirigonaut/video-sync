@@ -21,6 +21,7 @@ Authenticator.prototype.requestToken = function(id, data, callback) {
 
         log.debug(`Created Token: ${invitees[i].pass} for Address: ${data.address}`);
         session.setInvitees(invitees);
+        callback({'id': invitees[i].id, 'address': invitees[i].email, 'pass': invitees[i].pass});
         break;
       }
     }

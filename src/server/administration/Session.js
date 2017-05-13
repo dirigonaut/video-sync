@@ -60,8 +60,7 @@ Session.prototype.addInvitee = function(email) {
   invitee.email = email;
   invitee.pass = null;
 
-  var handleResult = function(results) {
-    var invitees = results;
+  var handleResult = function(invitees) {
     var found = false;
     for(var i in invitees) {
       if(email === invitees.email) {
@@ -84,9 +83,7 @@ Session.prototype.removeInvitee = function(id, callback) {
   log.debug("Session.removeInvitee");
   _this = this;
 
-  var handleResults = function(result) {
-    var invitees = result;
-
+  var handleResults = function(invitees) {
     if(invitees !== null && invitees !== undefined) {
       for(var i in invitees) {
         if(invitees[i] === id) {
@@ -97,7 +94,7 @@ Session.prototype.removeInvitee = function(id, callback) {
         }
       }
     } else {
-      log.warn("There is no user with the id: ", id);
+      log.warn("There is no use with the this id: ", id);
     }
   };
 
@@ -138,8 +135,16 @@ Session.prototype.getMediaPath = function(callback) {
 
 Session.prototype.isAdmin = function(id, callback) {
   log.debug("Session.isAdmin");
-  var compareResults = function(result) {
-    callback(result === id);
+  var compareResults = function(adminList) {
+    if(adminList !== undefined && adminList !== null) {
+      for(var i in adminList) {
+        if(adminList[i] === id) {
+          callback(true);
+          break;
+        }
+      }
+    }
+    callback(false);
   };
 
   getSessionData(Session.Enum.ADMIN, compareResults);
@@ -151,12 +156,33 @@ Session.prototype.getAdmin = function(callback) {
 
 Session.prototype.addAdmin = function(id) {
   log.info("Session.setAdmin");
-  setSessionData(Session.Enum.ADMIN, id, undefined);
+  var addEntry = function(adminList) {
+    if(adminList === undefined || adminList === null) {
+        adminList = [];
+    }
+
+    adminList.push(id);
+    setSessionData(Session.Enum.ADMIN, adminList, undefined);
+  };
+
+  this.getAdmin(addEntry);
 };
 
 Session.prototype.removeAdmin = function(id) {
   log.info("Session.removeAdmin");
-  setSessionData(Session.Enum.ADMIN, id, undefined);
+  var removeEntry = function(adminList) {
+    if(adminList !== undefined && adminList !== null) {
+      for(var i in adminList) {
+        if(adminList[i] === id) {
+          adminList.splice(i, 1);
+          setSessionData(Session.Enum.ADMIN, adminList, undefined);
+          break
+        }
+      }
+    }
+  };
+
+  this.getAdmin(removeEntry);
 };
 
 Session.prototype.setIP = function(ip) {
