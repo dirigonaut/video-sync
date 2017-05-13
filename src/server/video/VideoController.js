@@ -1,4 +1,5 @@
 var FileIO          = require('../utils/FileIO');
+var FileUtils       = require('../../server/utils/FileSystemUtils');
 var EncoderManager  = require('./encoding/EncoderManager');
 var WebmMetaData    = require('./metadata/WebmMetaData');
 var Session         = require('../administration/Session');
@@ -73,23 +74,29 @@ function initialize(io, socket) {
     var handleMediaPath = function(basePath) {
       if(basePath !== null && basePath !== undefined && basePath.length > 0) {
         var fileIO = new FileIO();
+        var fileUtils = new FileUtils();
 
-        var readConfig = FileIO.createStreamConfig(basePath, function(file){
-          var header = new Object();
-          header.type = file.type;
+        var readConfig = fileIO.createStreamConfig(basePath, function(file) {
+          if(file !== undefined && file !== null) {
+            var header = new Object();
+            var splitName = file.split(".")[0].split("_");
+            header.type = splitName[splitName.length - 1];
 
-          socket.emit("file-register-response", {requestId: validator.sterilizeVideoInfo(requestId), header: header}, function(bufferId) {
-            var readConfig = FileIO.createStreamConfig(file.path, function(data) {
-              socket.emit("file-segment", {bufferId: bufferId, data: data});
+            socket.emit("file-register-response", {requestId: validator.sterilizeVideoInfo(requestId), header: header}, function(bufferId) {
+              var anotherReadConfig = fileIO.createStreamConfig(`${fileUtils.ensureEOL(basePath)}${file}`, function(data) {
+                socket.emit("file-segment", {bufferId: bufferId, data: data});
+              });
+
+              anotherReadConfig.onFinish = function() {
+                socket.emit("file-end", {bufferId: bufferId});
+              };
+
+              fileIO.read(anotherReadConfig);
             });
-
-            readConfig.onFinish = function() {
-              socket.emit("file-end", {bufferId: bufferId});
-            };
-            fileIO.read(readConfig);
-          });
+          }
         });
-        fileIO.readDir(readConfig);
+
+        fileIO.readDir(readConfig, "mpd");
       }
     };
 

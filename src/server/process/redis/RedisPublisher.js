@@ -2,6 +2,9 @@ const crypto    = require('crypto');
 var Util        = require('util');
 var Redis       = require("redis");
 var RedisSocket = require('./RedisSocket');
+var LogManager  = require('../../log/LogManager');
+
+var log         = LogManager.getLog(LogManager.LogEnum.UTILS);
 
 var publisher   = Redis.createClient();
 var subscriber  = Redis.createClient();
@@ -37,15 +40,15 @@ module.exports = RedisPublisher;
 
 var initialize = function(publisher, subscriber) {
   publisher.on("connect", function(err) {
-    console.log("RedisPublisher is connected to redis server");
+    log.debug("RedisPublisher is connected to redis server");
   });
 
   publisher.on("reconnecting", function(err) {
-    console.log("RedisPublisher is connected to redis server");
+    log.debug("RedisPublisher is connected to redis server");
   });
 
   publisher.on("error", function(err) {
-    console.log(err);
+    log.error(err);
   });
 
   subscriber.on("message", function(channel, message) {
@@ -58,18 +61,19 @@ var initialize = function(publisher, subscriber) {
         if(callback !== null && callback !== undefined) {
           var onData = function(data) {
             var data = JSON.parse(data);
-            //console.log(Util.inspect(data, { showHidden: false, depth: null }));
+            log.silly(Util.inspect(data, { showHidden: false, depth: null }));
             callback.apply(callback, data);
           }
           getRedisData(key, onData);
         }
       }
     } else if(channel === RedisPublisher.RespEnum.COMMAND) {
+
       var commands = message !== null && message !== undefined ? JSON.parse(message) : [];
 
       if(commands !== null && commands !== undefined) {
         for(var i in commands) {
-          //console.log(Util.inspect(commands[i], { showHidden: false, depth: null }));
+          log.silly(Util.inspect(commands[i], { showHidden: false, depth: null }));
           redisSocket.broadcastToId.apply(null, commands[i]);
         }
       }
@@ -77,19 +81,19 @@ var initialize = function(publisher, subscriber) {
   });
 
   subscriber.on("subscribe", function(channel, count) {
-    console.log(`RedisSubscriber subscribed to ${channel}`);
+    log.info(`RedisSubscriber subscribed to ${channel}`);
   });
 
   subscriber.on("connect", function(err) {
-    console.log("RedisSubscriber is connected to redis server");
+    log.debug("RedisSubscriber is connected to redis server");
   });
 
   subscriber.on("reconnecting", function(err) {
-    console.log("RedisSubscriber is connected to redis server");
+    log.debug("RedisSubscriber is connected to redis server");
   });
 
   subscriber.on("error", function(err) {
-    console.log(err);
+    log.error(err);
   });
 
   subscriber.subscribe("stateRedisResponse");
