@@ -52,7 +52,7 @@ function initialize(io) {
       var requestSmtp = function(token) {
         var getSmtp = function(session) {
           var sendInvitations = function(hostAddress) {
-            var mailOptions = smtp.createMailOptions(session.smtp, token.address, "Video-Sync Token", "Session token: " + token.token, "");
+            var mailOptions = smtp.createMailOptions(session.smtp, token.address, "Video-Sync Token", "Session token: " + token.pass, "");
             smtp.sendMail(mailOptions);
             socket.emit('login-token-sent');
           };
@@ -93,7 +93,7 @@ function initialize(io) {
 
       var removeAdmin = function(isAdmin) {
         if(isAdmin) {
-          session.removeAdmin();
+          session.removeAdmin(socket.id);
         }
       };
 
@@ -157,14 +157,12 @@ function isAdministrator(socket, io) {
 
   var setAdminId = function(admin) {
     log.info(`Admin is ${admin} new socket is ${socket.id}`);
-    if(admin === null || admin === undefined) {
-      if(socket.handshake.address.includes("127.0.0.1")) {
-        new AdminController(io, socket);
-        new DatabaseController(io, socket);
+    if(socket.handshake.address.includes("127.0.0.1")) {
+      new AdminController(io, socket);
+      new DatabaseController(io, socket);
 
-        session.addAdmin(socket.id);
-        userAuthorized(socket, io, 'admin');
-      }
+      session.addAdmin(socket.id);
+      userAuthorized(socket, io, 'admin');
     }
   };
 
