@@ -4,6 +4,7 @@ var Express     = require('express');
 var SocketIO    = require('socket.io');
 var SocketRedis = require('socket.io-redis');
 
+var Config                   = require('../utils/Config');
 var LogManager               = require('../log/LogManager');
 var Session                  = require('../administration/Session');
 var ServerRedis              = require('./redis/ServerRedis');
@@ -17,21 +18,20 @@ var logManager = new LogManager();
 logManager.initialize();
 
 var log         = LogManager.getLog(LogManager.LogEnum.GENERAL);
+var config      = new Config();
 var app         = null;
 var io          = null;
 var server      = null;
 var serverRedis = null;
 
-function ServerProcess(ip, port, appData, staticPath) {
-  logManager.addFileLogging(appData);
-  log.info(`Trying to start ServerProcess on port ${port}`);
+function ServerProcess() {
+  logManager.addFileLogging();
+  log.info(`Trying to start ServerProcess on port ${config.getConfig().port}`);
 
   serverRedis   = new ServerRedis();
 
   var publisher = new Publisher();
   publisher.initialize();
-
-  logManager.addFileLogging(appData);
 
   var initHttpsServer = function(pem) {
     log.debug('Certificates found starting ServerProcess');
@@ -44,15 +44,15 @@ function ServerProcess(ip, port, appData, staticPath) {
     app = Express();
     server = Https.createServer(options, app);
     io = SocketIO.listen(server)
-    io.adapter(SocketRedis({ host: 'localhost', port: 6379 }));
+    io.adapter(SocketRedis({ host: `${config.getConfig().redisHost}`, port: config.getConfig().redisPort }));
 
     var redisSocket = new RedisSocket();
     redisSocket.initialize(io);
 
     var session = new Session();
-    session.setIP(`${ip}:${port}`);
+    session.setIP(`${config.getConfig().host}:${config.getConfig().port}`);
 
-    app.use(Express.static(staticPath));
+    app.use(Express.static(config.getConfig().staticPath));
     server.listen(port);
 
     var socketLog = new SocketLog();

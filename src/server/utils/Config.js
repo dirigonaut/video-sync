@@ -1,9 +1,13 @@
+var Path      = require('path');
+
 var FileIO    = require("./FileIO");
 var FileUtils = require('./FileSystemUtils');
 
-const APP_DATA = (process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + 'Library/Preferences' : process.env.HOME + '/.config')) + '/video-sync/';
+const LOG_DIR  = "logs";
 const CONFIG_NAME = "config.json"
-const DEFAULT_CONFIG = ;
+const ROOT_DIR = Path.dirname(require.main.file);
+const APP_DATA = Path.join(process.env.APPDATA || Path.join(process.env.HOME,
+  (process.platform == 'darwin' ?  Path.join('Library', 'Preferences') : '.config'))), 'video-sync');
 
 var config = null;
 
@@ -20,6 +24,10 @@ Config.prototype.getConfig = function() {
 
 Config.prototype.getAppDataDir = function() {
   return APP_DATA;
+};
+
+Config.prototype.getLogDir = function() {
+  return Path.join(APP_DATA, LOG_DIR);
 };
 
 module.exports = Config;
@@ -39,10 +47,10 @@ function setupAppDataDir(callback) {
             };
 
             config = {};
-            loadConfig(`${APP_DATA}${CONFIG_NAME}`, setConfig);
+            loadConfig(Path.join(APP_DATA, CONFIG_NAME), setConfig);
           }
         } else if(file === null && config === null) {
-          createConfig(DEFAULT_CONFIG, `${APP_DATA}${CONFIG_NAME}`, callback);
+          createConfig(Path.join(ROOT_DIR, CONFIG_NAME), Path.join(APP_DATA, CONFIG_NAME), callback);
         }
       });
 
@@ -51,6 +59,7 @@ function setupAppDataDir(callback) {
   }
 
   fileIO.ensureDirExists(APP_DATA, 484, checkAssets);
+  fileIO.ensureDirExists(Path.join(APP_DATA, LOG_DIR), 484, null);
 };
 
 function loadConfig(path, callback) {

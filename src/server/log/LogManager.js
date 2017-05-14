@@ -1,9 +1,13 @@
-var Winston = require('winston');
+var Path       = require('path');
 
+var Winston    = require('winston');
+
+var Config     = require('../utils/Config');
 var LogFactory = require('./LogFactory');
 
-var log = null;
+var config     = new Config();
 
+var log = null;
 const LOG_LEVEL = "debug";
 const FILE_NAME = "logs.txt";
 const EXCEPTION = "exception";
@@ -20,12 +24,11 @@ LogManager.prototype.initialize = function() {
   log = Winston.loggers.get(LogManager.LogEnum.LOG);
 }
 
-LogManager.prototype.addFileLogging = function(basePath) {
-  basePath = `${basePath}/logs`;
-  log.debug('LogManager.addFileLogging', basePath);
+LogManager.prototype.addFileLogging = function() {
+  log.debug('LogManager.addFileLogging', config);
   var logFactory = new LogFactory();
 
-  var fileTransport = logFactory.buildFileTransport(`${basePath}/${FILE_NAME}`, LOG_LEVEL, 'file-logger', false);
+  var fileTransport = logFactory.buildFileTransport(Path.join(config.getLogDir(), FILE_NAME), LOG_LEVEL, 'file-logger', false);
 
   var keys = Object.keys(LogManager.LogEnum);
   for(var i in keys) {
@@ -36,7 +39,7 @@ LogManager.prototype.addFileLogging = function(basePath) {
     });
   }
 
-  var exceptionTransport = logFactory.buildFileTransport(`${basePath}/${EXCEPTION}`, 'error', 'exception-logger', true);
+  var exceptionTransport = logFactory.buildFileTransport(Path.join(config.getLogDir(), EXCEPTION), 'error', 'exception-logger', true);
   Winston.loggers.add(EXCEPTION, { transports: [exceptionTransport] });
   Winston.loggers.get(EXCEPTION).exitOnError = false;
 
