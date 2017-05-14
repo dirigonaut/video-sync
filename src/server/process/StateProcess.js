@@ -5,11 +5,11 @@ var LogManager  = require('../log/LogManager');
 var logManager = new LogManager();
 logManager.initialize();
 
-function StateProcess(appData) {
-  logManager.addFileLogging(appData);
+function StateProcess() {
+  logManager.addFileLogging();
 
   var database = new NeDatabase();
-  database.initialize(appData);
+  database.initialize();
 
   this.stateRedis = new StateRedis();
 }

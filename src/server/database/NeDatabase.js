@@ -1,19 +1,21 @@
 var Path 				= require('path');
 var Datastore 	= require('nedb');
 
-var LogManager    = require('../log/LogManager');
+var Config     	= require('../utils/Config');
+var LogManager  = require('../log/LogManager');
 
 var db;
 
-var log = LogManager.getLog(LogManager.LogEnum.DATABASE);
+var config  = new Config();
+var log 		= LogManager.getLog(LogManager.LogEnum.DATABASE);
 
 function NeDatabase(){
 };
 
-NeDatabase.prototype.initialize = function(appData) {
-	if((db === null || db === undefined) && appData !== undefined) {
-		console.log(`Loading db from path ${Path.join(appData, 'database_inst')}`);
-		db = new Datastore({ filename: Path.join(appData, 'database_inst'), autoload: true });
+NeDatabase.prototype.initialize = function() {
+	if(db === null || db === undefined) {
+		console.log(`Loading db from path ${Path.join(config.getAppDataDir(), 'database_inst')}`);
+		db = new Datastore({ filename: Path.join(config.getAppDataDir(), 'database_inst'), autoload: true });
 	}
 };
 

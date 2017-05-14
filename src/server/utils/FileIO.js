@@ -1,4 +1,5 @@
 var Fs          = require('fs');
+var Path        = require('path');
 var LogManager  = require('../log/LogManager');
 
 var log = LogManager.getLog(LogManager.LogEnum.UTILS);
@@ -57,10 +58,7 @@ FileIO.prototype.readDir = function(readConfig, extType) {
     var matchingFiles = [];
     if(extType !== undefined && extType !== null) {
       for(var x = 0; x < files.length; ++x) {
-        var splitExt = files[x].split(".");
-
-        var extension = splitExt[splitExt.length - 1];
-        if(extension === extType) {
+        if(path.extname(files[x]).includes(extType)) {
           matchingFiles.push(files[x]);
         }
       }
@@ -71,7 +69,7 @@ FileIO.prototype.readDir = function(readConfig, extType) {
     for(var i in matchingFiles) {
       readConfig.callback(matchingFiles[i]);
     }
-    
+
     readConfig.callback(null);
   });
 };
