@@ -5,9 +5,9 @@ var FileUtils = require('./FileSystemUtils');
 
 const LOG_DIR  = "logs";
 const CONFIG_NAME = "config.json"
-const ROOT_DIR = Path.dirname(require.main.file);
+const ROOT_DIR = Path.join(__dirname, "../");
 const APP_DATA = Path.join(process.env.APPDATA || Path.join(process.env.HOME,
-  (process.platform == 'darwin' ?  Path.join('Library', 'Preferences') : '.config'))), 'video-sync');
+  (process.platform == 'darwin' ?  Path.join('Library', 'Preferences') : '.config')), 'video-sync');
 
 var config = null;
 
