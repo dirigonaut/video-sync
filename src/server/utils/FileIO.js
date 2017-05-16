@@ -78,14 +78,20 @@ FileIO.prototype.ensureDirExists = function(path, mask, callback) {
   log.debug('FileIO.ensureDirExists', path);
 
   Fs.mkdir(path, mask, function(err) {
+    var result;
+
     if (err) {
       if (err.code == 'EEXIST') {
-        callback(true);
+        result = true;
       } else {
-        callback(err);
+        log.error(err);
       }
     } else {
-      callback(true);
+      result = true;
+    }
+
+    if(callback !== undefined && callback !== null) {
+      callback(result);
     }
   });
 }

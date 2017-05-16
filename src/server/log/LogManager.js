@@ -2,12 +2,11 @@ var Path       = require('path');
 
 var Winston    = require('winston');
 
-var Config     = require('../utils/Config');
 var LogFactory = require('./LogFactory');
 
-var config     = new Config();
-
+var config = null;
 var log = null;
+
 const LOG_LEVEL = "debug";
 const FILE_NAME = "logs.txt";
 const EXCEPTION = "exception";
@@ -15,7 +14,9 @@ const EXCEPTION = "exception";
 function LogManager() {
 }
 
-LogManager.prototype.initialize = function() {
+LogManager.prototype.initialize = function(config) {
+  config = config;
+
   var keys = Object.keys(LogManager.LogEnum);
   for(var i in keys) {
     Winston.loggers.get(LogManager.LogEnum[keys[i]]);

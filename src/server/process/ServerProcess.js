@@ -14,15 +14,15 @@ var RedisSocket              = require('./redis/RedisSocket');
 var SocketLog                = require('../log/SocketLog');
 var AuthenticationController = require('../authentication/AuthenticationController');
 
-var logManager = new LogManager();
-logManager.initialize();
-
 var log         = LogManager.getLog(LogManager.LogEnum.GENERAL);
 var config      = new Config();
 var app         = null;
 var io          = null;
 var server      = null;
 var serverRedis = null;
+
+var logManager = new LogManager();
+logManager.initialize(config);
 
 function ServerProcess() {
   logManager.addFileLogging();
