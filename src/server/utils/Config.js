@@ -5,7 +5,7 @@ var FileUtils = require('./FileSystemUtils');
 
 const LOG_DIR  = "logs";
 const CONFIG_NAME = "config.json"
-const ROOT_DIR = Path.join(__dirname, "../");
+const ROOT_DIR = Path.join(__dirname, "../../../");
 const APP_DATA = Path.join(process.env.APPDATA || Path.join(process.env.HOME,
   (process.platform == 'darwin' ?  Path.join('Library', 'Preferences') : '.config')), 'video-sync');
 
@@ -42,7 +42,8 @@ function setupAppDataDir(callback) {
         if(file !== undefined && file !== null) {
           if(file === CONFIG_NAME) {
             var setConfig = function(fileData) {
-              config = JSON.parse(fileData);
+              var data = fileData.toString();
+              config = JSON.parse(data);
               callback();
             };
 
@@ -56,7 +57,7 @@ function setupAppDataDir(callback) {
 
       fileIO.readDir(readStream, "json");
     }
-  }
+  };
 
   fileIO.ensureDirExists(APP_DATA, 484, checkAssets);
   fileIO.ensureDirExists(Path.join(APP_DATA, LOG_DIR), 484, null);

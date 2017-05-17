@@ -22,10 +22,8 @@ var server      = null;
 var serverRedis = null;
 
 var logManager = new LogManager();
-logManager.initialize(config);
 
 function ServerProcess() {
-  logManager.addFileLogging();
   log.info(`Trying to start ServerProcess on port ${config.getConfig().port}`);
 
   serverRedis   = new ServerRedis();
@@ -49,11 +47,8 @@ function ServerProcess() {
     var redisSocket = new RedisSocket();
     redisSocket.initialize(io);
 
-    var session = new Session();
-    session.setIP(`${config.getConfig().host}:${config.getConfig().port}`);
-
-    app.use(Express.static(config.getConfig().staticPath));
-    server.listen(port);
+    app.use(Express.static(config.getConfig().static));
+    server.listen(config.getConfig().port);
 
     var socketLog = new SocketLog();
     socketLog.initialize(io);

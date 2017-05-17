@@ -37,9 +37,10 @@ FileIO.prototype.write = function(writeConfig, data) {
   writeStream.on('error', function(e) {
 		log.error("FileIO.write, Server: Error: " + e);
 	});
-  writeStream.on('close', function() {
+
+  writeStream.on('finish', function() {
 		log.debug("FileIO.write, Server: Finished writing file");
-    if(readConfig.onFinish) {
+    if(writeConfig.onFinish) {
       writeConfig.onFinish();
     }
 	});
@@ -58,7 +59,7 @@ FileIO.prototype.readDir = function(readConfig, extType) {
     var matchingFiles = [];
     if(extType !== undefined && extType !== null) {
       for(var x = 0; x < files.length; ++x) {
-        if(path.extname(files[x]).includes(extType)) {
+        if(Path.extname(files[x]).includes(extType)) {
           matchingFiles.push(files[x]);
         }
       }
