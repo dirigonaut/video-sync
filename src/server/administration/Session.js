@@ -185,16 +185,6 @@ Session.prototype.removeAdmin = function(id) {
   this.getAdmin(removeEntry);
 };
 
-Session.prototype.setIP = function(ip) {
-  log.info("Session.setIP");
-  setSessionData(Session.Enum.IP, ip, undefined);
-};
-
-Session.prototype.getIP = function(callback) {
-  log.info("Session.getIP");
-  getSessionData(Session.Enum.IP, callback);
-};
-
 module.exports = Session;
 
 Session.Enum = { ACTIVE: "session-active", MEDIA: "session-media", ADMIN: "session-admin", IP: "session-ip", STARTED: "session-started", USERS: "session-users"};

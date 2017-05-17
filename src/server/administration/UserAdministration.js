@@ -2,7 +2,9 @@ var Smtp        = require('./Smtp');
 var Session     = require('./Session');
 var LogManager  = require('../log/LogManager');
 var Publisher   = require('../process/redis/RedisPublisher');
+var Config     	= require('../utils/Config');
 
+var config      = new Config();
 var log         = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
 var publisher   = new Publisher();
 var smtp        = new Smtp();
@@ -97,11 +99,7 @@ UserAdministration.prototype.inviteUsers = function() {
 module.exports = UserAdministration;
 
 function addP2PLink(mailOptions, callback) {
-  var addLink = function(baseUrl) {
-    log.silly("adding Link");
-    mailOptions.text = `${mailOptions.text} \n\n Link: https://${baseUrl}/html/client.html`;
-    callback(mailOptions);
-  }
-
-  session.getIP(addLink);
+  log.silly("adding Link");
+  mailOptions.text = `${mailOptions.text} \n\n Link: https://${config.getConfig().host}:${config.getConfig().port}/html/client.html`;
+  callback(mailOptions);
 }

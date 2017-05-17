@@ -14,8 +14,8 @@ const EXCEPTION = "exception";
 function LogManager() {
 }
 
-LogManager.prototype.initialize = function(config) {
-  config = config;
+LogManager.prototype.initialize = function(newConfig) {
+  config = newConfig;
 
   var keys = Object.keys(LogManager.LogEnum);
   for(var i in keys) {
