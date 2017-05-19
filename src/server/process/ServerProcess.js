@@ -2,17 +2,16 @@ var Path        = require('path');
 var Https       = require('https');
 var Express     = require('express');
 var SocketIO    = require('socket.io');
-var SocketRedis = require('socket.io-redis');
 
-var Config                   = require('../utils/Config');
-var LogManager               = require('../log/LogManager');
-var Session                  = require('../administration/Session');
-var ServerRedis              = require('./redis/ServerRedis');
-var Certificate              = require('../authentication/Certificate');
-var Publisher                = require('./redis/RedisPublisher');
-var RedisSocket              = require('./redis/RedisSocket');
-var SocketLog                = require('../log/SocketLog');
-var AuthenticationController = require('../authentication/AuthenticationController');
+var Config         = require('../utils/Config');
+var LogManager     = require('../log/LogManager');
+var Session        = require('../administration/Session');
+var ServerRedis    = require('./redis/ServerRedis');
+var Certificate    = require('../authentication/Certificate');
+var Publisher      = require('./redis/RedisPublisher');
+var RedisSocket    = require('./redis/RedisSocket');
+var SocketLog      = require('../log/SocketLog');
+var AuthController = require('../authentication/AuthenticationController');
 
 var log         = LogManager.getLog(LogManager.LogEnum.GENERAL);
 var config      = new Config();
@@ -42,7 +41,6 @@ function ServerProcess() {
     app = Express();
     server = Https.createServer(options, app);
     io = SocketIO.listen(server)
-    io.adapter(SocketRedis({ host: `${config.getConfig().redisHost}`, port: config.getConfig().redisPort }));
 
     var redisSocket = new RedisSocket();
     redisSocket.initialize(io);
@@ -53,7 +51,7 @@ function ServerProcess() {
     var socketLog = new SocketLog();
     socketLog.initialize(io);
 
-    new AuthenticationController(io);
+    new AuthController(io);
   }
 
   new Certificate().getCertificates(initHttpsServer);

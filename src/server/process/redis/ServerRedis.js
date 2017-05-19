@@ -1,5 +1,6 @@
 var Util              = require('util');
-var Redis             = require("redis");
+var Redis             = require('redis');
+
 var Session           = require('../../administration/Session');
 var ReflectiveAdapter = require('./ReflectiveAdapter');
 
