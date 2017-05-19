@@ -1,4 +1,5 @@
-var Redis             = require("redis");
+var Redis             = require('redis');
+
 var ReflectiveAdapter = require('./ReflectiveAdapter');
 var NeDatabase        = require('../../database/NeDatabase');
 var StateEngine       = require('../../state/StateEngine.js');

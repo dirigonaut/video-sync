@@ -14,7 +14,7 @@ var stateProcess  = null;
 var config = new Config();
 
 process.on('uncaughtException', function (err) {
-    console.log('UNCAUGHT EXCEPTION - keeping process alive:', err); // err.message is "foobar"
+    console.log('UNCAUGHT EXCEPTION:', err);
 });
 
 var configLoaded = function() {

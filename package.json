@@ -22,7 +22,6 @@
     "redis-server": "^1.1.0",
     "socket.io": "^1.7.3",
     "socket.io-client": "^1.7.3",
-    "socket.io-redis": "^4.0.0",
     "split": "^1.0.0",
     "validator": "^7.0.0",
     "winston": "^2.3.1",

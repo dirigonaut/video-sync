@@ -1,9 +1,15 @@
 var Redis = require('redis-server');
+var Config = require('../../utils/Config');
 
-var server = new Redis();
+var server = null;
 
 function RedisServer() {
+  var config = new Config();
 
+  server = new Redis({
+    bin: config.getConfig().redisPath,
+    conf: config.getRedisConfig()
+  });
 }
 
 RedisServer.prototype.start = function(callback) {

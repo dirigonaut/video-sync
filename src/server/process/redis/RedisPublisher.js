@@ -1,6 +1,6 @@
 const crypto    = require('crypto');
 var Util        = require('util');
-var Redis       = require("redis");
+var Redis       = require('redis');
 var RedisSocket = require('./RedisSocket');
 var LogManager  = require('../../log/LogManager');
 
