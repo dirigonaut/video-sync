@@ -1,3 +1,4 @@
+var Cluster   = require('cluster');
 var Path      = require('path');
 
 var FileIO    = require("./FileIO");
@@ -16,7 +17,16 @@ function Config() {
 };
 
 Config.prototype.initialize = function(callback) {
-  setupAppDataDir(callback);
+  if(Cluster.isMaster) {
+    setupAppDataDir(callback);
+  } else {
+    var handleConfig = function(configuration) {
+      config = JSON.parse(configuration);
+      callback();
+    }
+
+    loadConfig(Path.join(APP_DATA, CONFIG_NAME), handleConfig);
+  }
 };
 
 Config.prototype.getConfig = function() {

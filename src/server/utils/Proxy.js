@@ -1,5 +1,5 @@
-var cluster = require('cluster');
-var net     = require('net');
+var Cluster = require('cluster');
+var Net     = require('net');
 
 var Config  = require('./Config');
 
@@ -27,20 +27,35 @@ class Proxy {
     };
 
   	// Create the outside facing server listening on our port.
-  	proxyServer = net.createServer({ pauseOnConnect: true }, function(connection) {
-  		var worker = workers[getWorkerIndex(connection.remoteAddress, numProcesses)];
+  	proxyServer = Net.createServer({ pauseOnConnect: true }, function(connection) {
+      var index = getWorkerIndex(connection.remoteAddress, numProcesses);
+  		var worker = workers[index];
+
+      console.log(`Address: ${connection.remoteAddress} is being forwarded to process: ${index}`);
   		worker.send('sticky-session:connection', connection);
   	}).listen(port);
   }
 
   spawnWorker(index) {
-		workers[index] = cluster.fork({processType: 'serverProcess'});
+		workers[index] = Cluster.fork({processType: 'serverProcess'});
 
 		// Optional: Restart worker on exit
 		workers[index].on('exit', function(code, signal) {
 			console.log('respawning worker', index);
 			spawnWorker(index);
 		});
+  }
+
+  forwardWorker(server) {
+    process.on('message', function(message, connection) {
+      if (message !== 'sticky-session:connection') {
+        return;
+      }
+
+      //Forward Connection to appropriate server process
+      server.emit('connection', connection);
+      connection.resume();
+    });
   }
 }
 

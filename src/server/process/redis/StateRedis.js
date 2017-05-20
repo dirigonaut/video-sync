@@ -12,14 +12,16 @@ var stateEngine   = new StateEngine();
 var playerManager = new PlayerManager();
 var session       = new Session();
 
-function StateRedis() {
-  this.subscriber = Redis.createClient();
-  initialize(this.subscriber);
+class StateRedis {
+  constructor() {
+    this.subscriber = Redis.createClient();
+    initialize(this.subscriber);
 
-  this.subscriber.subscribe("database");
-  this.subscriber.subscribe("state");
-  this.subscriber.subscribe("player");
-  this.subscriber.subscribe("session");
+    this.subscriber.subscribe("database");
+    this.subscriber.subscribe("state");
+    this.subscriber.subscribe("player");
+    this.subscriber.subscribe("session");
+  }
 }
 
 module.exports = StateRedis;
