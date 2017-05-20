@@ -12,26 +12,25 @@ var subscriber  = Redis.createClient();
 var requestMap  = new Map();
 var redisSocket = new RedisSocket();
 
-function RedisPublisher() {
+class RedisPublisher {
+  initialize() {
+    requestMap = new Map();
+    initialize(publisher, subscriber);
+  }
+
+  publish(channel, args, callback) {
+    var key = createKey(channel);
+    args.push(key);
+
+    var response = function(err, data) {
+      if(err === null && callback !== null && callback !== undefined) {
+        requestMap.set(key, callback);
+      }
+    };
+
+    publisher.publish(channel, JSON.stringify(args), response);
+  }
 }
-
-RedisPublisher.prototype.initialize = function() {
-  requestMap = new Map();
-  initialize(publisher, subscriber);
-};
-
-RedisPublisher.prototype.publish = function(channel, args, callback) {
-  var key = createKey(channel);
-  args.push(key);
-
-  var response = function(err, data) {
-    if(err === null && callback !== null && callback !== undefined) {
-      requestMap.set(key, callback);
-    }
-  };
-
-  publisher.publish(channel, JSON.stringify(args), response);
-};
 
 RedisPublisher.Enum = { DATABASE: 'database', STATE: 'state', PLAYER: 'player', SESSION: 'session'};
 RedisPublisher.RespEnum = { RESPONSE: 'stateRedisResponse', COMMAND: 'stateRedisCommand'};
@@ -68,12 +67,11 @@ var initialize = function(publisher, subscriber) {
         }
       }
     } else if(channel === RedisPublisher.RespEnum.COMMAND) {
-
       var commands = message !== null && message !== undefined ? JSON.parse(message) : [];
 
       if(commands !== null && commands !== undefined) {
         for(var i in commands) {
-          log.silly(Util.inspect(commands[i], { showHidden: false, depth: null }));
+          log.silly(Util.inspect(commands[i], { showHidden: false, depth: null}));
           redisSocket.broadcastToId.apply(null, commands[i]);
         }
       }

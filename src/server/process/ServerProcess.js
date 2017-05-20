@@ -1,5 +1,7 @@
 var Path        = require('path');
 var Https       = require('https');
+var Events      = require('events');
+
 var Express     = require('express');
 var SocketIO    = require('socket.io');
 
@@ -15,15 +17,19 @@ var AuthController = require('../authentication/AuthenticationController');
 
 var log         = LogManager.getLog(LogManager.LogEnum.GENERAL);
 var config      = new Config();
+
 var app         = null;
 var io          = null;
 var server      = null;
 var serverRedis = null;
 
-var logManager = new LogManager();
-
-class ServerProcess {
+class ServerProcess extends Events {
   constructor() {
+    super();
+  }
+
+  initialize() {    
+    var _this = this;
     log.info(`Trying to start ServerProcess on port ${config.getConfig().port}`);
     serverRedis   = new ServerRedis();
 
@@ -40,7 +46,7 @@ class ServerProcess {
 
       app = Express();
       server = Https.createServer(options, app);
-      io = SocketIO.listen(server)
+      io = SocketIO.listen(server);
 
       var redisSocket = new RedisSocket();
       redisSocket.initialize(io);
@@ -52,13 +58,15 @@ class ServerProcess {
       socketLog.initialize(io);
 
       new AuthController(io);
+
+      _this.emit('started');
     }
 
     new Certificate().getCertificates(initHttpsServer);
   }
 
-  get server() {
-    return app;
+  getServer() {
+    return server;
   }
 }
 

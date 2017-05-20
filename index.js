@@ -19,7 +19,7 @@ var numCPUs = require('os').cpus().length;
 var config = new Config();
 
 process.on('uncaughtException', function (err) {
-    console.log('UNCAUGHT EXCEPTION:', err);
+  console.log('UNCAUGHT EXCEPTION:', err);
 });
 
 var configLoaded = function() {
@@ -32,34 +32,41 @@ var configLoaded = function() {
       var stateWorker = Cluster.fork({processType: 'stateProcess'});
 
       stateWorker.on('exit', function(code, signal) {
-        console.log('respawning state worker');
-        stateWorker = Cluster.fork({processType: 'stateProcess'});
+        console.error('State worker exited, app is now in non recoverable state.');
       });
 
-      proxy = new Proxy();
-      proxy.initialize(1);
+      stateWorker.on('message', function(message) {
+        console.log('starting servers');
+        if (message !== 'state-process:started') {
+          return;
+        }
+
+        proxy = new Proxy();
+        proxy.initialize(numCPUs - 1);
+      });
     };
 
     redisServer = new RedisServer();
     redisServer.start(startProcesses);
   } else if(process.env.processType === 'stateProcess') {
     stateProcess = new StateProcess();
-    console.log(`State Process: ${process.pid} started`);
-    process.send('state-process:started');
+
+    stateProcess.on('started', function() {
+      console.log(`State Process: ${process.pid} started`);
+      process.send('state-process:started');
+    });
+
+    stateProcess.initialize();
   } else if(process.env.processType === 'serverProcess') {
     serverProcess = new ServerProcess();
 
-    process.on('message', function(message, connection) {
-      if (message !== 'sticky-session:connection') {
-        return;
-      }
-
-      //Forward Connection to appropriate server process
-      serverProcess.server.emit('connection', connection);
-      connection.resume();
+    serverProcess.on('started', function() {
+      var proxy = new Proxy();
+      proxy.forwardWorker(serverProcess.getServer());
+      console.log(`Server Process: ${process.pid} started`);
     });
 
-    console.log(`Server Process: ${process.pid} started`);
+    serverProcess.initialize();
   }
 };
 
