@@ -22,39 +22,44 @@ var serverRedis = null;
 
 var logManager = new LogManager();
 
-function ServerProcess() {
-  log.info(`Trying to start ServerProcess on port ${config.getConfig().port}`);
+class ServerProcess {
+  constructor() {
+    log.info(`Trying to start ServerProcess on port ${config.getConfig().port}`);
+    serverRedis   = new ServerRedis();
 
-  serverRedis   = new ServerRedis();
+    var publisher = new Publisher();
+    publisher.initialize();
 
-  var publisher = new Publisher();
-  publisher.initialize();
+    var initHttpsServer = function(pem) {
+      log.debug('Certificates found starting ServerProcess');
+      var options = {
+        key: pem.privateKey,
+        cert: pem.certificate,
+        requestCert: true,
+      };
 
-  var initHttpsServer = function(pem) {
-    log.debug('Certificates found starting ServerProcess');
-    var options = {
-      key: pem.privateKey,
-      cert: pem.certificate,
-      requestCert: true,
-    };
+      app = Express();
+      server = Https.createServer(options, app);
+      io = SocketIO.listen(server)
 
-    app = Express();
-    server = Https.createServer(options, app);
-    io = SocketIO.listen(server)
+      var redisSocket = new RedisSocket();
+      redisSocket.initialize(io);
 
-    var redisSocket = new RedisSocket();
-    redisSocket.initialize(io);
+      app.use(Express.static(config.getConfig().static));
+      server.listen(0, 'localhost');
 
-    app.use(Express.static(config.getConfig().static));
-    server.listen(config.getConfig().port);
+      var socketLog = new SocketLog();
+      socketLog.initialize(io);
 
-    var socketLog = new SocketLog();
-    socketLog.initialize(io);
+      new AuthController(io);
+    }
 
-    new AuthController(io);
+    new Certificate().getCertificates(initHttpsServer);
   }
 
-  new Certificate().getCertificates(initHttpsServer);
+  get server() {
+    return app;
+  }
 }
 
 module.exports = ServerProcess;

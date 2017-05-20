@@ -2,5 +2,7 @@
   "host" : "",
   "port" : 8080,
   "static" : "static",
-  "redisLocation" : "/usr/bin/redis-cli"
+  "redisPath" : "/usr/bin/redis-cli",
+  "redisHost" : "localhost",
+  "redisPort" : 6729
 }

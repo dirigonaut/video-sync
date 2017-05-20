@@ -3,30 +3,50 @@ var Config = require('../../utils/Config');
 
 var server = null;
 
-function RedisServer() {
-  var config = new Config();
+class RedisServer {
+  constructor() {
+    var config = new Config();
+    var options;
 
-  server = new Redis({
-    bin: config.getConfig().redisPath,
-    conf: config.getRedisConfig()
-  });
-}
+    var redisPath = config.getConfig().redisPath;
+    var redisConfig = config.getRedisConfig();
 
-RedisServer.prototype.start = function(callback) {
-  server.open((err) => {
-    if (err === null) {
-      console.log("Redis server is up.");
-      callback();
-    } else {
-      console.log(err);
+    if(redisPath !== undefined && redisPath !== null) {
+      options = {
+        conf: redisConfig
+      };
     }
-  });
-};
 
-RedisServer.prototype.end = function() {
-  server.close().then(() => {
-    console.log("Redis server has shut down.");
-  });
-};
+    if(options !== undefined && options !== null) {
+      server = new Redis(options);
+    }
+  }
+
+  start(callback) {
+    if(server !== undefined && server !== null) {
+      server.open((err) => {
+        if (err === null) {
+          console.log("Redis server is up.");
+          callback();
+        } else {
+          console.log(err);
+        }
+      });
+    } else {
+      console.log("Redis has not been init check to make sure it has been configured properly.");
+      callback();
+    }
+  }
+
+  end() {
+    if(server !== undefined && server !== null) {
+      server.close().then(() => {
+        console.log("Redis server has shut down.");
+      });
+    } else {
+      console.log("Redis has not been init check to make sure it has been configured properly.");
+    }
+  }
+}
 
 module.exports = RedisServer;
