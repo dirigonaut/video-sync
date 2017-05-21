@@ -1,3 +1,4 @@
+var Events  = require('events');
 var Cluster = require('cluster');
 var Net     = require('net');
 
@@ -6,11 +7,8 @@ var Config  = require('./Config');
 var proxyServer = null;
 var workers = [];
 
-class Proxy {
+class Proxy extends Events{
   initialize(numProcesses) {
-    var config = new Config();
-    var port = config.getConfig().port;
-
     for (let i = 0; i < numProcesses; i++) {
       this.spawnWorker(i);
     }
@@ -28,12 +26,9 @@ class Proxy {
 
   	// Create the outside facing server listening on our port.
   	proxyServer = Net.createServer({ pauseOnConnect: true }, function(connection) {
-      var index = getWorkerIndex(connection.remoteAddress, numProcesses);
-  		var worker = workers[index];
-
-      console.log(`Address: ${connection.remoteAddress} is being forwarded to process: ${index}`);
+  		var worker = workers[getWorkerIndex(connection.remoteAddress, numProcesses)];
   		worker.send('sticky-session:connection', connection);
-  	}).listen(port);
+  	});
   }
 
   spawnWorker(index) {
@@ -44,6 +39,8 @@ class Proxy {
 			console.log('respawning worker', index);
 			spawnWorker(index);
 		});
+
+    this.emit('server-started', workers[index]);
   }
 
   forwardWorker(server) {
@@ -56,6 +53,11 @@ class Proxy {
       server.emit('connection', connection);
       connection.resume();
     });
+  }
+
+  start() {
+    var config = new Config();
+    proxyServer.listen(config.getConfig().port);
   }
 }
 

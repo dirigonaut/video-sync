@@ -13,9 +13,10 @@ var logManager = new LogManager();
 var redisServer   = null;
 var serverProcess = null;
 var stateProcess  = null;
-var proxy         = null;
+var proxy         = new Proxy();
 
-var numCPUs = require('os').cpus().length;
+var numCPUs = require('os').cpus().length - 1;
+var startedCPUs = 0;
 var config = new Config();
 
 process.on('uncaughtException', function (err) {
@@ -37,14 +38,25 @@ var configLoaded = function() {
 
       stateWorker.on('message', function(message) {
         console.log('starting servers');
-        if (message !== 'state-process:started') {
-          return;
+        if (message === 'state-process:started') {
+          proxy.initialize(numCPUs);
         }
-
-        proxy = new Proxy();
-        proxy.initialize(numCPUs - 1);
       });
     };
+
+    proxy.on('server-started', function(worker) {
+      console.log('server-started');
+      worker.on('message', function(message) {
+        console.log(message);
+        if(message === 'server-process:started') {
+          ++startedCPUs;
+          if(startedCPUs === numCPUs) {
+            console.log('starting proxy');
+            proxy.start();
+          }
+        }
+      });
+    });
 
     redisServer = new RedisServer();
     redisServer.start(startProcesses);
@@ -64,6 +76,7 @@ var configLoaded = function() {
       var proxy = new Proxy();
       proxy.forwardWorker(serverProcess.getServer());
       console.log(`Server Process: ${process.pid} started`);
+      process.send('server-process:started');
     });
 
     serverProcess.initialize();

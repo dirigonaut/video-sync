@@ -72,7 +72,7 @@ var initialize = function(publisher, subscriber) {
       if(commands !== null && commands !== undefined) {
         for(var i in commands) {
           log.silly(Util.inspect(commands[i], { showHidden: false, depth: null}));
-          redisSocket.broadcastToId.apply(null, commands[i]);
+          redisSocket.ping.apply(null, commands[i]);
         }
       }
     }
