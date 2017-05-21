@@ -7,6 +7,7 @@ var Validator     = require('../authentication/Validator');
 var Authenticator = require('../authentication/Authenticator');
 var ChatEngine    = require('../chat/ChatEngine');
 var Publisher     = require('../process/redis/RedisPublisher');
+var RedisSocket   = require('../process/redis/RedisSocket');
 var SocketLog     = require('../log/SocketLog');
 
 var AdminController     = require('../administration/AdminController');
@@ -19,6 +20,7 @@ var log       = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
 var socketLog = new SocketLog();
 
 var publisher;
+var redisSocket;
 var smtp;
 var session;
 var userAdmin;
@@ -27,6 +29,7 @@ var authenticator;
 
 function AuthenticationController(io) {
   publisher       = new Publisher();
+  redisSocket     = new RedisSocket()
   smtp            = new Smtp();
   session         = new Session();
   userAdmin       = new UserAdmin();
@@ -142,7 +145,7 @@ function userAuthorized(socket, io, handle) {
     session.getMediaPath(emitMediaReady);
 
     var emitHandles = function(handles) {
-      io.emit('chat-handles', handles);
+      redisSocket.broadcast('chat-handles', handles);
       chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has joined the session.`));
     }
 

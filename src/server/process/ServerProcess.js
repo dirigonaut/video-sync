@@ -28,7 +28,7 @@ class ServerProcess extends Events {
     super();
   }
 
-  initialize() {    
+  initialize() {
     var _this = this;
     log.info(`Trying to start ServerProcess on port ${config.getConfig().port}`);
     serverRedis   = new ServerRedis();
@@ -52,7 +52,7 @@ class ServerProcess extends Events {
       redisSocket.initialize(io);
 
       app.use(Express.static(config.getConfig().static));
-      server.listen(0, 'localhost');
+      server.listen(0);
 
       var socketLog = new SocketLog();
       socketLog.initialize(io);

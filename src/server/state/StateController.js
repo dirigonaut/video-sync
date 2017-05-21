@@ -36,7 +36,7 @@ function initialize(io, socket) {
 
     var onPlay = function(commands) {
       for(var i in commands) {
-        redisSocket.broadcastToId.apply(null, commands[i]);
+        redisSocket.ping.apply(null, commands[i]);
       }
 
       var message = chatEngine.buildMessage(socket.id, "issued play");
@@ -51,7 +51,7 @@ function initialize(io, socket) {
 
     var onPause = function(commands) {
       for(var i in commands) {
-        redisSocket.broadcastToId.apply(null, commands[i]);
+        redisSocket.ping.apply(null, commands[i]);
       }
 
       var message = chatEngine.buildMessage(socket.id, "issued pause");
@@ -66,7 +66,7 @@ function initialize(io, socket) {
 
     var onSeek = function(commands) {
       for(var i in commands) {
-        redisSocket.broadcastToId.apply(null, commands[i]);
+        redisSocket.ping.apply(null, commands[i]);
       }
 
       var message = chatEngine.buildMessage(socket.id, `issued seek to ${data.seekTime}`);
@@ -82,7 +82,7 @@ function initialize(io, socket) {
     var onSync = function(commands) {
       log.debug(`state-sync onSync ${commands}`);
       for(var i in commands) {
-        redisSocket.broadcastToId.apply(null, commands[i]);
+        redisSocket.ping.apply(null, commands[i]);
       }
 
       var message = chatEngine.buildMessage(socket.id, "issued sync");
@@ -114,7 +114,7 @@ function initialize(io, socket) {
 
     var onSync = function(commands) {
       for(var i in commands) {
-        redisSocket.broadcastToId.apply(null, commands[i]);
+        redisSocket.ping.apply(null, commands[i]);
       }
     };
 
@@ -126,7 +126,7 @@ function initialize(io, socket) {
 
     var onTime = function(commands) {
       for(var i in commands) {
-        redisSocket.broadcastToId.apply(null, commands[i]);
+        redisSocket.ping.apply(null, commands[i]);
       }
     };
 
@@ -140,7 +140,7 @@ function initialize(io, socket) {
     var onInit = function(id) {
       var onSync = function(commands) {
         for(var i in commands) {
-          redisSocket.broadcastToId.apply(null, commands[i]);
+          redisSocket.ping.apply(null, commands[i]);
         }
       };
 

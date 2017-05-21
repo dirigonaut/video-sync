@@ -9,7 +9,7 @@ var log = null;
 
 const LOG_LEVEL = "debug";
 const FILE_NAME = "logs.txt";
-const EXCEPTION = "exception";
+const EXCEPTION = "exception.txt";
 
 function LogManager() {
 }

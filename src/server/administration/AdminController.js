@@ -54,7 +54,7 @@ function initialize(io, socket) {
             log.debug('media-ready');
             var message = chatEngine.buildMessage(socket.id, "Video has been initialized.");
             chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
-            redisSocket.broadcastToIds(playerIds, 'media-ready');
+            redisSocket.broadcast('media-ready');
           };
 
           publisher.publish(Publisher.Enum.PLAYER, ['getPlayerIds', []], emitMediaReady);
@@ -99,7 +99,7 @@ function initialize(io, socket) {
           log.debug(`admin-chat-command emitting event`);
           var onState = function(commands) {
             for(var i in commands) {
-              redisSocket.broadcastToId.apply(null, commands[i]);
+              redisSocket.ping.apply(null, commands[i]);
             }
 
             chatResponse.apply(null, chat);

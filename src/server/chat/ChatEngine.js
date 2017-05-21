@@ -6,35 +6,30 @@ var log         = LogManager.getLog(LogManager.LogEnum.CHAT);
 var redisSocket = new RedisSocket();
 var publisher   = new Publisher();
 
-function ChatEngine() {
+class ChatEngine {
+  broadcast(event, message) {
+    log.debug(`ChatEngine.prototype.broadcast ${event}`);
+    if(event !== null && message !== null) {
+      redisSocket.broadcast(event, message);
+    }
+  }
+
+  ping(event, message) {
+    log.debug(`ChatEngine.prototype.ping ${event}`);
+    if(event !== null && event !== undefined && message !== null && message !== undefined) {
+      if(message.from !== undefined && message.from !== null) {
+        redisSocket.ping(message.from, event, message);
+      }
+    }
+  }
+
+  buildMessage(from, text) {
+    var message = new Object();
+    message.from = from;
+    message.text = text;
+    return message;
+  }
 }
-
-ChatEngine.prototype.broadcast = function(event, message) {
-  log.debug(`ChatEngine.prototype.broadcast ${event}`);
-  if(event !== null && message !== null) {
-    var broadcast = function(playerIds) {
-      redisSocket.broadcastToIds(playerIds, event, message);
-    }
-
-    publisher.publish(Publisher.Enum.PLAYER, ['getPlayerIds', []], broadcast);
-  }
-};
-
-ChatEngine.prototype.ping = function(event, message) {
-  log.debug(`ChatEngine.prototype.ping ${event}`);
-  if(event !== null && event !== undefined && message !== null && message !== undefined) {
-    if(message.from !== undefined && message.from !== null) {
-      redisSocket.broadcastToIds(message.from, event, message);
-    }
-  }
-};
-
-ChatEngine.prototype.buildMessage = function(from, text) {
-  var message = new Object();
-  message.from = from;
-  message.text = text;
-  return message;
-};
 
 module.exports = ChatEngine;
 

@@ -44,7 +44,7 @@ function initialize(io, socket) {
       log.debug(`chat-command emitting event`);
       var onState = function(commands) {
         for(var i in commands) {
-          redisSocket.broadcastToId.apply(null, commands[i]);
+          redisSocket.ping.apply(null, commands[i]);
         }
 
         chatResponse.apply(null, chat);
