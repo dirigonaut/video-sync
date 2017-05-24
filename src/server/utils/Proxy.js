@@ -34,13 +34,12 @@ class Proxy extends Events{
   spawnWorker(index) {
 		workers[index] = Cluster.fork({processType: 'serverProcess'});
 
-		// Optional: Restart worker on exit
 		workers[index].on('exit', function(code, signal) {
 			console.log('respawning worker', index);
 			spawnWorker(index);
 		});
 
-    this.emit('server-started', workers[index]);
+    this.emit('server-started', workers[index], index);
   }
 
   forwardWorker(server) {
