@@ -23,10 +23,14 @@ class RedisPublisher {
     args.push(key);
 
     var response = function(err, data) {
-      if(err === null && callback !== null && callback !== undefined) {
-        requestMap.set(key, callback);
+      if(err !== null) {
+        requestMap.remove(key, callback);
       }
     };
+
+    if(callback !== null && callback !== undefined) {
+      requestMap.set(key, callback);
+    }
 
     publisher.publish(channel, JSON.stringify(args), response);
   }

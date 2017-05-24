@@ -44,10 +44,9 @@ var configLoaded = function() {
       });
     };
 
-    proxy.on('server-started', function(worker) {
-      console.log('server-started');
+    proxy.on('server-started', function(worker, index) {
+      console.log(`server-started at index: ${index} with pid: ${worker.process.pid}`);
       worker.on('message', function(message) {
-        console.log(message);
         if(message === 'server-process:started') {
           ++startedCPUs;
           if(startedCPUs === numCPUs) {
@@ -70,12 +69,13 @@ var configLoaded = function() {
 
     stateProcess.initialize();
   } else if(process.env.processType === 'serverProcess') {
+    console.log(`Launching server Process: ${process.pid}`);
     serverProcess = new ServerProcess();
 
     serverProcess.on('started', function() {
       var proxy = new Proxy();
       proxy.forwardWorker(serverProcess.getServer());
-      console.log(`Server Process: ${process.pid} started`);
+      console.log(`Started server Process: ${process.pid}`);
       process.send('server-process:started');
     });
 

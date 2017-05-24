@@ -30,14 +30,14 @@ class ServerProcess extends Events {
 
   initialize() {
     var _this = this;
-    log.info(`Trying to start ServerProcess on port ${config.getConfig().port}`);
+    log.info(`Trying to start ServerProcess on port ${config.getConfig().port} with process ${process.pid}`);
     serverRedis   = new ServerRedis();
 
     var publisher = new Publisher();
     publisher.initialize();
 
     var initHttpsServer = function(pem) {
-      log.debug('Certificates found starting ServerProcess');
+      log.debug(`Certificates found initializing ${process.pid} ServerProcess`);
       var options = {
         key: pem.privateKey,
         cert: pem.certificate,
@@ -59,6 +59,7 @@ class ServerProcess extends Events {
 
       new AuthController(io);
 
+      log.info(`ServerProcess ${process.pid} ready to forward.`);
       _this.emit('started');
     }
 
