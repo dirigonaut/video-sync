@@ -6,6 +6,7 @@ var LogManager    = require('../log/LogManager');
 var basePath      = null;
 var log           = LogManager.getLog(LogManager.LogEnum.UTILS);
 var subCallbacks  = new Map();
+var publisher     = Redis.createClient();
 var client        = Redis.createClient();
 
 client.on("message", function(channel, message) {
@@ -83,7 +84,6 @@ function readFile(key, requestData) {
         log.error(`Could not insert segment into cache for key: ${key}:${index}`, err);
       } else {
         log.debug(`Publishing segment for key: ${key}:${index}`);
-        var publisher = client.duplicate();
         publisher.publish(key, JSON.stringify(segment));
       }
     };
@@ -108,7 +108,6 @@ function readFile(key, requestData) {
       } else {
         log.debug(`Publishing segment for key: ${key}:${index}`);
 
-        var publisher = client.duplicate();
         publisher.publish(key, JSON.stringify(segment));
       }
     };
@@ -129,13 +128,11 @@ var setCacheData = function(key, data, callback) {
     }
   };
 
-  var publisher = client.duplicate();
-  publisher.set(key, JSON.stringify(data), response);
+  publisher.set(key, JSON.stringify(data), 'EX', 24, response);
 };
 
 var getCacheData = function(key, callback) {
   log.debug('getCacheData for key: ', key);
-  var publisher = client.duplicate();
   publisher.get(key, function(err, reply) {
     callback(err, JSON.parse(reply));
   });
