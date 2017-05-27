@@ -1,15 +1,17 @@
 var Redis         = require('redis');
 
+var Config        = require('./Config');
 var FileIO        = require('../utils/FileIO');
 var LogManager    = require('../log/LogManager');
 
 var log           = LogManager.getLog(LogManager.LogEnum.UTILS);
-var basePath, subCallbacks, publisher, client;
+var config, basePath, subCallbacks, publisher, client;
 
 function lazyInit() {
+  config          = new Config();
   subCallbacks    = new Map();
-  publisher       = Redis.createClient();
-  client          = Redis.createClient();
+  publisher       = Redis.createClient(config.getConfig().redis);
+  client          = Redis.createClient(config.getConfig().redis);
 
   client.on("message", function(channel, message) {
     log.debug('Subscribers onMessage ', channel);

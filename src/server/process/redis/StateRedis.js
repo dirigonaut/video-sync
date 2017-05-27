@@ -5,15 +5,19 @@ var NeDatabase        = require('../../database/NeDatabase');
 var StateEngine       = require('../../state/StateEngine.js');
 var PlayerManager     = require('../../player/PlayerManager');
 var Session           = require('../../administration/Session');
+var Config            = require('../../utils/Config');
 
-var adapter, database, stateEngine, playerManager, session;
+var config, adapter, database, stateEngine, playerManager, session, subscriber;
 
 function lazyInit() {
+  config        = new Config();
   adapter       = new ReflectiveAdapter();
   database      = new NeDatabase();
   stateEngine   = new StateEngine();
   playerManager = new PlayerManager();
   session       = new Session();
+
+  subscriber    = Redis.createClient(config.getConfig().redis);
 }
 
 class StateRedis {
@@ -23,13 +27,12 @@ class StateRedis {
       StateRedis.prototype.lazyInit = true;
     }
 
-    this.subscriber = Redis.createClient();
-    initialize(this.subscriber);
+    initialize(subscriber);
 
-    this.subscriber.subscribe("database");
-    this.subscriber.subscribe("state");
-    this.subscriber.subscribe("player");
-    this.subscriber.subscribe("session");
+    subscriber.subscribe("database");
+    subscriber.subscribe("state");
+    subscriber.subscribe("player");
+    subscriber.subscribe("session");
   }
 }
 

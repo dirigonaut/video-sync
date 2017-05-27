@@ -1,14 +1,18 @@
 var Util              = require('util');
 var Redis             = require('redis');
 
+var Config            = require('../../utils/Config');
 var Session           = require('../../administration/Session');
 var ReflectiveAdapter = require('./ReflectiveAdapter');
 
-var session, adapter;
+var config, session, adapter, subscriber;
 
 function lazyInit() {
-  session = new Session();
-  adapter = new ReflectiveAdapter();
+  config              = new Config();
+  session             = new Session();
+  adapter             = new ReflectiveAdapter();
+
+  subscriber          = Redis.createClient(config.getConfig().redis);
 }
 
 class ServerRedis {
@@ -18,10 +22,8 @@ class ServerRedis {
       ServerRedis.prototype.lazyInit = true;
     }
 
-    this.subscriber = Redis.createClient();
-    initialize(this.subscriber);
-
-    this.subscriber.subscribe("session");
+    initialize(subscriber);
+    subscriber.subscribe("session");
   }
 }
 

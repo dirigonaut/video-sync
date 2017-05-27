@@ -1,12 +1,18 @@
 var Redis     = require('redis');
+var Config    = require('../../utils/Config');
 var Publisher = require('./RedisPublisher');
 
 var client;
 
+function lazyInit() {
+  config      = new Config();
+  client      = Redis.createClient(config.getConfig().redis);
+}
+
 class ReflectiveAdapter {
   constructor() {
     if(typeof ReflectiveAdapter.prototype.lazyInit === 'undefined') {
-      client = Redis.createClient();
+      lazyInit();
       ReflectiveAdapter.prototype.lazyInit = true;
     }
   }

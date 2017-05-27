@@ -3,18 +3,15 @@ var Config = require('../../utils/Config');
 
 var server;
 
+//TODO: There is an issue where the port can never be changed from the config as the startup
+//process does not respect it and will always spin up 6379 instead.
 class RedisServer {
   constructor() {
     var config = new Config();
-    var options;
+    var options = config.getConfig().redisStartUp;
 
-    var redisPath = config.getConfig().redis.path;
-    var redisConfig = config.getRedisConfig();
-
-    if(redisPath !== undefined && redisPath !== null) {
-      options = {
-        conf: redisConfig
-      };
+    if(options) {
+      options.conf = config.getRedisConfig();
     }
 
     if(options !== undefined && options !== null) {
