@@ -1,14 +1,26 @@
-var Redis         = require("redis");
+var Redis         = require('redis');
 var Cache         = require('../utils/Cache');
+var Config        = require('../utils/Config');
 var LogManager    = require('../log/LogManager');
 var Publisher     = require('../process/redis/RedisPublisher');
 
 var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
-var cache         = new Cache();
-var publisher 		= new Publisher();
-var client        = Redis.createClient();
+var config, cache, publisher, client;
 
-function Session() {
+function lazyInit() {
+  config        = new Config();
+  cache         = new Cache();
+  publisher 		= new Publisher();
+  client        = Redis.createClient();
+}
+
+class Session {
+  constructor() {
+    if(typeof Session.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      Session.prototype.lazyInit = true;
+    }
+  }
 }
 
 Session.prototype.setSession = function(id) {

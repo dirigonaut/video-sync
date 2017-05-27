@@ -10,17 +10,27 @@ var RedisSocket     = require('../process/redis/RedisSocket');
 var Publisher       = require('../process/redis/RedisPublisher');
 
 var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
+var userAdmin, session, validator, commandEngine, chatEngine, redisSocket, publisher;
 
-var userAdmin     = new UserAdmin();
-var session       = new Session();
-var validator     = new Validator();
-var commandEngine = new CommandEngine();
-var chatEngine    = new ChatEngine();
-var redisSocket   = new RedisSocket();
-var publisher     = new Publisher();
+function lazyInit() {
+  userAdmin       = new UserAdmin();
+  session         = new Session();
+  validator       = new Validator();
+  commandEngine   = new CommandEngine();
+  chatEngine      = new ChatEngine();
+  redisSocket     = new RedisSocket();
+  publisher       = new Publisher();
+}
 
-function AdminController(io, socket) {
-  initialize(io, socket);
+class AdminController {
+  constructor(io, socket) {
+    if(typeof AdminController.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      AdminController.prototype.lazyInit = true;
+    }
+
+    initialize(io, socket);
+  }
 }
 
 function initialize(io, socket) {

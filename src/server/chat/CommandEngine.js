@@ -4,11 +4,21 @@ var LogManager    = require('../log/LogManager');
 var Publisher     = require('../process/redis/RedisPublisher');
 
 var log           = LogManager.getLog(LogManager.LogEnum.CHAT);
-var userAdmin     = new UserAdmin();
-var chatEngine    = new ChatEngine();
-var publisher     = new Publisher();
+var userAdmin, chatEngine, publisher;
 
-function CommandEngine() {
+function lazyInit() {
+  userAdmin       = new UserAdmin();
+  chatEngine      = new ChatEngine();
+  publisher       = new Publisher();
+}
+
+class CommandEngine {
+  constructor() {
+    if(typeof CommandEngine.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      CommandEngine.prototype.lazyInit = true;
+    }
+  }
 }
 
 CommandEngine.prototype.processAdminCommand = function(admin, command, callback) {

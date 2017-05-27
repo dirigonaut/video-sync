@@ -1,15 +1,13 @@
 var LogManager    = require('../../log/LogManager');
-var PlayerManager = require('../../player/PlayerManager');
 var Player        = require('../../player/Player');
 
 var log           = LogManager.getLog(LogManager.LogEnum.STATE);
-var playerManager = new PlayerManager();
 
 function SyncRule(fuzzyRange) {
   this.fuzzyRange = fuzzyRange;
 }
 
-SyncRule.prototype.evaluate = function(issuer, callback) {
+SyncRule.prototype.evaluate = function(issuer, playerManager, callback) {
   log.silly("SyncRule.evaluate");
   var players = playerManager.getPlayers();
   var sync = false;

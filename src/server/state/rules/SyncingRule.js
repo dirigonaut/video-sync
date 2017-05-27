@@ -1,14 +1,12 @@
 var LogManager    = require('../../log/LogManager');
-var PlayerManager = require('../../player/PlayerManager');
 var Player        = require('../../player/Player');
 
 var log           = LogManager.getLog(LogManager.LogEnum.STATE);
-var playerManager = new PlayerManager();
 
 function SyncingRule() {
 }
 
-SyncingRule.prototype.evaluate = function(issuer, callback) {
+SyncingRule.prototype.evaluate = function(issuer, playerManager, callback) {
   log.info("SyncingRule.evaluate", issuer);
   if(issuer.sync === Player.Sync.SYNCING) {
   	var others = playerManager.getOtherPlayers(issuer.id);

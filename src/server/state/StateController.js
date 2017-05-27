@@ -1,4 +1,4 @@
-var Util = require('util');
+var Util          = require('util');
 var Validator     = require('../authentication/Validator');
 var Player        = require('../player/Player');
 var ChatEngine    = require('../chat/ChatEngine');
@@ -7,13 +7,24 @@ var Publisher     = require('../process/redis/RedisPublisher');
 var LogManager    = require('../log/LogManager');
 
 var log = LogManager.getLog(LogManager.LogEnum.STATE);
-var validator     = new Validator();
-var chatEngine    = new ChatEngine();
-var redisSocket   = new RedisSocket();
-var publisher     = new Publisher();
+var validator, chatEngine, redisSocket, publisher;
 
-function StateController(io, socket) {
-  initialize(io, socket);
+function lazyInit() {
+  validator       = new Validator();
+  chatEngine      = new ChatEngine();
+  redisSocket     = new RedisSocket();
+  publisher       = new Publisher();
+}
+
+class StateController {
+  constructor(io, socket) {
+    if(typeof StateController.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      StateController.prototype.lazyInit = true;
+    }
+
+    initialize(io, socket);
+  }
 }
 
 module.exports = StateController;

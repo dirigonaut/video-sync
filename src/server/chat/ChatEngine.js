@@ -3,10 +3,21 @@ var RedisSocket = require('../process/redis/RedisSocket');
 var LogManager  = require('../log/LogManager');
 
 var log         = LogManager.getLog(LogManager.LogEnum.CHAT);
-var redisSocket = new RedisSocket();
-var publisher   = new Publisher();
+var redisSocket, publisher;
+
+function lazyInit() {
+  redisSocket   = new RedisSocket();
+  publisher     = new Publisher();
+}
 
 class ChatEngine {
+  constructor() {
+    if(typeof ChatEngine.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      ChatEngine.prototype.lazyInit = true;
+    }
+  }
+
   broadcast(event, message) {
     log.debug(`ChatEngine.prototype.broadcast ${event}`);
     if(event !== null && message !== null) {

@@ -127,11 +127,11 @@ MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
   }
 
   if(!activeMeta.isSegmentBuffered(activeMeta.bufferIndex)) {
-    nextSegmentTime = this.getSegmentTimeCode(typeId, activeMeta.bufferIndex);
-
-    var step = parseFloat(this.getSegmentTimeCode(typeId, 1)) / 2;
-    nextSegmentTime = parseFloat(nextSegmentTime) + parseFloat(step);
-    nextSegmentTime = nextSegmentTime / 1000;
+    if(parseFloat(index) + this.threshold > activeMeta.bufferIndex) {
+      var step = parseFloat(this.getSegmentTimeCode(typeId, 1)) / 2;
+      nextSegmentTime = parseFloat(this.getSegmentTimeCode(typeId, activeMeta.bufferIndex)) + parseFloat(step);
+      nextSegmentTime = nextSegmentTime / 1000;
+    }
   }
 
   return nextSegmentTime;

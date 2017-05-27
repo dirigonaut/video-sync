@@ -4,13 +4,23 @@ var LogManager  = require('../log/LogManager');
 var Publisher   = require('../process/redis/RedisPublisher');
 var Config     	= require('../utils/Config');
 
-var config      = new Config();
 var log         = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
-var publisher   = new Publisher();
-var smtp        = new Smtp();
-var session     = new Session();
+var config, publisher, smtp, session;
 
-function UserAdministration() {
+function lazyInit() {
+  config      = new Config();
+  publisher   = new Publisher();
+  smtp        = new Smtp();
+  session     = new Session();
+}
+
+class UserAdministration {
+  constructor() {
+    if(typeof UserAdministration.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      UserAdministration.prototype.lazyInit = true;
+    }
+  }
 }
 
 UserAdministration.prototype.downgradeUser = function(user) {

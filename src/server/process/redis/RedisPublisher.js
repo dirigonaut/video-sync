@@ -5,36 +5,45 @@ var RedisSocket = require('./RedisSocket');
 var LogManager  = require('../../log/LogManager');
 
 var log         = LogManager.getLog(LogManager.LogEnum.UTILS);
+var publisher, subscriber, redisSocket, requestMap;
 
-var publisher   = Redis.createClient();
-var subscriber  = Redis.createClient();
-
-var requestMap  = new Map();
-var redisSocket = new RedisSocket();
+function lazyInit() {
+  publisher     = Redis.createClient();
+  subscriber    = Redis.createClient();
+  requestMap    = new Map();
+  redisSocket   = new RedisSocket();
+}
 
 class RedisPublisher {
-  initialize() {
-    requestMap = new Map();
-    initialize(publisher, subscriber);
-  }
-
-  publish(channel, args, callback) {
-    var key = createKey(channel);
-    args.push(key);
-
-    var response = function(err, data) {
-      if(err !== null) {
-        requestMap.remove(key, callback);
-      }
-    };
-
-    if(callback !== null && callback !== undefined) {
-      requestMap.set(key, callback);
+  constructor() {
+    if(typeof RedisPublisher.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      RedisPublisher.prototype.lazyInit = true;
     }
-
-    publisher.publish(channel, JSON.stringify(args), response);
   }
 }
+
+RedisPublisher.prototype.initialize = function() {
+  requestMap = new Map();
+  initialize(publisher, subscriber);
+};
+
+RedisPublisher.prototype.publish = function(channel, args, callback) {
+  var key = createKey(channel);
+  args.push(key);
+
+  var response = function(err, data) {
+    if(err !== null) {
+      requestMap.remove(key, callback);
+    }
+  };
+
+  if(callback !== null && callback !== undefined) {
+    requestMap.set(key, callback);
+  }
+
+  publisher.publish(channel, JSON.stringify(args), response);
+};
 
 RedisPublisher.Enum = { DATABASE: 'database', STATE: 'state', PLAYER: 'player', SESSION: 'session'};
 RedisPublisher.RespEnum = { RESPONSE: 'stateRedisResponse', COMMAND: 'stateRedisCommand'};

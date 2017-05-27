@@ -1,5 +1,4 @@
 var Cluster = require('cluster');
-var Fs      = require('fs');
 
 var RedisServer   = require('./src/server/process/redis/RedisServer');
 var StateProcess  = require('./src/server/process/StateProcess');
@@ -8,7 +7,7 @@ var Proxy         = require('./src/server/utils/Proxy');
 var LogManager    = require('./src/server/log/LogManager');
 var Config        = require('./src/server/utils/Config');
 
-var logManager = new LogManager();
+var logManager    = new LogManager();
 
 var redisServer   = null;
 var serverProcess = null;
@@ -29,19 +28,21 @@ var configLoaded = function() {
 
   if (Cluster.isMaster) {
     console.log(`Master ${process.pid} is running`);
-    var startProcesses = function() {
-      var stateWorker = Cluster.fork({processType: 'stateProcess'});
+    var startProcesses = function(redisUp) {
+      if(redisUp) {
+        var stateWorker = Cluster.fork({processType: 'stateProcess'});
 
-      stateWorker.on('exit', function(code, signal) {
-        console.error('State worker exited, app is now in non recoverable state.');
-      });
+        stateWorker.on('exit', function(code, signal) {
+          console.error('State worker exited, app is now in non recoverable state.');
+        });
 
-      stateWorker.on('message', function(message) {
-        console.log('starting servers');
-        if (message === 'state-process:started') {
-          proxy.initialize(numCPUs);
-        }
-      });
+        stateWorker.on('message', function(message) {
+          console.log('starting servers');
+          if (message === 'state-process:started') {
+            proxy.initialize(numCPUs);
+          }
+        });
+      }
     };
 
     proxy.on('server-started', function(worker, index) {

@@ -6,15 +6,28 @@ var RedisSocket   = require('../process/redis/RedisSocket');
 var Publisher     = require('../process/redis/RedisPublisher');
 
 var log           = LogManager.getLog(LogManager.LogEnum.CHAT);
-var commandEngine = new CommandEngine();
-var chatEngine    = new ChatEngine();
-var session       = new Session();
-var redisSocket   = new RedisSocket();
-var publisher     = new Publisher();
+var commandEngine, chatEngine, session, redisSocket, publisher;
 
-function ChatController(io, socket) {
-  initialize(io, socket);
+function lazyInit() {
+  commandEngine   = new CommandEngine();
+  chatEngine      = new ChatEngine();
+  session         = new Session();
+  redisSocket     = new RedisSocket();
+  publisher       = new Publisher();
 }
+
+class ChatController {
+  constructor(io, socket) {
+    if(typeof ChatController.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      ChatController.prototype.lazyInit = true;
+    }
+
+    initialize(io, socket);
+  }
+}
+
+module.exports = ChatController;
 
 function initialize(io, socket) {
   log.debug("Attaching ChatController");
@@ -69,5 +82,3 @@ function initialize(io, socket) {
     publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [socket.id]], processCommand);
   });
 }
-
-module.exports = ChatController;

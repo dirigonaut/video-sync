@@ -4,11 +4,21 @@ var Session       = require('../administration/Session');
 var Publisher     = require('../process/redis/RedisPublisher');
 var LogManager    = require('../log/LogManager');
 
-var session       = new Session();
-var publisher     = new Publisher();
 var log           = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
+var session, publisher;
 
-function Authenticator(){
+function lazyInit() {
+  session         = new Session();
+  publisher       = new Publisher();
+}
+
+class Authenticator{
+  constructor() {
+    if(typeof Authenticator.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      Authenticator.prototype.lazyInit = true;
+    }
+  }
 };
 
 Authenticator.prototype.requestToken = function(id, data, callback) {

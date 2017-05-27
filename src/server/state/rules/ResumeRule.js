@@ -1,15 +1,13 @@
 var LogManager    = require('../../log/LogManager');
-var PlayerManager = require('../../player/PlayerManager');
 var Player        = require('../../player/Player');
 
 var log           = LogManager.getLog(LogManager.LogEnum.STATE);
-var playerManager = new PlayerManager();
 
 function ResumeRule(fuzzyRange) {
   this.fuzzyRange = fuzzyRange;
 }
 
-ResumeRule.prototype.evaluate = function(issuer, callback) {
+ResumeRule.prototype.evaluate = function(issuer, playerManager, callback) {
   log.silly("ResumeRule.evaluate");
 	var others = playerManager.getOtherPlayers(issuer.id);
   var rearguard = null;
