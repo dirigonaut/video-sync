@@ -1,13 +1,15 @@
 var Redis       = require('redis');
 
+var Config      = require('../../utils/Config');
 var LogManager  = require('../../log/LogManager');
 
 var log         = LogManager.getLog(LogManager.LogEnum.GENERAL);
-var publisher, subscriber, io;
+var config, publisher, subscriber, io;
 
 function lazyInit() {
-  publisher     = Redis.createClient();
-  subscriber    = Redis.createClient();
+  config        = new Config();
+  publisher     = Redis.createClient(config.getConfig().redis);
+  subscriber    = Redis.createClient(config.getConfig().redis);
 }
 
 class RedisSocket {

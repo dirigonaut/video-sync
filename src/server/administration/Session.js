@@ -11,7 +11,7 @@ function lazyInit() {
   config        = new Config();
   cache         = new Cache();
   publisher 		= new Publisher();
-  client        = Redis.createClient();
+  client        = Redis.createClient(config.getConfig().redis);
 }
 
 class Session {

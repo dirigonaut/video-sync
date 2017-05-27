@@ -2,16 +2,19 @@ const crypto    = require('crypto');
 var Util        = require('util');
 var Redis       = require('redis');
 var RedisSocket = require('./RedisSocket');
+var Config      = require('../../utils/Config');
 var LogManager  = require('../../log/LogManager');
 
 var log         = LogManager.getLog(LogManager.LogEnum.UTILS);
-var publisher, subscriber, redisSocket, requestMap;
+var config, publisher, subscriber, redisSocket, requestMap;
 
 function lazyInit() {
-  publisher     = Redis.createClient();
-  subscriber    = Redis.createClient();
+  config        = new Config();
   requestMap    = new Map();
   redisSocket   = new RedisSocket();
+
+  publisher     = Redis.createClient(config.getConfig().redis);
+  subscriber    = Redis.createClient(config.getConfig().redis);
 }
 
 class RedisPublisher {
