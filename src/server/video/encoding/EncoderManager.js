@@ -11,11 +11,16 @@ const webm_manifest = "webm_dash_manifest";
 const mp4_manifest = "-frag-rap";
 
 var log = LogManager.getLog(LogManager.LogEnum.ENCODING);
+var socketLog;
 
-var socketLog = new SocketLog();
+function lazyInit() {
+	socketLog = new SocketLog();
+}
 
 function EncoderManager(data){
 	log.debug("EncodingManager", data);
+	lazyInit();
+
 	var self = this;
 	self.commands = [];
 	self.postProcess = [];

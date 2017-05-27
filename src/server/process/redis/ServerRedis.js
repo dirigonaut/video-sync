@@ -4,14 +4,25 @@ var Redis             = require('redis');
 var Session           = require('../../administration/Session');
 var ReflectiveAdapter = require('./ReflectiveAdapter');
 
-var session = new Session();
-var adapter = new ReflectiveAdapter();
+var session, adapter;
 
-function ServerRedis() {
-  this.subscriber = Redis.createClient();
-  initialize(this.subscriber);
+function lazyInit() {
+  session = new Session();
+  adapter = new ReflectiveAdapter();
+}
 
-  this.subscriber.subscribe("session");
+class ServerRedis {
+  constructor() {
+    if(typeof ServerRedis.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      ServerRedis.prototype.lazyInit = true;
+    }
+
+    this.subscriber = Redis.createClient();
+    initialize(this.subscriber);
+
+    this.subscriber.subscribe("session");
+  }
 }
 
 module.exports = ServerRedis;

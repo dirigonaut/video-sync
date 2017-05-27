@@ -1,32 +1,41 @@
-var Redis         = require("redis");
+var Redis         = require('redis');
 
 var FileIO        = require('../utils/FileIO');
 var LogManager    = require('../log/LogManager');
 
-var basePath      = null;
 var log           = LogManager.getLog(LogManager.LogEnum.UTILS);
-var subCallbacks  = new Map();
-var publisher     = Redis.createClient();
-var client        = Redis.createClient();
+var basePath, subCallbacks, publisher, client;
 
-client.on("message", function(channel, message) {
-  log.debug('Subscribers onMessage ', channel);
-  message = JSON.parse(message);
+function lazyInit() {
+  subCallbacks    = new Map();
+  publisher       = Redis.createClient();
+  client          = Redis.createClient();
 
-  var callbacks = subCallbacks.get(channel);
-  if(callbacks !== undefined && callbacks !== null) {
-    log.debug(`Subscribers returning data for key ${channel} and index ${message.index}`);
-    if(message.data !== null) {
-      message.data = new Buffer(new Uint8Array(message.data.data));
+  client.on("message", function(channel, message) {
+    log.debug('Subscribers onMessage ', channel);
+    message = JSON.parse(message);
+
+    var callbacks = subCallbacks.get(channel);
+    if(callbacks !== undefined && callbacks !== null) {
+      log.debug(`Subscribers returning data for key ${channel} and index ${message.index}`);
+      if(message.data !== null) {
+        message.data = new Buffer(new Uint8Array(message.data.data));
+      }
+
+      for(var i in callbacks) {
+        callbacks[i](message);
+      }
     }
+  });
+}
 
-    for(var i in callbacks) {
-      callbacks[i](message);
+class Cache {
+  constructor() {
+    if(typeof Cache.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      Cache.prototype.lazyInit = true;
     }
   }
-});
-
-function Cache() {
 }
 
 Cache.prototype.getSegment = function(requestData, callback) {

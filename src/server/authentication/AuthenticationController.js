@@ -17,17 +17,9 @@ var DatabaseController  = require('../database/DatabaseController');
 var ChatController      = require('../chat/ChatController');
 
 var log       = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
-var socketLog = new SocketLog();
+var publisher, redisSocket, smtp, session, userAdmin, validator, authenticator, socketLog
 
-var publisher;
-var redisSocket;
-var smtp;
-var session;
-var userAdmin;
-var validator;
-var authenticator;
-
-function AuthenticationController(io) {
+function lazyInit() {
   publisher       = new Publisher();
   redisSocket     = new RedisSocket()
   smtp            = new Smtp();
@@ -35,8 +27,18 @@ function AuthenticationController(io) {
   userAdmin       = new UserAdmin();
   validator		    = new Validator();
   authenticator   = new Authenticator();
+  socketLog       = new SocketLog();
+}
 
-  initialize(io);
+class AuthenticationController {
+  constructor(io, socket) {
+    if(typeof AuthenticationController.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      AuthenticationController.prototype.lazyInit = true;
+    }
+
+    initialize(io, socket);
+  }
 }
 
 module.exports = AuthenticationController;

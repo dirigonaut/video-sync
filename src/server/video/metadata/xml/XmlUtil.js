@@ -2,12 +2,17 @@ var DOMParser  = require('xmldom').DOMParser;
 var XmlFactory = require('./XmlFactory');
 var LogManager = require('../../../log/LogManager');
 
-var xmlFactory = new XmlFactory();
 var log = LogManager.getLog(LogManager.LogEnum.ENCODING);
+var xmlFactory;
 
-function XmlUtil() {
-
-};
+class XmlUtil {
+  constructor() {
+    if(typeof XmlUtil.prototype.lazyInit === 'undefined') {
+      xmlFactory = new XmlFactory();
+      XmlUtil.prototype.lazyInit = true;
+    }
+  }
+}
 
 XmlUtil.prototype.webmMetaToXml = function(meta) {
   log.debug("XmlUtil.webmMetaToXml", meta);

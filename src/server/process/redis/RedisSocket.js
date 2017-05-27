@@ -1,29 +1,38 @@
 var Redis       = require('redis');
 
-var LogManager    = require('../../log/LogManager');
-var log           = LogManager.getLog(LogManager.LogEnum.GENERAL);
+var LogManager  = require('../../log/LogManager');
 
-var publisher   = Redis.createClient();
-var subscriber  = Redis.createClient();
+var log         = LogManager.getLog(LogManager.LogEnum.GENERAL);
+var publisher, subscriber, io;
 
-var io = null;
+function lazyInit() {
+  publisher     = Redis.createClient();
+  subscriber    = Redis.createClient();
+}
 
 class RedisSocket {
-  initialize(socketIO) {
-    io = socketIO;
-    initialize(subscriber);
-  }
-
-  broadcast(key, message) {
-    log.silly(`RedisSocket.prototype.broadcastToIds`);
-    publisher.publish(RedisSocket.MessageEnum.BROADCAST, JSON.stringify([key, message]));
-  }
-
-  ping(id, key, message) {
-    log.silly(`RedisSocket.prototype.ping`);
-    publisher.publish(RedisSocket.MessageEnum.PING, JSON.stringify([id, key, message]));
+  constructor() {
+    if(typeof RedisSocket.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      RedisSocket.prototype.lazyInit = true;
+    }
   }
 }
+
+RedisSocket.prototype.initialize = function(socketIO) {
+  io = socketIO;
+  initialize(subscriber);
+};
+
+RedisSocket.prototype.broadcast = function(key, message) {
+  log.silly(`RedisSocket.prototype.broadcastToIds`);
+  publisher.publish(RedisSocket.MessageEnum.BROADCAST, JSON.stringify([key, message]));
+};
+
+RedisSocket.prototype.ping = function(id, key, message) {
+  log.silly(`RedisSocket.prototype.ping`);
+  publisher.publish(RedisSocket.MessageEnum.PING, JSON.stringify([id, key, message]));
+};
 
 RedisSocket.MessageEnum = { BROADCAST: 'redisSocketBroadcast', PING: 'redisSocketPing' };
 

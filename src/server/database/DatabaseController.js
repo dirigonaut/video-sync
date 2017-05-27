@@ -3,14 +3,27 @@ var Validator   = require('../authentication/Validator');
 var Publisher   = require('../process/redis/RedisPublisher');
 var LogManager  = require('../log/LogManager');
 
-var log       = LogManager.getLog(LogManager.LogEnum.DATABASE);
-var session   = new Session();
-var validator = new Validator();
-var publisher = new Publisher();
+var log         = LogManager.getLog(LogManager.LogEnum.DATABASE);
+var session, validator, publisher;
 
-function DatabaseController(io, socket) {
-  initialize(io, socket);
+function lazyInit() {
+  session       = new Session();
+  validator     = new Validator();
+  publisher     = new Publisher();
 }
+
+class DatabaseController {
+  constructor(io, socket) {
+    if(typeof DatabaseController.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      DatabaseController.prototype.lazyInit = true;
+    }
+
+    initialize(io, socket);
+  }
+}
+
+module.exports = DatabaseController;
 
 function initialize(io, socket) {
   log.debug("Attaching DatabaseController");
@@ -150,5 +163,3 @@ function initialize(io, socket) {
     session.isAdmin(socket.id, ifAdmin);
   });
 }
-
-module.exports = DatabaseController;

@@ -6,7 +6,6 @@ var LogManager  = require('../log/LogManager');
 
 var db;
 
-var config  = new Config();
 var log 		= LogManager.getLog(LogManager.LogEnum.DATABASE);
 
 function NeDatabase(){
@@ -14,6 +13,7 @@ function NeDatabase(){
 
 NeDatabase.prototype.initialize = function() {
 	if(db === null || db === undefined) {
+		var config  = new Config();
 		console.log(`Loading db from path ${Path.join(config.getAppDataDir(), 'database_inst')}`);
 		db = new Datastore({ filename: Path.join(config.getAppDataDir(), 'database_inst'), autoload: true });
 	}

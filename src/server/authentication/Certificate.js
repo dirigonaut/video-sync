@@ -3,16 +3,19 @@ var Moment     = require('moment');
 var LogManager = require('../log/LogManager');
 var Publisher  = require('../process/redis/RedisPublisher');
 
-var publisher = new Publisher();
+var publisher;
 
 var self;
 const EXPIR = 365;
 
 var log = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
 
-function Certificate() {
-  Moment().format('YYYY MM DD');
-  self = this;
+class Certificate {
+  constructor() {
+    Moment().format('YYYY MM DD');
+    self = this;
+    publisher= new Publisher();
+  }
 }
 
 Certificate.prototype.getCertificates = function(callback) {

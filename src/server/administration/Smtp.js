@@ -2,12 +2,20 @@ var NodeMailer	= require("nodemailer");
 var LogManager  = require('../log/LogManager');
 var Publisher   = require('../process/redis/RedisPublisher');
 
-var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
-var publisher 		= new Publisher();
-var smtpTransport = null;
-var activeSmtp		= null;
+var log         = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
+var publisher, smtpTransport, activeSmtp;
 
-function Smtp(){
+function lazyInit() {
+	publisher 		= new Publisher();
+}
+
+class Smtp{
+	constructor() {
+		if(typeof Smtp.prototype.lazyInit === 'undefined') {
+			lazyInit();
+			Smtp.prototype.lazyInit = true;
+		}
+	}
 };
 
 Smtp.prototype.initializeTransport = function(address, callback) {

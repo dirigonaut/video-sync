@@ -1,14 +1,22 @@
 var Util  = require('util');
 var Session = require('../administration/Session');
 
-var session = new Session();
-var io = null;
+var session, io;
 
-function SocketLog () {
+function lazyInit() {
+  session = new Session();
+}
 
+class SocketLog {
+  constructor() {
+    if(typeof SocketLog.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      SocketLog.prototype.lazyInit = true;
+    }
+  }
 };
 
-SocketLog.prototype.initialize = function(socketIO) {
+SocketLog.prototype.setSocketIO = function(socketIO) {
   io = socketIO;
 }
 

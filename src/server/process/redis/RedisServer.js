@@ -1,14 +1,14 @@
 var Redis = require('redis-server');
 var Config = require('../../utils/Config');
 
-var server = null;
+var server;
 
 class RedisServer {
   constructor() {
     var config = new Config();
     var options;
 
-    var redisPath = config.getConfig().redisPath;
+    var redisPath = config.getConfig().redis.path;
     var redisConfig = config.getRedisConfig();
 
     if(redisPath !== undefined && redisPath !== null) {
@@ -27,14 +27,14 @@ class RedisServer {
       server.open((err) => {
         if (err === null) {
           console.log("Redis server is up.");
-          callback();
+          callback(true);
         } else {
           console.log(err);
         }
       });
     } else {
       console.log("Redis has not been init check to make sure it has been configured properly.");
-      callback();
+      callback(false);
     }
   }
 

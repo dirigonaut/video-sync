@@ -9,13 +9,24 @@ var MpdUtil         = require('./metadata/MpdUtil');
 var Cache           = require('../utils/Cache');
 var LogManager      = require('../log/LogManager');
 
-var validator       = new Validator();
-var session         = new Session();
-var cache           = new Cache();
 var log             = LogManager.getLog(LogManager.LogEnum.VIDEO);
+var validator, session, cache;
 
-function VideoController(io, socket) {
-  initialize(io, socket);
+function lazyInit() {
+  validator       = new Validator();
+  session         = new Session();
+  cache           = new Cache();
+}
+
+class VideoController {
+  constructor(io, socket) {
+    if(typeof VideoController.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      VideoController.prototype.lazyInit = true;
+    }
+
+    initialize(io, socket);
+  }
 }
 
 function initialize(io, socket) {

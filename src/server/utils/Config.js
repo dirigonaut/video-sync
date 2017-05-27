@@ -13,8 +13,7 @@ const APP_DATA = Path.join(process.env.APPDATA || Path.join(process.env.HOME,
 
 var config = null;
 
-function Config() {
-};
+class Config { }
 
 Config.prototype.initialize = function(callback) {
   if(Cluster.isMaster) {

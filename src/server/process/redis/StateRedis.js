@@ -6,14 +6,23 @@ var StateEngine       = require('../../state/StateEngine.js');
 var PlayerManager     = require('../../player/PlayerManager');
 var Session           = require('../../administration/Session');
 
-var adapter       = new ReflectiveAdapter();
-var database      = new NeDatabase();
-var stateEngine   = new StateEngine();
-var playerManager = new PlayerManager();
-var session       = new Session();
+var adapter, database, stateEngine, playerManager, session;
+
+function lazyInit() {
+  adapter       = new ReflectiveAdapter();
+  database      = new NeDatabase();
+  stateEngine   = new StateEngine();
+  playerManager = new PlayerManager();
+  session       = new Session();
+}
 
 class StateRedis {
   constructor() {
+    if(typeof StateRedis.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      StateRedis.prototype.lazyInit = true;
+    }
+
     this.subscriber = Redis.createClient();
     initialize(this.subscriber);
 
