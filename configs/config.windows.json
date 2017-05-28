@@ -1,0 +1,12 @@
+{
+  "host" : "",
+  "port" : 8080,
+  "static" : "static",
+  "redis" : {
+    "host" : "127.0.0.1",
+    "port" : 6379
+  },
+  "redisStartUp" : {
+    "bin" : "C:\\Redis\\redis-server.exe"
+  }
+}
