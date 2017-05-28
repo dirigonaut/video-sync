@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "async": "^2.3.0",
+    "bluebird": "^3.5.0",
     "ebml": "^2.2.0",
     "express": "^4.15.2",
     "moment": "^2.14.1",
