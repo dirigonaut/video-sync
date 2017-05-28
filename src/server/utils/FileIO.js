@@ -120,7 +120,7 @@ FileIO.prototype.createStreamConfig = function(path, callback) {
   log.debug('FileIO.streamConfig');
   var streamConfig = new Object();
   streamConfig.path = path;
-  streamConfig.options = null;
+  streamConfig.options = {};
   streamConfig.callback = callback;
   streamConfig.onFinish = null;
 
@@ -131,7 +131,7 @@ FileIO.createStreamConfig = function(path, callback) {
   log.debug('FileIO.streamConfig');
   var streamConfig = new Object();
   streamConfig.path = path;
-  streamConfig.options = null;
+  streamConfig.options = {};
   streamConfig.callback = callback;
   streamConfig.onFinish = null;
 
