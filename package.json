@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "debug": "node static/resources/devInit.js && node --inspect=9999 index.js",
+    "debug": "node develop/devInit.js && node --inspect=9999 index.js",
+    "test": "node tests.js",
     "stats": "cloc --not-match-d resources --by-file ./src/ ./static/ index.js",
     "update-deps": "npm outdated --depth=0 | grep -v Package | awk '{print $1}' | xargs -I% npm install %@latest --save",
     "build": "nwbuild -p win64,linux64,osx64 -v 0.20.3 ~/repo/video-sync-2.0/",
