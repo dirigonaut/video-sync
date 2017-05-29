@@ -87,23 +87,25 @@ function initialize(io, socket) {
         var fileIO = new FileIO();
         var fileUtils = new FileUtils();
 
-        var readConfig = fileIO.createStreamConfig(basePath, function(file) {
-          if(file !== undefined && file !== null) {
-            var header = new Object();
-            var splitName = file.split(".")[0].split("_");
-            header.type = splitName[splitName.length - 1];
+        var readConfig = fileIO.createStreamConfig(basePath, function(files) {
+          if(files !== undefined && files !== null) {
+            for(let i = 0; i < files.length; ++i) {
+              var header = new Object();
+              var splitName = files[i].split(".")[0].split("_");
+              header.type = splitName[splitName.length - 1];
 
-            socket.emit("file-register-response", {requestId: validator.sterilizeVideoInfo(requestId), header: header}, function(bufferId) {
-              var anotherReadConfig = fileIO.createStreamConfig(`${fileUtils.ensureEOL(basePath)}${file}`, function(data) {
-                socket.emit("file-segment", {bufferId: bufferId, data: data});
+              socket.emit("file-register-response", {requestId: validator.sterilizeVideoInfo(requestId), header: header}, function(bufferId) {
+                var anotherReadConfig = fileIO.createStreamConfig(`${fileUtils.ensureEOL(basePath)}${files[i]}`, function(data) {
+                  socket.emit("file-segment", {bufferId: bufferId, data: data});
+                });
+
+                anotherReadConfig.onFinish = function() {
+                  socket.emit("file-end", {bufferId: bufferId});
+                };
+
+                fileIO.read(anotherReadConfig);
               });
-
-              anotherReadConfig.onFinish = function() {
-                socket.emit("file-end", {bufferId: bufferId});
-              };
-
-              fileIO.read(anotherReadConfig);
-            });
+            }
           }
         });
 
