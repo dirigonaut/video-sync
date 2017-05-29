@@ -1,9 +1,9 @@
-var Util              = require('util');
-var Redis             = require('redis');
+const Util              = require('util');
+const Redis             = require('redis');
 
-var Config            = require('../../utils/Config');
-var Session           = require('../../administration/Session');
-var ReflectiveAdapter = require('./ReflectiveAdapter');
+const Config            = require('../../utils/Config');
+const Session           = require('../../administration/Session');
+const ReflectiveAdapter = require('./ReflectiveAdapter');
 
 var config, session, adapter, subscriber;
 

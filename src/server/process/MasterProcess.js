@@ -1,24 +1,26 @@
-var Promise = require('bluebird');
-var Cluster = require('cluster');
+const Promise = require('bluebird');
+const Cluster = require('cluster');
 
-var RedisServer   = require('./redis/RedisServer');
-var StateProcess  = require('./StateProcess');
-var ServerProcess = require('./ServerProcess');
-var Proxy         = require('./../utils/Proxy');
-var LogManager    = require('./../log/LogManager');
-var Config        = require('./../utils/Config');
+const RedisServer   = require('./redis/RedisServer');
+const StateProcess  = require('./StateProcess');
+const ServerProcess = require('./ServerProcess');
+const Proxy         = require('./../utils/Proxy');
+const LogManager    = require('./../log/LogManager');
+const Config        = require('./../utils/Config');
 
 var logManager;
 var redisServer;
 var serverProcess;
 var stateProcess;
 var proxy;
-
-var numCPUs = require('os').cpus().length - 1;
-var startedCPUs = 0;
+var log;
 
 process.on('uncaughtException', function (err) {
-  console.log('UNCAUGHT EXCEPTION:', err);
+  if(log) {
+    log.error(err);
+  } else {
+    console.error('UNCAUGHT EXCEPTION:', err);
+  }
 });
 
 class MasterProcess { }
@@ -31,6 +33,8 @@ MasterProcess.prototype.start = Promise.coroutine(function* () {
   logManager.initialize(config);
   logManager.addFileLogging();
 
+  log = LogManager.getLog(LogManager.LogEnum.GENERAL);
+
   if(Cluster.isMaster) {
     yield startMaster();
   } else if(process.env.processType === 'stateProcess') {
@@ -40,34 +44,25 @@ MasterProcess.prototype.start = Promise.coroutine(function* () {
   }
 });
 
+MasterProcess.prototype.getLog = function() {
+  return log;
+};
+
+module.exports = MasterProcess;
+
 var startMaster = Promise.coroutine(function* () {
-  console.log(`Master ${process.pid} is running`);
+  log.info(`Master ${process.pid} is running`);
+  var numCPUs = require('os').cpus().length - 1;
+  var startedCPUs = 0;
+
   proxy = new Proxy();
-
-  var startProcesses = function(redisUp) {
-    if(redisUp) {
-      var stateWorker = Cluster.fork({processType: 'stateProcess'});
-
-      stateWorker.on('exit', function(code, signal) {
-        console.error('State worker exited, app is now in non recoverable state.');
-      });
-
-      stateWorker.on('message', function(message) {
-        console.log('starting servers');
-        if (message === 'state-process:started') {
-          proxy.initialize(numCPUs);
-        }
-      });
-    }
-  };
-
   proxy.on('server-started', function(worker, index) {
-    console.log(`server-started at index: ${index} with pid: ${worker.process.pid}`);
+    log.info(`server-started at index: ${index} with pid: ${worker.process.pid}`);
     worker.on('message', function(message) {
       if(message === 'server-process:started') {
         ++startedCPUs;
         if(startedCPUs === numCPUs) {
-          console.log('starting proxy');
+          log.info('starting proxy');
           proxy.start();
         }
       }
@@ -75,32 +70,44 @@ var startMaster = Promise.coroutine(function* () {
   });
 
   redisServer = new RedisServer();
-  redisServer.start(startProcesses);
+  yield redisServer.start();
+
+  var stateWorker = Cluster.fork({processType: 'stateProcess'});
+
+  stateWorker.on('exit', function(code, signal) {
+    log.error('State worker exited, app is now in non recoverable state.');
+  });
+
+  stateWorker.on('message', function(message) {
+    if(message === 'state-process:started') {
+      log.info('starting servers');
+      proxy.initialize(numCPUs);
+    }
+  });
 });
 
-var startState = Promise.coroutine(function* () {
-  stateProcess = new StateProcess();
+var startState = function() {
+  return new Promise(function() {
+    stateProcess = new StateProcess();
+    stateProcess.initialize();
 
-  stateProcess.on('started', function() {
-    console.log(`State Process: ${process.pid} started`);
+    log.info(`State Process: ${process.pid} started`);
     process.send('state-process:started');
   });
+};
 
-  stateProcess.initialize();
-});
+var startServer = function() {
+  return new Promise(function() {
+    log.info(`Launching server Process: ${process.pid}`);
+    serverProcess = new ServerProcess();
+    proxy = new Proxy();
 
-var startServer = Promise.coroutine(function* () {
-  console.log(`Launching server Process: ${process.pid}`);
-  serverProcess = new ServerProcess();
+    serverProcess.on('started', function() {
+      proxy.forwardWorker(serverProcess.getServer());
+      log.info(`Started server Process: ${process.pid}`);
+      process.send('server-process:started');
+    });
 
-  serverProcess.on('started', function() {
-    var proxy = new Proxy();
-    proxy.forwardWorker(serverProcess.getServer());
-    console.log(`Started server Process: ${process.pid}`);
-    process.send('server-process:started');
+    serverProcess.initialize();
   });
-
-  serverProcess.initialize();
-});
-
-module.exports = MasterProcess;
+};

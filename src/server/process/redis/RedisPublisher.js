@@ -1,9 +1,10 @@
-const crypto    = require('crypto');
-var Util        = require('util');
-var Redis       = require('redis');
-var RedisSocket = require('./RedisSocket');
-var Config      = require('../../utils/Config');
-var LogManager  = require('../../log/LogManager');
+const Promise     = require('bluebird');
+const Crypto      = require('crypto');
+const Util        = require('util');
+const Redis       = require('redis');
+const RedisSocket = require('./RedisSocket');
+const Config      = require('../../utils/Config');
+const LogManager  = require('../../log/LogManager');
 
 var log         = LogManager.getLog(LogManager.LogEnum.UTILS);
 var config, publisher, subscriber, redisSocket, requestMap;
@@ -46,6 +47,26 @@ RedisPublisher.prototype.publish = function(channel, args, callback) {
   }
 
   publisher.publish(channel, JSON.stringify(args), response);
+};
+
+RedisPublisher.prototype.publishAsync = function(channel, args) {
+  var key = createKey(channel);
+  args.push(key);
+
+  var response = function(err, data) {
+    if(err !== null) {
+      requestMap.remove(key);
+    }
+  };
+
+  var promise = new Promise(function(resolve, reject) {
+    return data;
+  });
+
+  requestMap.set(key, promise);
+  publisher.publish(channel, JSON.stringify(args), response);
+
+  return promise;
 };
 
 RedisPublisher.Enum = { DATABASE: 'database', STATE: 'state', PLAYER: 'player', SESSION: 'session'};
@@ -115,7 +136,7 @@ var initialize = function(publisher, subscriber) {
 };
 
 var createKey = function(seed) {
-  return `${seed}-${crypto.randomBytes(24).toString('hex')}`;
+  return `${seed}-${Crypto.randomBytes(24).toString('hex')}`;
 };
 
 var getRedisData = function(key, callback) {

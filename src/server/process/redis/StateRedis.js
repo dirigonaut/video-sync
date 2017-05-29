@@ -1,11 +1,11 @@
-var Redis             = require('redis');
+const Redis             = require('redis');
 
-var ReflectiveAdapter = require('./ReflectiveAdapter');
-var NeDatabase        = require('../../database/NeDatabase');
-var StateEngine       = require('../../state/StateEngine.js');
-var PlayerManager     = require('../../player/PlayerManager');
-var Session           = require('../../administration/Session');
-var Config            = require('../../utils/Config');
+const ReflectiveAdapter = require('./ReflectiveAdapter');
+const NeDatabase        = require('../../database/NeDatabase');
+const StateEngine       = require('../../state/StateEngine.js');
+const PlayerManager     = require('../../player/PlayerManager');
+const Session           = require('../../administration/Session');
+const Config            = require('../../utils/Config');
 
 var config, adapter, database, stateEngine, playerManager, session, subscriber;
 
