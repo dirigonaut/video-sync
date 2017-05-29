@@ -1,4 +1,5 @@
-var Fs          = require('fs');
+var Promise     = require('bluebird');
+var Fs          = Promise.promisifyAll(require('fs'));
 var Path        = require('path');
 var LogManager  = require('../log/LogManager');
 
@@ -67,13 +68,25 @@ FileIO.prototype.readDir = function(readConfig, extType) {
       matchingFiles = files;
     }
 
-    for(var i in matchingFiles) {
-      readConfig.callback(matchingFiles[i]);
-    }
-
-    readConfig.callback(null);
+    readConfig.callback(matchingFiles);
   });
 };
+
+FileIO.prototype.readDirAsync = Promise.coroutine(function* (path, extType) {
+  log.debug('FileIO.readDirAsync ' + path + ' ' + extType);
+  var files = yield Fs.readdirAsync(path);
+
+  var matchingFiles = [];
+  if(typeof files !== 'undefined' && files) {
+    for(let i = 0; i < files.length; ++i) {
+      if(Path.extname(files[i]).includes(extType)) {
+        matchingFiles.push(files[i]);
+      }
+    }
+  }
+
+  return matchingFiles;
+});
 
 FileIO.prototype.ensureDirExists = function(path, mask, callback) {
   log.debug('FileIO.ensureDirExists', path);
@@ -96,6 +109,17 @@ FileIO.prototype.ensureDirExists = function(path, mask, callback) {
     }
   });
 }
+
+FileIO.prototype.ensureDirExistsAsync = Promise.coroutine(function* (path, mask) {
+  log.debug('FileIO.ensureDirExistsAsync', path);
+
+  yield Fs.mkdirAsync(path, mask)
+  .catch(function(err) {
+      if (err.code !== 'EEXIST') {
+        throw new Error(err);
+      }
+    });
+});
 
 FileIO.prototype.dirExists = function(path, callback) {
   log.debug('FileIO.dirExists', path);
