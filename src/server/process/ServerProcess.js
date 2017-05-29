@@ -1,30 +1,25 @@
-var Path        = require('path');
-var Https       = require('https');
-var Events      = require('events');
+const Promise     = require('bluebird');
+const Path        = require('path');
+const Https       = require('https');
 
-var Express     = require('express');
-var SocketIO    = require('socket.io');
+const Express     = require('express');
+const SocketIO    = require('socket.io');
 
-var Config         = require('../utils/Config');
-var LogManager     = require('../log/LogManager');
-var ServerRedis    = require('./redis/ServerRedis');
-var Certificate    = require('../authentication/Certificate');
-var Publisher      = require('./redis/RedisPublisher');
-var RedisSocket    = require('./redis/RedisSocket');
-var SocketLog      = require('../log/SocketLog');
-var AuthController = require('../authentication/AuthenticationController');
+const Config         = require('../utils/Config');
+const LogManager     = require('../log/LogManager');
+const ServerRedis    = require('./redis/ServerRedis');
+const Certificate    = require('../authentication/Certificate');
+const Publisher      = require('./redis/RedisPublisher');
+const RedisSocket    = require('./redis/RedisSocket');
+const SocketLog      = require('../log/SocketLog');
+const AuthController = require('../authentication/AuthenticationController');
 
-var log            = LogManager.getLog(LogManager.LogEnum.GENERAL);
+var log              = LogManager.getLog(LogManager.LogEnum.GENERAL);
 var app, io, server, serverRedis;
 
-class ServerProcess extends Events {
-  constructor() {
-    super();
-  }
-}
+class ServerProcess { }
 
-ServerProcess.prototype.initialize = function() {
-  var _this = this;
+ServerProcess.prototype.initialize = Promise.coroutine(function* () {
   var config = new Config();
 
   log.info(`Trying to start ServerProcess on port ${config.getConfig().port} with process ${process.pid}`);
@@ -33,34 +28,31 @@ ServerProcess.prototype.initialize = function() {
   var publisher = new Publisher();
   publisher.initialize();
 
-  var initHttpsServer = function(pem) {
-    log.debug(`Certificates found initializing ${process.pid} ServerProcess`);
-    var options = {
-      key: pem.privateKey,
-      cert: pem.certificate,
-      requestCert: true,
-    };
+  var pem = yield new Certificate().getCertificates();
 
-    app = Express();
-    server = Https.createServer(options, app);
-    io = SocketIO.listen(server);
+  log.debug(`Certificates found initializing ${process.pid} ServerProcess`);
+  var options = {
+    key: pem.privateKey,
+    cert: pem.certificate,
+    requestCert: true,
+  };
 
-    var redisSocket = new RedisSocket();
-    redisSocket.initialize(io);
+  app = Express();
+  server = Https.createServer(options, app);
+  io = SocketIO.listen(server);
 
-    app.use(Express.static(config.getConfig().static));
-    server.listen(0);
+  var redisSocket = new RedisSocket();
+  redisSocket.initialize(io);
 
-    var socketLog = new SocketLog();
-    socketLog.setSocketIO(io);
+  app.use(Express.static(config.getConfig().static));
+  server.listen(0);
 
-    new AuthController(io);
+  var socketLog = new SocketLog();
+  socketLog.setSocketIO(io);
 
-    log.info(`ServerProcess ${process.pid} ready to forward.`);
-    _this.emit('started');
-  }
+  new AuthController(io);
 
-  new Certificate().getCertificates(initHttpsServer);
+  log.info(`ServerProcess ${process.pid} ready to forward.`);
 };
 
 ServerProcess.prototype.getServer = function() {

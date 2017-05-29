@@ -19,30 +19,24 @@ class RedisServer {
     }
   }
 
-  start(callback) {
+  start() {
     if(server !== undefined && server !== null) {
-      server.open((err) => {
-        if (err === null) {
-          console.log("Redis server is up.");
-          callback(true);
-        } else {
-          console.log(err);
-        }
+      return server.open().then(() => {
+        console.log("Redis server has started.");
       });
-    } else {
-      console.log("Redis has not been init check to make sure it has been configured properly.");
-      callback(false);
     }
+
+    throw new Error("Redis has not been init check to make sure it has been configured properly.");
   }
 
   end() {
     if(server !== undefined && server !== null) {
-      server.close().then(() => {
+      return server.close().then(() => {
         console.log("Redis server has shut down.");
       });
-    } else {
-      console.log("Redis has not been init check to make sure it has been configured properly.");
     }
+
+    throw new Error("Redis has not been init check to make sure it has been configured properly.");
   }
 }
 

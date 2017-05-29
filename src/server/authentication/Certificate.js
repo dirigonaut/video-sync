@@ -1,49 +1,53 @@
-var Forge      = require('node-forge');
-var Moment     = require('moment');
-var LogManager = require('../log/LogManager');
-var Publisher  = require('../process/redis/RedisPublisher');
+const Promise    = require('bluebird');
+const Forge      = require('node-forge');
+const Moment     = require('moment');
+const LogManager = require('../log/LogManager');
+const Publisher  = require('../process/redis/RedisPublisher');
 
-var publisher;
-
-var self;
 const EXPIR = 365;
 
 var log = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
+var publisher;
+
+function lazyInit() {
+  publisher = Redis.createClient(config.getConfig().redis);
+  Moment().format('YYYY MM DD');
+}
 
 class Certificate {
   constructor() {
-    Moment().format('YYYY MM DD');
-    self = this;
-    publisher= new Publisher();
+    if(typeof Certificate.prototype.lazyInit === 'undefined') {
+      lazyInit();
+      Certificate.prototype.lazyInit = true;
+    }
   }
 }
 
-Certificate.prototype.getCertificates = function(callback) {
+Certificate.prototype.getCertificates = Promise.coroutine(function* () {
   log.debug("Certificate.prototype.getCertificates");
-  var validateCerts = function(certs) {
-    if(certs === null || certs === undefined || certs.length === 0) {
-      log.info("There are no SSL Certificates, signing new ones.");
-      var cert = self._generate(self._getAttributes(), callback);
-    } else {
-      log.info("Loading SSL Certificates.");
-      var cert = certs[0];
-      if(Moment().diff(cert.expire) < -1) {
-        callback(cert.pem);
-      } else {
-        log.info("SSL Certificates are expired, signing new ones.");
-        publisher.publish(Publisher.Enum.DATABASE, ['deleteCerts', [Moment().valueOf()]]);
+  var certs = yield publisher.publish(Publisher.Enum.DATABASE, ['readCerts']);
 
-        self._generate(self._getAttributes(), callback);
-      }
+  if(typeof certs === 'undefind' || !certs) {
+    log.info("There are no SSL Certificates, signing new ones.");
+    cert = yield generate(getAttributes());
+  } else {
+    log.info("Loading SSL Certificates.");
+    cert = certs[0];
+
+    if(Moment().diff(cert.expire) > -1) {
+      log.info("SSL Certificates are expired, signing new ones.");
+      yield publisher.publish(Publisher.Enum.DATABASE, ['deleteCerts', [Moment().valueOf()]]);
+
+      certs = yield generate(getAttributes());
     }
   }
 
-  publisher.publish(Publisher.Enum.DATABASE, ['readCerts'], validateCerts);
-};
+  return certs;
+});
 
 module.exports = Certificate;
 
-Certificate.prototype._generate = function(attrs, callback) {
+var generate = function(attrs) {
   log.debug("Certificate.prototype._generate");
   var pki = Forge.pki;
 
@@ -71,10 +75,10 @@ Certificate.prototype._generate = function(attrs, callback) {
     certificate: pki.certificateToPem(cert)
   };
 
-  self._save(pem, callback);
+  return save(pem);
 };
 
-Certificate.prototype._getAttributes = function() {
+var getAttributes = function() {
   var attrs = [{
     name: 'commonName',
     value: 'example.org'
@@ -98,8 +102,8 @@ Certificate.prototype._getAttributes = function() {
   return attrs;
 };
 
-Certificate.prototype._save = function(certs, callback) {
-  log.debug("Certificate.prototype._save");
+var save = Promise.coroutine(function* (certs) {
+  log.debug("Certificate.prototype.save");
   var certificate = { expire: Moment().add(EXPIR, 'days').valueOf(), pem: certs };
-  publisher.publish(Publisher.Enum.DATABASE, ['createCerts', [certificate]], callback);
-};
+  yield publisher.publish(Publisher.Enum.DATABASE, ['createCerts', [certificate]]);
+});
