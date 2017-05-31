@@ -1,2 +1,2 @@
-var Bundler = require('../../src/server/utils/Bundler');
+var Bundler = require('../src/server/utils/Bundler');
 new Bundler();

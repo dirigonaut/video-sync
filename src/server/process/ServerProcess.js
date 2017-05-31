@@ -53,7 +53,7 @@ ServerProcess.prototype.initialize = Promise.coroutine(function* () {
   new AuthController(io);
 
   log.info(`ServerProcess ${process.pid} ready to forward.`);
-};
+});
 
 ServerProcess.prototype.getServer = function() {
   return server;

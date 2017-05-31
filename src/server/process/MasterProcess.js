@@ -36,11 +36,11 @@ MasterProcess.prototype.start = Promise.coroutine(function* () {
   log = LogManager.getLog(LogManager.LogEnum.GENERAL);
 
   if(Cluster.isMaster) {
-    yield startMaster();
+    return startMaster();
   } else if(process.env.processType === 'stateProcess') {
-    yield startState();
+    return startState();
   } else if(process.env.processType === 'serverProcess') {
-    yield startServer();
+    return startServer();
   }
 });
 
@@ -96,18 +96,14 @@ var startState = function() {
   });
 };
 
-var startServer = function() {
-  return new Promise(function() {
+var startServer = Promise.coroutine(function* () {
     log.info(`Launching server Process: ${process.pid}`);
     serverProcess = new ServerProcess();
     proxy = new Proxy();
 
-    serverProcess.on('started', function() {
-      proxy.forwardWorker(serverProcess.getServer());
-      log.info(`Started server Process: ${process.pid}`);
-      process.send('server-process:started');
-    });
+    yield serverProcess.initialize();
 
-    serverProcess.initialize();
-  });
-};
+    proxy.forwardWorker(serverProcess.getServer());
+    log.info(`Started server Process: ${process.pid}`);
+    process.send('server-process:started');
+});

@@ -1,18 +1,23 @@
 const Promise     = require('bluebird');
 const Crypto      = require('crypto');
+const Events      = require('events');
 const Util        = require('util');
 const Redis       = require('redis');
+
 const RedisSocket = require('./RedisSocket');
 const Config      = require('../../utils/Config');
 const LogManager  = require('../../log/LogManager');
 
+const TIMEOUT   = 10000;
 var log         = LogManager.getLog(LogManager.LogEnum.UTILS);
-var config, publisher, subscriber, redisSocket, requestMap;
+
+var config, publisher, subscriber, redisSocket, requestMap, asyncEmitter;
 
 function lazyInit() {
   config        = new Config();
   requestMap    = new Map();
   redisSocket   = new RedisSocket();
+  asyncEmitter  = new Events();
 
   publisher     = Redis.createClient(config.getConfig().redis);
   subscriber    = Redis.createClient(config.getConfig().redis);
@@ -53,18 +58,15 @@ RedisPublisher.prototype.publishAsync = function(channel, args) {
   var key = createKey(channel);
   args.push(key);
 
-  var response = function(err, data) {
-    if(err !== null) {
-      requestMap.remove(key);
-    }
-  };
-
   var promise = new Promise(function(resolve, reject) {
-    return data;
+    asyncEmitter.on(key, resolve);
+    setTimeout(function(err) {
+      asyncEmitter.removeListener(key, resolve);
+      reject(err);
+    },TIMEOUT, `Request for Key: ${key}, timed out.`);
   });
 
-  requestMap.set(key, promise);
-  publisher.publish(channel, JSON.stringify(args), response);
+  publisher.publish(channel, JSON.stringify(args));
 
   return promise;
 };
@@ -100,6 +102,12 @@ var initialize = function(publisher, subscriber) {
             log.silly(Util.inspect(data, { showHidden: false, depth: null }));
             callback.apply(callback, data);
           }
+          getRedisData(key, onData);
+        } else {
+          var onData = function(data) {
+            asyncEmitter.emit(key, JSON.parse(data[0]));
+          };
+
           getRedisData(key, onData);
         }
       }
