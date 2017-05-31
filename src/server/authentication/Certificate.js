@@ -10,7 +10,7 @@ var log = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
 var publisher;
 
 function lazyInit() {
-  publisher = Redis.createClient(config.getConfig().redis);
+  publisher = new Publisher();
   Moment().format('YYYY MM DD');
 }
 
@@ -25,7 +25,9 @@ class Certificate {
 
 Certificate.prototype.getCertificates = Promise.coroutine(function* () {
   log.debug("Certificate.prototype.getCertificates");
-  var certs = yield publisher.publish(Publisher.Enum.DATABASE, ['readCerts']);
+  var certs = yield publisher.publishAsync(Publisher.Enum.DATABASE, ['readCerts']);
+  console.log(`${process.pid}`);
+  console.log(certs);
 
   if(typeof certs === 'undefind' || !certs) {
     log.info("There are no SSL Certificates, signing new ones.");
@@ -34,15 +36,15 @@ Certificate.prototype.getCertificates = Promise.coroutine(function* () {
     log.info("Loading SSL Certificates.");
     cert = certs[0];
 
-    if(Moment().diff(cert.expire) > -1) {
+    if(Moment().diff(cert.expire) >= -1) {
       log.info("SSL Certificates are expired, signing new ones.");
-      yield publisher.publish(Publisher.Enum.DATABASE, ['deleteCerts', [Moment().valueOf()]]);
+      yield publisher.publishAsync(Publisher.Enum.DATABASE, ['deleteCerts', [Moment().valueOf()]]);
 
       certs = yield generate(getAttributes());
     }
   }
 
-  return certs;
+  return cert;
 });
 
 module.exports = Certificate;
@@ -102,8 +104,8 @@ var getAttributes = function() {
   return attrs;
 };
 
-var save = Promise.coroutine(function* (certs) {
+var save = function (certs) {
   log.debug("Certificate.prototype.save");
   var certificate = { expire: Moment().add(EXPIR, 'days').valueOf(), pem: certs };
-  yield publisher.publish(Publisher.Enum.DATABASE, ['createCerts', [certificate]]);
-});
+  return publisher.publishAsync(Publisher.Enum.DATABASE, ['createCerts', [certificate]]);
+};
