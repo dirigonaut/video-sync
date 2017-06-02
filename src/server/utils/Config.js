@@ -12,6 +12,8 @@ const CONFIG_NAME_OS  = `config.${process.platform}.json`;
 const REDIS_CONFIG    = "redis.conf";
 const REDIS_CONFIG_OS = `redis.${process.platform}.conf`;
 
+const CERTIFICATE     = "certificate.pem"
+
 const ROOT_DIR    = Path.join(__dirname, "../../../");
 const CONFIG_DIR  = Path.join(ROOT_DIR, "configs");
 const APP_DATA    = Path.join(process.env.APPDATA || Path.join(process.env.HOME,
@@ -38,8 +40,12 @@ Config.prototype.getConfig = function() {
   return config;
 };
 
-Config.prototype.getRedisConfig = function() {
+Config.prototype.getRedisConfigPath = function() {
   return Path.join(APP_DATA, REDIS_CONFIG);
+};
+
+Config.prototype.getCertificatePath = function() {
+  return Path.join(APP_DATA, CERTIFICATE);
 };
 
 Config.prototype.getAppDataDir = function() {

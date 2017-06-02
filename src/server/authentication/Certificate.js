@@ -1,4 +1,5 @@
 const Promise    = require('bluebird');
+const Fs         = Promise.promisifyAll(require('fs'));
 const Forge      = require('node-forge');
 const Moment     = require('moment');
 const LogManager = require('../log/LogManager');
@@ -25,26 +26,27 @@ class Certificate {
 
 Certificate.prototype.getCertificates = Promise.coroutine(function* () {
   log.debug("Certificate.prototype.getCertificates");
-  var certs = yield publisher.publishAsync(Publisher.Enum.DATABASE, ['readCerts']);
-  console.log(`${process.pid}`);
-  console.log(certs);
+  var cert = yield Fs.readFileAsync(config.getCertificatePath())
+  .catch(function(err) {
+    log.error(err);
+    return undefined;
+  });
 
-  if(typeof certs === 'undefind' || !certs) {
+  if(typeof cert === 'undefind' || !cert) {
     log.info("There are no SSL Certificates, signing new ones.");
     cert = yield generate(getAttributes());
   } else {
     log.info("Loading SSL Certificates.");
-    cert = certs[0];
+    cert = JSON.parse(cert);
 
     if(Moment().diff(cert.expire) >= -1) {
       log.info("SSL Certificates are expired, signing new ones.");
-      yield publisher.publishAsync(Publisher.Enum.DATABASE, ['deleteCerts', [Moment().valueOf()]]);
 
-      certs = yield generate(getAttributes());
+      cert = yield generate(getAttributes());
     }
   }
 
-  return cert;
+  return cert.pem;
 });
 
 module.exports = Certificate;
@@ -107,5 +109,8 @@ var getAttributes = function() {
 var save = function (certs) {
   log.debug("Certificate.prototype.save");
   var certificate = { expire: Moment().add(EXPIR, 'days').valueOf(), pem: certs };
-  return publisher.publishAsync(Publisher.Enum.DATABASE, ['createCerts', [certificate]]);
+  return Fs.writeFileAsync(config.getCertificatePath(), JSON.stringify(certificate))
+  .then(function() {
+    return certificate;
+  });
 };

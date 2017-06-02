@@ -9,10 +9,6 @@ var workers = [];
 
 class Proxy extends Events{
   initialize(numProcesses) {
-    for (let i = 0; i < numProcesses; i++) {
-      this.spawnWorker(i);
-    }
-
     var getWorkerIndex = function(ip, len) {
       var s = '';
       for (let i = 0, _len = ip.length; i < _len; i++) {
