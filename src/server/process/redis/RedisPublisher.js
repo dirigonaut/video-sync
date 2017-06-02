@@ -103,12 +103,6 @@ var initialize = function(publisher, subscriber) {
             callback.apply(callback, data);
           }
           getRedisData(key, onData);
-        } else {
-          var onData = function(data) {
-            asyncEmitter.emit(key, JSON.parse(data[0]));
-          };
-
-          getRedisData(key, onData);
         }
       }
     } else if(channel === RedisPublisher.RespEnum.COMMAND) {
