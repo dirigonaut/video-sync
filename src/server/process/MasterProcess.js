@@ -27,7 +27,7 @@ class MasterProcess { }
 
 MasterProcess.prototype.start = Promise.coroutine(function* () {
   var config = new Config();
-  yield config.initialize();
+  yield config.initialize().catch(console.error);
 
   logManager = new LogManager();
   logManager.initialize(config);
@@ -36,11 +36,11 @@ MasterProcess.prototype.start = Promise.coroutine(function* () {
   log = LogManager.getLog(LogManager.LogEnum.GENERAL);
 
   if(Cluster.isMaster) {
-    return startMaster();
+    startMaster();
   } else if(process.env.processType === 'stateProcess') {
-    return startState();
+    startState();
   } else if(process.env.processType === 'serverProcess') {
-    return startServer();
+    startServer();
   }
 });
 
@@ -53,17 +53,20 @@ module.exports = MasterProcess;
 var startMaster = Promise.coroutine(function* () {
   log.info(`Master ${process.pid} is running`);
   var numCPUs = require('os').cpus().length - 1;
-  var startedCPUs = 0;
+  var workerIndex = 0;
 
   proxy = new Proxy();
   proxy.on('server-started', function(worker, index) {
     log.info(`server-started at index: ${index} with pid: ${worker.process.pid}`);
     worker.on('message', function(message) {
       if(message === 'server-process:started') {
-        ++startedCPUs;
-        if(startedCPUs === numCPUs) {
+        ++workerIndex;
+
+        if(workerIndex >= numCPUs) {
           log.info('starting proxy');
           proxy.start();
+        } else {
+          proxy.spawnWorker(workerIndex);
         }
       }
     });
@@ -82,18 +85,17 @@ var startMaster = Promise.coroutine(function* () {
     if(message === 'state-process:started') {
       log.info('starting servers');
       proxy.initialize(numCPUs);
+      proxy.spawnWorker(workerIndex);
     }
   });
 });
 
 var startState = function() {
-  return new Promise(function() {
-    stateProcess = new StateProcess();
-    stateProcess.initialize();
+  stateProcess = new StateProcess();
+  stateProcess.initialize();
 
-    log.info(`State Process: ${process.pid} started`);
-    process.send('state-process:started');
-  });
+  log.info(`State Process: ${process.pid} started`);
+  process.send('state-process:started');
 };
 
 var startServer = Promise.coroutine(function* () {

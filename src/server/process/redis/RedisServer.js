@@ -11,7 +11,7 @@ class RedisServer {
     var options = config.getConfig().redisStartUp;
 
     if(options) {
-      options.conf = config.getRedisConfig();
+      options.conf = config.getRedisConfigPath();
     }
 
     if(options !== undefined && options !== null) {
