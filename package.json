@@ -5,11 +5,9 @@
   "scripts": {
     "start": "node index.js",
     "debug": "node develop/devInit.js && node --inspect=9999 index.js",
-    "test": "node tests.js",
+    "test": "mocha test/**/*.js",
     "stats": "cloc --not-match-d resources --by-file ./src/ ./static/ index.js",
-    "update-deps": "npm outdated --depth=0 | grep -v Package | awk '{print $1}' | xargs -I% npm install %@latest --save",
-    "build": "nwbuild -p win64,linux64,osx64 -v 0.20.3 ~/repo/video-sync-2.0/",
-    "build-win": "rm -rf ./build/video-sync/* && nwbuild -p win64 -v 0.20.3 ~/repo/video-sync-2.0/"
+    "update-deps": "npm outdated --depth=0 | grep -v Package | awk '{print $1}' | xargs -I% npm install %@latest --save"
   },
   "dependencies": {
     "async": "^2.3.0",
@@ -32,6 +30,8 @@
   },
   "devDependencies": {
     "browserify": "^14.1.0",
+    "mocha": "^3.4.2",
+    "should": "^11.2.1",
     "watchify": "^3.9.0"
   },
   "description": "This README would normally document whatever steps are necessary to get your application up and running.",

@@ -1,13 +1,15 @@
-var FileIO          = require('../utils/FileIO');
-var FileUtils       = require('../../server/utils/FileSystemUtils');
-var EncoderManager  = require('./encoding/EncoderManager');
-var WebmMetaData    = require('./metadata/WebmMetaData');
-var Session         = require('../administration/Session');
-var Validator       = require('../authentication/Validator');
-var XmlUtil         = require('./metadata/xml/XmlUtil');
-var MpdUtil         = require('./metadata/MpdUtil');
-var Cache           = require('../utils/Cache');
-var LogManager      = require('../log/LogManager');
+const Promise         = require('bluebird');
+const FileIO          = require('../utils/FileIO');
+const FileUtils       = require('../../server/utils/FileSystemUtils');
+const EncoderManager  = require('./encoding/EncoderManager');
+const FfprobeProcess  = require('./encoding/process/FfprobeProcess');
+const WebmMetaData    = require('./metadata/WebmMetaData');
+const Session         = require('../administration/Session');
+const Validator       = require('../authentication/Validator');
+const XmlUtil         = require('./metadata/xml/XmlUtil');
+const MpdUtil         = require('./metadata/MpdUtil');
+const Cache           = require('../utils/Cache');
+const LogManager      = require('../log/LogManager');
 
 var log             = LogManager.getLog(LogManager.LogEnum.VIDEO);
 var validator, session, cache;
@@ -132,6 +134,12 @@ function initialize(io, socket) {
     };
 
     session.getMediaPath(handleMediaPath);
+  });
+
+  socket.on('get-meta-info', function(data) {
+    log.debug('get-meta-info', data);
+
+
   });
 }
 
