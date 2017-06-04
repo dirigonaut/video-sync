@@ -5,6 +5,10 @@ const Promise = require('bluebird');
 var Spawn = require('child_process').spawn;
 var Split = require('split');
 
+const REGEXP_SPLIT = '[\\/[A-Z]*]([a-z\\s\\S]*?)[\\/[A-Z]*]';
+const REGEX_FIND_HEADERS = '[[A-Z]*]';
+const REGEX_REMOVE_HEADERS = '\\[\\/*[A-Z]*\\]';
+
 class FfprobeProcess extends Events { }
 
 FfprobeProcess.prototype.process = function(command) {
@@ -27,9 +31,7 @@ FfprobeProcess.prototype.process = function(command) {
   return new Promise(function(resolve, reject) {
     this.once('close', function() {
       if(output) {
-        output = output.toString().replace(/\[\/*[A-Z]*\]/g, '').trim();
-        var json = '{' + output.replace(/\n/g, ', ').replace(/=/g, ': ') + '}';
-        resolve(JSON.stringify(json));
+        resolve(format(output, REGEXP_SPLIT));
       } else {
         reject(new Error('FFprobe: No output'));
       }
@@ -39,3 +41,32 @@ FfprobeProcess.prototype.process = function(command) {
 };
 
 module.exports = FfprobeProcess;
+
+function format(input, regex) {
+  var regExp = new RegExp(regex, 'gm');
+  var jsonResults = { stream : [], format: [] };
+  var parsed;
+
+  while((parsed = regExp.exec(input.toString())) !== null) {
+    var json = toJSON(parsed.toString());
+    if(json) {
+      jsonResults[json.key.substring(1, json.key.length - 1).toLowerCase()].push(json.value);
+    }
+  }
+
+  return jsonResults;
+}
+
+function toJSON(input) {
+  var result;
+  var regExp = new RegExp(REGEX_FIND_HEADERS);
+  var parsed = regExp.exec(input.toString());
+
+  if(parsed) {
+    var output = input.replace(/REGEX_REMOVE_HEADERS/g, '').trim();
+    var json = '{' + output.replace(/\n/g, ', ').replace(/=/g, ': ') + '}';
+    result = { 'key' : parsed[0], 'value' : json};
+  }
+
+  return result;
+}

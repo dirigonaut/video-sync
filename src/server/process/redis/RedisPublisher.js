@@ -90,6 +90,7 @@ var initialize = function(publisher, subscriber) {
   });
 
   subscriber.on("message", function(channel, message) {
+    console.log(channel);
     if(channel === RedisPublisher.RespEnum.RESPONSE) {
       var key = message;
 
