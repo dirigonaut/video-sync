@@ -3,6 +3,7 @@ const FileIO          = require('../utils/FileIO');
 const FileUtils       = require('../../server/utils/FileSystemUtils');
 const EncoderManager  = require('./encoding/EncoderManager');
 const FfprobeProcess  = require('./encoding/process/FfprobeProcess');
+const command         = require('./encoding/process/Command');
 const WebmMetaData    = require('./metadata/WebmMetaData');
 const Session         = require('../administration/Session');
 const Validator       = require('../authentication/Validator');
@@ -138,8 +139,18 @@ function initialize(io, socket) {
 
   socket.on('get-meta-info', function(data) {
     log.debug('get-meta-info', data);
+    var cleanData = validator.sterilizeVideoInfo(data);
 
+    var ifAdmin = function(isAdmin) {
+      if(isAdmin) {
+        var command = new Command(data);
+        var ffprobeProcess = new FfprobeProcess();
+        var metaData = ffprobeProcess.process(command);
+        socket.emit("meta-info", metaData);
+      }
+    };
 
+    session.isAdmin(socket.id, ifAdmin);
   });
 }
 

@@ -1,8 +1,11 @@
-var Redis         = require('redis');
-var Cache         = require('../utils/Cache');
-var Config        = require('../utils/Config');
-var LogManager    = require('../log/LogManager');
-var Publisher     = require('../process/redis/RedisPublisher');
+const Promise       = require('bluebird');
+const Redis         = require('redis');
+const Cache         = require('../utils/Cache');
+const Config        = require('../utils/Config');
+const LogManager    = require('../log/LogManager');
+const Publisher     = require('../process/redis/RedisPublisher');
+
+Promise.promisifyAll(Redis.RedisClient.prototype);
 
 var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
 var config, cache, publisher, client;
@@ -23,197 +26,171 @@ class Session {
   }
 }
 
-Session.prototype.setSession = function(id) {
+Session.prototype.setSession = Promise.coroutine(function* (id) {
   log.debug("Session.setActiveSession");
-  _this = this;
 
-  var setSession = function(session) {
-    var handleResult = function(result) {
-      var invitees = [];
-      for(var i in session[0].invitees) {
-        var invitee = {};
-        invitee.id = null;
-        invitee.email = session[0].invitees[i];
-        invitee.pass = null;
+  var setSession = Promise.coroutine(function* (session) {
+    var result = yield setSessionData(Session.Enum.ACTIVE, session[0]);
 
-        invitees.push(invitee);
-      }
+    var invitees = [];
+    for(let i = 0; i < session[0].invitees.length; ++i) {
+      var invitee = { };
+      invitee.id = null;
+      invitee.email = session[0].invitees[i];
+      invitee.pass = null;
+      invitees.push(invitee);
+    }
 
-      _this.setInvitees(invitees);
-    };
-
-    setSessionData(Session.Enum.ACTIVE, session[0], handleResult);
-  };
+    this.setInvitees(invitees);
+  }).bind(this);
 
   publisher.publish(Publisher.Enum.DATABASE, ['readSession', [id]], setSession);
-};
+});
 
-Session.prototype.getSession = function(callback) {
+Session.prototype.getSession = function() {
   log.debug("Session.getActiveSession");
-  getSessionData(Session.Enum.ACTIVE, callback);
+  return getSessionData(Session.Enum.ACTIVE);
 };
 
-Session.prototype.getInvitees = function(callback) {
+Session.prototype.getInvitees = function() {
   log.debug("Session.getInvitees");
-  getSessionData(Session.Enum.USERS, callback);
+  return getSessionData(Session.Enum.USERS);
 };
 
 Session.prototype.setInvitees = function(invitees) {
   log.debug("Session.setInvitees");
-  setSessionData(Session.Enum.USERS, invitees, undefined);
+  return setSessionData(Session.Enum.USERS, invitees);
 };
 
-Session.prototype.addInvitee = function(email) {
+Session.prototype.addInvitee = Promise.coroutine(function* (email) {
   log.debug("Session.addInvitee");
-  _this = this;
 
   var invitee = {};
   invitee.id = null;
   invitee.email = email;
   invitee.pass = null;
 
-  var handleResult = function(invitees) {
+  var invitees = yield this.getInvitees(handleResult);
+  if(typeof invitees !== 'undefined' && invitees) {
     var found = false;
     for(var i in invitees) {
       if(email === invitees.email) {
-        log.warn(`User ${email} already is in the session.`);
-        found = true;
-        break;
+        return new Promise.reject(new Error(`User ${email} already is in the session.`));
       }
     }
 
     if(!found) {
       invitees.push(invitee);
-      _this.setInvitees(invitees);
+      return this.setInvitees(invitees);
     }
-  };
+  }
 
-  this.getInvitees(handleResult);
-};
+  return new Promise.reject(new Error(`Session is not set.`));
+});
 
-Session.prototype.removeInvitee = function(id, callback) {
+Session.prototype.removeInvitee = Promise.coroutine(function* (id) {
   log.debug("Session.removeInvitee");
-  _this = this;
+  var invitees = yield this.getInvitees();
 
-  var handleResults = function(invitees) {
-    if(invitees !== null && invitees !== undefined) {
-      for(var i in invitees) {
-        if(invitees[i] === id) {
-          invitees.splice(i, 1);
-          _this.setInvitees(invitees);
-          callback();
-          break;
-        }
+  if(typeof invitees !== 'undefined' && invitees) {
+    for(var i in invitees) {
+      if(invitees[i] === id) {
+        invitees.splice(i, 1);
+        return this.setInvitees(invitees);
       }
-    } else {
-      log.warn("There is no use with the this id: ", id);
     }
-  };
+  }
 
-  this.getInvitees(handleResults);
-};
+  return new Promise.reject(new Error(`There is no use with the this id: ${id}`));
+});
 
-Session.prototype.setMediaStarted = function(started) {
+Session.prototype.setMediaStarted = Promise.coroutine(function* (started) {
   log.silly("Session.setMediaStarted");
-  var checkMediaPathSet = function(basePath) {
-    if(basePath !== null && basePath !== undefined && basePath.length > 0) {
-      setSessionData(Session.Enum.STARTED, started, undefined);
-    }
-  };
+  var basePath = yield this.getMediaPath(checkMediaPathSet);
+  if(typeof basePath !== 'undefined' && basePath) {
+    return setSessionData(Session.Enum.STARTED, started);
+  }
 
-  this.getMediaPath(checkMediaPathSet);
-};
+  return new Promise.reject(new Error("Media is not defined."));
+});
 
-Session.prototype.getMediaStarted = function(callback) {
+Session.prototype.getMediaStarted = function() {
   log.silly("Session.getMediaStarted");
-  getSessionData(Session.Enum.STARTED, callback);
+  return getSessionData(Session.Enum.STARTED);
 };
 
-Session.prototype.setMediaPath = function(path) {
+Session.prototype.setMediaPath = Promise.coroutine(function* (path) {
   log.info("Session.setMediaPath");
-  _this = this;
-  var handleResult = function(result) {
-    _this.setMediaStarted(false);
-    cache.setPath(path);
-  };
+  var results = yield setSessionData(Session.Enum.MEDIA, path, handleResult);
+  yield this.setMediaStarted(false);
+  cache.setPath(path);
+});
 
-  setSessionData(Session.Enum.MEDIA, path, handleResult);
-};
-
-Session.prototype.getMediaPath = function(callback) {
+Session.prototype.getMediaPath = function() {
   log.debug("Session.getMediaPath");
-  getSessionData(Session.Enum.MEDIA, callback);
+  return getSessionData(Session.Enum.MEDIA);
 };
 
-Session.prototype.isAdmin = function(id, callback) {
+Session.prototype.isAdmin = Promise.coroutine(function* (id) {
   log.debug("Session.isAdmin");
-  var compareResults = function(adminList) {
-    if(adminList !== undefined && adminList !== null) {
-      for(var i in adminList) {
-        if(adminList[i] === id) {
-          callback(true);
-          break;
-        }
+  var adminList = yield getSessionData(Session.Enum.ADMIN, compareResults);
+
+  if(typeof adminList !== 'undefined' && adminList) {
+    for(var i in adminList) {
+      if(adminList[i] === id) {
+        return true;
       }
     }
-    callback(false);
-  };
+  }
 
-  getSessionData(Session.Enum.ADMIN, compareResults);
+  return false;
+});
+
+Session.prototype.getAdmin = function (id) {
+  return getSessionData(Session.Enum.ADMIN);
 };
 
-Session.prototype.getAdmin = function(callback) {
-  getSessionData(Session.Enum.ADMIN, callback);
-};
-
-Session.prototype.addAdmin = function(id) {
+Session.prototype.addAdmin = Promise.coroutine(function* (id) {
   log.info("Session.setAdmin");
-  var addEntry = function(adminList) {
+  var adminList = yield this.getAdmin(addEntry);
+
+  if(typeof adminList !== 'undefined' && adminList) {
     if(adminList === undefined || adminList === null) {
         adminList = [];
     }
 
     adminList.push(id);
-    setSessionData(Session.Enum.ADMIN, adminList, undefined);
-  };
+    yield setSessionData(Session.Enum.ADMIN, adminList);
+  }
+});
 
-  this.getAdmin(addEntry);
-};
-
-Session.prototype.removeAdmin = function(id) {
+Session.prototype.removeAdmin = Promise.coroutine(function* (id) {
   log.info("Session.removeAdmin");
-  var removeEntry = function(adminList) {
-    if(adminList !== undefined && adminList !== null) {
-      for(var i in adminList) {
-        if(adminList[i] === id) {
-          adminList.splice(i, 1);
-          setSessionData(Session.Enum.ADMIN, adminList, undefined);
-          break
-        }
+  var adminList = yield this.getAdmin(addEntry);
+
+  if(typeof adminList !== 'undefined' && adminList) {
+    for(let i = 0; i < adminList.length; ++i) {
+      if(adminList[i] === id) {
+        adminList.splice(i, 1);
+        yield setSessionData(Session.Enum.ADMIN, adminList);
+        break;
       }
     }
-  };
-
-  this.getAdmin(removeEntry);
-};
+  }
+});
 
 module.exports = Session;
 
 Session.Enum = { ACTIVE: "session-active", MEDIA: "session-media", ADMIN: "session-admin", IP: "session-ip", STARTED: "session-started", USERS: "session-users"};
 
-var setSessionData = function(key, data, callback) {
+var setSessionData = function(key, data) {
   log.debug('setSessionData for key: ', key);
-  client.set(key, JSON.stringify(data), callback);
+  return client.setAsync(key, JSON.stringify(data));
 };
 
-var getSessionData = function(key, callback) {
+var getSessionData = function(key) {
   log.debug('getSessionData for key:', key);
-  client.get(key, function(err, result) {
-    log.debug(`getSessionData ${key} result:`, result);
-    if(err) {
-      log.error(err);
-    } else {
-      callback(JSON.parse(result));
-    }
+  return client.getAsync(key).then(function(results) {
+    return JSON.parse(results);
   });
 };

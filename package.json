@@ -5,8 +5,9 @@
   "scripts": {
     "start": "node index.js",
     "debug": "node develop/devInit.js && node --inspect=9999 index.js",
-    "test": "mocha test/**/*.js",
+    "test": "mocha test/src/**/*.js",
     "stats": "cloc --not-match-d resources --by-file ./src/ ./static/ index.js",
+    "allStats": "cloc --not-match-d resources --by-file ./src/ ./static/ ./develop ./test index.js",
     "update-deps": "npm outdated --depth=0 | grep -v Package | awk '{print $1}' | xargs -I% npm install %@latest --save"
   },
   "dependencies": {
