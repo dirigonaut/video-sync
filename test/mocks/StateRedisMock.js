@@ -14,16 +14,16 @@ function lazyInit() {
   publisher     = Redis.createClient(config.getConfig().redis);
 }
 
-class RedisSubscriberMock {
+class StateRedisMock {
   constructor() {
-    if(typeof RedisSubscriberMock.prototype.lazyInit === 'undefined') {
+    if(typeof StateRedisMock.prototype.lazyInit === 'undefined') {
       lazyInit();
-      RedisSubscriberMock.prototype.lazyInit = true;
+      StateRedisMock.prototype.lazyInit = true;
     }
   }
 }
 
-RedisSubscriberMock.prototype.setMockEvent = function(key, payload) {
+StateRedisMock.prototype.setMockEvent = function(key, payload) {
   subscriber.subscribe(key);
 
   subscriber.on("message", Promise.coroutine(function* (channel, message) {
@@ -36,11 +36,11 @@ RedisSubscriberMock.prototype.setMockEvent = function(key, payload) {
   }));
 };
 
-RedisSubscriberMock.prototype.cleanup = function() {
+StateRedisMock.prototype.cleanup = function() {
   subscriber.unref();
   subscriber.removeAllListeners("message");
 
   publisher.unref();
 };
 
-module.exports = RedisSubscriberMock;
+module.exports = StateRedisMock;
