@@ -7,7 +7,7 @@ Promise.promisifyAll(Redis.RedisClient.prototype);
 const Config  = require('../../../../src/server/utils/Config');
 const Session = require('../../../../src/server/administration/Session');
 const Publisher = require('../../../../src/server/process/redis/RedisPublisher');
-const RedisSubscriberMock = require('../../../mocks/RedisSubscriberMock');
+const StateRedisMock = require('../../../mocks/StateRedisMock');
 
 describe('Session', function() {
   describe('#setSession()', function() {
@@ -18,14 +18,14 @@ describe('Session', function() {
       var mockData = {"title":"Testing Session","smtp":"","invitees":["danielcsabo@gmail.com","test@gmail.com"],
                       "mailOptions":{"from":"","to":"danielcsabo@gmail.com,test@gmail.com","subject":"Testing Email","text":"Woot Woot\nTest Link: "}};
 
-      var mock = new RedisSubscriberMock();
+      var mock = new StateRedisMock();
       mock.setMockEvent(Publisher.Enum.DATABASE, mockData);
 
       var config = new Config();
       var client = Redis.createClient(config.getConfig().redis);
 
       var session = new Session();
-      yield session.setSession('lLN7WmCuvZU79zSS');
+      yield session.setSession('dummyId');
 
       var sessionData = yield client.getAsync(Session.Enum.ACTIVE);
       should.deepEqual(mockData, sessionData, "Sessions did not match");
