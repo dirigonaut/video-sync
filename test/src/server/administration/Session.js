@@ -13,13 +13,13 @@ describe('Session', function() {
   describe('#setSession()', function() {
     it('should set the session', Promise.coroutine(function* () {
       var publisher = new Publisher();
-      publisher.initialize();
+      yield publisher.initialize();
 
       var mockData = {"title":"Testing Session","smtp":"","invitees":["danielcsabo@gmail.com","test@gmail.com"],
                       "mailOptions":{"from":"","to":"danielcsabo@gmail.com,test@gmail.com","subject":"Testing Email","text":"Woot Woot\nTest Link: "}};
 
       var mock = new StateRedisMock();
-      mock.setMockEvent(Publisher.Enum.DATABASE, mockData);
+      yield mock.setMockEvent(Publisher.Enum.DATABASE, mockData);
 
       var config = new Config();
       var client = Redis.createClient(config.getConfig().redis);
@@ -27,8 +27,12 @@ describe('Session', function() {
       var session = new Session();
       yield session.setSession('dummyId');
 
-      var sessionData = yield client.getAsync(Session.Enum.ACTIVE);
-      should.deepEqual(mockData, sessionData, "Sessions did not match");
+      var sessionData = yield client.getAsync(Session.Enum.ACTIVE)
+      .then(function(data) {
+        return data;
+      });
+
+      should.deepEqual(mockData, JSON.parse(sessionData), "Sessions did not match");
     }));
   });
 

@@ -1,46 +1,46 @@
 const Promise = require('bluebird');
 const Redis = require('redis');
 
-const Publisher = require('../../src/server/process/redis/RedisPublisher');
-const Config    = require('../../src/server/utils/Config');
+const Publisher   = require('../../src/server/process/redis/RedisPublisher');
+const Config      = require('../../src/server/utils/Config');
+const LogManager  = require('../../src/server/log/LogManager');
+
+var log         = LogManager.getLog(LogManager.LogEnum.UTILS);
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-var config, subscriber, publisher;
-
-function lazyInit() {
-  config        = new Config();
-  subscriber    = Redis.createClient(config.getConfig().redis);
-  publisher     = Redis.createClient(config.getConfig().redis);
-}
+var config;
 
 class StateRedisMock {
   constructor() {
-    if(typeof StateRedisMock.prototype.lazyInit === 'undefined') {
-      lazyInit();
-      StateRedisMock.prototype.lazyInit = true;
-    }
+    config          = new Config();
+    this.publisher  = Redis.createClient(config.getConfig().redis);
+    this.subscriber = Redis.createClient(config.getConfig().redis);
   }
 }
 
 StateRedisMock.prototype.setMockEvent = function(key, payload) {
-  subscriber.subscribe(key);
-
-  subscriber.on("message", Promise.coroutine(function* (channel, message) {
+  var handle = Promise.coroutine(function* (channel, message) {
     if(channel === key) {
       var id = JSON.parse(message).pop();
-      yield publisher.setAsync(id, JSON.stringify(payload));
-
-      yield publisher.publishAsync(Publisher.RespEnum.RESPONSE, id);
+      console.log(`Mock: Id: ${id}, ${JSON.stringify(payload)}`);
+      yield this.publisher.setAsync(id, JSON.stringify(payload));
+      yield this.publisher.publishAsync(Publisher.RespEnum.RESPONSE, id);
+      yield this.subscriber.removeListenerAsync("message", handle);
     }
-  }));
-};
+  }).bind(this);
 
-StateRedisMock.prototype.cleanup = function() {
-  subscriber.unref();
-  subscriber.removeAllListeners("message");
+  this.subscriber.on("message", handle);
 
-  publisher.unref();
+  this.subscriber.on("subscribe", function(channel, count) {
+    log.info(`StateRedisMock subscribed to ${channel}`);
+  });
+
+  this.subscriber.on("connect", function(err) {
+    log.debug("StateRedisMock is connected to redis server");
+  });
+
+  return this.subscriber.subscribeAsync(key);
 };
 
 module.exports = StateRedisMock;
