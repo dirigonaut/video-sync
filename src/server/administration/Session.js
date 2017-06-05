@@ -28,23 +28,23 @@ class Session {
 
 Session.prototype.setSession = Promise.coroutine(function* (id) {
   log.debug("Session.setActiveSession");
+  var session = yield publisher.publishAsync(Publisher.Enum.DATABASE, ['readSession', [id]])
+  .then(function(data) {
+    return data;
+  });
 
-  var setSession = Promise.coroutine(function* (session) {
-    var result = yield setSessionData(Session.Enum.ACTIVE, session[0]);
+  yield setSessionData(Session.Enum.ACTIVE, session);
 
-    var invitees = [];
-    for(let i = 0; i < session[0].invitees.length; ++i) {
-      var invitee = { };
-      invitee.id = null;
-      invitee.email = session[0].invitees[i];
-      invitee.pass = null;
-      invitees.push(invitee);
-    }
+  var invitees = [];
+  for(let i = 0; i < session.invitees.length; ++i) {
+    var invitee = { };
+    invitee.id = null;
+    invitee.email = session.invitees[i];
+    invitee.pass = null;
+    invitees.push(invitee);
+  }
 
-    this.setInvitees(invitees);
-  }).bind(this);
-
-  publisher.publish(Publisher.Enum.DATABASE, ['readSession', [id]], setSession);
+  yield this.setInvitees(invitees);
 });
 
 Session.prototype.getSession = function() {

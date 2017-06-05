@@ -2,8 +2,9 @@ const Promise = require('bluebird');
 const Redis   = require('redis');
 const should  = require('should');
 
-const RedisServer   = require('../../src/server/process/redis/RedisServer');
-const Config        = require('../../src/server/utils/Config');
+const RedisServer     = require('../../src/server/process/redis/RedisServer');
+const Config          = require('../../src/server/utils/Config');
+const RedisPublisher  = require('../../src/server/process/redis/RedisPublisher');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
@@ -24,9 +25,10 @@ before(Promise.coroutine(function* () {
 
 after(Promise.coroutine(function* () {
   yield redisServer.end();
-  client.unrefAsync();
+  client.end();
 }));
 
 beforeEach(Promise.coroutine(function* () {
+  console.log("Flushing Redis");
   return client.flushdbAsync();
 }));
