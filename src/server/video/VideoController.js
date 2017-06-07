@@ -137,21 +137,17 @@ function initialize(io, socket) {
     session.getMediaPath(handleMediaPath);
   });
 
-  socket.on('get-meta-info', function(data) {
+  socket.on('get-meta-info', Promise.coroutine(function* (data) {
     log.debug('get-meta-info', data);
     var cleanData = validator.sterilizeVideoInfo(data);
 
-    var ifAdmin = function(isAdmin) {
-      if(isAdmin) {
-        var command = new Command(data);
-        var ffprobeProcess = new FfprobeProcess();
-        var metaData = ffprobeProcess.process(command);
-        socket.emit("meta-info", metaData);
-      }
-    };
-
-    session.isAdmin(socket.id, ifAdmin);
-  });
+    if(yield session.isAdmin(socket.id)) {
+      var command = new Command(data);
+      var ffprobeProcess = new FfprobeProcess();
+      var metaData = yield ffprobeProcess.process(command);
+      socket.emit("meta-info", metaData);
+    }
+  }));
 }
 
 module.exports = VideoController;

@@ -4,10 +4,10 @@ const should  = require('should');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-const Config  = require('../../../../src/server/utils/Config');
-const Session = require('../../../../src/server/administration/Session');
-const Publisher = require('../../../../src/server/process/redis/RedisPublisher');
-const StateRedisMock = require('../../../mocks/StateRedisMock');
+const Config          = require('../../../../src/server/utils/Config');
+const Session         = require('../../../../src/server/administration/Session');
+const Publisher       = require('../../../../src/server/process/redis/RedisPublisher');
+const StateRedisMock  = require('../../../mocks/StateRedisMock');
 
 describe('Session', function() {
   describe('#setSession()', function() {
@@ -15,102 +15,214 @@ describe('Session', function() {
       var publisher = new Publisher();
       yield publisher.initialize();
 
-      var mockData = {"title":"Testing Session","smtp":"","invitees":["danielcsabo@gmail.com","test@gmail.com"],
-                      "mailOptions":{"from":"","to":"danielcsabo@gmail.com,test@gmail.com","subject":"Testing Email","text":"Woot Woot\nTest Link: "}};
+      var sessionMock = {"title":"Testing Session","smtp":"","invitees":["test@gmail.com"],
+      "mailOptions":{"from":"","to":"test@gmail.com","subject":"Testing Email",
+      "text":"Woot Woot\nTest Link: "},"_id":"lLN7WmCuvZU79zSS"};
+
+      var inviteeMock = [{ "id": null, "email": "test@gmail.com", "pass": null }];
 
       var mock = new StateRedisMock();
-      yield mock.setMockEvent(Publisher.Enum.DATABASE, mockData);
+      yield mock.setMockEvent(Publisher.Enum.DATABASE, sessionMock);
 
       var config = new Config();
       var client = Redis.createClient(config.getConfig().redis);
 
       var session = new Session();
-      yield session.setSession('dummyId');
+      yield session.setSession('lLN7WmCuvZU79zSS');
 
-      var sessionData = yield client.getAsync(Session.Enum.ACTIVE)
-      .then(function(data) {
-        return data;
-      });
+      var sessionData = yield client.getAsync(Session.Enum.ACTIVE);
+      should.deepEqual(sessionMock, JSON.parse(sessionData), "Sessions did not match");
 
-      should.deepEqual(mockData, JSON.parse(sessionData), "Sessions did not match");
+      var inviteeData = yield client.getAsync(Session.Enum.USERS);
+      should.deepEqual(inviteeMock, JSON.parse(inviteeData), "Invitee list did not match");
     }));
   });
 
   describe('#getSession()', function() {
-    it('should return the session', function() {
+    it('should return the session', Promise.coroutine(function* () {
+      var config = new Config();
+      var client = Redis.createClient(config.getConfig().redis);
 
-    });
+      var sessionMock = {"title":"Testing Session","smtp":"","invitees":["test@gmail.com"],
+      "mailOptions":{"from":"","to":"test@gmail.com","subject":"Testing Email",
+      "text":"Woot Woot\nTest Link: "},"_id":"lLN7WmCuvZU79zSS"};
+
+      yield client.setAsync(Session.Enum.ACTIVE, JSON.stringify(sessionMock));
+
+      var session = new Session();
+
+      var sessionData = yield session.getSession();
+
+      should.deepEqual(sessionMock, sessionData, "Sessions did not match");
+    }));
   });
 
   describe('#getInvitees()', function() {
-    it('should return the list of invitees', function() {
+    it('should return the list of invitees', Promise.coroutine(function* () {
+      var config = new Config();
+      var client = Redis.createClient(config.getConfig().redis);
 
-    });
+      var sessionMock = {"title":"Testing Session","smtp":"","invitees":["test@gmail.com"],
+      "mailOptions":{"from":"","to":"test@gmail.com","subject":"Testing Email",
+      "text":"Woot Woot\nTest Link: "},"_id":"lLN7WmCuvZU79zSS"};
+
+      yield client.setAsync(Session.Enum.USERS, JSON.stringify(sessionMock));
+
+      var session = new Session();
+
+      var inviteeData = yield session.getInvitees()
+      .then(function(data) {
+        return data;
+      });
+
+      should.deepEqual(sessionMock, inviteeData, "Invitee list did not match");
+    }));
   });
 
   describe('#setInvitees()', function() {
-    it('should set the list of invitees', function() {
+    it('should set the list of invitees', Promise.coroutine(function* () {
+      var config = new Config();
+      var client = Redis.createClient(config.getConfig().redis);
 
-    });
+      var inviteeMock = [{ "id": null, "email": "test@gmail.com", "pass": null }];
+
+      var session = new Session();
+      yield session.setInvitees(inviteeMock);
+
+      var inviteeData = yield client.getAsync(Session.Enum.USERS);
+      should.deepEqual(inviteeMock, JSON.parse(inviteeData), "Invitee list did not match");
+    }));
   });
 
   describe('#addInvitee()', function() {
-    it('should add invitee to the session', function() {
+    it('should add invitee to the session', Promise.coroutine(function* () {
+      var publisher = new Publisher();
+      yield publisher.initialize();
 
-    });
+      var sessionMock = {"title":"Testing Session","smtp":"","invitees":["test@gmail.com"],
+      "mailOptions":{"from":"","to":"test@gmail.com","subject":"Testing Email",
+      "text":"Woot Woot\nTest Link: "},"_id":"lLN7WmCuvZU79zSS"};
+
+      var inviteeMock = { id: null, email: "test2@gmail.com", pass: null };
+
+      var mock = new StateRedisMock();
+      yield mock.setMockEvent(Publisher.Enum.DATABASE, sessionMock);
+
+      var config = new Config();
+      var client = Redis.createClient(config.getConfig().redis);
+
+      var session = new Session();
+      yield session.setSession('lLN7WmCuvZU79zSS');
+      yield session.addInvitee(inviteeMock.email);
+
+      var inviteeData = yield client.getAsync(Session.Enum.USERS);
+      JSON.parse(inviteeData).should.containEql(inviteeMock, "Invitee list did not match");
+    }));
   });
 
   describe('#removeInvitee()', function() {
-    it('should remove an invitee from the session', function() {
+    it('should remove an invitee from the session', Promise.coroutine(function* () {
+      var publisher = new Publisher();
+      yield publisher.initialize();
 
-    });
+      var sessionMock = {"title":"Testing Session","smtp":"","invitees":["test@gmail.com"],
+      "mailOptions":{"from":"","to":"test@gmail.com","subject":"Testing Email",
+      "text":"Woot Woot\nTest Link: "},"_id":"lLN7WmCuvZU79zSS"};
+
+      var inviteeMock = { id: null, email: "test@gmail.com", pass: null };
+
+      var mock = new StateRedisMock();
+      yield mock.setMockEvent(Publisher.Enum.DATABASE, sessionMock);
+
+      var config = new Config();
+      var client = Redis.createClient(config.getConfig().redis);
+
+      var session = new Session();
+      yield session.setSession('lLN7WmCuvZU79zSS');
+      yield session.removeInvitee(inviteeMock.email);
+
+      var inviteeData = yield client.getAsync(Session.Enum.USERS);
+      JSON.parse(inviteeData).should.not.containEql(inviteeMock, "Invitee list did not match");
+    }));
   });
 
   describe('#setMediaStarted()', function() {
-    it('should set the media started flag', function() {
+    it('should set the media started flag', Promise.coroutine(function* () {
+      var pathMock = "/test/tester/testest/";
 
-    });
-  });
+      var config = new Config();
+      var client = Redis.createClient(config.getConfig().redis);
 
-  describe('#getMediaStarted()', function() {
-    it('should return the media started flag', function() {
+      var session = new Session();
+      yield session.setMediaPath(pathMock);
+      yield session.setMediaStarted(true);
 
-    });
-  });
-
-  describe('#getMediaPath()', function() {
-    it('should return the media path', function() {
-
-    });
+      var startedData = yield client.getAsync(Session.Enum.STARTED);
+      should((startedData == true)).be.ok();
+    }));
   });
 
   describe('#setMediaPath()', function() {
-    it('should set the media path in the session', function() {
+    it('should set the media path in the session', Promise.coroutine(function* () {
+      var pathMock = "/test/tester/testest/";
 
-    });
+      var config = new Config();
+      var client = Redis.createClient(config.getConfig().redis);
+
+      var session = new Session();
+      yield session.setMediaPath(pathMock);
+
+      var pathData = yield client.getAsync(Session.Enum.MEDIA);
+      var startedData = yield client.getAsync(Session.Enum.STARTED);
+
+      should(pathMock == pathData).be.ok();
+      should((startedData == false)).be.ok();
+    }));
   });
 
   describe('#isAdmin()', function() {
-    it('should return if the user is admin or not', function() {
+    it('should return if the user is admin or not', Promise.coroutine(function* () {
+      var mockId = "test234";
 
-    });
-  });
+      var config = new Config();
+      var client = Redis.createClient(config.getConfig().redis);
 
-  describe('#getAdmin()', function() {
-    it('should return list of admins', function() {
+      var session = new Session();
+      yield session.addAdmin(mockId);
 
-    });
+      should(session.isAdmin(mockId)).be.ok();
+    }));
   });
 
   describe('#addAdmin()', function() {
-    it('should add a user to the admin list', function() {
+    it('should add a user to the admin list', Promise.coroutine(function* () {
+      var mockId = "test234";
 
-    });
+      var config = new Config();
+      var client = Redis.createClient(config.getConfig().redis);
+
+      var session = new Session();
+      yield session.addAdmin(mockId);
+
+      var adminIds = yield client.getAsync(Session.Enum.ADMIN);
+      JSON.parse(adminIds).should.containEql(mockId, "Admin list did not match");
+    }));
   });
 
   describe('#removeAdmin()', function() {
-    it('should remove a admin from the admin list', function() {
+    it('should remove a admin from the admin list', Promise.coroutine(function* () {
+      var mockId = "test234";
 
-    });
+      var config = new Config();
+      var client = Redis.createClient(config.getConfig().redis);
+
+      yield client.setAsync(Session.Enum.ADMIN, JSON.stringify([ mockId ]));
+
+      var session = new Session();
+      yield session.removeAdmin(mockId);
+
+      var adminIds = yield client.getAsync(Session.Enum.ADMIN);
+      JSON.parse(adminIds).should.not.containEql(mockId, "Admin list did not match");
+    }));
   });
 });

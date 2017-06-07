@@ -70,10 +70,10 @@ Session.prototype.addInvitee = Promise.coroutine(function* (email) {
   invitee.email = email;
   invitee.pass = null;
 
-  var invitees = yield this.getInvitees(handleResult);
+  var invitees = yield this.getInvitees();
   if(typeof invitees !== 'undefined' && invitees) {
     var found = false;
-    for(var i in invitees) {
+    for(let i = 0; i < invitees.length; ++i) {
       if(email === invitees.email) {
         return new Promise.reject(new Error(`User ${email} already is in the session.`));
       }
@@ -93,8 +93,8 @@ Session.prototype.removeInvitee = Promise.coroutine(function* (id) {
   var invitees = yield this.getInvitees();
 
   if(typeof invitees !== 'undefined' && invitees) {
-    for(var i in invitees) {
-      if(invitees[i] === id) {
+    for(let i = 0; i < invitees.length; ++i) {
+      if(invitees[i].email === id) {
         invitees.splice(i, 1);
         return this.setInvitees(invitees);
       }
@@ -106,7 +106,7 @@ Session.prototype.removeInvitee = Promise.coroutine(function* (id) {
 
 Session.prototype.setMediaStarted = Promise.coroutine(function* (started) {
   log.silly("Session.setMediaStarted");
-  var basePath = yield this.getMediaPath(checkMediaPathSet);
+  var basePath = yield this.getMediaPath();
   if(typeof basePath !== 'undefined' && basePath) {
     return setSessionData(Session.Enum.STARTED, started);
   }
@@ -121,9 +121,9 @@ Session.prototype.getMediaStarted = function() {
 
 Session.prototype.setMediaPath = Promise.coroutine(function* (path) {
   log.info("Session.setMediaPath");
-  var results = yield setSessionData(Session.Enum.MEDIA, path, handleResult);
-  yield this.setMediaStarted(false);
+  var results = yield setSessionData(Session.Enum.MEDIA, path);
   cache.setPath(path);
+  return this.setMediaStarted(false);
 });
 
 Session.prototype.getMediaPath = function() {
@@ -133,10 +133,10 @@ Session.prototype.getMediaPath = function() {
 
 Session.prototype.isAdmin = Promise.coroutine(function* (id) {
   log.debug("Session.isAdmin");
-  var adminList = yield getSessionData(Session.Enum.ADMIN, compareResults);
+  var adminList = yield getSessionData(Session.Enum.ADMIN);
 
   if(typeof adminList !== 'undefined' && adminList) {
-    for(var i in adminList) {
+    for(let i = 0; i < adminList.length; ++i) {
       if(adminList[i] === id) {
         return true;
       }
@@ -146,34 +146,31 @@ Session.prototype.isAdmin = Promise.coroutine(function* (id) {
   return false;
 });
 
-Session.prototype.getAdmin = function (id) {
+Session.prototype.getAdmin = function () {
   return getSessionData(Session.Enum.ADMIN);
 };
 
 Session.prototype.addAdmin = Promise.coroutine(function* (id) {
   log.info("Session.setAdmin");
-  var adminList = yield this.getAdmin(addEntry);
+  var adminList = yield this.getAdmin();
 
-  if(typeof adminList !== 'undefined' && adminList) {
-    if(adminList === undefined || adminList === null) {
-        adminList = [];
-    }
-
-    adminList.push(id);
-    yield setSessionData(Session.Enum.ADMIN, adminList);
+  if(typeof adminList === 'undefined' || !adminList) {
+      adminList = [];
   }
+
+  adminList.push(id);
+  return setSessionData(Session.Enum.ADMIN, adminList);
 });
 
 Session.prototype.removeAdmin = Promise.coroutine(function* (id) {
   log.info("Session.removeAdmin");
-  var adminList = yield this.getAdmin(addEntry);
+  var adminList = yield this.getAdmin();
 
   if(typeof adminList !== 'undefined' && adminList) {
     for(let i = 0; i < adminList.length; ++i) {
       if(adminList[i] === id) {
         adminList.splice(i, 1);
-        yield setSessionData(Session.Enum.ADMIN, adminList);
-        break;
+        return setSessionData(Session.Enum.ADMIN, adminList);
       }
     }
   }
