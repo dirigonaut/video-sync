@@ -99,13 +99,13 @@ var startState = function() {
 };
 
 var startServer = Promise.coroutine(function* () {
-    log.info(`Launching server Process: ${process.pid}`);
-    serverProcess = new ServerProcess();
-    proxy = new Proxy();
+  log.info(`Launching server Process: ${process.pid}`);
+  serverProcess = new ServerProcess();
+  proxy = new Proxy();
 
-    yield serverProcess.initialize();
+  yield serverProcess.initialize();
 
-    proxy.forwardWorker(serverProcess.getServer());
-    log.info(`Started server Process: ${process.pid}`);
-    process.send('server-process:started');
+  proxy.forwardWorker(serverProcess.getServer());
+  log.info(`Started server Process: ${process.pid}`);
+  process.send('server-process:started');
 });

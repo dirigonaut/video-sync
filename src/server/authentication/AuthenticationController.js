@@ -1,20 +1,21 @@
-var Smtp          = require('../administration/Smtp');
-var Bundler       = require('../utils/Bundler');
-var Session       = require('../administration/Session');
-var LogManager    = require('../log/LogManager');
-var UserAdmin     = require('../administration/UserAdministration');
-var Validator     = require('../authentication/Validator');
-var Authenticator = require('../authentication/Authenticator');
-var ChatEngine    = require('../chat/ChatEngine');
-var Publisher     = require('../process/redis/RedisPublisher');
-var RedisSocket   = require('../process/redis/RedisSocket');
-var SocketLog     = require('../log/SocketLog');
+const Promise       = require('bluebird');
+const Smtp          = require('../administration/Smtp');
+const Bundler       = require('../utils/Bundler');
+const Session       = require('../administration/Session');
+const LogManager    = require('../log/LogManager');
+const UserAdmin     = require('../administration/UserAdministration');
+const Validator     = require('../authentication/Validator');
+const Authenticator = require('../authentication/Authenticator');
+const ChatEngine    = require('../chat/ChatEngine');
+const Publisher     = require('../process/redis/RedisPublisher');
+const RedisSocket   = require('../process/redis/RedisSocket');
+const SocketLog     = require('../log/SocketLog');
 
-var AdminController     = require('../administration/AdminController');
-var VideoController     = require('../video/VideoController');
-var StateController     = require('../state/StateController');
-var DatabaseController  = require('../database/DatabaseController');
-var ChatController      = require('../chat/ChatController');
+const AdminController     = require('../administration/AdminController');
+const VideoController     = require('../video/VideoController');
+const StateController     = require('../state/StateController');
+const DatabaseController  = require('../database/DatabaseController');
+const ChatController      = require('../chat/ChatController');
 
 var log       = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
 var publisher, redisSocket, smtp, session, userAdmin, validator, authenticator, socketLog
@@ -44,17 +45,19 @@ class AuthenticationController {
 module.exports = AuthenticationController;
 
 function initialize(io) {
-  io.on('connection', function (socket) {
+  io.on('connection', Promise.coroutine(function* (socket) {
     console.log(socket.handshake.address.toString());
     log.info("socket has connected: " + socket.id + " ip: " + socket.handshake.address);
     socket.logonAttempts = 0;
 
-    isAdministrator(socket, io);
+    yield isAdministrator(socket, io);
     socket.emit('connected');
 
-    socket.on('auth-get-token', function (data) {
+    socket.on('auth-get-token', Promise.coroutine(function* (data) {
       log.debug('auth-get-token');
       var requestSmtp = function(token) {
+        var session = yield session.getSession(getSmtp);
+
         var getSmtp = function(session) {
           var sendInvitations = function(hostAddress) {
             var mailOptions = smtp.createMailOptions(session.smtp, token.address, "Video-Sync Token", "Session token: " + token.pass, "");
@@ -66,13 +69,12 @@ function initialize(io) {
         };
 
         socketLog.log("Login Info: ", token);
-        session.getSession(getSmtp);
       };
 
       authenticator.requestToken(socket.id, validator.sterilizeUser(data), requestSmtp);
-    });
+    }));
 
-    socket.on('auth-validate-token', function (data) {
+    socket.on('auth-validate-token', Promise.coroutine(function* (data) {
       log.debug('auth-validate-token');
       var cleanData = validator.sterilizeUser(data);
 
@@ -89,27 +91,24 @@ function initialize(io) {
       };
 
       authenticator.validateToken(socket.id, cleanData, loginAttempt);
-    });
+    }));
 
-    socket.on('disconnect', function() {
+    socket.on('disconnect', Promise.coroutine(function* () {
       log.info('disconnect', socket.id);
       var chatEngine = new ChatEngine();
       chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has left the session.`));
 
-      var removeAdmin = function(isAdmin) {
-        if(isAdmin) {
-          session.removeAdmin(socket.id);
-        }
-      };
-
-      session.isAdmin(socket.id, removeAdmin);
+      var isAdmin = yield session.isAdmin(socket.id);
+      if(isAdmin) {
+        session.removeAdmin(socket.id);
+      }
 
       var disconnect = function(socket) {
         userAdmin.disconnectSocket(socket);
       }
 
       publisher.publish(Publisher.Enum.PLAYER, ['removePlayer', [socket.id]], disconnect);
-    });
+    }));
 
     socket.on('error', function (data) {
       log.error("error", data);
@@ -157,19 +156,16 @@ function userAuthorized(socket, io, handle) {
   log.info("socket has been authenticated.", socket.id);
 }
 
-function isAdministrator(socket, io) {
+var isAdministrator = Promise.coroutine(function* (socket, io) {
   socket.auth = false;
 
-  var setAdminId = function(admin) {
-    log.info(`Admin is ${admin} new socket is ${socket.id}`);
-    if(socket.handshake.address.includes("127.0.0.1")) {
-      new AdminController(io, socket);
-      new DatabaseController(io, socket);
+  var admin = yield session.getAdmin();
+  log.info(`Admin is ${admin} new socket is ${socket.id}`);
+  if(socket.handshake.address.includes("127.0.0.1")) {
+    new AdminController(io, socket);
+    new DatabaseController(io, socket);
 
-      session.addAdmin(socket.id);
-      userAuthorized(socket, io, 'admin');
-    }
-  };
-
-  session.getAdmin(setAdminId);
-}
+    yield session.addAdmin(socket.id);
+    userAuthorized(socket, io, 'admin');
+  }
+});

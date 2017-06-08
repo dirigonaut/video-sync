@@ -121,9 +121,11 @@ Session.prototype.getMediaStarted = function() {
 
 Session.prototype.setMediaPath = Promise.coroutine(function* (path) {
   log.info("Session.setMediaPath");
-  var results = yield setSessionData(Session.Enum.MEDIA, path);
-  cache.setPath(path);
-  return this.setMediaStarted(false);
+  return setSessionData(Session.Enum.MEDIA, path)
+  .then(function(results) {
+    cache.setPath(path);
+    return this.setMediaStarted(false);
+  }.bind(this));
 });
 
 Session.prototype.getMediaPath = function() {

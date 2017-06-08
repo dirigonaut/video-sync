@@ -158,7 +158,7 @@ describe('Session', function() {
       yield session.setMediaStarted(true);
 
       var startedData = yield client.getAsync(Session.Enum.STARTED);
-      should((startedData == true)).be.ok();
+      should((startedData == "true")).be.ok();
     }));
   });
 
@@ -175,8 +175,8 @@ describe('Session', function() {
       var pathData = yield client.getAsync(Session.Enum.MEDIA);
       var startedData = yield client.getAsync(Session.Enum.STARTED);
 
-      should(pathMock == pathData).be.ok();
-      should((startedData == false)).be.ok();
+      should(JSON.stringify(pathMock) == pathData).be.ok();
+      should((startedData == "false")).be.ok();
     }));
   });
 

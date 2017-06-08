@@ -1,8 +1,9 @@
-var Smtp        = require('./Smtp');
-var Session     = require('./Session');
-var LogManager  = require('../log/LogManager');
-var Publisher   = require('../process/redis/RedisPublisher');
-var Config     	= require('../utils/Config');
+const Promise     = require('bluebird');
+const Smtp        = require('./Smtp');
+const Session     = require('./Session');
+const LogManager  = require('../log/LogManager');
+const Publisher   = require('../process/redis/RedisPublisher');
+const Config     	= require('../utils/Config');
 
 var log         = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
 var config, publisher, smtp, session;
@@ -33,9 +34,9 @@ UserAdministration.prototype.upgradeUser = function(user) {
   publisher.publish(Publisher.Enum.PLAYER, ['setAuth', [user, Player.Auth.DEFAULT]]);
 };
 
-UserAdministration.prototype.kickUser = function(user, callback) {
+UserAdministration.prototype.kickUser = Promise.coroutine(function* (user, callback) {
   log.debug("UserAdministration.kickUser");
-  session.removeInvitee(user);
+  yield session.removeInvitee(user);
 
   var kick = function(player) {
     if(player !== null && player !== undefined) {
@@ -52,58 +53,49 @@ UserAdministration.prototype.kickUser = function(user, callback) {
   publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [user]]);
 };
 
-UserAdministration.prototype.disconnectSocket = function(socket) {
+UserAdministration.prototype.disconnectSocket = Promise.coroutine(function* (socket) {
   log.info("Disconnecting socket ", socket.id);
-
-  var disconnect = function() {
-    console.log(socket.id);
-    socket.disconnect('unauthorized');
-  };
-
-  session.removeInvitee(socket.id, disconnect);
+  yield session.removeInvitee(socket.id, disconnect);
+  socket.disconnect('unauthorized');
 };
 
-UserAdministration.prototype.inviteUser = function(emailAddress) {
+UserAdministration.prototype.inviteUser = Promise.coroutine(function* (emailAddress) {
   log.debug("UserAdministration.inviteUser");
-  var inviteUserIfSession = function(activeSession) {
-    if(session !== null && session !== undefined) {
-      activeSession.addInvitee(emailAddress);
+  var activeSession = yield session.getSession();
 
-      var sendInvitation = function(address) {
-        var mailOptions = activeSession.mailOptions;
-        mailOptions.invitees = [emailAddress];
+  if(session) {
+    activeSession.addInvitee(emailAddress);
 
-        smtp.sendMail(addP2PLink(mailOptions));
-      };
+    var sendInvitation = function(address) {
+      var mailOptions = activeSession.mailOptions;
+      mailOptions.invitees = [emailAddress];
 
-      smtp.initializeTransport(activeSession.smtp, sendInvitation);
-    } else {
-      log.warn("There is no active session to load smtp info from.");
-    }
+      smtp.sendMail(addP2PLink(mailOptions));
+    };
+
+    smtp.initializeTransport(activeSession.smtp, sendInvitation);
+  } else {
+    log.warn("There is no active session to load smtp info from.");
   }
-
-  session.getSession(inviteUserIfSession);
 };
 
-UserAdministration.prototype.inviteUsers = function() {
-  var inviteUsersIfSession = function(activeSession) {
-    log.debug("UserAdministration.inviteUsers");
-    if(activeSession !== null && activeSession !== undefined) {
-      var sendInvitations = function(address) {
-        var sendEmail = function(mailOptions) {
-          smtp.sendMail(mailOptions)
-        };
+UserAdministration.prototype.inviteUsers = Promise.coroutine(function* () {
+  log.debug("UserAdministration.inviteUsers");
+  var activeSession = yield session.getSession();
 
-        addP2PLink(activeSession.mailOptions, sendEmail);
+  if(activeSession) {
+    var sendInvitations = function(address) {
+      var sendEmail = function(mailOptions) {
+        smtp.sendMail(mailOptions)
       };
 
-      smtp.initializeTransport(activeSession.smtp, sendInvitations);
-    } else {
-      log.warn("There is no active session to load smtp info from.");
-    }
-  }
+      addP2PLink(activeSession.mailOptions, sendEmail);
+    };
 
-  session.getSession(inviteUsersIfSession);
+    smtp.initializeTransport(activeSession.smtp, sendInvitations);
+  } else {
+    log.warn("There is no active session to load smtp info from.");
+  }
 };
 
 module.exports = UserAdministration;
