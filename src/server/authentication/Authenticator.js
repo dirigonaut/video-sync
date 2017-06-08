@@ -1,8 +1,8 @@
-const crypto      = require('crypto');
+const crypto        = require('crypto');
 
-var Session       = require('../administration/Session');
-var Publisher     = require('../process/redis/RedisPublisher');
-var LogManager    = require('../log/LogManager');
+const Session       = require('../administration/Session');
+const Publisher     = require('../process/redis/RedisPublisher');
+const LogManager    = require('../log/LogManager');
 
 var log           = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
 var session, publisher;
