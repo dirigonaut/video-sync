@@ -55,21 +55,19 @@ function initialize(io) {
 
     socket.on('auth-get-token', Promise.coroutine(function* (data) {
       log.debug('auth-get-token');
-      var requestSmtp = function(token) {
-        var session = yield session.getSession(getSmtp);
+      var requestSmtp = Promise.coroutine(function* (token) {
+        var activeSession = yield session.getSession();
 
-        var getSmtp = function(session) {
-          var sendInvitations = function(hostAddress) {
-            var mailOptions = smtp.createMailOptions(session.smtp, token.address, "Video-Sync Token", "Session token: " + token.pass, "");
-            smtp.sendMail(mailOptions);
-            socket.emit('login-token-sent');
-          };
-
-          smtp.initializeTransport(session.smtp, sendInvitations);
+        var sendInvitations = function(hostAddress) {
+          var mailOptions = smtp.createMailOptions(activeSession.smtp, token.address, "Video-Sync Token", "Session token: " + token.pass, "");
+          smtp.sendMail(mailOptions);
+          socket.emit('login-token-sent');
         };
 
+        smtp.initializeTransport(activeSession.smtp, sendInvitations);
+
         socketLog.log("Login Info: ", token);
-      };
+      });
 
       authenticator.requestToken(socket.id, validator.sterilizeUser(data), requestSmtp);
     }));
@@ -122,7 +120,7 @@ function initialize(io) {
         userAdmin.disconnectSocket(socket);
       }
     }, 300000);
-  });
+  }));
 }
 
 function userAuthorized(socket, io, handle) {

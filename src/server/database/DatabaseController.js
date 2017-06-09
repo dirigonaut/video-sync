@@ -30,7 +30,7 @@ function initialize(io, socket) {
   log.debug("Attaching DatabaseController");
 
   //Create
-  socket.on('db-create-smtp', Promise.coroutine(function* (data) { {
+  socket.on('db-create-smtp', Promise.coroutine(function* (data) {
     log.debug('db-create-smtp');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
@@ -43,7 +43,7 @@ function initialize(io, socket) {
     }
   }));
 
-  socket.on('db-create-session', Promise.coroutine(function* (data) { {
+  socket.on('db-create-session', Promise.coroutine(function* (data) {
     log.debug('db-create-session');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
@@ -83,7 +83,7 @@ function initialize(io, socket) {
   }));
 
   //Update
-  socket.on('db-update-smtp', Promise.coroutine(function* (data) { {
+  socket.on('db-update-smtp', Promise.coroutine(function* (data) {
     log.debug('db-update-smtp');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
@@ -96,7 +96,7 @@ function initialize(io, socket) {
     }
   }));
 
-  socket.on('db-update-session', Promise.coroutine(function* (data) { {
+  socket.on('db-update-session', Promise.coroutine(function* (data) {
     log.debug('db-update-session');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
@@ -110,7 +110,7 @@ function initialize(io, socket) {
   }));
 
   //Delete
-  socket.on('db-delete-smtp', Promise.coroutine(function* (data) { {
+  socket.on('db-delete-smtp', Promise.coroutine(function* (data) {
     log.debug('db-delete-smtp');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
@@ -125,7 +125,7 @@ function initialize(io, socket) {
     }
   }));
 
-  socket.on('db-delete-session', Promise.coroutine(function* (data) { {
+  socket.on('db-delete-session', Promise.coroutine(function* (data) {
     log.debug('db-delete-session');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {

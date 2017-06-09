@@ -35,6 +35,6 @@ SocketLog.prototype.log = Promise.coroutine(function* (msg, meta) {
     console.log(ids);
     io.sockets.to(ids).emit('chat-log-resp', payload);
   }
-};
+});
 
 module.exports = SocketLog;

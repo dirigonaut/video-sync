@@ -51,13 +51,13 @@ UserAdministration.prototype.kickUser = Promise.coroutine(function* (user, callb
   }
 
   publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [user]]);
-};
+});
 
 UserAdministration.prototype.disconnectSocket = Promise.coroutine(function* (socket) {
   log.info("Disconnecting socket ", socket.id);
   yield session.removeInvitee(socket.id, disconnect);
   socket.disconnect('unauthorized');
-};
+});
 
 UserAdministration.prototype.inviteUser = Promise.coroutine(function* (emailAddress) {
   log.debug("UserAdministration.inviteUser");
@@ -77,7 +77,7 @@ UserAdministration.prototype.inviteUser = Promise.coroutine(function* (emailAddr
   } else {
     log.warn("There is no active session to load smtp info from.");
   }
-};
+});
 
 UserAdministration.prototype.inviteUsers = Promise.coroutine(function* () {
   log.debug("UserAdministration.inviteUsers");
@@ -96,7 +96,7 @@ UserAdministration.prototype.inviteUsers = Promise.coroutine(function* () {
   } else {
     log.warn("There is no active session to load smtp info from.");
   }
-};
+});
 
 module.exports = UserAdministration;
 
