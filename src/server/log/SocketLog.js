@@ -1,5 +1,6 @@
-var Util  = require('util');
-var Session = require('../administration/Session');
+const Promise = require('bluebird');
+const Util    = require('util');
+const Session = require('../administration/Session');
 
 var session, io;
 
@@ -20,7 +21,7 @@ SocketLog.prototype.setSocketIO = function(socketIO) {
   io = socketIO;
 }
 
-SocketLog.prototype.log = function (msg, meta) {
+SocketLog.prototype.log = Promise.coroutine(function* (msg, meta) {
   var payload = {
     log : 'socket',
     level : 'info',
@@ -29,14 +30,11 @@ SocketLog.prototype.log = function (msg, meta) {
     time: new Date().toTimeString().split(" ")[0]
   };
 
-  var onAdminIds = function(ids) {
-    if(ids !== null && ids !== undefined) {
-      console.log(ids);
-      io.sockets.to(ids).emit('chat-log-resp', payload);
-    }
-  };
-
-  session.getAdmin(onAdminIds);
+  var ids = yield session.getAdmin(onAdminIds);
+  if(ids !== null && ids !== undefined) {
+    console.log(ids);
+    io.sockets.to(ids).emit('chat-log-resp', payload);
+  }
 };
 
 module.exports = SocketLog;
