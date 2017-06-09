@@ -1,17 +1,16 @@
-var CommandEngine = require('./CommandEngine');
-var ChatEngine    = require('./ChatEngine');
-var Session       = require('../administration/Session');
-var LogManager    = require('../log/LogManager');
-var RedisSocket   = require('../process/redis/RedisSocket');
-var Publisher     = require('../process/redis/RedisPublisher');
+const Promise       = require('bluebird');
+const CommandEngine = require('./CommandEngine');
+const ChatEngine    = require('./ChatEngine');
+const LogManager    = require('../log/LogManager');
+const RedisSocket   = require('../process/redis/RedisSocket');
+const Publisher     = require('../process/redis/RedisPublisher');
 
 var log           = LogManager.getLog(LogManager.LogEnum.CHAT);
-var commandEngine, chatEngine, session, redisSocket, publisher;
+var commandEngine, chatEngine, redisSocket, publisher;
 
 function lazyInit() {
   commandEngine   = new CommandEngine();
   chatEngine      = new ChatEngine();
-  session         = new Session();
   redisSocket     = new RedisSocket();
   publisher       = new Publisher();
 }
