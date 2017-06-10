@@ -231,7 +231,7 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, callback) {
     var player = playerManager.getPlayer(id);
 
     if(players.size > 1 && player !== null && player !== undefined) {
-      var isMediaStarted = yield session.getMediaStarted(handleSessionResults);
+      var isMediaStarted = yield session.getMediaStarted();
 
       if(player.sync === Player.Sync.SYNCING && isMediaStarted) {
         var broadcastSyncingEvent = function(leader, player, event) {

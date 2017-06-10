@@ -42,7 +42,7 @@ ServerProcess.prototype.initialize = Promise.coroutine(function* () {
   io = SocketIO.listen(server);
 
   var redisSocket = new RedisSocket();
-  redisSocket.initialize(io);
+  yield redisSocket.initialize(io);
 
   app.use(Express.static(config.getConfig().static));
   server.listen(0);

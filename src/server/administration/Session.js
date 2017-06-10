@@ -28,10 +28,7 @@ class Session {
 
 Session.prototype.setSession = Promise.coroutine(function* (id) {
   log.debug("Session.setActiveSession");
-  var session = yield publisher.publishAsync(Publisher.Enum.DATABASE, ['readSession', [id]])
-  .then(function(data) {
-    return data;
-  });
+  var session = yield publisher.publishAsync(Publisher.Enum.DATABASE, ['readSession', [id]]);
 
   yield setSessionData(Session.Enum.ACTIVE, session);
 
