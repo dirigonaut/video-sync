@@ -1,7 +1,10 @@
-var Redis       = require('redis');
+const Promise     = require('bluebird');
+const Redis       = require('redis');
 
-var Config      = require('../../utils/Config');
-var LogManager  = require('../../log/LogManager');
+const Config      = require('../../utils/Config');
+const LogManager  = require('../../log/LogManager');
+
+Promise.promisifyAll(Redis.RedisClient.prototype);
 
 var log         = LogManager.getLog(LogManager.LogEnum.GENERAL);
 var config, publisher, subscriber, io;
@@ -21,18 +24,18 @@ class RedisSocket {
   }
 }
 
-RedisSocket.prototype.initialize = function(socketIO) {
+RedisSocket.prototype.initialize = Promise.coroutine(function* (socketIO) {
   io = socketIO;
-  initialize(subscriber);
-};
+  yield initialize(subscriber);
+});
 
 RedisSocket.prototype.broadcast = function(key, message) {
-  log.silly(`RedisSocket.prototype.broadcastToIds`);
+  log.debug(`RedisSocket.prototype.broadcastToIds`);
   publisher.publish(RedisSocket.MessageEnum.BROADCAST, JSON.stringify([key, message]));
 };
 
 RedisSocket.prototype.ping = function(id, key, message) {
-  log.silly(`RedisSocket.prototype.ping`);
+  log.debug(`RedisSocket.prototype.ping`);
   publisher.publish(RedisSocket.MessageEnum.PING, JSON.stringify([id, key, message]));
 };
 
@@ -40,7 +43,7 @@ RedisSocket.MessageEnum = { BROADCAST: 'redisSocketBroadcast', PING: 'redisSocke
 
 module.exports = RedisSocket;
 
-var initialize = function(subscriber) {
+var initialize = Promise.coroutine(function* (subscriber) {
   subscriber.on("message", function(channel, payload) {
     if(channel === RedisSocket.MessageEnum.BROADCAST) {
       payload = JSON.parse(payload);
@@ -73,6 +76,6 @@ var initialize = function(subscriber) {
     log.error(err);
   });
 
-  subscriber.subscribe(RedisSocket.MessageEnum.BROADCAST);
-  subscriber.subscribe(RedisSocket.MessageEnum.PING);
-}
+  yield subscriber.subscribeAsync(RedisSocket.MessageEnum.BROADCAST);
+  yield subscriber.subscribeAsync(RedisSocket.MessageEnum.PING);
+});

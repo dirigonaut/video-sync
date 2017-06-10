@@ -31,7 +31,7 @@ RedisPublisher.prototype.initialize = Promise.coroutine(function* () {
   requestMap = new Map();
   yield cleanUp();
   lazyInit();
-  return initialize(publisher, subscriber);
+  initialize(publisher, subscriber);
 });
 
 RedisPublisher.prototype.publish = function(channel, args, callback) {
@@ -40,7 +40,7 @@ RedisPublisher.prototype.publish = function(channel, args, callback) {
 
   var response = function(err, data) {
     if(err !== null) {
-      requestMap.remove(key, callback);
+      requestMap.delete(key);
     }
   };
 
@@ -55,12 +55,16 @@ RedisPublisher.prototype.publishAsync = function(channel, args) {
   var key = createKey(channel);
   args.push(key);
 
+  requestMap.set(key, "promise");
+
   var promise = new Promise(function(resolve, reject) {
     asyncEmitter.once(key, resolve);
     setTimeout(function(err) {
       asyncEmitter.removeListener(key, resolve);
       reject(err);
     },TIMEOUT, `Request for Key: ${key}, timed out.`);
+  }).then(function(data) {
+    return data[0];
   });
 
   publisher.publish(channel, JSON.stringify(args));
@@ -89,21 +93,18 @@ var initialize = Promise.coroutine(function* (publisher, subscriber) {
   subscriber.on("message", Promise.coroutine(function* (channel, message) {
     if(channel === RedisPublisher.RespEnum.RESPONSE) {
       var key = message;
-
       if(key !== null && key !== undefined) {
         var callback = requestMap.get(key);
+        requestMap.delete(key);
 
-        if(callback !== null && callback !== undefined) {
-          var onData = function(data) {
-            var data = JSON.parse(data);
-            log.silly(Util.inspect(data, { showHidden: false, depth: null }));
-            callback.apply(callback, data);
-          };
-
-          getRedisData(key, onData);
-        } else {
-          var data = yield getRedisData(key);
-          asyncEmitter.emit(key, JSON.parse(data));
+        if(callback === "promise") {
+          let data = yield getRedisData(key);
+          asyncEmitter.emit(key, JSON.parse(data)[0]);
+        } else if(callback !== null && callback !== undefined) {
+          let data = yield getRedisData(key);
+          data = JSON.parse(data);
+          //log.silly(Util.inspect(data, { showHidden: false, depth: null }));
+          callback.apply(callback, data);
         }
       }
     } else if(channel === RedisPublisher.RespEnum.COMMAND) {

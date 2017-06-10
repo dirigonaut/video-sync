@@ -55,7 +55,7 @@ UserAdministration.prototype.kickUser = Promise.coroutine(function* (user, callb
 
 UserAdministration.prototype.disconnectSocket = Promise.coroutine(function* (socket) {
   log.info("Disconnecting socket ", socket.id);
-  yield session.removeInvitee(socket.id, disconnect);
+  yield session.removeInvitee(socket.id);
   socket.disconnect('unauthorized');
 });
 
