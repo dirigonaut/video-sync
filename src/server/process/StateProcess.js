@@ -1,13 +1,15 @@
-const StateRedis  = require('./redis/StateRedis');
+const Promise   = require('bluebird');
+
 const NeDatabase  = require('../database/NeDatabase');
 
 class StateProcess { }
 
-StateProcess.prototype.initialize = function() {
+StateProcess.prototype.initialize = Promise.coroutine(function* () {
   var database = new NeDatabase();
   database.initialize(this.config);
 
-  this.stateRedis = new StateRedis();
-};
+  this.stateRedis = yield this.factory.createStateRedis();
+  this.stateRedis.initialize();
+});
 
 module.exports = StateProcess;

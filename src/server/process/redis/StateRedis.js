@@ -1,40 +1,37 @@
+const Promise           = require('bluebird');
 const Redis             = require('redis');
 
 const ReflectiveAdapter = require('./ReflectiveAdapter');
 const NeDatabase        = require('../../database/NeDatabase');
-const StateEngine       = require('../../state/StateEngine.js');
 const PlayerManager     = require('../../player/PlayerManager');
-const Session           = require('../../administration/Session');
-const Config            = require('../../utils/Config');
 
-var config, adapter, database, stateEngine, playerManager, session, subscriber;
+var adapter, database, playerManager, subscriber, stateEngine;
 
-function lazyInit() {
-  config        = new Config();
+var lazyInit = Promise.coroutine(function* () {
   adapter       = new ReflectiveAdapter();
   database      = new NeDatabase();
-  stateEngine   = new StateEngine();
+  stateEngine   = yield this.factory.createStateEngine();
   playerManager = new PlayerManager();
-  session       = new Session();
 
-  subscriber    = Redis.createClient(config.getConfig().redis);
-}
+  subscriber    = Redis.createClient(this.config.getConfig().redis);
+});
 
-class StateRedis {
-  constructor() {
-    if(typeof StateRedis.prototype.lazyInit === 'undefined') {
-      lazyInit();
-      StateRedis.prototype.lazyInit = true;
-    }
+function StateRedis() { };
 
-    initialize(subscriber);
-
-    subscriber.subscribe("database");
-    subscriber.subscribe("state");
-    subscriber.subscribe("player");
-    subscriber.subscribe("session");
+StateRedis.prototype.initialize = Promise.coroutine(function* () {
+  if(typeof StateRedis.prototype.lazyInit === 'undefined') {
+    yield lazyInit.call(this);
+    StateRedis.prototype.lazyInit = true;
   }
-}
+
+  this.log = this.logManager.getLog(this.logManager.LogEnum.GENERAL);
+  initialize.call(this, subscriber);
+
+  subscriber.subscribe("database");
+  subscriber.subscribe("state");
+  subscriber.subscribe("player");
+  subscriber.subscribe("session");
+});
 
 module.exports = StateRedis;
 
@@ -49,21 +46,21 @@ function initialize(subscriber) {
     } else if(channel === "session"){
       adapter.callFunction(session, message);
     }
-  });
+  }.bind(this));
 
   subscriber.on("subscribe", function(channel, count) {
-    console.log(`Subscribed to ${channel}`);
-  });
+    this.log.info(`Subscribed to ${channel}`);
+  }.bind(this));
 
   subscriber.on("connect", function(err) {
-    console.log("StateRedis is connected to redis server");
-  });
+    this.log.info("StateRedis is connected to redis server");
+  }.bind(this));
 
   subscriber.on("reconnecting", function(err) {
-    console.log("StateRedis is connected to redis server");
-  });
+    this.log.info("StateRedis is connected to redis server");
+  }.bind(this));
 
   subscriber.on("error", function(err) {
-    console.log(err);
-  });
+    this.log.error(err);
+  }.bind(this));
 }
