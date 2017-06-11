@@ -39,8 +39,7 @@ ObjectFactory.prototype.createStateEngine = function() {
 ObjectFactory.prototype.createMasterProcess = Promise.coroutine(function* () {
   var dependency = Object.create(DependencyFactory.prototype);
   yield dependency.addConfig();
-  dependency.addFactory();
-  dependency.addLog();
+  dependency.addFactory().addLog();
 
   var dependencies = dependency.getDependencies();
 
