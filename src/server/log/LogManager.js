@@ -47,11 +47,18 @@ LogManager.prototype.addFileLogging = function() {
   log.info('Attached file logging.');
 };
 
+LogManager.prototype.getLog = function(id) {
+  return Winston.loggers.get(id);
+};
+
 LogManager.getLog = function(id) {
   return Winston.loggers.get(id);
 };
 
 module.exports = LogManager;
+
+LogManager.prototype.LogEnum = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
+                        CHAT: 'chat', DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};
 
 LogManager.LogEnum = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
                         CHAT: 'chat', DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};

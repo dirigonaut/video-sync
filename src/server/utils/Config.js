@@ -36,6 +36,10 @@ Config.prototype.initialize = Promise.coroutine(function* () {
   }
 });
 
+Config.prototype.isInit = function() {
+  return typeof config !== 'undefined';
+};
+
 Config.prototype.getConfig = function() {
   return config;
 };

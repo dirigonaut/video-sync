@@ -21,6 +21,7 @@ describe('RedisPublisher', function() {
 
       var respData = yield publisher.publishAsync(RedisPublisher.Enum.DATABASE, ['Boo']);
 
+      console.log(respData);
       should.deepEqual(mockData, respData, "The publisher response does not match the mockData.");
     }));
   });
