@@ -1,11 +1,6 @@
 const Promise = require('bluebird');
 const Cluster = require('cluster');
 
-const RedisServer   = require('./redis/RedisServer');
-const StateProcess  = require('./StateProcess');
-const ServerProcess = require('./ServerProcess');
-const Proxy         = require('./../utils/Proxy');
-
 var redisServer;
 var serverProcess;
 var stateProcess;
@@ -29,11 +24,11 @@ MasterProcess.prototype.start = Promise.coroutine(function* () {
   log = this.logManager.getLog(this.logManager.LogEnum.GENERAL);
 
   if(Cluster.isMaster) {
-    startMaster();
+    startMaster.apply(this);
   } else if(process.env.processType === 'stateProcess') {
-    startState();
+    startState.apply(this);
   } else if(process.env.processType === 'serverProcess') {
-    startServer();
+    startServer.apply(this);
   }
 });
 
@@ -48,7 +43,7 @@ var startMaster = Promise.coroutine(function* () {
   var numCPUs = require('os').cpus().length - 1;
   var workerIndex = 0;
 
-  proxy = new Proxy();
+  proxy = yield this.factory.getFactory().createProxy();
   proxy.on('server-started', function(worker, index) {
     log.info(`server-started at index: ${index} with pid: ${worker.process.pid}`);
     worker.on('message', function(message) {
@@ -65,7 +60,7 @@ var startMaster = Promise.coroutine(function* () {
     });
   });
 
-  redisServer = new RedisServer();
+  redisServer = yield this.factory.getFactory().createRedisServer();
   yield redisServer.start();
 
   var stateWorker = Cluster.fork({processType: 'stateProcess'});
@@ -83,18 +78,18 @@ var startMaster = Promise.coroutine(function* () {
   });
 });
 
-var startState = function() {
-  stateProcess = new StateProcess();
+var startState = Promise.coroutine(function* () {
+  stateProcess = yield this.factory.getFactory().createStateProcess();
   stateProcess.initialize();
 
   log.info(`State Process: ${process.pid} started`);
   process.send('state-process:started');
-};
+});
 
 var startServer = Promise.coroutine(function* () {
   log.info(`Launching server Process: ${process.pid}`);
-  serverProcess = new ServerProcess();
-  proxy = new Proxy();
+  serverProcess = yield this.factory.getFactory().createServerProcess();
+  proxy = yield this.factory.getFactory().createProxy();
 
   yield serverProcess.initialize();
 
