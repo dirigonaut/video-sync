@@ -61,7 +61,7 @@ DependencyFactory.prototype.getDependencies = function() {
   return this.dependencies;
 };
 
-DependencyFactory.Enum = { FACTORY: "FactoryWrapper", SESSION: "Session", CONFIG: "Config", LOG: "LogManager", PUBLISHER: "RedisPublisher", SOCKET: "RedisSocket", VALIDATOR: "Validator"};
+DependencyFactory.Enum = { FACTORY: "Factory", SESSION: "Session", CONFIG: "Config", LOG: "LogManager", PUBLISHER: "RedisPublisher", SOCKET: "RedisSocket", VALIDATOR: "Validator"};
 
 module.exports = DependencyFactory;
 

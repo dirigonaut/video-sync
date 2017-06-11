@@ -1,12 +1,11 @@
 const StateRedis  = require('./redis/StateRedis');
 const NeDatabase  = require('../database/NeDatabase');
-const Config      = require('../utils/Config');
 
 class StateProcess { }
 
 StateProcess.prototype.initialize = function() {
   var database = new NeDatabase();
-  database.initialize(new Config());
+  database.initialize(this.config);
 
   this.stateRedis = new StateRedis();
 };

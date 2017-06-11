@@ -41,7 +41,6 @@ ObjectFactory.prototype.createMasterProcess = Promise.coroutine(function* () {
   yield dependency.addConfig();
   dependency.addFactory();
   dependency.addLog();
-  dependency.addSession();
 
   var dependencies = dependency.getDependencies();
 
@@ -53,7 +52,56 @@ ObjectFactory.prototype.createMasterProcess = Promise.coroutine(function* () {
   return masterProcess;
 });
 
-ObjectFactory.Enum = { MASTER_PROCESS: "MasterProcess", STATE_ENGINE: "StateEngine"}
+ObjectFactory.prototype.createProxy = Promise.coroutine(function* () {
+  var dependency = Object.create(DependencyFactory.prototype);
+  yield dependency.addConfig();
+
+  var dependencies = dependency.getDependencies();
+
+  var Proxy = require(imports[ObjectFactory.Enum.PROXY]);
+  var proxy = new Proxy();
+
+  Object.assign(proxy, dependencies);
+
+  return proxy;
+});
+
+ObjectFactory.prototype.createRedisServer = Promise.coroutine(function* () {
+  var dependency = Object.create(DependencyFactory.prototype);
+  yield dependency.addConfig();
+
+  var dependencies = dependency.getDependencies();
+
+  var RedisServer = require(imports[ObjectFactory.Enum.REDIS_SERVER]);
+  var redisServer = new RedisServer();
+
+  Object.assign(redisServer, dependencies);
+
+  return redisServer;
+});
+
+ObjectFactory.prototype.createStateProcess = Promise.coroutine(function* () {
+  var dependency = Object.create(DependencyFactory.prototype);
+  yield dependency.addConfig();
+
+  var dependencies = dependency.getDependencies();
+
+  var StateProcess = require(imports[ObjectFactory.Enum.STATE_PROCESS]);
+  var stateProcess = new StateProcess();
+
+  Object.assign(stateProcess, dependencies);
+
+  return stateProcess;
+});
+
+ObjectFactory.prototype.createServerProcess = Promise.coroutine(function* () {
+  var ServerProcess = require(imports[ObjectFactory.Enum.SERVER_PROCCESS]);
+  var serverProcess = new ServerProcess();
+
+  return serverProcess;
+});
+
+ObjectFactory.Enum = { MASTER_PROCESS: "MasterProcess", STATE_ENGINE: "StateEngine", PROXY:"Proxy", REDIS_SERVER: "RedisServer", STATE_PROCESS: "StateProcess", SERVER_PROCCESS: "ServerProcess"};
 module.exports = ObjectFactory;
 
 var getAllImports = function (path) {
