@@ -5,10 +5,7 @@ const RedisServer   = require('./redis/RedisServer');
 const StateProcess  = require('./StateProcess');
 const ServerProcess = require('./ServerProcess');
 const Proxy         = require('./../utils/Proxy');
-const LogManager    = require('./../log/LogManager');
-const Config        = require('./../utils/Config');
 
-var logManager;
 var redisServer;
 var serverProcess;
 var stateProcess;
@@ -26,14 +23,10 @@ process.on('uncaughtException', function (err) {
 class MasterProcess { }
 
 MasterProcess.prototype.start = Promise.coroutine(function* () {
-  var config = new Config();
-  yield config.initialize().catch(console.error);
+  this.logManager.initialize(this.config);
+  this.logManager.addFileLogging();
 
-  logManager = new LogManager();
-  logManager.initialize(config);
-  logManager.addFileLogging();
-
-  log = LogManager.getLog(LogManager.LogEnum.GENERAL);
+  log = this.logManager.getLog(this.logManager.LogEnum.GENERAL);
 
   if(Cluster.isMaster) {
     startMaster();

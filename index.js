@@ -1,3 +1,13 @@
-const MasterProcess = require('./src/server/process/MasterProcess');
-var masterProcess = new MasterProcess();
-masterProcess.start();
+const Promise         = require('bluebird');
+const FactoryManager  = require('./src/server/factory/FactoryManager');
+
+var masterProcess, factoryManager;
+
+var start = Promise.coroutine(function* () {
+  factoryManager = Object.create(FactoryManager.prototype);
+
+  var factory = yield factoryManager.initialize();
+
+  masterProcess = yield factory.createMasterProcess();
+  yield masterProcess.start();
+})();
