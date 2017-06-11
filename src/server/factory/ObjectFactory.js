@@ -12,13 +12,11 @@ const FACTORY_DIR = '/factory/';
 
 var imports = { };
 
-var fileUtils = new FileUtils();
-
 function ObjectFactory() { }
 
 ObjectFactory.prototype.initialize = Promise.coroutine(function* () {
   imports = yield getAllImports(ROOT_DIR);
-  this.Enum = Object.getOwnPropertyNames(imports);
+  this.enum = createEnums(imports);
 });
 
 ObjectFactory.prototype.createStateEngine = function() {
@@ -28,7 +26,7 @@ ObjectFactory.prototype.createStateEngine = function() {
                               .addPublisher()
                               .getDependencies();
 
-  var StateEngine = require(imports[ObjectFactory.Enum.STATE_ENGINE]);
+  var StateEngine = require(imports[this.enum.STATEENGINE]);
   var stateEngine = new StateEngine(dependencies);
 
   Object.assign(stateEngine, dependencies);
@@ -43,7 +41,7 @@ ObjectFactory.prototype.createMasterProcess = Promise.coroutine(function* () {
 
   var dependencies = dependency.getDependencies();
 
-  var MasterProcess = require(imports[ObjectFactory.Enum.MASTER_PROCESS]);
+  var MasterProcess = require(imports[this.enum.MASTERPROCESS]);
   var masterProcess = new MasterProcess();
 
   Object.assign(masterProcess, dependencies);
@@ -57,7 +55,7 @@ ObjectFactory.prototype.createProxy = Promise.coroutine(function* () {
 
   var dependencies = dependency.getDependencies();
 
-  var Proxy = require(imports[ObjectFactory.Enum.PROXY]);
+  var Proxy = require(imports[this.enum.PROXY]);
   var proxy = new Proxy();
 
   Object.assign(proxy, dependencies);
@@ -71,7 +69,7 @@ ObjectFactory.prototype.createRedisServer = Promise.coroutine(function* () {
 
   var dependencies = dependency.getDependencies();
 
-  var RedisServer = require(imports[ObjectFactory.Enum.REDIS_SERVER]);
+  var RedisServer = require(imports[this.enum.REDISSERVER]);
   var redisServer = new RedisServer();
 
   Object.assign(redisServer, dependencies);
@@ -85,7 +83,7 @@ ObjectFactory.prototype.createStateProcess = Promise.coroutine(function* () {
 
   var dependencies = dependency.getDependencies();
 
-  var StateProcess = require(imports[ObjectFactory.Enum.STATE_PROCESS]);
+  var StateProcess = require(imports[this.enum.STATEPROCESS]);
   var stateProcess = new StateProcess();
 
   Object.assign(stateProcess, dependencies);
@@ -94,16 +92,17 @@ ObjectFactory.prototype.createStateProcess = Promise.coroutine(function* () {
 });
 
 ObjectFactory.prototype.createServerProcess = Promise.coroutine(function* () {
-  var ServerProcess = require(imports[ObjectFactory.Enum.SERVER_PROCCESS]);
+  var ServerProcess = require(imports[this.enum.SERVERPROCESS]);
   var serverProcess = new ServerProcess();
 
   return serverProcess;
 });
 
-ObjectFactory.Enum = { MASTER_PROCESS: "MasterProcess", STATE_ENGINE: "StateEngine", PROXY:"Proxy", REDIS_SERVER: "RedisServer", STATE_PROCESS: "StateProcess", SERVER_PROCCESS: "ServerProcess"};
 module.exports = ObjectFactory;
 
 var getAllImports = function (path) {
+  var fileUtils = new FileUtils();
+
   var imports = {};
 
   var asyncEmitter = new Events();
@@ -136,4 +135,15 @@ var getAllImports = function (path) {
     asyncEmitter.once(finished, resolve);
     asyncEmitter.once(error, reject);
   });
+};
+
+var createEnums = function(object) {
+  var keys = Object.keys(object);
+  var enums = { };
+
+  for(let i = 0; i < keys.length; ++i) {
+    enums[keys[i].toUpperCase()] = keys[i];
+  }
+
+  return enums;
 };
