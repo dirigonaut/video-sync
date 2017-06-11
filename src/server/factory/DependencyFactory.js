@@ -11,7 +11,7 @@ function DependencyFactory() { }
 
 DependencyFactory.prototype.addFactory = function() {
   this.dependencies = initDependencies(this.dependencies);
-  this.dependencies[format(DependencyFactory.Enum.FACTORY)] =  Object.create(FactoryWrapper.prototype);
+  this.dependencies[format(DependencyFactory.Enum.FACTORY)] =  Object.create(FactoryWrapper.prototype).getFactory();
   return this;
 };
 
