@@ -32,6 +32,9 @@ RedisPublisher.prototype.initialize = Promise.coroutine(function* () {
   yield cleanUp();
   lazyInit();
   initialize(publisher, subscriber);
+  
+  RedisPublisher.prototype.enum = RedisPublisher.Enum;
+  RedisPublisher.prototype.respEnum = RedisPublisher.RespEnum;
 });
 
 RedisPublisher.prototype.publish = function(channel, args, callback) {
@@ -64,6 +67,7 @@ RedisPublisher.prototype.publishAsync = function(channel, args) {
       reject(err);
     },TIMEOUT, `Request for Key: ${key}, timed out.`);
   }).then(function(data) {
+    console.log(data);
     return data[0];
   });
 

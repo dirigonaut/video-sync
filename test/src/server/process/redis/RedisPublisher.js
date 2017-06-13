@@ -17,7 +17,7 @@ describe('RedisPublisher', function() {
 
       console.log('setup mock');
       var mock = new StateRedisMock();
-      yield mock.setMockEvent(RedisPublisher.Enum.DATABASE, mockData);
+      yield mock.setMockEvent(RedisPublisher.Enum.DATABASE, [[mockData]]);
 
       var respData = yield publisher.publishAsync(RedisPublisher.Enum.DATABASE, ['Boo']);
 

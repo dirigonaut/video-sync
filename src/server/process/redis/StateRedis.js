@@ -14,6 +14,8 @@ var lazyInit = Promise.coroutine(function* () {
   playerManager = new PlayerManager();
 
   subscriber    = Redis.createClient(this.config.getConfig().redis);
+
+  stateEngine.initialize();
 });
 
 function StateRedis() { };
