@@ -22,7 +22,7 @@ describe('Session', function() {
       var inviteeMock = [{ "id": null, "email": "test@gmail.com", "pass": null }];
 
       var mock = new StateRedisMock();
-      yield mock.setMockEvent(Publisher.Enum.DATABASE, sessionMock);
+      yield mock.setMockEvent(Publisher.Enum.DATABASE, [[sessionMock]]);
 
       var config = new Config();
       var client = Redis.createClient(config.getConfig().redis);
@@ -106,7 +106,7 @@ describe('Session', function() {
       var inviteeMock = { id: null, email: "test2@gmail.com", pass: null };
 
       var mock = new StateRedisMock();
-      yield mock.setMockEvent(Publisher.Enum.DATABASE, sessionMock);
+      yield mock.setMockEvent(Publisher.Enum.DATABASE, [[sessionMock]]);
 
       var config = new Config();
       var client = Redis.createClient(config.getConfig().redis);
@@ -132,7 +132,7 @@ describe('Session', function() {
       var inviteeMock = { id: null, email: "test@gmail.com", pass: null };
 
       var mock = new StateRedisMock();
-      yield mock.setMockEvent(Publisher.Enum.DATABASE, sessionMock);
+      yield mock.setMockEvent(Publisher.Enum.DATABASE, [[sessionMock]]);
 
       var config = new Config();
       var client = Redis.createClient(config.getConfig().redis);

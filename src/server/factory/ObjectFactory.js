@@ -22,8 +22,8 @@ ObjectFactory.prototype.initialize = Promise.coroutine(function* () {
 ObjectFactory.prototype.createStateEngine = Promise.coroutine(function* () {
   var dependency = Object.create(DependencyFactory.prototype);
 
-  var publisher     = this.createRedisPublisher();
-  var playerManager = this.createPlayerManager();
+  var publisher     = yield this.createRedisPublisher();
+  var playerManager = yield this.createPlayerManager();
 
   dependencies = dependency.addFactory().addSession().addLog()
                           .addCustomDep(this.enum.REDISPUBLISHER, publisher)
@@ -31,7 +31,7 @@ ObjectFactory.prototype.createStateEngine = Promise.coroutine(function* () {
                           .getDependencies();
 
   var StateEngine = require(imports[this.enum.STATEENGINE]);
-  var stateEngine = new StateEngine();
+  var stateEngine = Object.create(StateEngine.prototype);
 
   Object.assign(stateEngine, dependencies);
 
@@ -137,6 +137,27 @@ ObjectFactory.prototype.createRedisPublisher = Promise.coroutine(function* () {
   Object.assign(publisher, dependencies);
 
   return publisher;
+});
+
+ObjectFactory.prototype.createPlayRule = Promise.coroutine(function* () {
+  var PlayRule = require(imports[this.enum.PLAYRULE]);
+  var playRule = Object.create(PlayRule.prototype);
+
+  return playRule;
+});
+
+ObjectFactory.prototype.createSyncRule = Promise.coroutine(function* () {
+  var SyncRule = require(imports[this.enum.SYNCRULE]);
+  var syncRule = Object.create(SyncRule.prototype);
+
+  return syncRule;
+});
+
+ObjectFactory.prototype.createSyncingRule = Promise.coroutine(function* () {
+  var SyncingRule = require(imports[this.enum.SYNCINGRULE]);
+  var syncingRule = Object.create(SyncingRule.prototype);
+
+  return syncingRule;
 });
 
 module.exports = ObjectFactory;

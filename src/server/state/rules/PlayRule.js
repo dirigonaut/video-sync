@@ -3,11 +3,10 @@ var Player        = require('../../player/Player');
 
 var log           = LogManager.getLog(LogManager.LogEnum.STATE);
 
-function PlayRule(fuzzyRange) {
-  this.fuzzyRange = fuzzyRange;
+function PlayRule() {
 }
 
-PlayRule.prototype.evaluate = function(issuer, playerManager, mediaStarted, callback) {
+PlayRule.prototype.evaluate = function(issuer, playerManager, mediaStarted, fuzzyRange, callback) {
   log.debug("PlayRule.evaluate");
   _this = this;
 
@@ -20,7 +19,7 @@ PlayRule.prototype.evaluate = function(issuer, playerManager, mediaStarted, call
   } else {
     for(var player of players) {
       if(player[1].sync === Player.Sync.SYNCED || (mediaStarted === false && player[1].isInit())) {
-        if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(player[1].timestamp)) < _this.fuzzyRange) {
+        if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(player[1].timestamp)) < fuzzyRange) {
           issuees.push(player[1]);
         }
       }

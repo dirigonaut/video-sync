@@ -15,6 +15,8 @@ function LogManager() {
 }
 
 LogManager.prototype.initialize = function(newConfig) {
+  LogManager.prototype.LogEnum = LogManager.LogEnum;
+
   config = newConfig;
 
   var keys = Object.keys(LogManager.LogEnum);
@@ -56,9 +58,6 @@ LogManager.getLog = function(id) {
 };
 
 module.exports = LogManager;
-
-LogManager.prototype.LogEnum = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
-                        CHAT: 'chat', DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};
 
 LogManager.LogEnum = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
                         CHAT: 'chat', DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};

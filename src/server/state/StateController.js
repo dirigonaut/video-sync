@@ -39,7 +39,7 @@ function initialize(io, socket) {
       socket.emit(event);
     };
 
-    publisher.publish(Publisher.Enum.STATE, ['init', [socket.id]], onInit);
+    publisher.publish(Publisher.Enum.STATE, ['initPlayer', [socket.id]], onInit);
   });
 
   socket.on('state-req-play', function() {
