@@ -10,9 +10,18 @@ const Session         = require('../../../../src/server/administration/Session')
 const Publisher       = require('../../../../src/server/process/redis/RedisPublisher');
 const StateRedisMock  = require('../../../mocks/StateRedisMock');
 
+const MockFactory     = require('../../../mocks/MockFactory');
+
 describe('StateEngine', function() {
   describe('#init()', function() {
     it('should init the player session side and send a command to the client to proceed with init', Promise.coroutine(function* () {
+      var mockFactory = Object.create(MockFactory.prototype);
+      yield mockFactory.initialize();
+
+      var mockMixin = mockFactory.createMockMixin([mockFactory.ImportEnum.PLAYERMANAGER]);
+
+      mockMixin.playerManager.pushReturn(mockMixin.playerManager.Enum.GETPLAYER, "boo!");
+      console.log(mockMixin.playerManager.getPlayer());
       var publisher = new Publisher();
       yield publisher.initialize();
 
