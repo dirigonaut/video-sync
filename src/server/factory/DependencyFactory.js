@@ -7,23 +7,24 @@ const Deps = {
   LogManager:     require('../log/LogManager'),
 };
 
-var depsEnum;
-
 function DependencyFactory() { }
 
-DependencyFactory.prototype.initialize = function() {
-  depsEnum = createEnums(Deps);
+DependencyFactory.prototype.initialize = function(enumUtil) {
+  DependencyFactory.prototype.enumUtil = enumUtil;
+  DependencyFactory.prototype.DepEnum = enumUtil.createEnums(Deps);
 };
 
 DependencyFactory.prototype.addFactory = function() {
   this.dependencies = initDependencies(this.dependencies);
-  this.dependencies[format(depsEnum.FACTORY)] = Object.create(Deps.Factory.prototype).getFactory();
+  this.dependencies[this.enumUtil.firstCharToLowerCase(this.DepEnum.FACTORY)]
+    = Object.create(Deps.Factory.prototype).getFactory();
   return this;
 };
 
 DependencyFactory.prototype.addSession = function() {
   this.dependencies = initDependencies(this.dependencies);
-  this.dependencies[format(depsEnum.SESSION)] = new Deps.Session();
+  this.dependencies[this.enumUtil.firstCharToLowerCase(this.DepEnum.SESSION)]
+    = new Deps.Session();
   return this;
 };
 
@@ -35,19 +36,21 @@ DependencyFactory.prototype.addConfig = Promise.coroutine(function* () {
     yield config.initialize().catch(console.error);
   }
 
-  this.dependencies[format(depsEnum.CONFIG)]  = config;
+  this.dependencies[this.enumUtil.firstCharToLowerCase(this.DepEnum.CONFIG)]
+    = config;
   return this;
 });
 
 DependencyFactory.prototype.addLog = function() {
   this.dependencies = initDependencies(this.dependencies);
-  this.dependencies[format(depsEnum.LOGMANAGER)] = new Deps.LogManager();
+  this.dependencies[this.enumUtil.firstCharToLowerCase(this.DepEnum.LOGMANAGER)]
+    = new Deps.LogManager();
   return this;
 };
 
 DependencyFactory.prototype.addCustomDep = function(key, reference) {
   this.dependencies = initDependencies(this.dependencies);
-  this.dependencies[format(key)] = reference;
+  this.dependencies[this.enumUtil.firstCharToLowerCase(key)] = reference;
   return this;
 };
 
@@ -67,19 +70,4 @@ var initDependencies = function(dependencies) {
   }
 
   return dependencies;
-};
-
-var format = function(string) {
-  return string.charAt(0).toLowerCase() + string.slice(1);
-}
-
-var createEnums = function(object) {
-  var keys = Object.keys(object);
-  var enums = { };
-
-  for(let i = 0; i < keys.length; ++i) {
-    enums[keys[i].toUpperCase()] = keys[i];
-  }
-
-  return enums;
 };

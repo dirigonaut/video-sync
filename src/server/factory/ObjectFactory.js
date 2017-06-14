@@ -1,22 +1,23 @@
 const Promise   = require('bluebird');
-const Find      = require('find');
 const Path      = require('path');
-const Events    = require('events');
-const Fs        = Promise.promisifyAll(require('fs'));
 
-const FileUtils = require('../utils/FileSystemUtils');
-const DependencyFactory = require('./DependencyFactory');
+const DependencyFactory   = require('./DependencyFactory');
 
 const ROOT_DIR  = Path.join(__dirname, "../../server");
 const FACTORY_DIR = '/factory/';
 
-var imports = { };
+var imports;
 
 function ObjectFactory() { }
 
-ObjectFactory.prototype.initialize = Promise.coroutine(function* () {
-  imports = yield getAllImports(ROOT_DIR);
-  this.enum = createEnums(imports);
+ObjectFactory.prototype.initialize = Promise.coroutine(function* (enumUtil, dependencyFactory) {
+  imports = Object.create(Object.prototype);
+  var rawImports = yield enumUtil.getAllImports(ROOT_DIR, [FACTORY_DIR]);
+
+  Object.assign(imports, rawImports);
+  imports = enumUtil.filterOut(imports, dependencyFactory.DepEnum);
+
+  ObjectFactory.prototype.Enum = enumUtil.createEnums(imports);
 });
 
 ObjectFactory.prototype.createStateEngine = Promise.coroutine(function* () {
@@ -26,11 +27,11 @@ ObjectFactory.prototype.createStateEngine = Promise.coroutine(function* () {
   var playerManager = yield this.createPlayerManager();
 
   dependencies = dependency.addFactory().addSession().addLog()
-                          .addCustomDep(this.enum.REDISPUBLISHER, publisher)
-                          .addCustomDep(this.enum.PLAYERMANAGER, playerManager)
+                          .addCustomDep(this.Enum.REDISPUBLISHER, publisher)
+                          .addCustomDep(this.Enum.PLAYERMANAGER, playerManager)
                           .getDependencies();
 
-  var StateEngine = require(imports[this.enum.STATEENGINE]);
+  var StateEngine = require(imports[this.Enum.STATEENGINE]);
   var stateEngine = Object.create(StateEngine.prototype);
 
   Object.assign(stateEngine, dependencies);
@@ -44,7 +45,7 @@ ObjectFactory.prototype.createMasterProcess = Promise.coroutine(function* () {
   dependency.addFactory().addLog();
   var dependencies = dependency.getDependencies();
 
-  var MasterProcess = require(imports[this.enum.MASTERPROCESS]);
+  var MasterProcess = require(imports[this.Enum.MASTERPROCESS]);
   var masterProcess = new MasterProcess();
 
   Object.assign(masterProcess, dependencies);
@@ -57,7 +58,7 @@ ObjectFactory.prototype.createProxy = Promise.coroutine(function* () {
   yield dependency.addConfig();
   var dependencies = dependency.getDependencies();
 
-  var Proxy = require(imports[this.enum.PROXY]);
+  var Proxy = require(imports[this.Enum.PROXY]);
   var proxy = new Proxy();
 
   Object.assign(proxy, dependencies);
@@ -70,7 +71,7 @@ ObjectFactory.prototype.createRedisServer = Promise.coroutine(function* () {
   yield dependency.addConfig();
   var dependencies = dependency.getDependencies();
 
-  var RedisServer = require(imports[this.enum.REDISSERVER]);
+  var RedisServer = require(imports[this.Enum.REDISSERVER]);
   var redisServer = new RedisServer();
 
   Object.assign(redisServer, dependencies);
@@ -84,7 +85,7 @@ ObjectFactory.prototype.createStateProcess = Promise.coroutine(function* () {
   yield dependency.addConfig();
   var dependencies = dependency.getDependencies();
 
-  var StateProcess = require(imports[this.enum.STATEPROCESS]);
+  var StateProcess = require(imports[this.Enum.STATEPROCESS]);
   var stateProcess = Object.create(StateProcess.prototype);
 
   Object.assign(stateProcess, dependencies);
@@ -93,7 +94,7 @@ ObjectFactory.prototype.createStateProcess = Promise.coroutine(function* () {
 });
 
 ObjectFactory.prototype.createServerProcess = Promise.coroutine(function* () {
-  var ServerProcess = require(imports[this.enum.SERVERPROCESS]);
+  var ServerProcess = require(imports[this.Enum.SERVERPROCESS]);
   var serverProcess = new ServerProcess();
 
   return serverProcess;
@@ -105,7 +106,7 @@ ObjectFactory.prototype.createStateRedis = Promise.coroutine(function* () {
   dependency.addFactory().addLog();
   var dependencies = dependency.getDependencies();
 
-  var StateRedis = require(imports[this.enum.STATEREDIS]);
+  var StateRedis = require(imports[this.Enum.STATEREDIS]);
   var stateRedis = Object.create(StateRedis.prototype);
 
   Object.assign(stateRedis, dependencies);
@@ -117,7 +118,7 @@ ObjectFactory.prototype.createPlayerManager = Promise.coroutine(function* () {
   var dependency = Object.create(DependencyFactory.prototype);
   dependencies = dependency.addFactory().addLog().getDependencies();
 
-  var PlayerManager = require(imports[this.enum.PLAYERMANAGER]);
+  var PlayerManager = require(imports[this.Enum.PLAYERMANAGER]);
   var playerManager = Object.create(PlayerManager.prototype);
 
   Object.assign(playerManager, dependencies);
@@ -131,7 +132,7 @@ ObjectFactory.prototype.createRedisPublisher = Promise.coroutine(function* () {
   yield dependency.addConfig();
   var dependencies = dependency.getDependencies();
 
-  var Publisher = require(imports[this.enum.REDISPUBLISHER]);
+  var Publisher = require(imports[this.Enum.REDISPUBLISHER]);
   var publisher = Object.create(Publisher.prototype);
 
   Object.assign(publisher, dependencies);
@@ -140,72 +141,24 @@ ObjectFactory.prototype.createRedisPublisher = Promise.coroutine(function* () {
 });
 
 ObjectFactory.prototype.createPlayRule = Promise.coroutine(function* () {
-  var PlayRule = require(imports[this.enum.PLAYRULE]);
+  var PlayRule = require(imports[this.Enum.PLAYRULE]);
   var playRule = Object.create(PlayRule.prototype);
 
   return playRule;
 });
 
 ObjectFactory.prototype.createSyncRule = Promise.coroutine(function* () {
-  var SyncRule = require(imports[this.enum.SYNCRULE]);
+  var SyncRule = require(imports[this.Enum.SYNCRULE]);
   var syncRule = Object.create(SyncRule.prototype);
 
   return syncRule;
 });
 
 ObjectFactory.prototype.createSyncingRule = Promise.coroutine(function* () {
-  var SyncingRule = require(imports[this.enum.SYNCINGRULE]);
+  var SyncingRule = require(imports[this.Enum.SYNCINGRULE]);
   var syncingRule = Object.create(SyncingRule.prototype);
 
   return syncingRule;
 });
 
 module.exports = ObjectFactory;
-
-var getAllImports = function (path) {
-  var fileUtils = new FileUtils();
-
-  var imports = {};
-
-  var asyncEmitter = new Events();
-  var finished = "finished";
-  var error = "error";
-
-  Find.eachfile(/\.js$/, path, function(filePath) {
-    if(filePath) {
-      var key = fileUtils.splitNameFromPath(filePath);
-
-      if(!filePath.includes(FACTORY_DIR)) {
-        imports[key] = filePath;
-      }
-    }
-  })
-  .end(function() {
-    for(let property in DependencyFactory.Enum) {
-      if(DependencyFactory.Enum.hasOwnProperty(property)) {
-        delete imports[DependencyFactory.Enum[property]];
-      }
-    };
-
-    asyncEmitter.emit(finished, imports);
-  })
-  .error(function(err) {
-    asyncEmitter.emit(error, err);
-  });
-
-  return new Promise(function(resolve, reject) {
-    asyncEmitter.once(finished, resolve);
-    asyncEmitter.once(error, reject);
-  });
-};
-
-var createEnums = function(object) {
-  var keys = Object.keys(object);
-  var enums = { };
-
-  for(let i = 0; i < keys.length; ++i) {
-    enums[keys[i].toUpperCase()] = keys[i];
-  }
-
-  return enums;
-};
