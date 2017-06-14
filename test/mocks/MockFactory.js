@@ -41,7 +41,9 @@ MockFactory.prototype.createMockObject = function(objectPrototype) {
     for(let property in objectPrototype) {
       if (objectPrototype.hasOwnProperty(property)) {
         mock[property] = function() {
-          return this.callMock(property);
+          var args = Array.from(arguments);
+          args.unshift(property);
+          return this.callMock.apply(this, args);
         };
       }
     }

@@ -20,8 +20,8 @@ describe('StateEngine', function() {
 
       var mockMixin = mockFactory.createMockMixin([mockFactory.ImportEnum.PLAYERMANAGER]);
 
-      mockMixin.playerManager.pushReturn(mockMixin.playerManager.Enum.GETPLAYER, "boo!");
-      console.log(mockMixin.playerManager.getPlayer());
+      mockMixin.playerManager.pushReturn(mockMixin.playerManager.Enum.GETPLAYER, function() { return "boo!"; }());
+      console.log(mockMixin.playerManager.getPlayer('id'));
       var publisher = new Publisher();
       yield publisher.initialize();
 
