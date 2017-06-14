@@ -20,7 +20,9 @@ MockObject.prototype.pushEvent = function(key, trigger) {
   this[key + EVENT].push(trigger);
 };
 
-MockObject.prototype.callMock = function(key) {
+MockObject.prototype.callMock = function() {
+  var args = Array.from(arguments);
+  var key = args.shift();
   if(this[key + EVENT]) {
     var trigger = this[key + EVENT].pop();
 
@@ -30,7 +32,8 @@ MockObject.prototype.callMock = function(key) {
   }
 
   if(this[key + VALUE]) {
-    return this[key + VALUE].pop();
+    var value = this[key + VALUE].pop();
+    return typeof value === 'function' ? value.apply(this, args) : value;
   }
 };
 
