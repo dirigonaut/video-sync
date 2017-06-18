@@ -50,7 +50,7 @@ describe('StateEngine', function() {
       var stateEngine = Object.create(StateEngine.prototype);
 
       var Player = mockFactory.getImport(mockFactory.ImportEnum.PLAYER);
-      var player =  mockFactory.createMockObject(mockFactory.ImportEnum.PLAYER, Player.prototype);
+      var player = mockFactory.createMockObject(mockFactory.ImportEnum.PLAYER, Player.prototype);
 
       var mockMixin = mockFactory.createMockMixin([mockFactory.ImportEnum.LOGMANAGER, mockFactory.ImportEnum.SESSION,
         mockFactory.ImportEnum.PLAYERMANAGER, mockFactory.ImportEnum.PLAYRULE]);
@@ -94,54 +94,193 @@ describe('StateEngine', function() {
 
   describe('#pause()', function() {
     it('should pause all the players', Promise.coroutine(function* () {
-      var publisher = new Publisher();
-      yield publisher.initialize();
+      var mockFactory = Object.create(MockFactory.prototype);
+      yield mockFactory.initialize();
 
+      var stateEngine = Object.create(StateEngine.prototype);
 
+      var Player = mockFactory.getImport(mockFactory.ImportEnum.PLAYER);
+      var player = mockFactory.createMockObject(mockFactory.ImportEnum.PLAYER, Player.prototype);
+
+      var mockMixin = mockFactory.createMockMixin([mockFactory.ImportEnum.LOGMANAGER, mockFactory.ImportEnum.SESSION,
+        mockFactory.ImportEnum.PLAYERMANAGER]);
+      mockMixin.session.pushReturn(mockMixin.session.Enum.GETMEDIAPATH,
+        Promise.coroutine(function* () {
+          return "mediaPath";
+        }));
+
+      mockMixin.logManager = mockFactory.mockLogging(mockMixin.logManager);
+
+      mockMixin.playerManager.pushReturn(mockMixin.playerManager.Enum.GETPLAYER,
+        function() {
+          player.id = "test1";
+          player.sync = Player.Sync.SYNCED;
+          return player;
+        });
+
+      mockMixin.playerManager.pushReturn(mockMixin.playerManager.Enum.GETPLAYERS,
+        function() {
+          var players = new Map();
+          player.id = "test1";
+          player.sync = Player.Sync.SYNCED;
+          players.set("test1", player);
+          player = mockFactory.createMockObject(mockFactory.ImportEnum.PLAYER, Player.prototype);
+          player.id = "test2";
+          player.sync = Player.Sync.SYNCED;
+          players.set("test2", player);
+          return players;
+        });
+
+      Object.assign(stateEngine, mockMixin);
+      stateEngine.initialize();
+
+      var result = yield stateEngine.pause("test1");
+      should.deepEqual(result, [[["test1", "state-pause", true], ["test2", "state-pause", true]]], "The StateEngine did not return the pause event.");
     }));
   });
 
   describe('#seek()', function() {
     it('should send a message to players to seek to the requested timestamp', Promise.coroutine(function* () {
-      var publisher = new Publisher();
-      yield publisher.initialize();
+      var mockFactory = Object.create(MockFactory.prototype);
+      yield mockFactory.initialize();
 
+      var stateEngine = Object.create(StateEngine.prototype);
 
+      var Player = mockFactory.getImport(mockFactory.ImportEnum.PLAYER);
+      var player = mockFactory.createMockObject(mockFactory.ImportEnum.PLAYER, Player.prototype);
+
+      var mockMixin = mockFactory.createMockMixin([mockFactory.ImportEnum.LOGMANAGER, mockFactory.ImportEnum.SESSION,
+        mockFactory.ImportEnum.PLAYERMANAGER]);
+      mockMixin.session.pushReturn(mockMixin.session.Enum.GETMEDIAPATH,
+        Promise.coroutine(function* () {
+          return "mediaPath";
+        }));
+
+      mockMixin.logManager = mockFactory.mockLogging(mockMixin.logManager);
+
+      mockMixin.playerManager.pushReturn(mockMixin.playerManager.Enum.GETPLAYER,
+        function() {
+          player.id = "test1";
+          player.sync = Player.Sync.SYNCED;
+          return player;
+        });
+
+      mockMixin.playerManager.pushReturn(mockMixin.playerManager.Enum.GETPLAYERS,
+        function() {
+          var players = new Map();
+          player.id = "test1";
+          player.sync = Player.Sync.SYNCED;
+          players.set("test1", player);
+          player = mockFactory.createMockObject(mockFactory.ImportEnum.PLAYER, Player.prototype);
+          player.id = "test2";
+          player.sync = Player.Sync.SYNCED;
+          players.set("test2", player);
+          return players;
+        });
+
+      Object.assign(stateEngine, mockMixin);
+      stateEngine.initialize();
+
+      var result = yield stateEngine.seek("test1", 1000);
+      should.deepEqual(result, [[["test1", "state-seek", 1000], ["test2", "state-seek", 1000]]], "The StateEngine did not return the seek event.");
     }));
   });
 
   describe('#pauseSync()', function() {
     it('should authenticate an invited user\'s token', Promise.coroutine(function* () {
-      var publisher = new Publisher();
-      yield publisher.initialize();
+      var mockFactory = Object.create(MockFactory.prototype);
+      yield mockFactory.initialize();
 
+      var stateEngine = Object.create(StateEngine.prototype);
 
+      var Player = mockFactory.getImport(mockFactory.ImportEnum.PLAYER);
+      var player = mockFactory.createMockObject(mockFactory.ImportEnum.PLAYER, Player.prototype);
+
+      var mockMixin = mockFactory.createMockMixin([mockFactory.ImportEnum.LOGMANAGER, mockFactory.ImportEnum.SESSION,
+        mockFactory.ImportEnum.PLAYERMANAGER]);
+      mockMixin.session.pushReturn(mockMixin.session.Enum.GETMEDIAPATH,
+        Promise.coroutine(function* () {
+          return "mediaPath";
+        }));
+
+      mockMixin.logManager = mockFactory.mockLogging(mockMixin.logManager);
+
+      mockMixin.playerManager.pushReturn(mockMixin.playerManager.Enum.GETPLAYER,
+        function() {
+          player.id = "test1";
+          player.sync = Player.Sync.SYNCED;
+          return player;
+        });
+
+      var getPlayers = function() {
+        var players = new Map();
+        player.id = "test1";
+        player.sync = Player.Sync.SYNCED;
+        player.timestamp = 200;
+        players.set("test1", player);
+        player = mockFactory.createMockObject(mockFactory.ImportEnum.PLAYER, Player.prototype);
+        player.id = "test2";
+        player.sync = Player.Sync.SYNCED;
+        player.timestamp = 300;
+        players.set("test2", player);
+        return players;
+      };
+
+      mockMixin.playerManager.pushReturn(mockMixin.playerManager.Enum.GETPLAYERS,
+        getPlayers);
+      mockMixin.playerManager.pushReturn(mockMixin.playerManager.Enum.GETPLAYERS,
+        getPlayers);
+
+      Object.assign(stateEngine, mockMixin);
+      stateEngine.initialize();
+
+      var result = yield stateEngine.pauseSync("test2");
+      should.deepEqual(result, [[["test2","state-seek",{ seekTime: 200}]]], "The StateEngine did not return the pauseSync event.");
     }));
   });
 
   describe('#changeSyncState()', function() {
     it('should authenticate an invited user\'s token', Promise.coroutine(function* () {
-      var publisher = new Publisher();
-      yield publisher.initialize();
+      var mockFactory = Object.create(MockFactory.prototype);
+      yield mockFactory.initialize();
 
+      var stateEngine = Object.create(StateEngine.prototype);
 
+      var Player = mockFactory.getImport(mockFactory.ImportEnum.PLAYER);
+      var player = mockFactory.createMockObject(mockFactory.ImportEnum.PLAYER, Player.prototype);
+
+      var mockMixin = mockFactory.createMockMixin([mockFactory.ImportEnum.LOGMANAGER, mockFactory.ImportEnum.SESSION,
+        mockFactory.ImportEnum.PLAYERMANAGER]);
+      mockMixin.session.pushReturn(mockMixin.session.Enum.GETMEDIAPATH,
+        Promise.coroutine(function* () {
+          return "mediaPath";
+        }));
+
+      mockMixin.logManager = mockFactory.mockLogging(mockMixin.logManager);
+
+      mockMixin.playerManager.pushReturn(mockMixin.playerManager.Enum.GETPLAYER,
+        function() {
+          player.id = "test1";
+          player.sync = Player.Sync.DESYNCED;
+          return player;
+        });
+
+      Object.assign(stateEngine, mockMixin);
+      stateEngine.initialize();
+
+      var result = yield stateEngine.changeSyncState("test1", 1);
+      should.deepEqual(result, [0], "The StateEngine did not return the proper changeSync event.");
     }));
   });
 
   describe('#timeUpdate()', function() {
     it('should authenticate an invited user\'s token', Promise.coroutine(function* () {
-      var publisher = new Publisher();
-      yield publisher.initialize();
-
 
     }));
   });
 
   describe('#syncingPing()', function() {
     it('should authenticate an invited user\'s token', Promise.coroutine(function* () {
-      var publisher = new Publisher();
-      yield publisher.initialize();
-
 
     }));
   });

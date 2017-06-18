@@ -128,7 +128,7 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
   }
 });
 
-StateEngine.prototype.pauseSync = Promise.coroutine(function* (id, callback) {
+StateEngine.prototype.pauseSync = Promise.coroutine(function* (id) {
   log.debug(`StateEngine.pauseSync ${id}`);
   var basePath = yield this.session.getMediaPath();
 
@@ -158,7 +158,7 @@ StateEngine.prototype.pauseSync = Promise.coroutine(function* (id, callback) {
   }
 });
 
-StateEngine.prototype.changeSyncState = Promise.coroutine(function* (id, syncState, callback) {
+StateEngine.prototype.changeSyncState = Promise.coroutine(function* (id, syncState) {
   log.debug(`StateEngine.changeSyncState for ${id}, to ${syncState}`);
   var basePath = yield this.session.getMediaPath();
 
@@ -177,7 +177,7 @@ StateEngine.prototype.changeSyncState = Promise.coroutine(function* (id, syncSta
   }
 });
 
-StateEngine.prototype.timeUpdate = Promise.coroutine(function* (id, data, callback) {
+StateEngine.prototype.timeUpdate = Promise.coroutine(function* (id, data) {
   log.silly(`StateEngine.timeUpdate ${id}, ${data.timestamp}`);
   var basePath = yield this.session.getMediaPath();
 
@@ -201,7 +201,7 @@ StateEngine.prototype.timeUpdate = Promise.coroutine(function* (id, data, callba
   }
 });
 
-StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, callback) {
+StateEngine.prototype.syncingPing = Promise.coroutine(function* (id) {
   log.silly(`StateEngine.syncingPing ${id}`);
   var basePath = yield this.session.getMediaPath();
 
