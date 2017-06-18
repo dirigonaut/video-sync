@@ -8,7 +8,7 @@ const Config          = require('../../../../src/server/utils/Config');
 const Authenticator   = require('../../../../src/server/authentication/Authenticator');
 const Session         = require('../../../../src/server/administration/Session');
 const Publisher       = require('../../../../src/server/process/redis/RedisPublisher');
-const StateRedisMock  = require('../../../mocks/StateRedisMock');
+const RedisMock       = require('../../../mocks/RedisMock');
 
 const MockFactory     = require('../../../mocks/MockFactory');
 
@@ -27,7 +27,7 @@ describe('StateEngine', function() {
 
       var mockData = { "address" : "test1@gmail.com" };
 
-      var mock = new StateRedisMock();
+      var mock = new RedisMock();
       //yield mock.setMockEvent(Publisher.Enum.DATABASE, sessionMock);
 
       var config = new Config();
@@ -47,7 +47,7 @@ describe('StateEngine', function() {
 
       var mockData = { "address" : "test1@gmail.com", "pass" : "dummyPass"};
 
-      var mock = new StateRedisMock();
+      var mock = new RedisMock();
       //yield mock.setMockEvent(Publisher.Enum.DATABASE, sessionMock);
 
       var session = new Session();
@@ -62,7 +62,7 @@ describe('StateEngine', function() {
 
       var mockData = { "address" : "test1@gmail.com", "pass" : "dummyPass"};
 
-      var mock = new StateRedisMock();
+      var mock = new RedisMock();
       //yield mock.setMockEvent(Publisher.Enum.DATABASE, sessionMock);
 
       var session = new Session();
@@ -77,7 +77,7 @@ describe('StateEngine', function() {
 
       var mockData = { "address" : "test1@gmail.com", "pass" : "dummyPass"};
 
-      var mock = new StateRedisMock();
+      var mock = new RedisMock();
       //yield mock.setMockEvent(Publisher.Enum.DATABASE, sessionMock);
 
       var session = new Session();
@@ -92,7 +92,7 @@ describe('StateEngine', function() {
 
       var mockData = { "address" : "test1@gmail.com", "pass" : "dummyPass"};
 
-      var mock = new StateRedisMock();
+      var mock = new RedisMock();
       //yield mock.setMockEvent(Publisher.Enum.DATABASE, sessionMock);
 
       var session = new Session();
@@ -107,7 +107,7 @@ describe('StateEngine', function() {
 
       var mockData = { "address" : "test1@gmail.com", "pass" : "dummyPass"};
 
-      var mock = new StateRedisMock();
+      var mock = new RedisMock();
       //yield mock.setMockEvent(Publisher.Enum.DATABASE, sessionMock);
 
       var session = new Session();
@@ -122,7 +122,7 @@ describe('StateEngine', function() {
 
       var mockData = { "address" : "test1@gmail.com", "pass" : "dummyPass"};
 
-      var mock = new StateRedisMock();
+      var mock = new RedisMock();
       //yield mock.setMockEvent(Publisher.Enum.DATABASE, sessionMock);
 
       var session = new Session();
@@ -137,7 +137,7 @@ describe('StateEngine', function() {
 
       var mockData = { "address" : "test1@gmail.com", "pass" : "dummyPass"};
 
-      var mock = new StateRedisMock();
+      var mock = new RedisMock();
       //yield mock.setMockEvent(Publisher.Enum.DATABASE, sessionMock);
 
       var session = new Session();

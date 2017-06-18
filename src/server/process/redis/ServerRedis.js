@@ -5,6 +5,8 @@ const Config            = require('../../utils/Config');
 const Session           = require('../../administration/Session');
 const ReflectiveAdapter = require('./ReflectiveAdapter');
 
+Promise.promisifyAll(Redis.RedisClient.prototype);
+
 var config, session, adapter, subscriber;
 
 function lazyInit() {

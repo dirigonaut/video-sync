@@ -1,24 +1,27 @@
-var Redis     = require('redis');
-var Config    = require('../../utils/Config');
-var Publisher = require('./RedisPublisher');
+const Promise   = require('bluebird');
+const Redis     = require('redis');
+const Config    = require('../../utils/Config');
+const Publisher = require('./RedisPublisher');
 
-var client;
+Promise.promisifyAll(Redis.RedisClient.prototype);
+
+var client, config;
 
 function lazyInit() {
   config      = new Config();
   client      = Redis.createClient(config.getConfig().redis);
 }
 
-class ReflectiveAdapter {
-  constructor() {
-    if(typeof ReflectiveAdapter.prototype.lazyInit === 'undefined') {
-      lazyInit();
-      ReflectiveAdapter.prototype.lazyInit = true;
-    }
-  }
-}
+function ReflectiveAdapter() { }
 
-ReflectiveAdapter.prototype.callFunction = function(object, message) {
+ReflectiveAdapter.prototype.initialize = function() {
+  if(typeof ReflectiveAdapter.prototype.lazyInit === 'undefined') {
+    lazyInit();
+    ReflectiveAdapter.prototype.lazyInit = true;
+  }
+};
+
+ReflectiveAdapter.prototype.callFunction = Promise.coroutine(function* (object, message) {
   if(object !== null && object !== undefined) {
     if(message !== null && message !== undefined) {
       message = JSON.parse(message);
@@ -26,28 +29,25 @@ ReflectiveAdapter.prototype.callFunction = function(object, message) {
       var functionHandle = message[0];
       var functionParams = message[1] !== null && message[1] !== undefined ? message[1] : [];
 
-      //console.log(`${key}: Discovering function ${functionHandle} for object ${object.constructor.name}`);
-      if(functionHandle !== null && functionHandle !== undefined) {
+      if(functionHandle) {
         if(typeof object[functionHandle] === 'function') {
-          var pushDataToRedis = function(response) {
-            var onSuccess = function(err, data) {
-              if(err === null) {
-                //console.log(`${key}: Response for ${functionHandle} for object ${object.constructor.name}`)
-                client.publish(Publisher.RespEnum.RESPONSE, key);
-              }
-            };
+          var response;
+          response = object[functionHandle].apply(object, functionParams);
 
-            client.set(key, JSON.stringify(response), onSuccess);
-          };
+          if(response.isFulfilled) {
+            response = yield response;
+          }
 
-          functionParams.push(pushDataToRedis);
-          object[functionHandle].apply(object, functionParams);
+          if(response) {
+            yield client.setAsync(key, JSON.stringify(response));
+            yield client.publishAsync(Publisher.RespEnum.RESPONSE, key);
+          }
         } else {
           console.log(`No function found with name ${functionHandle}`);
         }
       }
     }
   }
-};
+});
 
 module.exports = ReflectiveAdapter;

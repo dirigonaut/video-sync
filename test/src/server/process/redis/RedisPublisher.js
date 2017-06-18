@@ -5,7 +5,7 @@ const should  = require('should');
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
 const RedisPublisher = require('../../../../../src/server/process/redis/RedisPublisher');
-const StateRedisMock = require('../../../../mocks/StateRedisMock');
+const RedisMock      = require('../../../../mocks/RedisMock');
 
 describe('RedisPublisher', function() {
   describe('#publishAsync()', function() {
@@ -16,7 +16,7 @@ describe('RedisPublisher', function() {
       var mockData = { "message" : "Ahhhhhhh!"};
 
       console.log('setup mock');
-      var mock = new StateRedisMock();
+      var mock = new RedisMock();
       yield mock.setMockEvent(RedisPublisher.Enum.DATABASE, [[mockData]]);
 
       var respData = yield publisher.publishAsync(RedisPublisher.Enum.DATABASE, ['Boo']);
