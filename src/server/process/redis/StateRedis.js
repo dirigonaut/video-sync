@@ -27,28 +27,29 @@ StateRedis.prototype.initialize = Promise.coroutine(function* () {
   }
 
   this.log = this.logManager.getLog(this.logManager.LogEnum.GENERAL);
+  console.log(this.log);
   initialize.call(this, subscriber);
 
-  subscriber.subscribe("database");
-  subscriber.subscribe("state");
-  subscriber.subscribe("player");
-  subscriber.subscribe("session");
+  yield subscriber.subscribeAsync("database");
+  yield subscriber.subscribeAsync("state");
+  yield subscriber.subscribeAsync("player");
+  yield subscriber.subscribeAsync("session");
 });
 
 module.exports = StateRedis;
 
 function initialize(subscriber) {
-  subscriber.on("message", function(channel, message) {
+  subscriber.on("message", Promise.coroutine(function* (channel, message) {
     if(channel === "database") {
-      adapter.callFunction(database, message);
+      yield adapter.callFunction(database, message);
     } else if(channel === "state") {
-      adapter.callFunction(stateEngine, message);
+      yield adapter.callFunction(stateEngine, message);
     } else if(channel === "player") {
-      adapter.callFunction(playerManager, message);
+      yield adapter.callFunction(playerManager, message);
     } else if(channel === "session"){
-      adapter.callFunction(session, message);
+      yield adapter.callFunction(session, message);
     }
-  }.bind(this));
+  }.bind(this)));
 
   subscriber.on("subscribe", function(channel, count) {
     this.log.info(`Subscribed to ${channel}`);

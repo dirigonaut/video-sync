@@ -8,7 +8,7 @@ const Config          = require('../../../../src/server/utils/Config');
 const Authenticator   = require('../../../../src/server/authentication/Authenticator');
 const Session         = require('../../../../src/server/administration/Session');
 const Publisher       = require('../../../../src/server/process/redis/RedisPublisher');
-const StateRedisMock  = require('../../../mocks/StateRedisMock');
+const RedisMock       = require('../../../mocks/RedisMock');
 
 describe('Authenticator', function() {
   describe('#requestToken()', function() {
@@ -26,7 +26,7 @@ describe('Authenticator', function() {
       var mockId = "dummyId1";
       var mockData = { "address" : "test1@gmail.com" };
 
-      var mock = new StateRedisMock();
+      var mock = new RedisMock();
       yield mock.setMockEvent(Publisher.Enum.DATABASE, [[sessionMock]]);
 
       var config = new Config();
@@ -61,7 +61,7 @@ describe('Authenticator', function() {
       var mockId = "dummyId1";
       var mockData = { "address" : "test1@gmail.com", "pass" : "dummyPass"};
 
-      var mock = new StateRedisMock();
+      var mock = new RedisMock();
       yield mock.setMockEvent(Publisher.Enum.DATABASE, [[sessionMock]]);
 
       var session = new Session();

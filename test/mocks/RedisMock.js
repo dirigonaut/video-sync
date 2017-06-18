@@ -11,7 +11,7 @@ Promise.promisifyAll(Redis.RedisClient.prototype);
 
 var config;
 
-class StateRedisMock {
+class RedisMock {
   constructor() {
     config          = new Config();
     this.publisher  = Redis.createClient(config.getConfig().redis);
@@ -19,7 +19,7 @@ class StateRedisMock {
   }
 }
 
-StateRedisMock.prototype.setMockEvent = function(key, payload) {
+RedisMock.prototype.setMockEvent = function(key, payload) {
   var handle = Promise.coroutine(function* (channel, message) {
     if(channel === key) {
       var id = JSON.parse(message).pop();
@@ -33,14 +33,14 @@ StateRedisMock.prototype.setMockEvent = function(key, payload) {
   this.subscriber.on("message", handle);
 
   this.subscriber.on("subscribe", function(channel, count) {
-    log.info(`StateRedisMock subscribed to ${channel}`);
+    log.info(`RedisMock subscribed to ${channel}`);
   });
 
   this.subscriber.on("connect", function(err) {
-    log.debug("StateRedisMock is connected to redis server");
+    log.debug("RedisMock is connected to redis server");
   });
 
   return this.subscriber.subscribeAsync(key);
 };
 
-module.exports = StateRedisMock;
+module.exports = RedisMock;

@@ -7,7 +7,7 @@ Promise.promisifyAll(Redis.RedisClient.prototype);
 const Config          = require('../../../../src/server/utils/Config');
 const Session         = require('../../../../src/server/administration/Session');
 const Publisher       = require('../../../../src/server/process/redis/RedisPublisher');
-const StateRedisMock  = require('../../../mocks/StateRedisMock');
+const RedisMock       = require('../../../mocks/RedisMock');
 
 describe('Session', function() {
   describe('#setSession()', function() {
@@ -21,7 +21,7 @@ describe('Session', function() {
 
       var inviteeMock = [{ "id": null, "email": "test@gmail.com", "pass": null }];
 
-      var mock = new StateRedisMock();
+      var mock = new RedisMock();
       yield mock.setMockEvent(Publisher.Enum.DATABASE, [[sessionMock]]);
 
       var config = new Config();
@@ -105,7 +105,7 @@ describe('Session', function() {
 
       var inviteeMock = { id: null, email: "test2@gmail.com", pass: null };
 
-      var mock = new StateRedisMock();
+      var mock = new RedisMock();
       yield mock.setMockEvent(Publisher.Enum.DATABASE, [[sessionMock]]);
 
       var config = new Config();
@@ -131,7 +131,7 @@ describe('Session', function() {
 
       var inviteeMock = { id: null, email: "test@gmail.com", pass: null };
 
-      var mock = new StateRedisMock();
+      var mock = new RedisMock();
       yield mock.setMockEvent(Publisher.Enum.DATABASE, [[sessionMock]]);
 
       var config = new Config();

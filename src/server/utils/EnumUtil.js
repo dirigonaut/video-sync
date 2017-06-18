@@ -19,12 +19,17 @@ EnumUtil.prototype.getAllImports = function(path, excludes) {
     if(filePath) {
       var key = fileUtils.splitNameFromPath(filePath);
 
+      var foundExclude = false;
       if(excludes) {
         for(let i in excludes) {
           if(!filePath.includes(excludes[i])) {
-            imports[key] = filePath;
+            foundExclude = filePath;
           }
         }
+      }
+
+      if(!foundExclude) {
+        imports[key] = filePath;
       }
     }
   })
