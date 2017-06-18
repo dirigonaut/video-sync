@@ -52,6 +52,11 @@ var getFunctionHandles = Promise.coroutine(function* (objectName, objectPath) {
     string = string.substring(index)
   }
 
+  for(let i = 0; i < functions.length; ++i) {
+    var newLine = functions[i].search('\n');
+    functions[i] = functions[i].substring(0, newLine);
+  }
+
   return functions;
 });
 

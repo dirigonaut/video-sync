@@ -8,7 +8,7 @@ const PlayerManager     = require('../../player/PlayerManager');
 var adapter, database, playerManager, subscriber, stateEngine;
 
 var lazyInit = Promise.coroutine(function* () {
-  adapter       = new ReflectiveAdapter();
+  adapter       = yield this.factory.createReflectiveAdapter();
   database      = new NeDatabase();
   stateEngine   = yield this.factory.createStateEngine();
   playerManager = new PlayerManager();
@@ -27,13 +27,33 @@ StateRedis.prototype.initialize = Promise.coroutine(function* () {
   }
 
   this.log = this.logManager.getLog(this.logManager.LogEnum.GENERAL);
-  console.log(this.log);
   initialize.call(this, subscriber);
 
   yield subscriber.subscribeAsync("database");
   yield subscriber.subscribeAsync("state");
   yield subscriber.subscribeAsync("player");
   yield subscriber.subscribeAsync("session");
+});
+
+StateRedis.prototype.cleanUp = Promise.coroutine(function* () {
+  this.log.debug("ServerRedis.cleanUp");
+  if(typeof subscriber !== 'undefined' && subscriber) {
+    this.log.info('sub unscribe');
+    yield subscriber.unsubscribeAsync("database");
+    yield subscriber.unsubscribeAsync("state");
+    yield subscriber.unsubscribeAsync("player");
+    yield subscriber.unsubscribeAsync("session");
+
+    this.log.info('sub unref');
+    subscriber.unref();
+
+    this.log.info('sub unlisten');
+    subscriber.removeAllListeners("message");
+    subscriber.removeAllListeners("subscribe");
+    subscriber.removeAllListeners("connect");
+    subscriber.removeAllListeners("reconnecting");
+    subscriber.removeAllListeners("error");
+  }
 });
 
 module.exports = StateRedis;
@@ -47,7 +67,7 @@ function initialize(subscriber) {
     } else if(channel === "player") {
       yield adapter.callFunction(playerManager, message);
     } else if(channel === "session"){
-      yield adapter.callFunction(session, message);
+      yield adapter.callFunction(this.session, message);
     }
   }.bind(this)));
 

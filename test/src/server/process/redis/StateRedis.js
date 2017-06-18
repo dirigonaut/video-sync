@@ -15,24 +15,21 @@ describe('StateRedis', function() {
       var mockFactory = Object.create(MockFactory.prototype);
       yield mockFactory.initialize();
 
-      var mockData = "TestData";
+      var mockKey = "key";
 
       var config = new Config();
       var client = Redis.createClient(config.getConfig().redis);
+      var stateRedis = Object.create(StateRedis.prototype);
 
-      var mockMixin = mockFactory.createMockMixin([mockFactory.ImportEnum.REFLECTIVEADAPTER, mockFactory.ImportEnum.LOGMANAGER]);
+      var mockMixin = mockFactory.createMockMixin([mockFactory.ImportEnum.REFLECTIVEADAPTER, mockFactory.ImportEnum.LOGMANAGER, mockFactory.ImportEnum.SESSION]);
       mockMixin.reflectiveAdapter.pushReturn(mockMixin.reflectiveAdapter.Enum.CALLFUNCTION,
-        Promise.coroutine(function* () {
-          yield client.setAsync("key", mockData);
+        Promise.coroutine(function* (data, message) {
+          should.deepEqual(message, mockKey, "The StateRedis did not cause a call to the ReflectiveAdapter.");
+          stateRedis.cleanUp();
         }));
 
       mockMixin.config = config;
-
-      mockMixin.logManager.LogEnum = { GENERAL: "" };
-      mockMixin.logManager.pushReturn(mockMixin.logManager.GETLOG,
-        function () {
-          return { info: function() {}, error: function() {}, debug: function() {} };
-        });
+      mockMixin.logManager = mockFactory.mockLogging(mockMixin.logManager);
 
       var ObjectFactory = mockFactory.getImport(mockFactory.ImportEnum.OBJECTFACTORY);
       mockMixin.factory = mockFactory.createMockObject(mockFactory.ImportEnum.OBJECTFACTORY, ObjectFactory.prototype);
@@ -42,15 +39,16 @@ describe('StateRedis', function() {
           return { initialize: function() {} };
         }));
 
-      var stateRedis = Object.create(StateRedis.prototype);
+      mockMixin.factory.pushReturn(mockMixin.factory.Enum.CREATEREFLECTIVEADAPTER,
+        Promise.coroutine(function* () {
+          return mockMixin.reflectiveAdapter;
+        }));
+
       Object.assign(stateRedis, mockMixin);
-      stateRedis.initialize();
+      yield stateRedis.initialize();
 
       var publisher = Redis.createClient(config.getConfig().redis);
       yield publisher.publishAsync("session", "key");
-
-      var respData = yield client.getAsync("key");
-      should.deepEqual(mockData, respData, "The StateRedis did not cause a key to be injected into redis.");
     }));
   });
 });

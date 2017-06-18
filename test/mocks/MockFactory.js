@@ -75,4 +75,23 @@ MockFactory.prototype.getImport = function(dependency) {
   return require(imports[this.ImportEnum[(dependency).toUpperCase()]]);
 };
 
+MockFactory.prototype.mockLogging = function(logManager, enableLogging) {
+  var LogManager = this.getImport(this.ImportEnum.LOGMANAGER);
+
+  var logFunction;
+  if(enableLogging) {
+    logFunction = function(data) {console.log(data)}
+  } else {
+    logFunction = function() {}
+  }
+
+  logManager.LogEnum = LogManager.LogEnum;
+  logManager.pushReturn(logManager.Enum.GETLOG,
+    function () {
+      return { info: logFunction, error: logFunction, debug: logFunction, silly: logFunction };
+    });
+
+  return logManager;
+};
+
 module.exports = MockFactory;

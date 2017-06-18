@@ -103,7 +103,7 @@ ObjectFactory.prototype.createServerProcess = Promise.coroutine(function* () {
 ObjectFactory.prototype.createStateRedis = Promise.coroutine(function* () {
   var dependency = Object.create(DependencyFactory.prototype);
   yield dependency.addConfig();
-  dependency.addFactory().addLog();
+  dependency.addFactory().addLog().addSession();
   var dependencies = dependency.getDependencies();
 
   var StateRedis = require(imports[this.Enum.STATEREDIS]);
@@ -159,6 +159,18 @@ ObjectFactory.prototype.createSyncingRule = Promise.coroutine(function* () {
   var syncingRule = Object.create(SyncingRule.prototype);
 
   return syncingRule;
+});
+
+ObjectFactory.prototype.createReflectiveAdapter = Promise.coroutine(function* () {
+  var dependency = Object.create(DependencyFactory.prototype);
+  yield dependency.addConfig();
+
+  var ReflectiveAdapter = require(imports[this.Enum.REFLECTIVEADAPTER]);
+  var reflectiveAdapter = Object.create(ReflectiveAdapter.prototype);
+
+  Object.assign(reflectiveAdapter, dependencies);
+
+  return reflectiveAdapter;
 });
 
 module.exports = ObjectFactory;
