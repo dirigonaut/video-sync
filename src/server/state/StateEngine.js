@@ -189,7 +189,7 @@ StateEngine.prototype.timeUpdate = Promise.coroutine(function* (id, data) {
     if(players.size > 1 && player !== null && player !== undefined) {
       if(player.sync === Player.Sync.SYNCED) {
         var syncRule = yield this.factory.createSyncRule();
-        var triggered = syncRule.evaluate(player, playerManager, accuracy);
+        var triggered = syncRule.evaluate(player, this.playerManager, accuracy);
         if(triggered) {
           player.sync = Player.Sync.SYNCWAIT;
           var command = [];
@@ -209,12 +209,12 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id) {
     var players = this.playerManager.getPlayers();
     var player = this.playerManager.getPlayer(id);
 
-    if(players.size > 1 && player !== null && player !== undefined) {
+    if(players.size > 1 && player) {
       var isMediaStarted = yield this.session.getMediaStarted();
 
       if(player.sync === Player.Sync.SYNCING && isMediaStarted) {
         var syncingRule = yield this.factory.createSyncingRule();
-        var leader = syncingRule.evaluate(player, playerManager, broadcastSyncingEvent);
+        var leader = syncingRule.evaluate(player, this.playerManager);
 
         if(leader) {
           var object = new Object();

@@ -22,7 +22,7 @@ EnumUtil.prototype.getAllImports = function(path, excludes) {
       var foundExclude = false;
       if(excludes) {
         for(let i in excludes) {
-          if(!filePath.includes(excludes[i])) {
+          if(filePath.includes(excludes[i])) {
             foundExclude = filePath;
           }
         }
