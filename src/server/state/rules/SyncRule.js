@@ -5,7 +5,7 @@ var log           = LogManager.getLog(LogManager.LogEnum.STATE);
 
 function SyncRule() { }
 
-SyncRule.prototype.evaluate = function(issuer, playerManager, fuzzyRange, callback) {
+SyncRule.prototype.evaluate = function(issuer, playerManager, fuzzyRange) {
   log.silly("SyncRule.evaluate");
   var players = playerManager.getPlayers();
   var sync = false;
@@ -22,9 +22,10 @@ SyncRule.prototype.evaluate = function(issuer, playerManager, fuzzyRange, callba
   }
 
   if(sync) {
-    log.debug(`Sync triggered ${issuer.id} ${issuer.timestamp}`);
-    callback(issuer, "state-pause");
+    return true;
   }
+  
+  return false;
 };
 
 module.exports = SyncRule;

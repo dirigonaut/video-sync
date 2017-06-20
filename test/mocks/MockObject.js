@@ -11,7 +11,6 @@ MockObject.prototype.pushReturn = function(key, value) {
   }
 
   this[key + VALUE].push(value);
-  console.log(this[key + VALUE]);
 };
 
 MockObject.prototype.pushEvent = function(key, trigger) {

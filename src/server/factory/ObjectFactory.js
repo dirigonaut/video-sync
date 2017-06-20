@@ -168,7 +168,7 @@ ObjectFactory.prototype.createReflectiveAdapter = Promise.coroutine(function* ()
   var ReflectiveAdapter = require(imports[this.Enum.REFLECTIVEADAPTER]);
   var reflectiveAdapter = Object.create(ReflectiveAdapter.prototype);
 
-  Object.assign(reflectiveAdapter, dependencies);
+  Object.assign(reflectiveAdapter, dependency);
 
   return reflectiveAdapter;
 });
