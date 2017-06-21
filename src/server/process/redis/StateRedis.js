@@ -9,7 +9,7 @@ var adapter, database, playerManager, subscriber, stateEngine;
 
 var lazyInit = Promise.coroutine(function* () {
   adapter       = yield this.factory.createReflectiveAdapter();
-  database      = new NeDatabase();
+  database      = yield this.factory.createNeDatabase();
   stateEngine   = yield this.factory.createStateEngine();
   playerManager = new PlayerManager();
 

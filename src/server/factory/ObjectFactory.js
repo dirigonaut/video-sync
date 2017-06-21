@@ -94,8 +94,15 @@ ObjectFactory.prototype.createStateProcess = Promise.coroutine(function* () {
 });
 
 ObjectFactory.prototype.createServerProcess = Promise.coroutine(function* () {
+  var dependency = Object.create(DependencyFactory.prototype);
+  dependency.addFactory().addLog();
+  yield dependency.addConfig();
+  var dependencies = dependency.getDependencies();
+
   var ServerProcess = require(imports[this.Enum.SERVERPROCESS]);
   var serverProcess = new ServerProcess();
+
+  Object.assign(serverProcess, dependencies);
 
   return serverProcess;
 });
@@ -141,8 +148,15 @@ ObjectFactory.prototype.createRedisPublisher = Promise.coroutine(function* () {
 });
 
 ObjectFactory.prototype.createPlayRule = Promise.coroutine(function* () {
+  var dependency = Object.create(DependencyFactory.prototype);
+
+  dependency.addLog();
+
   var PlayRule = require(imports[this.Enum.PLAYRULE]);
   var playRule = Object.create(PlayRule.prototype);
+
+  var dependencies = dependency.getDependencies();
+  playRule.log = dependencies.logManager.getLog(dependencies.logManager.LogEnum.STATE);
 
   return playRule;
 });
@@ -171,6 +185,38 @@ ObjectFactory.prototype.createReflectiveAdapter = Promise.coroutine(function* ()
   Object.assign(reflectiveAdapter, dependency);
 
   return reflectiveAdapter;
+});
+
+ObjectFactory.prototype.createCertificate = Promise.coroutine(function* () {
+  var dependency = Object.create(DependencyFactory.prototype);
+
+  dependency.addLog();
+  yield dependency.addConfig();
+
+  var Certificate = require(imports[this.Enum.CERTIFICATE]);
+  var certificate = Object.create(Certificate.prototype);
+
+  var dependencies = dependency.getDependencies();
+  Object.assign(certificate, dependencies);
+  
+  certificate.log = dependencies.logManager.getLog(dependencies.logManager.LogEnum.AUTHENTICATION);
+  return certificate;
+});
+
+ObjectFactory.prototype.createNeDatabase = Promise.coroutine(function* () {
+  var dependency = Object.create(DependencyFactory.prototype);
+
+  dependency.addLog();
+  yield dependency.addConfig();
+
+  var NeDatabase = require(imports[this.Enum.NEDATABASE]);
+  var neDatabase = Object.create(NeDatabase.prototype);
+
+  var dependencies = dependency.getDependencies();
+  Object.assign(neDatabase, dependencies);
+
+  neDatabase.log = dependencies.logManager.getLog(dependencies.logManager.LogEnum.DATABASE);
+  return neDatabase;
 });
 
 module.exports = ObjectFactory;

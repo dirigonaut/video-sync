@@ -1,21 +1,16 @@
-var LogManager    = require('../../log/LogManager');
 var Player        = require('../../player/Player');
-
-var log           = LogManager.getLog(LogManager.LogEnum.STATE);
 
 function PlayRule() {
 }
 
-PlayRule.prototype.evaluate = function(issuer, playerManager, mediaStarted, fuzzyRange, callback) {
-  log.debug("PlayRule.evaluate");
-  _this = this;
-
+PlayRule.prototype.evaluate = function(issuer, playerManager, mediaStarted, fuzzyRange) {
+  this.log.debug("PlayRule.evaluate");
 	var players = playerManager.getPlayers();
   var issuees = [];
 
   if(issuer.sync === Player.Sync.DESYNCED) {
     log.silly("PlayRule triggered", [issuer]);
-    callback([issuer]);
+    return [issuer];
   } else {
     for(var player of players) {
       if(player[1].sync === Player.Sync.SYNCED || (mediaStarted === false && player[1].isInit())) {
@@ -27,8 +22,8 @@ PlayRule.prototype.evaluate = function(issuer, playerManager, mediaStarted, fuzz
   }
 
   if(issuees.length > 0) {
-    log.debug("PlayRule triggered", issuees);
-    callback(issuees);
+    this.log.debug("PlayRule triggered", issuees);
+    return issuees;
   }
 };
 

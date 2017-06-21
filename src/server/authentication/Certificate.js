@@ -2,47 +2,32 @@ const Promise    = require('bluebird');
 const Fs         = Promise.promisifyAll(require('fs'));
 const Forge      = require('node-forge');
 const Moment     = require('moment');
-const LogManager = require('../log/LogManager');
-const Publisher  = require('../process/redis/RedisPublisher');
 
 const EXPIR = 365;
 
-var log = LogManager.getLog(LogManager.LogEnum.AUTHENTICATION);
-var publisher;
+Moment().format('YYYY MM DD');
 
-function lazyInit() {
-  publisher = new Publisher();
-  Moment().format('YYYY MM DD');
-}
-
-class Certificate {
-  constructor() {
-    if(typeof Certificate.prototype.lazyInit === 'undefined') {
-      lazyInit();
-      Certificate.prototype.lazyInit = true;
-    }
-  }
-}
+function Certificate() { }
 
 Certificate.prototype.getCertificates = Promise.coroutine(function* () {
-  log.debug("Certificate.prototype.getCertificates");
-  var cert = yield Fs.readFileAsync(config.getCertificatePath())
+  this.log.debug("Certificate.prototype.getCertificates");
+  var cert = yield Fs.readFileAsync(this.config.getCertificatePath())
   .catch(function(err) {
-    log.error(err);
+    this.log.error(err);
     return undefined;
-  });
+  }.bind(this));
 
   if(typeof cert === 'undefind' || !cert) {
-    log.info("There are no SSL Certificates, signing new ones.");
+    this.log.info("There are no SSL Certificates, signing new ones.");
     cert = yield generate(getAttributes());
   } else {
-    log.info("Loading SSL Certificates.");
+    this.log.info("Loading SSL Certificates.");
     cert = JSON.parse(cert);
 
     if(Moment().diff(cert.expire) >= -1) {
-      log.info("SSL Certificates are expired, signing new ones.");
+      this.log.info("SSL Certificates are expired, signing new ones.");
 
-      cert = yield generate(getAttributes());
+      cert = yield generate.call(this, getAttributes());
     }
   }
 
@@ -52,7 +37,7 @@ Certificate.prototype.getCertificates = Promise.coroutine(function* () {
 module.exports = Certificate;
 
 var generate = function(attrs) {
-  log.debug("Certificate.prototype._generate");
+  this.log.debug("Certificate.prototype._generate");
   var pki = Forge.pki;
 
   var keypair = pki.rsa.generateKeyPair(2048);
@@ -79,7 +64,7 @@ var generate = function(attrs) {
     certificate: pki.certificateToPem(cert)
   };
 
-  return save(pem);
+  return save.call(this, pem);
 };
 
 var getAttributes = function() {
@@ -107,7 +92,7 @@ var getAttributes = function() {
 };
 
 var save = function (certs) {
-  log.debug("Certificate.prototype.save");
+  this.log.debug("Certificate.prototype.save");
   var certificate = { expire: Moment().add(EXPIR, 'days').valueOf(), pem: certs };
   return Fs.writeFileAsync(config.getCertificatePath(), JSON.stringify(certificate))
   .then(function() {

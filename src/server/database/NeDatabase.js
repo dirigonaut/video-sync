@@ -1,135 +1,107 @@
-var Path 				= require('path');
-var Datastore 	= require('nedb');
-
-var Config     	= require('../utils/Config');
-var LogManager  = require('../log/LogManager');
+const Promise			= require('bluebird');
+const Path				= require('path');
+const Datastore		= require('nedb');
 
 var db;
-
-var log 		= LogManager.getLog(LogManager.LogEnum.DATABASE);
 
 function NeDatabase(){
 };
 
 NeDatabase.prototype.initialize = function() {
 	if(db === null || db === undefined) {
-		var config  = new Config();
-		console.log(`Loading db from path ${Path.join(config.getAppDataDir(), 'database_inst')}`);
-		db = new Datastore({ filename: Path.join(config.getAppDataDir(), 'database_inst'), autoload: true });
+		this.log.info(`Loading db from path ${Path.join(this.config.getAppDataDir(), 'database_inst')}`);
+		db = new Datastore({ filename: Path.join(this.config.getAppDataDir(), 'database_inst'), autoload: true });
+		db = Promise.promisifyAll(db);
 	}
 };
 
 //Create Calls
-NeDatabase.prototype.createSmtp = function(json, callback){
-	createJson(json, callback);
+NeDatabase.prototype.createSmtp = function(json){
+	return createJson.call(this, json);
 };
 
-NeDatabase.prototype.createSession = function(json, callback){
-	createJson(json, callback);
+NeDatabase.prototype.createSession = function(json){
+	return createJson.call(this, json);
 };
 
-NeDatabase.prototype.createCerts = function(json, callback){
-	createJson(json, callback);
+NeDatabase.prototype.createCerts = function(json){
+	return createJson.call(this, json);
 };
 
 //Read Calls
-NeDatabase.prototype.readSmtp = function(address, callback){
+NeDatabase.prototype.readSmtp = function(address){
 	var query = { smtpAddress : address };
-	readJson(query, callback);
+	return readJson.call(this, query);
 };
 
-NeDatabase.prototype.readAllSmtp = function(callback){
+NeDatabase.prototype.readAllSmtp = function(){
 	var query = { smtpAddress : { $exists: true } };
-	readJson(query, callback);
+	return readJson.call(this, query);
 };
 
-NeDatabase.prototype.readSession = function(id, callback){
+NeDatabase.prototype.readSession = function(id){
 	var query = { _id: id };
-	readJson(query, callback);
+	return readJson.call(this, query);
 };
 
-NeDatabase.prototype.readAllSessions = function(callback){
+NeDatabase.prototype.readAllSessions = function(){
 	var query = { title: { $exists: true } };
-	readJson(query, callback);
+	return readJson.call(this, query);
 };
 
-NeDatabase.prototype.readCerts = function(callback){
+NeDatabase.prototype.readCerts = function(){
 	var query = { pem : { $exists: true } };
-	readJson(query, callback);
+	return readJson.call(this, query);
 };
 
 //Update Calls
-NeDatabase.prototype.updateSmtp = function(id, json, callback){
+NeDatabase.prototype.updateSmtp = function(id, json){
 	var query = { _id : id };
-	updateJson(query, json, callback);
+	return updateJson.call(this, query, json);
 };
 
-NeDatabase.prototype.updateSession = function(id, json, callback){
+NeDatabase.prototype.updateSession = function(id, json){
 	var query = { _id: id };
-	updateJson(query, json, callback);
+	return updateJson.call(this, query, json);
 };
 
 //Delete Calls
-NeDatabase.prototype.deleteSmtp = function(id, callback){
+NeDatabase.prototype.deleteSmtp = function(id){
 	var query = { _id : id };
 	var option = {};
-	deleteJson(query, option, callback);
+	return deleteJson.call(this, query, option);
 };
 
-NeDatabase.prototype.deleteSession = function(id, callback){
+NeDatabase.prototype.deleteSession = function(id){
 	var query = { _id: id };
 	var option = {};
-	deleteJson(query, option, callback);
+	deleteJson.call(this, query, option);
 };
 
-NeDatabase.prototype.deleteCerts = function(date, callback){
+NeDatabase.prototype.deleteCerts = function(date){
 	var query = { expire: { $gt: date } };
 	var option = { multi: true };
-	deleteJson(query, option, callback);
+	deleteJson.call(this, query, option);
 };
 
 module.exports = NeDatabase;
 
-function createJson(json, callback) {
-	log.info("createJson", json);
-
-	db.insert(json, function(err, newDoc){
-		console.log(newDoc);
-		if(callback) {
-			callback([newDoc]);
-		}
-	});
+function createJson(json) {
+	this.log.info("createJson", json);
+	return db.insertAsync(json);
 };
 
-function readJson(query, callback) {
-	log.info("readJson", query);
-
-	db.find(query, function(err, docs){
-		log.info(docs);
-		if(callback) {
-			callback([docs]);
-		}
-	});
+function readJson(query) {
+	this.log.info("readJson", query);
+	return db.findAsync(query);
 };
 
-function updateJson(query, json, callback) {
-	log.info("updateJson", query);
-
-	db.update(query, json, function(err, docs){
-		log.info(docs);
-		if(callback) {
-			callback([docs]);
-		}
-	});
+function updateJson(query, json) {
+	this.log.info("updateJson", query);
+	return db.updateAsync(query, json);
 };
 
-function deleteJson(query, options, callback) {
-	log.info("removeJson", query);
-
-	db.remove(query, options, function (err, removed) {
-		log.info(removed);
-		if(callback) {
-			callback([removed]);
-		}
-	});
+function deleteJson(query, options) {
+	this.log.info("removeJson", query);
+	return db.removeAsync(query, options);
 };
