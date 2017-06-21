@@ -407,7 +407,6 @@ describe('StateEngine', function() {
       stateEngine.initialize();
 
       var result = yield stateEngine.syncingPing("test1", 0);
-      console.log(result);
       should.deepEqual(result, [[["test1","state-seek", {play:true, seekTime:6001, syncWait:true}]]], "The StateEngine did not trigger a seek event.");
     }));
   });

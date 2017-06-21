@@ -5,10 +5,8 @@ const Https       = require('https');
 const Express     = require('express');
 const SocketIO    = require('socket.io');
 
-const Config         = require('../utils/Config');
 const LogManager     = require('../log/LogManager');
 const ServerRedis    = require('./redis/ServerRedis');
-const Certificate    = require('../authentication/Certificate');
 const Publisher      = require('./redis/RedisPublisher');
 const RedisSocket    = require('./redis/RedisSocket');
 const SocketLog      = require('../log/SocketLog');
@@ -20,15 +18,14 @@ var app, io, server, serverRedis;
 class ServerProcess { }
 
 ServerProcess.prototype.initialize = Promise.coroutine(function* () {
-  var config = new Config();
-
-  log.info(`Trying to start ServerProcess on port ${config.getConfig().port} with process ${process.pid}`);
+  log.info(`Trying to start ServerProcess on port ${this.config.getConfig().port} with process ${process.pid}`);
   serverRedis   = new ServerRedis();
 
   var publisher = new Publisher();
   publisher.initialize();
 
-  var pem = yield new Certificate().getCertificates();
+  var certificate = yield this.factory.createCertificate();
+  var pem = yield certificate.getCertificates();
 
   log.debug(`Certificates found initializing ${process.pid} ServerProcess`);
   var options = {
@@ -44,7 +41,7 @@ ServerProcess.prototype.initialize = Promise.coroutine(function* () {
   var redisSocket = new RedisSocket();
   yield redisSocket.initialize(io);
 
-  app.use(Express.static(config.getConfig().static));
+  app.use(Express.static(this.config.getConfig().static));
   server.listen(0);
 
   var socketLog = new SocketLog();
