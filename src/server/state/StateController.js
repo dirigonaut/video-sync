@@ -35,8 +35,9 @@ function initialize(io, socket) {
 
   socket.on('state-req-init', function() {
     log.debug('state-req-init');
-    var onInit = function(id, event) {
-      socket.emit(event);
+    var onInit = function(payload) {
+      console.log("here")
+      socket.emit(payload[1]);
     };
 
     publisher.publish(Publisher.Enum.STATE, ['initPlayer', [socket.id]], onInit);

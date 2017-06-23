@@ -76,17 +76,17 @@ function initialize(io) {
       log.debug('auth-validate-token');
       var cleanData = validator.sterilizeUser(data);
 
-      var loginAttempt = function(authorized) {
+      var loginAttempt = Promise.coroutine(function* (authorized) {
         if(authorized) {
           userAuthorized(socket, io, cleanData.handle);
         } else {
           socket.logonAttempts += 1;
 
           if(socket.logonAttempts > 4) {
-            userAdmin.disconnectSocket(socket);
+            yield userAdmin.disconnectSocket(socket);
           }
         }
-      };
+      });
 
       authenticator.validateToken(socket.id, cleanData, loginAttempt);
     }));
@@ -101,9 +101,9 @@ function initialize(io) {
         session.removeAdmin(socket.id);
       }
 
-      var disconnect = function(socket) {
-        userAdmin.disconnectSocket(socket);
-      }
+      var disconnect =  Promise.coroutine(function* (socket) {
+        yield userAdmin.disconnectSocket(socket);
+      });
 
       publisher.publish(Publisher.Enum.PLAYER, ['removePlayer', [socket.id]], disconnect);
     }));
@@ -112,14 +112,14 @@ function initialize(io) {
       log.error("error", data);
     });
 
-    setTimeout(function(){
+    setTimeout(Promise.coroutine(function* () {
       //If the socket didn't authenticate, disconnect it
       if (!socket.auth) {
         log.debug(socket.auth);
         log.info("timing out socket", socket.id);
-        userAdmin.disconnectSocket(socket);
+        yield userAdmin.disconnectSocket(socket);
       }
-    }, 300000);
+    }), 300000);
   }));
 }
 

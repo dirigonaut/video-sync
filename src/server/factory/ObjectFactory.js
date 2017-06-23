@@ -129,6 +129,7 @@ ObjectFactory.prototype.createPlayerManager = Promise.coroutine(function* () {
   var playerManager = Object.create(PlayerManager.prototype);
 
   Object.assign(playerManager, dependencies);
+  playerManager.log = dependencies.logManager.getLog(dependencies.logManager.LogEnum.STATE);
 
   return playerManager;
 });
@@ -198,7 +199,7 @@ ObjectFactory.prototype.createCertificate = Promise.coroutine(function* () {
 
   var dependencies = dependency.getDependencies();
   Object.assign(certificate, dependencies);
-  
+
   certificate.log = dependencies.logManager.getLog(dependencies.logManager.LogEnum.AUTHENTICATION);
   return certificate;
 });

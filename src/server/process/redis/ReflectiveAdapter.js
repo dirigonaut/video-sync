@@ -31,12 +31,7 @@ ReflectiveAdapter.prototype.callFunction = Promise.coroutine(function* (object, 
 
       if(functionHandle) {
         if(typeof object[functionHandle] === 'function') {
-          var response;
-          response = object[functionHandle].apply(object, functionParams);
-
-          if(response.isFulfilled) {
-            response = yield response;
-          }
+          var response = yield object[functionHandle].apply(object, functionParams);
 
           if(response) {
             yield client.setAsync(key, JSON.stringify(response));

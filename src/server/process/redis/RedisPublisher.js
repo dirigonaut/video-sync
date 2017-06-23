@@ -32,7 +32,7 @@ RedisPublisher.prototype.initialize = Promise.coroutine(function* () {
   yield cleanUp();
   lazyInit();
   initialize(publisher, subscriber);
-  
+
   RedisPublisher.prototype.enum = RedisPublisher.Enum;
   RedisPublisher.prototype.respEnum = RedisPublisher.RespEnum;
 });
@@ -42,7 +42,7 @@ RedisPublisher.prototype.publish = function(channel, args, callback) {
   args.push(key);
 
   var response = function(err, data) {
-    if(err !== null) {
+    if(err) {
       requestMap.delete(key);
     }
   };
@@ -66,9 +66,6 @@ RedisPublisher.prototype.publishAsync = function(channel, args) {
       asyncEmitter.removeListener(key, resolve);
       reject(err);
     },TIMEOUT, `Request for Key: ${key}, timed out.`);
-  }).then(function(data) {
-    console.log(data);
-    return data[0];
   });
 
   publisher.publish(channel, JSON.stringify(args));
@@ -99,16 +96,18 @@ var initialize = Promise.coroutine(function* (publisher, subscriber) {
       var key = message;
       if(key !== null && key !== undefined) {
         var callback = requestMap.get(key);
-        requestMap.delete(key);
 
         if(callback === "promise") {
+          requestMap.delete(key);
           let data = yield getRedisData(key);
-          asyncEmitter.emit(key, JSON.parse(data)[0]);
-        } else if(callback !== null && callback !== undefined) {
+          //console.log(Util.inspect(data, { showHidden: false, depth: null }));
+          asyncEmitter.emit(key, JSON.parse(data).fulfillmentValue);
+        } else if(typeof callback === "function") {
+          requestMap.delete(key);
           let data = yield getRedisData(key);
           data = JSON.parse(data);
-          //log.silly(Util.inspect(data, { showHidden: false, depth: null }));
-          callback.apply(callback, data);
+          //console.log(Util.inspect(data, { showHidden: false, depth: null }));
+          callback.apply(callback, [data]);
         }
       }
     } else if(channel === RedisPublisher.RespEnum.COMMAND) {
@@ -147,13 +146,13 @@ var createKey = function(seed) {
   return `${seed}-${Crypto.randomBytes(24).toString('hex')}`;
 };
 
-var getRedisData = Promise.coroutine(function* (key, callback) {
+var getRedisData = function(key, callback) {
   return publisher.getAsync(key)
   .then(Promise.coroutine(function* (data) {
     yield publisher.delAsync(key).catch(log.error);
     return data;
   }));
-});
+};
 
 var cleanUp = Promise.coroutine(function* () {
   log.debug("RedisPublisher._cleanUp");

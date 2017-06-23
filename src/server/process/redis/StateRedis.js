@@ -11,11 +11,12 @@ var lazyInit = Promise.coroutine(function* () {
   adapter       = yield this.factory.createReflectiveAdapter();
   database      = yield this.factory.createNeDatabase();
   stateEngine   = yield this.factory.createStateEngine();
-  playerManager = new PlayerManager();
+  playerManager = yield this.factory.createPlayerManager();
 
   subscriber    = Redis.createClient(this.config.getConfig().redis);
 
   stateEngine.initialize();
+  adapter.initialize();
 });
 
 function StateRedis() { };
