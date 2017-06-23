@@ -8,7 +8,7 @@ function NeDatabase(){
 };
 
 NeDatabase.prototype.initialize = function() {
-	if(db === null || db === undefined) {
+	if(!db) {
 		this.log.info(`Loading db from path ${Path.join(this.config.getAppDataDir(), 'database_inst')}`);
 		db = new Datastore({ filename: Path.join(this.config.getAppDataDir(), 'database_inst'), autoload: true });
 		db = Promise.promisifyAll(db);
@@ -75,13 +75,13 @@ NeDatabase.prototype.deleteSmtp = function(id){
 NeDatabase.prototype.deleteSession = function(id){
 	var query = { _id: id };
 	var option = {};
-	deleteJson.call(this, query, option);
+	return deleteJson.call(this, query, option);
 };
 
 NeDatabase.prototype.deleteCerts = function(date){
 	var query = { expire: { $gt: date } };
 	var option = { multi: true };
-	deleteJson.call(this, query, option);
+	return deleteJson.call(this, query, option);
 };
 
 module.exports = NeDatabase;

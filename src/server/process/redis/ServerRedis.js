@@ -9,6 +9,8 @@ var adapter, subscriber;
 var lazyInit = Promise.coroutine(function* () {
   adapter             = yield this.factory.createReflectiveAdapter();
   subscriber          = Redis.createClient(this.config.getConfig().redis);
+
+  adapter.initialize();
 });
 
 function ServerRedis() { }
