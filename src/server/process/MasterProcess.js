@@ -61,6 +61,7 @@ var startMaster = Promise.coroutine(function* () {
   });
 
   redisServer = yield this.factory.createRedisServer();
+  redisServer.initialize();
   yield redisServer.start();
 
   var stateWorker = Cluster.fork({processType: 'stateProcess'});

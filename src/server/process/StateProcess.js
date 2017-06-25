@@ -1,6 +1,6 @@
 const Promise   = require('bluebird');
 
-class StateProcess { }
+function StateProcess() { }
 
 StateProcess.prototype.initialize = Promise.coroutine(function* () {
   var database = yield this.factory.createNeDatabase();

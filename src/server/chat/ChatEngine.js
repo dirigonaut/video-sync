@@ -1,45 +1,38 @@
-var Publisher   = require('../process/redis/RedisPublisher');
-var RedisSocket = require('../process/redis/RedisSocket');
-var LogManager  = require('../log/LogManager');
+const Promise = require('bluebird');
 
-var log         = LogManager.getLog(LogManager.LogEnum.CHAT);
 var redisSocket, publisher;
 
-function lazyInit() {
-  redisSocket   = new RedisSocket();
-  publisher     = new Publisher();
-}
+function ChatEngine() { }
 
-class ChatEngine {
-  constructor() {
-    if(typeof ChatEngine.prototype.lazyInit === 'undefined') {
-      lazyInit();
-      ChatEngine.prototype.lazyInit = true;
+ChatEngine.prototype.initialize = Promise.coroutine(function* () {
+  if(typeof ChatEngine.prototype.lazyInit === 'undefined') {
+    redisSocket   = yield this.factory.createRedisSocket();
+    publisher     = yield this.factory.createRedisPublisher();
+    ChatEngine.prototype.lazyInit = true;
+  }
+};
+
+ChatEngine.prototype.broadcast = function(eventName, message) {
+  this.log.debug(`ChatEngine.prototype.broadcast ${eventName}`);
+  if(eventName) {
+    redisSocket.broadcast(eventName, message);
+  }
+});
+
+ChatEngine.prototype.ping = function(eventName, message) {
+  this.log.debug(`ChatEngine.prototype.ping ${eventName}`);
+  if(eventName && message) {
+    if(message.from) {
+      redisSocket.ping(message.from, eventName, message);
     }
   }
+};
 
-  broadcast(event, message) {
-    log.debug(`ChatEngine.prototype.broadcast ${event}`);
-    if(event !== null && message !== null) {
-      redisSocket.broadcast(event, message);
-    }
-  }
-
-  ping(event, message) {
-    log.debug(`ChatEngine.prototype.ping ${event}`);
-    if(event !== null && event !== undefined && message !== null && message !== undefined) {
-      if(message.from !== undefined && message.from !== null) {
-        redisSocket.ping(message.from, event, message);
-      }
-    }
-  }
-
-  buildMessage(from, text) {
-    var message = new Object();
-    message.from = from;
-    message.text = text;
-    return message;
-  }
+ChatEngine.prototype.buildMessage = function(sender, text) {
+  var message = {};
+  message.from = sender;
+  message.text = text;
+  return message;
 }
 
 module.exports = ChatEngine;

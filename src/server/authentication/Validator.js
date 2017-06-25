@@ -63,7 +63,7 @@ Validator.prototype.sterilizeContact = function(input) {
 
 Validator.prototype.sterilizeSession = function(input) {
 	var clean = {};
-	var recipients = new Array();
+	var recipients = [];
 
 	this.logDataCleaning(input, clean);
 	return input;

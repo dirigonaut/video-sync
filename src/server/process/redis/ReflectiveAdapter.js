@@ -1,22 +1,16 @@
 const Promise   = require('bluebird');
 const Redis     = require('redis');
-const Config    = require('../../utils/Config');
 const Publisher = require('./RedisPublisher');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-var client, config;
-
-function lazyInit() {
-  config      = new Config();
-  client      = Redis.createClient(config.getConfig().redis);
-}
+var config;
 
 function ReflectiveAdapter() { }
 
 ReflectiveAdapter.prototype.initialize = function() {
   if(typeof ReflectiveAdapter.prototype.lazyInit === 'undefined') {
-    lazyInit();
+    client = Redis.createClient(this.config.getConfig().redis);
     ReflectiveAdapter.prototype.lazyInit = true;
   }
 };
@@ -35,8 +29,9 @@ ReflectiveAdapter.prototype.callFunction = Promise.coroutine(function* (object, 
 
           if(response) {
             yield client.setAsync(key, JSON.stringify(response));
-            yield client.publishAsync(Publisher.RespEnum.RESPONSE, key);
           }
+
+          yield client.publishAsync(Publisher.RespEnum.RESPONSE, key);
         } else {
           console.log(`No function found with name ${functionHandle}`);
         }

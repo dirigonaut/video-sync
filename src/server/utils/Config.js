@@ -1,10 +1,7 @@
-var Promise   = require('bluebird');
-
-var Cluster   = require('cluster');
-var Path      = require('path');
-var Fs        = Promise.promisifyAll(require('fs'));
-
-var FileIO    = require("./FileIO");
+const Promise   = require('bluebird');
+const Cluster   = require('cluster');
+const Path      = require('path');
+const Fs        = Promise.promisifyAll(require('fs'));
 
 const CONFIG_NAME     = "config.json";
 const CONFIG_NAME_OS  = `config.${process.platform}.json`;
@@ -22,11 +19,11 @@ const LOG_DIR     = Path.join(APP_DATA, "logs");
 
 var config;
 
-class Config { }
+function Config() { }
 
 Config.prototype.initialize = Promise.coroutine(function* () {
   if(Cluster.isMaster) {
-    yield setupAppDataDir();
+    yield setupAppDataDir.call(this);
   }
 
   var binaryConfig = yield Fs.readFileAsync(Path.join(APP_DATA, CONFIG_NAME));
@@ -63,19 +60,19 @@ Config.prototype.getLogDir = function() {
 module.exports = Config;
 
 var setupAppDataDir = Promise.coroutine(function* () {
-  var fileIO = new FileIO();
+  var fileIO = yield this.factory.createFileIO();
 
   yield fileIO.ensureDirExistsAsync(APP_DATA, 484);
 
-  yield ensureAssetExists(REDIS_CONFIG, REDIS_CONFIG_OS, "conf");
-  yield ensureAssetExists(CONFIG_NAME, CONFIG_NAME_OS, "json");
+  yield ensureAssetExists.call(this, REDIS_CONFIG, REDIS_CONFIG_OS, "conf");
+  yield ensureAssetExists.call(this, CONFIG_NAME, CONFIG_NAME_OS, "json");
 
   yield fileIO.ensureDirExistsAsync(LOG_DIR, 484);
 });
 
 var ensureAssetExists = Promise.coroutine(function* (name, pattern, extType) {
   var fileExists;
-  var fileIO = new FileIO();
+  var fileIO = yield this.factory.createFileIO();
 
   var files = yield fileIO.readDirAsync(APP_DATA, extType);
 

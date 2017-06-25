@@ -16,7 +16,7 @@ function Manifest(path, init) {
 }
 
 Manifest.cluster = function() {
-  var cluster = new Object();
+  var cluster = {};
   cluster.start = null;
   cluster.end = null;
   cluster.time = null;

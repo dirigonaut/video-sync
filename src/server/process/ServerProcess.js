@@ -5,29 +5,21 @@ const Https       = require('https');
 const Express     = require('express');
 const SocketIO    = require('socket.io');
 
-const LogManager     = require('../log/LogManager');
-const ServerRedis    = require('./redis/ServerRedis');
-const Publisher      = require('./redis/RedisPublisher');
-const RedisSocket    = require('./redis/RedisSocket');
-const SocketLog      = require('../log/SocketLog');
-const AuthController = require('../authentication/AuthenticationController');
-
-var log              = LogManager.getLog(LogManager.LogEnum.GENERAL);
 var app, io, server, serverRedis;
 
-class ServerProcess { }
+function ServerProcess() { }
 
 ServerProcess.prototype.initialize = Promise.coroutine(function* () {
-  log.info(`Trying to start ServerProcess on port ${this.config.getConfig().port} with process ${process.pid}`);
-  serverRedis   = new ServerRedis();
+  this.log.info(`Trying to start ServerProcess on port ${this.config.getConfig().port} with process ${process.pid}`);
+  serverRedis   = yield this.factory.createServerRedis();
 
-  var publisher = new Publisher();
+  var publisher = yield this.factory.createRedisPublisher();
   publisher.initialize();
 
   var certificate = yield this.factory.createCertificate();
   var pem = yield certificate.getCertificates();
 
-  log.debug(`Certificates found initializing ${process.pid} ServerProcess`);
+  this.log.debug(`Certificates found initializing ${process.pid} ServerProcess`);
   var options = {
     key: pem.privateKey,
     cert: pem.certificate,
@@ -38,18 +30,19 @@ ServerProcess.prototype.initialize = Promise.coroutine(function* () {
   server = Https.createServer(options, app);
   io = SocketIO.listen(server);
 
-  var redisSocket = new RedisSocket();
+  var redisSocket = yield this.factory.createRedisSocket();
   yield redisSocket.initialize(io);
 
   app.use(Express.static(this.config.getConfig().static));
   server.listen(0);
 
-  var socketLog = new SocketLog();
+  var socketLog = yield this.factory.createSocketLog();
   socketLog.setSocketIO(io);
 
-  new AuthController(io);
+  var authController = yield this.factory.createAuthenticationController();
+  authController.initialize(io);
 
-  log.info(`ServerProcess ${process.pid} ready to forward.`);
+  this.log.info(`ServerProcess ${process.pid} ready to forward.`);
 });
 
 ServerProcess.prototype.getServer = function() {

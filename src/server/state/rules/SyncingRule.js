@@ -1,15 +1,11 @@
-var LogManager    = require('../../log/LogManager');
 var Player        = require('../../player/Player');
-
-var log           = LogManager.getLog(LogManager.LogEnum.STATE);
 
 function SyncingRule() {
 }
 
-SyncingRule.prototype.evaluate = function(issuer, playerManager, callback) {
-  log.info("SyncingRule.evaluate", issuer);
+SyncingRule.prototype.evaluate = function(issuer, others) {
+  this.log.info("SyncingRule.evaluate", issuer);
   if(issuer.sync === Player.Sync.SYNCING) {
-  	var others = playerManager.getOtherPlayers(issuer.id);
     var leader = null;
 
     for(var i in others){
@@ -20,12 +16,12 @@ SyncingRule.prototype.evaluate = function(issuer, playerManager, callback) {
       }
     }
 
-    if(leader !== null) {
-      log.info("SyncingRule triggered syncing to user", leader);
-      callback(leader, issuer, "state-seek");
+    if(leader) {
+      this.log.info("SyncingRule triggered syncing to user", leader);
+      return leader;
     } else {
-      log.info("SyncingRule triggered as there is no leader syncing to user", issuer);
-      callback(issuer, issuer, "state-seek");
+      this.log.info("SyncingRule triggered as there is no leader syncing to user", issuer);
+      return issuer;
     }
   }
 };

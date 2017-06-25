@@ -1,44 +1,34 @@
 const Promise     = require('bluebird');
-const Smtp        = require('./Smtp');
-const Session     = require('./Session');
-const LogManager  = require('../log/LogManager');
-const Publisher   = require('../process/redis/RedisPublisher');
-const Config     	= require('../utils/Config');
 
-var log         = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
-var config, publisher, smtp, session;
+var publisher, smtp;
 
-function lazyInit() {
-  config      = new Config();
-  publisher   = new Publisher();
-  smtp        = new Smtp();
-  session     = new Session();
-}
+function UserAdministration() { }
 
-class UserAdministration {
-  constructor() {
-    if(typeof UserAdministration.prototype.lazyInit === 'undefined') {
-      lazyInit();
-      UserAdministration.prototype.lazyInit = true;
-    }
+UserAdministration.prototype.initialize = Promise.coroutine(function* () {
+  if(typeof UserAdministration.prototype.lazyInit === 'undefined') {
+    publisher = yield this.factory.createRedisPublisher();
+    smtp      = yield this.factory.createSmtp();
+    UserAdministration.prototype.lazyInit = true;
   }
-}
+});
 
-UserAdministration.prototype.downgradeUser = function(user) {
+UserAdministration.prototype.downgradeUser = Promise.coroutine(function* (user) {
   log.debug("UserAdministration.downgradeUser");
-  publisher.publish(Publisher.Enum.PLAYER, ['setAuth', [user, Player.Auth.RESTRICTED]]);
-};
+  yield publisher.publishAsync(Publisher.Enum.PLAYER, ['setAuth', [user, Player.Auth.RESTRICTED]]);
+});
 
-UserAdministration.prototype.upgradeUser = function(user) {
+UserAdministration.prototype.upgradeUser = Promise.coroutine(function*(user) {
   log.debug("UserAdministration.upgradeUser");
-  publisher.publish(Publisher.Enum.PLAYER, ['setAuth', [user, Player.Auth.DEFAULT]]);
-};
+  yield publisher.publishAsync(Publisher.Enum.PLAYER, ['setAuth', [user, Player.Auth.DEFAULT]]);
+});
 
 UserAdministration.prototype.kickUser = Promise.coroutine(function* (user, callback) {
   log.debug("UserAdministration.kickUser");
-  yield session.removeInvitee(user);
+  var isAdmin = yield session.isAdmin(user);
+  if(!isAdmin) {
+    yield session.removeInvitee(user);
+    var player = yield publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [user]]);
 
-  var kick = function(player) {
     if(player !== null && player !== undefined) {
       var socket = player.socket;
 
@@ -50,7 +40,7 @@ UserAdministration.prototype.kickUser = Promise.coroutine(function* (user, callb
     }
   }
 
-  publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [user]]);
+  return new Promise.reject(new Error(`Cannot kick admin.`));
 });
 
 UserAdministration.prototype.disconnectSocket = Promise.coroutine(function* (socket) {
@@ -66,14 +56,12 @@ UserAdministration.prototype.inviteUser = Promise.coroutine(function* (emailAddr
   if(session) {
     activeSession.addInvitee(emailAddress);
 
-    var sendInvitation = function(address) {
-      var mailOptions = activeSession.mailOptions;
-      mailOptions.invitees = [emailAddress];
+    yield smtp.initializeTransport(activeSession.smtp);
+    var mailOptions = activeSession.mailOptions;
+    mailOptions.invitees = [emailAddress];
 
-      smtp.sendMail(addP2PLink(mailOptions));
-    };
+    smtp.sendMail(addP2PLink(mailOptions));
 
-    smtp.initializeTransport(activeSession.smtp, sendInvitation);
   } else {
     log.warn("There is no active session to load smtp info from.");
   }
@@ -84,15 +72,8 @@ UserAdministration.prototype.inviteUsers = Promise.coroutine(function* () {
   var activeSession = yield session.getSession();
 
   if(activeSession) {
-    var sendInvitations = function(address) {
-      var sendEmail = function(mailOptions) {
-        smtp.sendMail(mailOptions)
-      };
-
-      addP2PLink(activeSession.mailOptions, sendEmail);
-    };
-
-    smtp.initializeTransport(activeSession.smtp, sendInvitations);
+    yield smtp.initializeTransport(activeSession.smtp);
+    smtp.sendMail(addP2PLink(activeSession.mailOptions));
   } else {
     log.warn("There is no active session to load smtp info from.");
   }
@@ -100,8 +81,7 @@ UserAdministration.prototype.inviteUsers = Promise.coroutine(function* () {
 
 module.exports = UserAdministration;
 
-function addP2PLink(mailOptions, callback) {
-  log.silly("adding Link");
+function addP2PLink(mailOptions) {
   mailOptions.text = `${mailOptions.text} \n\n Link: https://${config.getConfig().host}:${config.getConfig().port}/html/client.html`;
-  callback(mailOptions);
+  return mailOptions;
 }

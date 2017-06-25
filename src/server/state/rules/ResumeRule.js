@@ -7,9 +7,8 @@ function ResumeRule(fuzzyRange) {
   this.fuzzyRange = fuzzyRange;
 }
 
-ResumeRule.prototype.evaluate = function(issuer, playerManager, callback) {
+ResumeRule.prototype.evaluate = function(issuer, others) {
   log.silly("ResumeRule.evaluate");
-	var others = playerManager.getOtherPlayers(issuer.id);
   var rearguard = null;
   var waitguard = null;
 
@@ -28,15 +27,17 @@ ResumeRule.prototype.evaluate = function(issuer, playerManager, callback) {
     rearguard = waitguard;
   }
 
-  if(rearguard !== null) {
+  if(rearguard) {
     if((parseFloat(issuer.timestamp) - parseFloat(rearguard.timestamp)) < this.fuzzyRange) {
       log.info("ResumeRule triggered for", issuer);
-      callback(issuer);
+      return true;
     }
   } else {
     log.silly("ResumeRule triggered as there are no other users synced", issuer);
-    callback(issuer);
+    return true;
   }
+
+  return false;
 };
 
 module.exports = ResumeRule;
