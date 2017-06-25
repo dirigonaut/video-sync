@@ -21,16 +21,31 @@ DependencyFactory.prototype.addFactory = function() {
   return this;
 };
 
-DependencyFactory.prototype.addSession = function() {
+DependencyFactory.prototype.addSession = Promise.coroutine(function* () {
   this.dependencies = initDependencies(this.dependencies);
+
+  var dependency = Object.create(DependencyFactory.prototype);
+  yield dependency.addConfig();
+  dependency.addLog().addFactory();
+
+  var session = Object.create(Deps.Session.prototype);
   this.dependencies[this.enumUtil.firstCharToLowerCase(this.DepEnum.SESSION)]
-    = new Deps.Session();
+    = session;
+
+  var deps = dependency.addFactory().getDependencies()
+  Object.assign(session, deps);
+  session.log = deps.logManager.getLog(deps.logManager.LogEnum.ADMINISTRATION);
+
   return this;
-};
+});
 
 DependencyFactory.prototype.addConfig = Promise.coroutine(function* () {
   this.dependencies = initDependencies(this.dependencies);
   var config = new Deps.Config();
+
+  var dependency = Object.create(DependencyFactory.prototype);
+
+  Object.assign(config, dependency.addFactory().getDependencies());
 
   if(!config.isInit()) {
     yield config.initialize().catch(console.error);

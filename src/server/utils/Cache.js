@@ -1,53 +1,44 @@
-var Redis         = require('redis');
+const Promise     = require('bluebird');
+const Redis         = require('redis');
 
-var Config        = require('./Config');
-var FileIO        = require('../utils/FileIO');
-var LogManager    = require('../log/LogManager');
+var subCallbacks, publisher, client;
 
-var log           = LogManager.getLog(LogManager.LogEnum.UTILS);
-var config, basePath, subCallbacks, publisher, client;
+function Cache() { }
 
-function lazyInit() {
-  config          = new Config();
-  subCallbacks    = new Map();
-  publisher       = Redis.createClient(config.getConfig().redis);
-  client          = Redis.createClient(config.getConfig().redis);
+Cache.prototype.initialize = function() {
+  if(typeof Cache.prototype.lazyInit === 'undefined') {
+    subCallbacks    = {};
+    publisher       = Redis.createClient(this.config.getConfig().redis);
+    client          = Redis.createClient(this.config.getConfig().redis);
 
-  client.on("message", function(channel, message) {
-    log.debug('Subscribers onMessage ', channel);
-    message = JSON.parse(message);
+    client.on("message", function(channel, message) {
+      this.log.debug('Subscribers onMessage ', channel);
+      message = JSON.parse(message);
 
-    var callbacks = subCallbacks.get(channel);
-    if(callbacks !== undefined && callbacks !== null) {
-      log.debug(`Subscribers returning data for key ${channel} and index ${message.index}`);
-      if(message.data !== null) {
-        message.data = new Buffer(new Uint8Array(message.data.data));
+      var callbacks = subCallbacks.get(channel);
+      if(callbacks) {
+        this.log.debug(`Subscribers returning data for key ${channel} and index ${message.index}`);
+        if(message.data !== null) {
+          message.data = new Buffer(new Uint8Array(message.data.data));
+        }
+
+        for(var i in callbacks) {
+          callbacks[i](message);
+        }
       }
-
-      for(var i in callbacks) {
-        callbacks[i](message);
-      }
-    }
-  });
-}
-
-class Cache {
-  constructor() {
-    if(typeof Cache.prototype.lazyInit === 'undefined') {
-      lazyInit();
-      Cache.prototype.lazyInit = true;
-    }
+    });
+    Cache.prototype.lazyInit = true;
   }
-}
+};
 
-Cache.prototype.getSegment = function(requestData, callback) {
+Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback) {
   var key = `${requestData.path}-${requestData.segment[0]}-${requestData.segment[1]}-${requestData.typeId}`;
-  log.debug('Cache.getSegment', key);
+  this.log.debug('Cache.getSegment', key);
 
   var handleCachedData = function(err, segment) {
     if(err === null) {
       if(segment !== undefined && segment !== null) {
-        log.info('Cache has data', key);
+        this.log.info('Cache has data', key);
         if(segment.name !== undefined && segment.name !== null) {
           if(segment.data !== null) {
             segment.data = new Buffer(new Uint8Array(segment.data.data));
@@ -56,35 +47,32 @@ Cache.prototype.getSegment = function(requestData, callback) {
           callback(segment);
 
           if(segment.data !== null && segment.index !== null) {
-            getCacheData(`${key}:${segment.index + 1}`, handleCachedData);
+            getCacheData.call(this, `${key}:${segment.index + 1}`, handleCachedData);
           }
         }
       } else if(subCallbacks.get(key) !== null && subCallbacks.get(key) !== undefined) {
         subscribeToRead(key, callback);
       } else {
-        log.info('Cache has no data', key);
-        readFile(key, requestData);
+        this.log.info('Cache has no data', key);
+        readFile.call(this, key, requestData);
         subscribeToRead(key, callback);
       }
     }
-  };
+  }.bind(this);
 
-  getCacheData(`${key}:0`, handleCachedData);
-};
-
-Cache.prototype.setPath = function(path) {
-  basePath = path;
-};
+  getCacheData.call(this, `${key}:0`, handleCachedData);
+});
 
 module.exports = Cache;
 
-function readFile(key, requestData) {
-  log.debug(`Cache.readFile ${key}`);
-  var fileIO = new FileIO();
+var readFile = Promise.coroutine(function* (key, requestData) {
+  this.log.debug(`Cache.readFile ${key}`);
+  var fileIO = yield this.factory.createFileIO();
 
+  var basePath = yield this.session.getMediaPath();
   var readConfig = fileIO.createStreamConfig(basePath + requestData.path, function onData(data, index) {
-    log.debug('Cache on data', key);
-    var segment = new Object();
+    this.log.debug('Cache on data', key);
+    var segment = {};
     segment.typeId = requestData.typeId;
     segment.name = key;
     segment.data = data;
@@ -92,22 +80,22 @@ function readFile(key, requestData) {
 
     var handleResponse = function(err, result) {
       if(err) {
-        log.error(`Could not insert segment into cache for key: ${key}:${index}`, err);
+        this.log.error(`Could not insert segment into cache for key: ${key}:${index}`, err);
       } else {
-        log.debug(`Publishing segment for key: ${key}:${index}`);
+        this.log.debug(`Publishing segment for key: ${key}:${index}`);
         publisher.publish(key, JSON.stringify(segment));
       }
     };
 
-    setCacheData(`${key}:${index}`, segment, handleResponse);
-  });
+    setCacheData.call(this, `${key}:${index}`, segment, handleResponse);
+  }.bind(this));
 
   var options = {"start": parseInt(requestData.segment[0]), "end": parseInt(requestData.segment[1])};
   readConfig.options = options;
 
   readConfig.onFinish = function onFinish(index) {
-    log.debug('Cache finished read: ', key);
-    var segment = new Object();
+    this.log.debug('Cache finished read: ', key);
+    var segment = {};
     segment.typeId = requestData.typeId;
     segment.name = key;
     segment.data = null;
@@ -115,27 +103,27 @@ function readFile(key, requestData) {
 
     var handleResponse = function(err, result) {
       if(err) {
-        log.error(`Could not insert segment into cache for key: ${key}:${index}`, err);
+        this.log.error(`Could not insert segment into cache for key: ${key}:${index}`, err);
       } else {
-        log.debug(`Publishing segment for key: ${key}:${index}`);
+        this.log.debug(`Publishing segment for key: ${key}:${index}`);
 
         publisher.publish(key, JSON.stringify(segment));
       }
     };
 
-    setCacheData(`${key}:${index}`, segment, handleResponse);
-  };
+    setCacheData.call(this, `${key}:${index}`, segment, handleResponse);
+  }.bind(this);
 
   fileIO.read(readConfig);
-}
+});
 
 var setCacheData = function(key, data, callback) {
-  log.debug('setCacheData for key: ', key);
+  this.log.debug('setCacheData for key: ', key);
   var response = function(err, result) {
     if(err) {
       callback(err);
     } else {
-      callback(null, data !== undefined && data !== null ? data.index : null);
+      callback(null, data ? data.index : null);
     }
   };
 
@@ -143,20 +131,20 @@ var setCacheData = function(key, data, callback) {
 };
 
 var getCacheData = function(key, callback) {
-  log.debug('getCacheData for key: ', key);
+  this.log.debug('getCacheData for key: ', key);
   publisher.get(key, function(err, reply) {
     callback(err, JSON.parse(reply));
   });
 };
 
 var subscribeToRead = function(key, callback) {
-  log.debug('subscribeToRead for key: ', key);
+  this.log.debug('subscribeToRead for key: ', key);
   var callbacks = subCallbacks.get(key);
 
   if(callbacks !== undefined && callbacks !== null) {
     callbacks.splice(callbacks.length - 1, 0, callback)
   } else {
-    callbacks = [ callback, createUnsubscribeListener(key)];
+    callbacks = [ callback, createUnsubscribeListener.call(this, key)];
     client.subscribe(key);
   }
 
@@ -174,14 +162,14 @@ var createUnsubscribeListener = function(key) {
       }
 
       if(lastIndex && lastIndex === countIndex) {
-        log.debug(`Unsubscribing key: ${key} lastIndex: ${lastIndex}, countIndex: ${countIndex}`);
+        this.log.debug(`Unsubscribing key: ${key} lastIndex: ${lastIndex}, countIndex: ${countIndex}`);
         subCallbacks.delete(key);
         client.unsubscribe(key);
       }
 
       ++countIndex;
     }
-  };
+  }.bind(this);
 
   return unsubscribe;
 };

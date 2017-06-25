@@ -10,12 +10,16 @@ function ClientSocket() {
 }
 
 ClientSocket.prototype.connect = function(serverUrl, callback) {
-	console.log("Socket connecting to: " + serverUrl);
+	log.info("Socket connecting to: " + serverUrl);
 
 	socket = io.connect(serverUrl, {rejectUnauthorized: false});
 
+	socket.on('connected', function(acknowledge) {
+		log.info("Socket connected to server.");
+	});
+
 	socket.on('authenticated', function(acknowledge) {
-		console.log("Socket connected to: " + serverUrl);
+		log.info("Socket authenticated with server." );
 		callback(acknowledge);
 	});
 };

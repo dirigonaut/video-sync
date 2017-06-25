@@ -1,36 +1,24 @@
 const Promise       = require('bluebird');
 const Redis         = require('redis');
-const Cache         = require('../utils/Cache');
-const Config        = require('../utils/Config');
-const LogManager    = require('../log/LogManager');
-const Publisher     = require('../process/redis/RedisPublisher');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
-var config, cache, publisher, client;
+var publisher, client;
 
-function lazyInit() {
-  config        = new Config();
-  cache         = new Cache();
-  publisher 		= new Publisher();
-  client        = Redis.createClient(config.getConfig().redis);
-}
+function Session() { }
 
-class Session {
-  constructor() {
-    if(typeof Session.prototype.lazyInit === 'undefined') {
-      lazyInit();
-      Session.prototype.lazyInit = true;
-    }
+Session.prototype.initialize = function() {
+  if(typeof Session.prototype.lazyInit === 'undefined') {
+    publisher 		= this.factory.createRedisPublisher();
+    client        = Redis.createClient(this.config.getConfig().redis);
+    Session.prototype.lazyInit = true;
   }
-}
+};
 
 Session.prototype.setSession = Promise.coroutine(function* (id) {
-  log.debug("Session.setActiveSession");
+  this.log.debug("Session.setActiveSession");
   var session = yield publisher.publishAsync(Publisher.Enum.DATABASE, ['readSession', [id]]);
-
-  yield setSessionData(Session.Enum.ACTIVE, session);
+  yield setSessionData.call(this, Session.Enum.ACTIVE, session);
 
   var invitees = [];
   for(let i = 0; i < session.invitees.length; ++i) {
@@ -45,22 +33,22 @@ Session.prototype.setSession = Promise.coroutine(function* (id) {
 });
 
 Session.prototype.getSession = function() {
-  log.debug("Session.getActiveSession");
-  return getSessionData(Session.Enum.ACTIVE);
+  this.log.debug("Session.getActiveSession");
+  return getSessionData.call(this, Session.Enum.ACTIVE);
 };
 
 Session.prototype.getInvitees = function() {
-  log.debug("Session.getInvitees");
-  return getSessionData(Session.Enum.USERS);
+  this.log.debug("Session.getInvitees");
+  return getSessionData.call(this, Session.Enum.USERS);
 };
 
 Session.prototype.setInvitees = function(invitees) {
-  log.debug("Session.setInvitees");
-  return setSessionData(Session.Enum.USERS, invitees);
+  this.log.debug("Session.setInvitees");
+  return setSessionData.call(this, Session.Enum.USERS, invitees);
 };
 
 Session.prototype.addInvitee = Promise.coroutine(function* (email) {
-  log.debug("Session.addInvitee");
+  this.log.debug("Session.addInvitee");
 
   var invitee = {};
   invitee.id = null;
@@ -86,7 +74,7 @@ Session.prototype.addInvitee = Promise.coroutine(function* (email) {
 });
 
 Session.prototype.removeInvitee = Promise.coroutine(function* (id) {
-  log.debug("Session.removeInvitee");
+  this.log.debug("Session.removeInvitee");
   var invitees = yield this.getInvitees();
 
   if(typeof invitees !== 'undefined' && invitees) {
@@ -96,43 +84,44 @@ Session.prototype.removeInvitee = Promise.coroutine(function* (id) {
         return this.setInvitees(invitees);
       }
     }
+
+    return new Promise.reject(new Error(`There is no user with the this id: ${id}`));
   }
 
-  return new Promise.reject(new Error(`There is no use with the this id: ${id}`));
+  return new Promise.reject(new Error(`Session is not set`));
 });
 
 Session.prototype.setMediaStarted = Promise.coroutine(function* (started) {
-  log.silly("Session.setMediaStarted");
+  this.log.silly("Session.setMediaStarted");
   var basePath = yield this.getMediaPath();
   if(typeof basePath !== 'undefined' && basePath) {
-    return setSessionData(Session.Enum.STARTED, started);
+    return setSessionData.call(this, Session.Enum.STARTED, started);
   }
 
   return new Promise.reject(new Error("Media is not defined."));
 });
 
 Session.prototype.getMediaStarted = function() {
-  log.silly("Session.getMediaStarted");
-  return getSessionData(Session.Enum.STARTED);
+  this.log.silly("Session.getMediaStarted");
+  return getSessionData.call(this, Session.Enum.STARTED);
 };
 
 Session.prototype.setMediaPath = Promise.coroutine(function* (path) {
-  log.info("Session.setMediaPath");
+  this.log.info("Session.setMediaPath");
   return setSessionData(Session.Enum.MEDIA, path)
   .then(function(results) {
-    cache.setPath(path);
     return this.setMediaStarted(false);
   }.bind(this));
 });
 
 Session.prototype.getMediaPath = function() {
-  log.debug("Session.getMediaPath");
-  return getSessionData(Session.Enum.MEDIA);
+  this.log.debug("Session.getMediaPath");
+  return getSessionData.call(this, Session.Enum.MEDIA);
 };
 
 Session.prototype.isAdmin = Promise.coroutine(function* (id) {
-  log.debug("Session.isAdmin");
-  var adminList = yield getSessionData(Session.Enum.ADMIN);
+  this.log.debug("Session.isAdmin");
+  var adminList = yield getSessionData.call(this, Session.Enum.ADMIN);
 
   if(typeof adminList !== 'undefined' && adminList) {
     for(let i = 0; i < adminList.length; ++i) {
@@ -146,11 +135,11 @@ Session.prototype.isAdmin = Promise.coroutine(function* (id) {
 });
 
 Session.prototype.getAdmin = function () {
-  return getSessionData(Session.Enum.ADMIN);
+  return getSessionData.call(this, Session.Enum.ADMIN);
 };
 
 Session.prototype.addAdmin = Promise.coroutine(function* (id) {
-  log.info("Session.setAdmin");
+  this.log.info("Session.setAdmin");
   var adminList = yield this.getAdmin();
 
   if(typeof adminList === 'undefined' || !adminList) {
@@ -158,18 +147,18 @@ Session.prototype.addAdmin = Promise.coroutine(function* (id) {
   }
 
   adminList.push(id);
-  return setSessionData(Session.Enum.ADMIN, adminList);
+  return setSessionData.call(this, Session.Enum.ADMIN, adminList);
 });
 
 Session.prototype.removeAdmin = Promise.coroutine(function* (id) {
-  log.info("Session.removeAdmin");
+  this.log.info("Session.removeAdmin");
   var adminList = yield this.getAdmin();
 
   if(typeof adminList !== 'undefined' && adminList) {
     for(let i = 0; i < adminList.length; ++i) {
       if(adminList[i] === id) {
         adminList.splice(i, 1);
-        return setSessionData(Session.Enum.ADMIN, adminList);
+        return setSessionData.call(this, Session.Enum.ADMIN, adminList);
       }
     }
   }
@@ -180,12 +169,12 @@ module.exports = Session;
 Session.Enum = { ACTIVE: "session-active", MEDIA: "session-media", ADMIN: "session-admin", IP: "session-ip", STARTED: "session-started", USERS: "session-users"};
 
 var setSessionData = function(key, data) {
-  log.debug('setSessionData for key: ', key);
+  this.log.debug('setSessionData for key: ', key);
   return client.setAsync(key, JSON.stringify(data));
 };
 
 var getSessionData = function(key) {
-  log.debug('getSessionData for key:', key);
+  this.log.debug('getSessionData for key:', key);
   return client.getAsync(key).then(function(results) {
     return JSON.parse(results);
   });

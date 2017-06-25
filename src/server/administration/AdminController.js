@@ -1,75 +1,59 @@
 const Promise         = require('bluebird');
-const UserAdmin       = require("./UserAdministration");
-const Session         = require('./Session');
-const Validator       = require('../authentication/Validator');
-const CommandEngine   = require('../chat/CommandEngine');
-const ChatEngine      = require('../chat/ChatEngine');
-const FileSystemUtils = require('../utils/FileSystemUtils');
-const FileIO          = require('../utils/FileIO');
-const LogManager      = require('../log/LogManager');
-const RedisSocket     = require('../process/redis/RedisSocket');
-const Publisher       = require('../process/redis/RedisPublisher');
 
-var log           = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
-var userAdmin, session, validator, commandEngine, chatEngine, redisSocket, publisher;
+var userAdmin, validator, commandEngine, chatEngine, redisSocket, publisher;
 
-function lazyInit() {
-  userAdmin       = new UserAdmin();
-  session         = new Session();
-  validator       = new Validator();
-  commandEngine   = new CommandEngine();
-  chatEngine      = new ChatEngine();
-  redisSocket     = new RedisSocket();
-  publisher       = new Publisher();
-}
+function AdminController() { }
 
-class AdminController {
-  constructor(io, socket) {
-    if(typeof AdminController.prototype.lazyInit === 'undefined') {
-      lazyInit();
-      AdminController.prototype.lazyInit = true;
-    }
-
-    initialize(io, socket);
+AdminController.prototype.initialize = Promise.coroutine(function* (io, socket) {
+  if(typeof AdminController.prototype.lazyInit === 'undefined') {
+    userAdmin       = yield this.factory.createUserAdministration();
+    validator       = yield this.factory.createValidator();
+    commandEngine   = yield this.factory.createCommandEngine();
+    chatEngine      = yield this.factory.createChatEngine();
+    redisSocket     = yield this.factory.createRedisSocket();
+    publisher       = yield this.factory.createRedisPublisher();
+    AdminController.prototype.lazyInit = true;
   }
-}
+
+  initialize.call(this, io, socket);
+});
 
 function initialize(io, socket) {
   log.info("Attaching AdminController");
 
   socket.on('admin-smtp-invite', Promise.coroutine(function* () {
     log.debug("admin-smtp-invite");
-    var isAdmin = yield session.isAdmin(socket.id);
+    var isAdmin = yield this.session.isAdmin(socket.id);
     if(isAdmin) {
       userAdmin.inviteUsers();
     }
-  }));
+  }.bind(this)));
 
   socket.on('admin-set-media', Promise.coroutine(function* (data) {
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       log.debug('admin-set-media');
-      var fileIO = new FileIO();
+      var fileIO = yield this.factory.createFileIO();
 
       var setMedia = Promise.coroutine(function* () {
-        var fileUtils = new FileSystemUtils();
+        var fileUtils = yield this.factory.createFileSystemUtils();
         data = fileUtils.ensureEOL(data);
 
         yield session.setMediaPath(data);
+        yield publisher.publishAsync(Publisher.Enum.PLAYER, ['initPlayers', []]);
 
-        var emitMediaReady = function(playerIds) {
+        var playerIds = yield publisher.publishAsync(Publisher.Enum.PLAYER, ['getPlayerIds', []]);
+        if(playerIds) {
           log.debug('media-ready');
           var message = chatEngine.buildMessage(socket.id, "Video has been initialized.");
           chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
           redisSocket.broadcast('media-ready');
         };
-
-        publisher.publish(Publisher.Enum.PLAYER, ['getPlayerIds', []], emitMediaReady);
-      });
+      }.bind(this));
 
       fileIO.dirExists(data, setMedia);
     }
-  }));
+  }.bind(this)));
 
   socket.on('admin-load-session', Promise.coroutine(function* (data) {
     var isAdmin = yield session.isAdmin(socket.id);
@@ -77,7 +61,7 @@ function initialize(io, socket) {
       log.debug('admin-load-session');
       session.setSession(data);
     }
-  }));
+  }.bind(this)));
 
   socket.on('chat-command', Promise.coroutine(function* (data) {
     var isAdmin = yield session.isAdmin(socket.id);
@@ -94,7 +78,7 @@ function initialize(io, socket) {
           log.silly('chat-command-response', data);
           chatEngine.broadcast(event, message);
         }
-      };
+      }.bind(this);
 
       var stateResponse = function(command, chat) {
         log.debug(`admin-chat-command emitting event`);
@@ -108,7 +92,7 @@ function initialize(io, socket) {
 
         command.push(onState);
         publisher.publish.apply(null, command);
-      };
+      }.bind(this);
 
       var handleResponse = function(key, param) {
         if(key === CommandEngine.RespEnum.COMMAND) {
@@ -116,15 +100,14 @@ function initialize(io, socket) {
         } else if(key === CommandEngine.RespEnum.CHAT){
           chatResponse.apply(null, param);
         }
-      };
+      }.bind(this);
 
-      var processCommand = function(admin) {
+      var admin = yield publisher.publishAsync(Publisher.Enum.PLAYER, ['getPlayer', [socket.id]]);
+      if(admin) {
         commandEngine.processAdminCommand(admin, data, handleResponse);
-      };
-
-      publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [socket.id]], processCommand);
+      }
     }
-  }));
+  }.bind(this)));
 }
 
 module.exports = AdminController;

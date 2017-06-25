@@ -16,10 +16,10 @@ StateEngine.prototype.initialize = function() {
 StateEngine.prototype.initPlayer = Promise.coroutine(function* (id) {
   log.debug('StateEngine.init');
   var basePath = yield this.session.getMediaPath();
-  if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  if(basePath && basePath.length > 0) {
     var player = yield this.playerManager.getPlayer(id);
 
-    if(player !== null && player !== undefined) {
+    if(player) {
       log.debug(`Init player ${player.id}`);
       return new Promise.resolve([[player.id], 'state-init']);
     }
@@ -30,19 +30,19 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
   log.debug(`StateEngine.play ${id}`);
   var basePath = yield this.session.getMediaPath();
 
-  if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  if(basePath && basePath.length > 0) {
     var mediaStarted = yield this.session.getMediaStarted();
     var player = yield this.playerManager.getPlayer(id);
 
-    if(player !== null && player !== undefined) {
+    if(player) {
       if(player.sync === Player.Sync.DESYNCED) {
         log.silly('StateEngine issuing play', player);
         var commands = [];
         commands.push([player.id, 'state-play']);
-        return new Promise.resolve([commands]);
+        return new Promise.resolve(commands);
       } else {
         var playRule = yield this.factory.createPlayRule();
-        var players = playRule.evaluate(player, this.playerManager, mediaStarted, accuracy);
+        var players = playRule.evaluate(player, yield this.playerManager.getPlayers(), mediaStarted, accuracy);
 
         var commands = [];
         for(var i in players) {
@@ -61,7 +61,7 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
             yield this.session.setMediaStarted(!mediaStarted);
           }
 
-          return new Promise.resolve([commands]);
+          return new Promise.resolve(commands);
         }
       }
     }
@@ -72,15 +72,15 @@ StateEngine.prototype.pause = Promise.coroutine(function* (id) {
   log.debug(`StateEngine.pause ${id}`);
   var basePath = yield this.session.getMediaPath();
 
-  if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  if(basePath && basePath.length > 0) {
     var issuer = yield this.playerManager.getPlayer(id);
 
-    if(issuer !== null && issuer !== undefined) {
+    if(issuer) {
       if(issuer.sync === Player.Sync.DESYNCED) {
         log.silly('StateEngine issuing pause', issuer);
         var commands = [];
         commands.push([issuer.id, 'state-pause', false]);
-        return new Promise.resolve([commands]);
+        return new Promise.resolve(commands);
       } else {
         var commands = [];
         var players = yield this.playerManager.getPlayers();
@@ -93,7 +93,7 @@ StateEngine.prototype.pause = Promise.coroutine(function* (id) {
         }
 
         if(commands.length > 0) {
-          return new Promise.resolve([commands]);
+          return new Promise.resolve(commands);
         }
       }
     }
@@ -103,27 +103,39 @@ StateEngine.prototype.pause = Promise.coroutine(function* (id) {
 StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
   log.debug('StateEngine.seek');
   var basePath = yield this.session.getMediaPath();
+  var mediaStarted = yield this.session.getMediaStarted();
 
-  if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  if(basePath && basePath.length > 0) {
     var issuer = yield this.playerManager.getPlayer(id);
 
-    if(issuer !== null && issuer !== undefined) {
+    if(issuer) {
       if(issuer.sync === Player.Sync.DESYNCED) {
         log.silly('StateEngine issuing pause', issuer);
         var commands = [];
         commands.push([issuer.id, 'state-seek', data]);
-        return new Promise.resolve([commands]);
+
+        if(mediaStarted === false && issuer.isInit()) {
+          issuer.sync = Player.Sync.SYNCED;
+          issuer.timestamp = data.seekTime;
+        }
+
+        return new Promise.resolve(commands);
       } else {
         var commands = [];
         var players = yield this.playerManager.getPlayers();
         for(var player of players.values()) {
           if(player.sync !== Player.Sync.DESYNCED) {
             commands.push([player.id, 'state-seek', data]);
+
+            if(mediaStarted === false && player.isInit()) {
+              player.sync = Player.Sync.SYNCED;
+              player.timestamp = data.seekTime;
+            }
           }
         }
 
         if(commands.length > 0) {
-          return new Promise.resolve([commands]);
+          return new Promise.resolve(commands);
         }
       }
     }
@@ -134,7 +146,7 @@ StateEngine.prototype.pauseSync = Promise.coroutine(function* (id) {
   log.debug(`StateEngine.pauseSync ${id}`);
   var basePath = yield this.session.getMediaPath();
 
-  if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  if(basePath && basePath.length > 0) {
     var player = yield this.playerManager.getPlayer(id);
 
     if(player !== null && player !== undefined) {
@@ -149,12 +161,12 @@ StateEngine.prototype.pauseSync = Promise.coroutine(function* (id) {
             }
           }
 
-          var response = new Object();
+          var response = {};
           response.seekTime = syncTime;
           var command = [];
           command.push([id, 'state-seek', response]);
 
-          return new Promise.resolve([command]);
+          return new Promise.resolve(command);
         }
       }
     }
@@ -165,10 +177,10 @@ StateEngine.prototype.changeSyncState = Promise.coroutine(function* (id, syncSta
   log.debug(`StateEngine.changeSyncState for ${id}, to ${syncState}`);
   var basePath = yield this.session.getMediaPath();
 
-  if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  if(basePath && basePath.length > 0) {
     var player = yield this.playerManager.getPlayer(id);
 
-    if(player !== null && player !== undefined) {
+    if(player) {
       if(syncState) {
         player.sync = Player.Sync.SYNCING;
       } else {
@@ -180,48 +192,28 @@ StateEngine.prototype.changeSyncState = Promise.coroutine(function* (id, syncSta
   }
 });
 
-StateEngine.prototype.timeUpdate = Promise.coroutine(function* (id, data) {
-  log.silly(`StateEngine.timeUpdate ${id}, ${data.timestamp}`);
+StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
+  log.silly(`StateEngine.syncingPing ${id}, ${data}`);
   var basePath = yield this.session.getMediaPath();
 
-  if(basePath !== null && basePath !== undefined && basePath.length > 0) {
-    var player = yield this.playerManager.getPlayer(id);
-    player.timestamp = data.timestamp;
-
-    var players = yield this.playerManager.getPlayers();
-    if(players.size > 1 && player !== null && player !== undefined) {
-      if(player.sync === Player.Sync.SYNCED) {
-        var syncRule = yield this.factory.createSyncRule();
-        var triggered = syncRule.evaluate(player, this.playerManager, accuracy);
-        if(triggered) {
-          player.sync = Player.Sync.SYNCWAIT;
-          var command = [];
-          command.push([player.id, "state-pause", false]);
-          return new Promise.resolve([command]);
-        }
-      }
-    }
-  }
-});
-
-StateEngine.prototype.syncingPing = Promise.coroutine(function* (id) {
-  log.silly(`StateEngine.syncingPing ${id}`);
-  var basePath = yield this.session.getMediaPath();
-
-  if(basePath !== null && basePath !== undefined && basePath.length > 0) {
+  if(basePath && basePath.length > 0) {
     var players = yield this.playerManager.getPlayers();
     var player = yield this.playerManager.getPlayer(id);
 
     if(player) {
+      if(data && typeof data.timestamp !== "undefined") {
+        player.timestamp = data.timestamp;
+      }
+
       if(players.size > 1) {
         var isMediaStarted = yield this.session.getMediaStarted();
 
         if(player.sync === Player.Sync.SYNCING && isMediaStarted) {
           var syncingRule = yield this.factory.createSyncingRule();
-          var leader = syncingRule.evaluate(player, this.playerManager);
+          var leader = syncingRule.evaluate(player, yield this.playerManager.getOtherPlayers(player.id));
 
           if(leader) {
-            var object = new Object();
+            var object = {};
             object.seekTime = leader.timestamp + 1;
             object.syncWait = true;
 
@@ -233,24 +225,31 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id) {
 
             var command = [];
             command.push([player.id, "state-seek", object]);
-            return new Promise.resolve([command]);
+            return new Promise.resolve(command);
+          }
+        } else if(player.sync === Player.Sync.SYNCED) {
+          var syncRule = yield this.factory.createSyncRule();
+          var triggered = syncRule.evaluate(player, yield this.playerManager.getPlayers(), accuracy);
+
+          if(triggered) {
+            player.sync = Player.Sync.SYNCWAIT;
+            var command = [];
+            command.push([player.id, "state-pause", false]);
+            return new Promise.resolve(command);
           }
         }
-      } else if(player.sync !== Player.Sync.DESYNCED) {
-        player.sync = Player.Sync.SYNCED;
-        var command = [];
-        command.push([player.id, 'state-trigger-ping', false]);
-        return new Promise.resolve([command]);
       }
     }
   }
+
+  return new Promise.resolve();
 });
 
 StateEngine.prototype.playerInit = Promise.coroutine(function* (id) {
   log.info(`StateEngine.playerInit ${id}`);
   var player = yield this.playerManager.getPlayer(id);
 
-  if(player !== null && player !== undefined) {
+  if(player) {
     log.debug(`Player: ${id} is initialized`);
     player.initialized = true;
     return [id];
@@ -264,7 +263,7 @@ StateEngine.prototype.updatePlayerState = Promise.coroutine(function* (id, times
   log.info(`StateEngine.updatePlayerState ${id}`);
   var player = yield this.playerManager.getPlayer(id);
 
-  if(player !== null && player !== undefined) {
+  if(player) {
     player.state      = state ? Player.State.PAUSE : Player.State.PLAY;
     player.timestamp  = timestamp;
   } else {
@@ -277,7 +276,7 @@ StateEngine.prototype.updatePlayerSync = Promise.coroutine(function* (id, timest
   log.info(`StateEngine.updatePlayerSync ${id}`);
   var player = yield this.playerManager.getPlayer(id);
 
-  if(player !== null && player !== undefined) {
+  if(player) {
     player.state      = state ? Player.State.PAUSE : Player.State.PLAY;
     player.timestamp  = timestamp;
     player.sync       = Player.Sync.SYNCWAIT;
@@ -290,12 +289,12 @@ StateEngine.prototype.updatePlayerSync = Promise.coroutine(function* (id, timest
 module.exports = StateEngine;
 
 var resumeLogic = Promise.coroutine(function* (players) {
-  for(var waitingPlayer of players) {
+  for(let waitingPlayer of players) {
     if(waitingPlayer[1].sync === Player.Sync.SYNCWAIT) {
       var resumeRule = yield this.factory.createResumeRule();
-      var syncPlayer = resumeRule.evaluate(waitingPlayer[1], this.playerManager, accuracy/4, broadcastResumeEvent);
+      var triggered = resumeRule.evaluate(waitingPlayer[1], yield this.playerManager.getOtherPlayers(waitingPlayer.id), accuracy/4);
 
-      if(syncPlayer) {
+      if(triggered) {
         if(yield this.playerManager.getSyncedPlayersState() === Player.State.PLAY) {
           var commands = [];
           commands.push([waitingPlayer[1].id, 'state-play']);
@@ -306,7 +305,7 @@ var resumeLogic = Promise.coroutine(function* (players) {
           this.redisPublisher.publish(this.redisPublisher.respEnum.COMMAND, commands);
         }
 
-        syncPlayer.sync = Player.Sync.SYNCED;
+        waitingPlayer[1].sync = Player.Sync.SYNCED;
       }
     }
   }

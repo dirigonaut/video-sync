@@ -15,6 +15,7 @@ var lazyInit = Promise.coroutine(function* () {
 
   subscriber    = Redis.createClient(this.config.getConfig().redis);
 
+  console.log("StateEngine inited")
   stateEngine.initialize();
   adapter.initialize();
 });

@@ -1,176 +1,157 @@
-var Util          = require('util');
-var Validator     = require('../authentication/Validator');
-var Player        = require('../player/Player');
-var ChatEngine    = require('../chat/ChatEngine');
-var RedisSocket   = require('../process/redis/RedisSocket');
-var Publisher     = require('../process/redis/RedisPublisher');
-var LogManager    = require('../log/LogManager');
+const Promise  = require('bluebird');
+const Util     = require('util');
 
-var log = LogManager.getLog(LogManager.LogEnum.STATE);
 var validator, chatEngine, redisSocket, publisher;
 
-function lazyInit() {
-  validator       = new Validator();
-  chatEngine      = new ChatEngine();
-  redisSocket     = new RedisSocket();
-  publisher       = new Publisher();
-}
+function StateController() { }
 
-class StateController {
-  constructor(io, socket) {
-    if(typeof StateController.prototype.lazyInit === 'undefined') {
-      lazyInit();
-      StateController.prototype.lazyInit = true;
-    }
-
-    initialize(io, socket);
+StateController.prototype.initialize = Promise.coroutine(function* (io, socket) {}
+  if(typeof StateController.prototype.lazyInit === 'undefined') {
+    validator   = yield this.factory.createValidator();
+    chatEngine  = yield this.factory.createChatEngine();
+    redisSocket = yield this.factory.createRedisSocket();
+    publisher   = yield this.factory.createRedisPublisher();
+    StateController.prototype.lazyInit = true;
   }
-}
+
+  initialize.call(this, io, socket);
+});
 
 module.exports = StateController;
 
 function initialize(io, socket) {
-  log.info("Attaching StateController");
+  this.log.info("Attaching StateController");
   socket.emit('state-trigger-ping', true);
 
-  socket.on('state-req-init', function() {
-    log.debug('state-req-init');
-    var onInit = function(payload) {
-      console.log("here")
+  socket.on('state-req-init', Promise.coroutine(function*() {
+    this.log.debug('state-req-init');
+    var payload = yield publisher.publishAsync(Publisher.Enum.STATE, ['initPlayer', [socket.id]]);
+    if(payload) {
       socket.emit(payload[1]);
-    };
+    }
+  }.bind(this)));
 
-    publisher.publish(Publisher.Enum.STATE, ['initPlayer', [socket.id]], onInit);
-  });
+  socket.on('state-req-play', Promise.coroutine(function* () {
+    this.log.info('state-req-play');
 
-  socket.on('state-req-play', function() {
-    log.info('state-req-play');
-
-    var onPlay = function(commands) {
+    var commands = yield publisher.publishAsync(Publisher.Enum.STATE, ['play', [socket.id]]);
+    if(commands) {
       for(var i in commands) {
         redisSocket.ping.apply(null, commands[i]);
       }
 
       var message = chatEngine.buildMessage(socket.id, "issued play");
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
-    };
+    }
+  }.bind(this)));
 
-    publisher.publish(Publisher.Enum.STATE, ['play', [socket.id]], onPlay);
-  });
+  socket.on('state-req-pause', Promise.coroutine(function* (data) {
+    this.log.debug('state-req-pause', data);
 
-  socket.on('state-req-pause', function(data) {
-    log.debug('state-req-pause', data);
-
-    var onPause = function(commands) {
+    var commands = yeild publisher.publishAsync(Publisher.Enum.STATE, ['pause', [socket.id]]);
+    if(commands) {
       for(var i in commands) {
         redisSocket.ping.apply(null, commands[i]);
       }
 
       var message = chatEngine.buildMessage(socket.id, "issued pause");
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
-    };
+    }
+  }.bind(this)));
 
-    publisher.publish(Publisher.Enum.STATE, ['pause', [socket.id]], onPause);
-  });
+  socket.on('state-req-seek', Promise.coroutine(function* (data) {
+    this.log.debug('state-req-seek', data);
 
-  socket.on('state-req-seek', function(data) {
-    log.debug('state-req-seek', data);
-
-    var onSeek = function(commands) {
+    var commands = yield publisher.publishAsync(Publisher.Enum.STATE, ['seek', [socket.id, data]]);
+    if(commands) {
       for(var i in commands) {
         redisSocket.ping.apply(null, commands[i]);
       }
 
       var message = chatEngine.buildMessage(socket.id, `issued seek to ${data.seekTime}`);
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
-    };
+    }
+  }.bind(this)));
 
-    publisher.publish(Publisher.Enum.STATE, ['seek', [socket.id, data]], onSeek);
-  });
+  socket.on('state-sync', Promise.coroutine(function* () {
+    this.log.debug('state-sync');
 
-  socket.on('state-sync', function() {
-    log.debug('state-sync');
-
-    var onSync = function(commands) {
-      log.debug(`state-sync onSync ${commands}`);
+    var commands = yield publisher.publishAsync(Publisher.Enum.STATE, ['pauseSync', [socket.id]]);
+    if(commands) {
+      this.log.debug(`state-sync onSync ${commands}`);
       for(var i in commands) {
         redisSocket.ping.apply(null, commands[i]);
       }
 
       var message = chatEngine.buildMessage(socket.id, "issued sync");
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
-    };
+    }
+  }.bind(this)));
 
-    publisher.publish(Publisher.Enum.STATE, ['pauseSync', [socket.id]], onSync);
-  });
+  socket.on('state-change-sync', Promise.coroutine(function* (data) {
+    this.log.debug('state-change-sync', data);
 
-  socket.on('state-change-sync', function(data) {
-    log.debug('state-change-sync', data);
-
-    var onChangeSync = function(value) {
+    var value = yield publisher.publishAsync(Publisher.Enum.STATE, ['changeSyncState', [socket.id, data]]);
+    if(value) {
       var message = chatEngine.buildMessage(socket.id, `is now in sync state ${value}`);
       chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
 
       if(value === Player.Sync.SYNCING) {
         socket.emit('state-trigger-ping', true);
+      } else {
+        socket.emit('state-trigger-ping', false);
       }
 
       socket.emit('state-sync-state', value);
-    };
+    }
+  }.bind(this)));
 
-    publisher.publish(Publisher.Enum.STATE, ['changeSyncState', [socket.id, data]], onChangeSync);
-  });
+  socket.on('state-sync-ping', Promise.coroutine(function* () {
+    this.log.silly('state-sync-ping');
 
-  socket.on('state-sync-ping', function() {
-    log.silly('state-sync-ping');
-
-    var onSync = function(commands) {
+    var commands = yield publisher.publishAsync(Publisher.Enum.STATE, ['syncingPing', [socket.id]]);
+    if(commands) {
       for(var i in commands) {
         redisSocket.ping.apply(null, commands[i]);
       }
-    };
+    }
+  }.bind(this)));
 
-    publisher.publish(Publisher.Enum.STATE, ['syncingPing', [socket.id]], onSync);
-  });
+  socket.on('state-time-update', Promise.coroutine(function* (data) {
+    this.log.silly('state-time-update', data);
 
-  socket.on('state-time-update', function(data) {
-    log.silly('state-time-update', data);
-
-    var onTime = function(commands) {
+    var commands = yield publisher.publishAsync(Publisher.Enum.STATE, ['syncingPing', [socket.id, data]]);
+    if(commands) {
       for(var i in commands) {
         redisSocket.ping.apply(null, commands[i]);
       }
-    };
+    }
+  }.bind(this)));
 
-    publisher.publish(Publisher.Enum.STATE, ['timeUpdate', [socket.id, data]], onTime);
-  });
-
-  socket.on('state-update-init', function(data, acknowledge) {
-    log.info(`state-update-init`, data);
+  socket.on('state-update-init', Promise.coroutine(function* (data, acknowledge) {
+    this.log.info(`state-update-init`, data);
     acknowledge(null, true);
 
-    var onInit = function(id) {
-      var onSync = function(commands) {
+    var id = yield publisher.publishAsync(Publisher.Enum.STATE, ['playerInit', [data.id]]);
+    if(id) {
+      var commands = yield publisher.publishAsync(Publisher.Enum.STATE, ['syncingPing', [id]]);
+      if(commands) {
         for(var i in commands) {
           redisSocket.ping.apply(null, commands[i]);
         }
-      };
-
-      publisher.publish(Publisher.Enum.STATE, ['syncingPing', [id]], onSync);
+      }
     }
+  }.bind(this)));
 
-    publisher.publish(Publisher.Enum.STATE, ['playerInit', [data.id]], onInit);
-  });
-
-  socket.on('state-update-state', function(data, acknowledge) {
-    log.info('state-update-state', data);
+  socket.on('state-update-state', Promise.coroutine(function* (data, acknowledge) {
+    this.log.info('state-update-state', data);
     acknowledge(null, true);
-    publisher.publish(Publisher.Enum.STATE, ['updatePlayerState', [data.id, data.timestamp, data.state]]);
-  });
+    yield publisher.publishAsync(Publisher.Enum.STATE, ['updatePlayerState', [data.id, data.timestamp, data.state]]);
+  }.bind(this)));
 
-  socket.on('state-update-sync', function(data, acknowledge) {
-    log.info('state-update-sync', data);
+  socket.on('state-update-sync', Promise.coroutine(function* (data, acknowledge) {
+    this.log.info('state-update-sync', data);
     acknowledge(null, true);
-    publisher.publish(Publisher.Enum.STATE, ['updatePlayerSync', [data.id, data.timestamp, data.state]]);
-  });
+    yield publisher.publishAsync(Publisher.Enum.STATE, ['updatePlayerSync', [data.id, data.timestamp, data.state]]);
+  }.bind(this)));
 }

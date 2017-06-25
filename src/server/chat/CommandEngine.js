@@ -1,28 +1,20 @@
-var UserAdmin     = require('../administration/UserAdministration');
-var ChatEngine    = require('./ChatEngine');
-var LogManager    = require('../log/LogManager');
-var Publisher     = require('../process/redis/RedisPublisher');
+const Promise   = require('bluebird');
 
-var log           = LogManager.getLog(LogManager.LogEnum.CHAT);
 var userAdmin, chatEngine, publisher;
 
-function lazyInit() {
-  userAdmin       = new UserAdmin();
-  chatEngine      = new ChatEngine();
-  publisher       = new Publisher();
-}
+function CommandEngine() { }
 
-class CommandEngine {
-  constructor() {
-    if(typeof CommandEngine.prototype.lazyInit === 'undefined') {
-      lazyInit();
-      CommandEngine.prototype.lazyInit = true;
-    }
+CommandEngine.prototype.initialize = Promise.coroutine(function* ()
+  if(typeof CommandEngine.prototype.lazyInit === 'undefined') {
+    userAdmin  = yield this.factory.createUserAdministration();
+    chatEngine = yield this.factory.createChatEngine();
+    publisher  = yield this.factory.createRedisPublisher();
+    CommandEngine.prototype.lazyInit = true;
   }
-}
+});
 
 CommandEngine.prototype.processAdminCommand = function(admin, command, callback) {
-  log.debug("CommandEngine.prototype.processAdminCommand");
+  this.log.debug("CommandEngine.prototype.processAdminCommand");
   switch(command.command) {
     case CommandEngine.AdminEnum.INVITE:
       userAdmin.inviteUser(command.param[0]);
@@ -50,7 +42,7 @@ CommandEngine.prototype.processAdminCommand = function(admin, command, callback)
 };
 
 CommandEngine.prototype.processCommand = function(issuer, command, callback) {
-  log.debug("CommandEngine.prototype.processCommand", command);
+  this.log.debug("CommandEngine.prototype.processCommand", command);
   switch(command.command) {
     case CommandEngine.ClientEnum.PLAY:
       var engineCommand = [Publisher.Enum.STATE, ['play', [issuer.id]]];

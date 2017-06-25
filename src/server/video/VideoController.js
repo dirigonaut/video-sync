@@ -1,52 +1,33 @@
 const Promise         = require('bluebird');
-const FileIO          = require('../utils/FileIO');
-const FileUtils       = require('../../server/utils/FileSystemUtils');
-const EncoderManager  = require('./encoding/EncoderManager');
-const FfprobeProcess  = require('./encoding/process/FfprobeProcess');
-const command         = require('./encoding/process/Command');
-const WebmMetaData    = require('./metadata/WebmMetaData');
-const Session         = require('../administration/Session');
-const Validator       = require('../authentication/Validator');
-const XmlUtil         = require('./metadata/xml/XmlUtil');
-const MpdUtil         = require('./metadata/MpdUtil');
-const Cache           = require('../utils/Cache');
-const LogManager      = require('../log/LogManager');
 
-var log             = LogManager.getLog(LogManager.LogEnum.VIDEO);
-var validator, session, cache;
+var validator;
 
-function lazyInit() {
-  validator       = new Validator();
-  session         = new Session();
-  cache           = new Cache();
-}
+function VideoController() { }
 
-class VideoController {
-  constructor(io, socket) {
-    if(typeof VideoController.prototype.lazyInit === 'undefined') {
-      lazyInit();
-      VideoController.prototype.lazyInit = true;
-    }
+VideoController.prototype.initialize = Promise.coroutine(function* (io, socket) {
+  validator = yield this.factory.createValidator();
+  this.cache.initialize();
 
-    initialize(io, socket);
-  }
-}
+  initialize.call(this, io, socket);
+};
+
+module.exports = VideoController;
 
 function initialize(io, socket) {
-  log.info("Attaching VideoController");
+  this.log.info("Attaching VideoController");
 
   socket.on('video-encode', Promise.coroutine(function* (data) {
-    var isAdmin = yield session.isAdmin(socket.id);
+    var isAdmin = yield this.session.isAdmin(socket.id);
     if(isAdmin) {
-      log.debug('video-encode', data);
-      var fileIO = new FileIO();
+      this.log.debug('video-encode', data);
+      var fileIO = this.factory.createFileIO();
       var request = validator.sterilizeVideoInfo(data);
 
-      var genWebmMeta = function (path) {
+      var genWebmMeta = function(path) {
         var webmMetaData = new WebmMetaData();
 
         var saveMetaToMpd = function(meta) {
-          log.debug('Save webm metadata', meta);
+          this.log.debug('Save webm metadata', meta);
           var xmlUtil = new XmlUtil();
           var xmlMeta = xmlUtil.webmMetaToXml(meta);
 
@@ -57,13 +38,13 @@ function initialize(io, socket) {
         };
 
         webmMetaData.generateWebmMeta(path, saveMetaToMpd);
-      };
+      }.bind(this);
 
       var encoderManager = new EncoderManager(request);
       encoderManager.on('webm', function(path) {
-        log.debug('Generate webm metadata', data);
+        this.log.debug('Generate webm metadata', data);
         genWebmMeta(path);
-      }).on('finished', function(path) {
+      }.bind(this)).on('finished', function(path) {
         socket.emit('video-encoded');
       });
 
@@ -77,20 +58,20 @@ function initialize(io, socket) {
         fileIO.ensureDirExists(request[0].outputDir, 484, encode);
       }
     }
-  }));
+  }.bind(this)));
 
   socket.on('get-meta-files', Promise.coroutine(function* (requestId) {
-    log.debug('get-meta-files', requestId);
+    this.log.debug('get-meta-files', requestId);
 
-    var basePath = yield session.getMediaPath();
+    var basePath = yield this.session.getMediaPath();
     if(basePath) {
-      var fileIO = new FileIO();
-      var fileUtils = new FileUtils();
+      var fileIO = yield this.factory.createFileIO();
+      var fileUtils = yield this.factory.createFileSystemUtils();
 
       var readConfig = fileIO.createStreamConfig(basePath, function(files) {
         if(files !== undefined && files !== null) {
           for(let i = 0; i < files.length; ++i) {
-            var header = new Object();
+            var header = {};
             var splitName = files[i].split(".")[0].split("_");
             header.type = splitName[splitName.length - 1];
 
@@ -111,35 +92,33 @@ function initialize(io, socket) {
 
       fileIO.readDir(readConfig, "mpd");
     }
-  }));
+  }.bind(this)));
 
   socket.on('get-segment', Promise.coroutine(function* (data) {
-    log.debug('get-segment', data);
+    this.log.debug('get-segment', data);
     var data = validator.sterilizeVideoInfo(data);
 
-    var basePath = yield session.getMediaPath();
+    var basePath = yield this.session.getMediaPath();
     if(basePath) {
       var handleResponse = function(segment) {
-        log.info('Returning segment for request: ', data);
+        this.log.info('Returning segment for request: ', data);
         socket.emit("segment-chunk", segment);
       };
 
-      cache.getSegment(data, handleResponse);
+      this.cache.getSegment(data, handleResponse);
     }
-  }));
+  }.bind(this)));
 
   socket.on('get-meta-info', Promise.coroutine(function* (data) {
-    log.debug('get-meta-info', data);
+    this.log.debug('get-meta-info', data);
     var cleanData = validator.sterilizeVideoInfo(data);
 
-    var isAdmin = yield session.isAdmin(socket.id);
+    var isAdmin = yield this.session.isAdmin(socket.id);
     if(isAdmin) {
       var command = new Command(data);
       var ffprobeProcess = new FfprobeProcess();
       var metaData = yield ffprobeProcess.process(command);
       socket.emit("meta-info", metaData);
     }
-  }));
+  }.bind(this)));
 }
-
-module.exports = VideoController;

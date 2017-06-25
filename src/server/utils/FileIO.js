@@ -1,60 +1,56 @@
-var Promise     = require('bluebird');
-var Fs          = Promise.promisifyAll(require('fs'));
-var Path        = require('path');
-var LogManager  = require('../log/LogManager');
+const Promise     = require('bluebird');
+const Fs          = Promise.promisifyAll(require('fs'));
+const Path        = require('path');
 
-var log = LogManager.getLog(LogManager.LogEnum.UTILS);
-
-function FileIO() {
-};
+function FileIO() { };
 
 FileIO.prototype.read = function(readConfig) {
-  log.debug('FileIO.read', readConfig);
+  this.log.debug('FileIO.read', readConfig);
   var readStream  = Fs.createReadStream(readConfig.path, readConfig.options);
   var index = 0;
 
   readStream.on('error', function(e) {
-    log.error("FileIO.write, Server: Error: " + e);
+    this.log.error("FileIO.read, Server: Error: " + e);
   });
 
   readStream.on('close', function() {
-    log.debug("FileIO.read, Server: Finished reading.");
+    this.log.debug("FileIO.read, Server: Finished reading.");
     if(readConfig.onFinish) {
       readConfig.onFinish(index);
     }
 	});
 
   readStream.on('data', function(chunk) {
-    log.silly("on data", readConfig);
+    this.log.silly("on data", readConfig);
     readConfig.callback(chunk, index);
     index += 1;
   });
 };
 
 FileIO.prototype.write = function(writeConfig, data) {
-  log.debug('FileIO.write', writeConfig);
+  this.log.debug('FileIO.write', writeConfig);
 	var writeStream = Fs.createWriteStream(writeConfig.path, writeConfig.options);
 
   writeStream.on('error', function(e) {
-		log.error("FileIO.write, Server: Error: " + e);
-	});
+		this.log.error("FileIO.write, Server: Error: " + e);
+	}.bind(this));
 
   writeStream.on('finish', function() {
-		log.debug("FileIO.write, Server: Finished writing file");
+		this.log.debug("FileIO.write, Server: Finished writing file");
     if(writeConfig.onFinish) {
       writeConfig.onFinish();
     }
-	});
+	}.bind(this));
 
   writeStream.write(data);
 };
 
 FileIO.prototype.readDir = function(readConfig, extType) {
-  log.debug('FileIO.readDir', readConfig);
+  this.log.debug('FileIO.readDir', readConfig);
 
   Fs.readdir(readConfig.path, function (err, files) {
     if (err) {
-      log.error("FileIO.write, Server: Error:", err);
+      this.log.error("FileIO.write, Server: Error:", err);
     }
 
     var matchingFiles = [];
@@ -69,11 +65,11 @@ FileIO.prototype.readDir = function(readConfig, extType) {
     }
 
     readConfig.callback(matchingFiles);
-  });
+  }.bind(this));
 };
 
 FileIO.prototype.readDirAsync = Promise.coroutine(function* (path, extType) {
-  log.debug('FileIO.readDirAsync ' + path + ' ' + extType);
+  this.log.debug('FileIO.readDirAsync ' + path + ' ' + extType);
   var files = yield Fs.readdirAsync(path);
 
   var matchingFiles = [];
@@ -89,7 +85,7 @@ FileIO.prototype.readDirAsync = Promise.coroutine(function* (path, extType) {
 });
 
 FileIO.prototype.ensureDirExists = function(path, mask, callback) {
-  log.debug('FileIO.ensureDirExists', path);
+  this.log.debug('FileIO.ensureDirExists', path);
 
   Fs.mkdir(path, mask, function(err) {
     var result;
@@ -98,20 +94,20 @@ FileIO.prototype.ensureDirExists = function(path, mask, callback) {
       if (err.code == 'EEXIST') {
         result = true;
       } else {
-        log.error(err);
+        this.log.error(err);
       }
     } else {
       result = true;
     }
 
-    if(callback !== undefined && callback !== null) {
+    if(callback) {
       callback(result);
     }
-  });
+  }.bind(this));
 }
 
 FileIO.prototype.ensureDirExistsAsync = Promise.coroutine(function* (path, mask) {
-  log.debug('FileIO.ensureDirExistsAsync', path);
+  this.log.debug('FileIO.ensureDirExistsAsync', path);
 
   yield Fs.mkdirAsync(path, mask)
   .catch(function(err) {
@@ -122,27 +118,28 @@ FileIO.prototype.ensureDirExistsAsync = Promise.coroutine(function* (path, mask)
 });
 
 FileIO.prototype.dirExists = function(path, callback) {
-  log.debug('FileIO.dirExists', path);
+  this.log.debug('FileIO.dirExists', path);
   var isDir = true;
 
   Fs.stat(path, function(err, stats) {
     if (err) {
-      log.error('FileIO.dirExists err', err);
+      this.log.error('FileIO.dirExists err', err);
       isDir = false;
     } else if(!stats.isDirectory()) {
-      log.error('FileIO.dirExists is not dir', path);
+      this.log.error('FileIO.dirExists is not dir', path);
       isDir = false;
     }
 
     if(isDir) {
       callback();
     }
-  });
+  }.bind(this));
 }
 
 FileIO.prototype.createStreamConfig = function(path, callback) {
-  log.debug('FileIO.streamConfig');
-  var streamConfig = new Object();
+  this.log.debug('FileIO.streamConfig');
+  
+  var streamConfig = {};
   streamConfig.path = path;
   streamConfig.options = {};
   streamConfig.callback = callback;
@@ -152,8 +149,8 @@ FileIO.prototype.createStreamConfig = function(path, callback) {
 };
 
 FileIO.createStreamConfig = function(path, callback) {
-  log.debug('FileIO.streamConfig');
-  var streamConfig = new Object();
+  this.log.debug('FileIO.streamConfig');
+  var streamConfig = {};
   streamConfig.path = path;
   streamConfig.options = {};
   streamConfig.callback = callback;

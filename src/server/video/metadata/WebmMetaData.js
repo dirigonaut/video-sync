@@ -70,7 +70,7 @@ var getClusters = function(dirPath, tracks, callback) {
   var metaRequests = [];
 
   for(var i in tracks) {
-    var metaRequest = new Object();
+    var metaRequest = {};
     var fileName = fileUtil.splitNameFromPath(tracks[i].baseUrl);
     var fileExt  = fileUtil.splitExtensionFromPath(tracks[i].baseUrl);
     var readConfig = FileIO.createStreamConfig(`${dirPath}${fileName}.${fileExt}`, parseEBML);

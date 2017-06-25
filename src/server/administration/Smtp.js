@@ -1,53 +1,39 @@
-var NodeMailer	= require("nodemailer");
-var LogManager  = require('../log/LogManager');
-var Publisher   = require('../process/redis/RedisPublisher');
+const Promise     = require('bluebird');
+const NodeMailer	= require("nodemailer");
 
-var log         = LogManager.getLog(LogManager.LogEnum.ADMINISTRATION);
 var publisher, smtpTransport, activeSmtp;
 
-function lazyInit() {
-	publisher 		= new Publisher();
-}
+function Smtp() { }
 
-class Smtp{
-	constructor() {
-		if(typeof Smtp.prototype.lazyInit === 'undefined') {
-			lazyInit();
-			Smtp.prototype.lazyInit = true;
-		}
+Smtp.prototype.initializeTransport = Promise.coroutine(function* (address, callback) {
+	this.log.debug(`Smtp.initializeTransport for ${address}`);
+	if(typeof Smtp.prototype.lazyInit === 'undefined') {
+		publisher = yield this.factory.createRedisPublisher();
+		Smtp.prototype.lazyInit = true;
 	}
-};
 
-Smtp.prototype.initializeTransport = function(address, callback) {
-	log.debug(`Smtp.initializeTransport for ${address}`);
 	if(address !== activeSmtp) {
 		this.closeTrasporter();
 
-		var loadSmtpOptions = function(result) {
-			var data = result[0];
-			if(data !== undefined && data !== null) {
-				log.debug("loadSmtpOptions found options initializing smtp");
-				smtpTransport = NodeMailer.createTransport({
-						service: data.smtpHost,
-						auth: {
-								user: data.smtpAddress,
-								pass: data.smtpPassword
-						}
-				});
-				activeSmtp = data.smtpAddress;
-				callback();
-			}
+		var result = yield publisher.publishAsync(Publisher.Enum.DATABASE, ['readSmtp', [address]]);
+		var data = result[0];
+		if(data) {
+			this.log.debug("Found smtp options initializing transport");
+			smtpTransport = NodeMailer.createTransport({
+					service: data.smtpHost,
+					auth: {
+							user: data.smtpAddress,
+							pass: data.smtpPassword
+					}
+			});
+			activeSmtp = data.smtpAddress;
 		}
-
-		publisher.publish(Publisher.Enum.DATABASE, ['readSmtp', [address]], loadSmtpOptions);
-	} else {
-		callback();
 	}
-};
+});
 
 Smtp.prototype.createMailOptions = function(from, to, subject, text, html) {
-	log.debug("Smtp.createMailOptions");
-	var mailOptions 		= new Object();
+	this.log.debug("Smtp.createMailOptions");
+	var mailOptions 		= {};
 
 	mailOptions.from 		= from;
 	mailOptions.to 			= to;
@@ -59,30 +45,26 @@ Smtp.prototype.createMailOptions = function(from, to, subject, text, html) {
 };
 
 Smtp.prototype.sendMail = function(mailOptions) {
-	log.debug("Smtp.sendMail");
-	if(isTransportInitialized()) {
+	this.log.debug("Smtp.sendMail");
+	if(smtpTransport) {
 		smtpTransport.sendMail(mailOptions, function(error, response) {
-		    if(error) {
-		        log.error(error);
-		    }
+	    if(error) {
+	        this.log.error(error);
+	    }
 
-				log.info("Message sent: ", response);
-		});
+			this.log.info("Message sent: ", response);
+		}.bind(this));
 		return true;
-	}
+	}.bind(this);
 	return false;
 };
 
 Smtp.prototype.closeTrasporter = function() {
-	if(isTransportInitialized()) {
-		log.debug("Smtp.closeTrasporter");
+	if(smtpTransport) {
+		this.log.debug("Smtp.closeTrasporter");
 		smtpTransport.close();
 		smtpTransport = null;
 	}
 };
 
 module.exports = Smtp;
-
-var isTransportInitialized = function() {
-	return smtpTransport !== null && smtpTransport !== undefined;
-}

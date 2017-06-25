@@ -1,43 +1,41 @@
 var Redis = require('redis-server');
-var Config = require('../../utils/Config');
 
 var server;
 
 //TODO: There is an issue where the port can never be changed from the config as the startup
 //process does not respect it and will always spin up 6379 instead.
-class RedisServer {
-  constructor() {
-    var config = new Config();
-    var options = config.getConfig().redisStartUp;
+function RedisServer() { };
 
-    if(options) {
-      options.conf = config.getRedisConfigPath();
-    }
+RedisServer.prototype.initialize = function() {
+  var options = this.config.getConfig().redisStartUp;
 
-    if(options !== undefined && options !== null) {
-      server = new Redis(options);
-    }
+  if(options) {
+    options.conf = this.config.getRedisConfigPath();
   }
 
-  start() {
-    if(server !== undefined && server !== null) {
-      return server.open().then(() => {
-        console.log("Redis server has started.");
-      });
-    }
+  if(options !== undefined && options !== null) {
+    server = new Redis(options);
+  }
+};
 
-    throw new Error("Redis has not been init check to make sure it has been configured properly.");
+RedisServer.prototype.start = function() {
+  if(server !== undefined && server !== null) {
+    return server.open().then(() => {
+      console.log("Redis server has started.");
+    });
   }
 
-  end() {
-    if(server !== undefined && server !== null) {
-      return server.close().then(() => {
-        console.log("Redis server has shut down.");
-      });
-    }
+  throw new Error("Redis has not been init check to make sure it has been configured properly.");
+};
 
-    throw new Error("Redis has not been init check to make sure it has been configured properly.");
+RedisServer.prototype.stop = function() {
+  if(server !== undefined && server !== null) {
+    return server.close().then(() => {
+      console.log("Redis server has shut down.");
+    });
   }
-}
+
+  throw new Error("Redis has not been init check to make sure it has been configured properly.");
+};
 
 module.exports = RedisServer;

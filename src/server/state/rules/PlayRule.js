@@ -3,9 +3,8 @@ var Player        = require('../../player/Player');
 function PlayRule() {
 }
 
-PlayRule.prototype.evaluate = function(issuer, playerManager, mediaStarted, fuzzyRange) {
+PlayRule.prototype.evaluate = function(issuer, players, mediaStarted, fuzzyRange) {
   this.log.debug("PlayRule.evaluate");
-	var players = playerManager.getPlayers();
   var issuees = [];
 
   if(issuer.sync === Player.Sync.DESYNCED) {

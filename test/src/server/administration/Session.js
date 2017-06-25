@@ -31,6 +31,7 @@ describe('Session', function() {
       yield session.setSession('lLN7WmCuvZU79zSS');
 
       var sessionData = yield client.getAsync(Session.Enum.ACTIVE);
+      console.log(sessionData);
       should.deepEqual(sessionMock, JSON.parse(sessionData), "Sessions did not match");
 
       var inviteeData = yield client.getAsync(Session.Enum.USERS);

@@ -1,4 +1,5 @@
-var Path       = require('path');
+const Cluster    = require('cluster');
+const Path       = require('path');
 
 var Winston    = require('winston');
 
@@ -8,8 +9,9 @@ var config = null;
 var log = null;
 
 const LOG_LEVEL = "debug";
-const FILE_NAME = "logs.txt";
-const EXCEPTION = "exception.txt";
+const TYPE      = Cluster.isMaster ? "masterProcess" : process.env.processType;
+const FILE_NAME = `${TYPE}_${process.pid}_logs.txt`;
+const EXCEPTION = `${TYPE}_${process.pid}_exception.txt`;
 
 function LogManager() {
 }
@@ -29,7 +31,7 @@ LogManager.prototype.initialize = function(newConfig) {
 
 LogManager.prototype.addFileLogging = function() {
   log.debug('LogManager.addFileLogging', config);
-  var logFactory = new LogFactory();
+  var logFactory = Object.create(LogFactory.prototype);
 
   var fileTransport = logFactory.buildFileTransport(Path.join(config.getLogDir(), FILE_NAME), LOG_LEVEL, 'file-logger', false);
 
