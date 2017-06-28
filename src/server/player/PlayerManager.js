@@ -1,21 +1,33 @@
 const Promise   = require('bluebird');
 const Player    = require('./Player');
 
-var players = new Map();
+var players;
 
 function PlayerManager () {
+};
+
+PlayerManager.prototype.initialize = function() {
+  if(typeof PlayerManager.prototype.lazyInit === 'undefined') {
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.PLAYER);
+
+    PlayerManager.prototype.lazyInit = true;
+  }
+
+  players = new Map();
 };
 
 PlayerManager.prototype.createPlayer = function(id, handle) {
   var newPlayer = new Player(id, handle);
   players.set(id, newPlayer);
-  this.log.info(`Adding player ${id}, total players now: ${players.size}`);
+  log.info(`Adding player ${id}, total players now: ${players.size}`);
 
   return Promise.resolve();
 };
 
 PlayerManager.prototype.getPlayer = function(id, callback) {
-  this.log.silly("PlayerManager.getPlayer", id);
+  log.silly("PlayerManager.getPlayer", id);
   var player = players.get(id);
 
   if(player === null || player === undefined) {
@@ -39,7 +51,7 @@ PlayerManager.prototype.getPlayers = function() {
 };
 
 PlayerManager.prototype.removePlayer = function(id) {
-  this.log.debug("PlayerManager.removePlayer", id);
+  log.debug("PlayerManager.removePlayer", id);
   players.delete(id);
 
   var player = players.get(id);
@@ -52,7 +64,7 @@ PlayerManager.prototype.removePlayer = function(id) {
 };
 
 PlayerManager.prototype.getOtherPlayers = function(id) {
-  this.log.silly("PlayerManager.getOtherPlayers", id);
+  log.silly("PlayerManager.getOtherPlayers", id);
   var temp = [];
   for(var p of players.keys()) {
     if(p != id){
@@ -64,7 +76,7 @@ PlayerManager.prototype.getOtherPlayers = function(id) {
 };
 
 PlayerManager.prototype.getSyncedPlayersState = function() {
-  this.log.silly("PlayerManager.getSyncedPlayersState");
+  log.silly("PlayerManager.getSyncedPlayersState");
   var state = null;
   for(var p of players.keys()) {
     if(players.get(p).sync === Player.Sync.SYNCED) {
@@ -77,7 +89,7 @@ PlayerManager.prototype.getSyncedPlayersState = function() {
 };
 
 PlayerManager.prototype.removePlayersWithId = function(playerArray, id) {
-  this.log.silly("PlayerManager.removePlayersWithId", id);
+  log.silly("PlayerManager.removePlayersWithId", id);
   var temp = [];
   for(var p in playerArray) {
     if(playerArray[p].id != id) {
@@ -89,7 +101,7 @@ PlayerManager.prototype.removePlayersWithId = function(playerArray, id) {
 };
 
 PlayerManager.prototype.getHandles = function() {
-  this.log.silly("PlayerManager.getHandles");
+  log.silly("PlayerManager.getHandles");
   var temp = [];
   for(var p of players.keys()) {
     temp.push([players.get(p).id, players.get(p).handle]);
@@ -99,7 +111,7 @@ PlayerManager.prototype.getHandles = function() {
 };
 
 PlayerManager.prototype.setPlayerHandle = function(id, handle) {
-  this.log.silly("PlayerManager.setPlayerHandle", id);
+  log.silly("PlayerManager.setPlayerHandle", id);
   var handles = [];
 
   for(var p of players.keys()) {

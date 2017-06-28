@@ -18,7 +18,7 @@ SocketLog.prototype.log = Promise.coroutine(function* (msg, meta) {
     time: new Date().toTimeString().split(" ")[0]
   };
 
-  var ids = yield this.session.getAdmin();
+  var ids = yield session.getAdmin();
   if(ids !== null && ids !== undefined) {
     io.sockets.to(ids).emit('chat-log-resp', payload);
   }

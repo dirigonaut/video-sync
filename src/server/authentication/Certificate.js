@@ -5,27 +5,40 @@ const Moment     = require('moment');
 
 const EXPIR = 365;
 
-Moment().format('YYYY MM DD');
+var config, log;
 
 function Certificate() { }
 
+Certificate.prototype.initialize = function() {
+  if(typeof Certificate.prototype.lazyInit === 'undefined') {
+    Moment().format('YYYY MM DD');
+
+    config          = this.factory.createConfig();
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);
+
+    Certificate.prototype.lazyInit = true;
+  }
+};
+
 Certificate.prototype.getCertificates = Promise.coroutine(function* () {
-  this.log.debug("Certificate.prototype.getCertificates");
-  var cert = yield Fs.readFileAsync(this.config.getCertificatePath())
+  log.debug("Certificate.prototype.getCertificates");
+  var cert = yield Fs.readFileAsync(config.getCertificatePath())
   .catch(function(err) {
-    this.log.error(err);
+    log.error(err);
     return undefined;
   }.bind(this));
 
   if(typeof cert === 'undefind' || !cert) {
-    this.log.info("There are no SSL Certificates, signing new ones.");
+    log.info("There are no SSL Certificates, signing new ones.");
     cert = yield generate(getAttributes());
   } else {
-    this.log.info("Loading SSL Certificates.");
+    log.info("Loading SSL Certificates.");
     cert = JSON.parse(cert);
 
     if(Moment().diff(cert.expire) >= -1) {
-      this.log.info("SSL Certificates are expired, signing new ones.");
+      log.info("SSL Certificates are expired, signing new ones.");
 
       cert = yield generate.call(this, getAttributes());
     }
@@ -37,7 +50,7 @@ Certificate.prototype.getCertificates = Promise.coroutine(function* () {
 module.exports = Certificate;
 
 var generate = function(attrs) {
-  this.log.debug("Certificate.prototype._generate");
+  log.debug("Certificate.prototype._generate");
   var pki = Forge.pki;
 
   var keypair = pki.rsa.generateKeyPair(2048);
@@ -92,7 +105,7 @@ var getAttributes = function() {
 };
 
 var save = function (certs) {
-  this.log.debug("Certificate.prototype.save");
+  log.debug("Certificate.prototype.save");
   var certificate = { expire: Moment().add(EXPIR, 'days').valueOf(), pem: certs };
   return Fs.writeFileAsync(config.getCertificatePath(), JSON.stringify(certificate))
   .then(function() {

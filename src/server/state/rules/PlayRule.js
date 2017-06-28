@@ -4,7 +4,7 @@ function PlayRule() {
 }
 
 PlayRule.prototype.evaluate = function(issuer, players, mediaStarted, fuzzyRange) {
-  this.log.debug("PlayRule.evaluate");
+  log.debug("PlayRule.evaluate");
   var issuees = [];
 
   if(issuer.sync === Player.Sync.DESYNCED) {
@@ -21,7 +21,7 @@ PlayRule.prototype.evaluate = function(issuer, players, mediaStarted, fuzzyRange
   }
 
   if(issuees.length > 0) {
-    this.log.debug("PlayRule triggered", issuees);
+    log.debug("PlayRule triggered", issuees);
     return issuees;
   }
 };

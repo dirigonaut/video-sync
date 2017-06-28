@@ -9,8 +9,8 @@ function RedisSocket() { }
 
 RedisSocket.prototype.initialize = Promise.coroutine(function* (socketIO) {
   if(typeof RedisSocket.prototype.lazyInit === 'undefined') {
-    publisher     = Redis.createClient(this.config.getConfig().redis);
-    subscriber    = Redis.createClient(this.config.getConfig().redis);
+    publisher     = Redis.createClient(config.getConfig().redis);
+    subscriber    = Redis.createClient(config.getConfig().redis);
     RedisSocket.prototype.lazyInit = true;
   }
 
@@ -19,12 +19,12 @@ RedisSocket.prototype.initialize = Promise.coroutine(function* (socketIO) {
 });
 
 RedisSocket.prototype.broadcast = function(key, message) {
-  this.log.debug(`RedisSocket.prototype.broadcastToIds`);
+  log.debug(`RedisSocket.prototype.broadcastToIds`);
   publisher.publish(RedisSocket.MessageEnum.BROADCAST, JSON.stringify([key, message]));
 };
 
 RedisSocket.prototype.ping = function(id, key, message) {
-  this.log.debug(`RedisSocket.prototype.ping`);
+  log.debug(`RedisSocket.prototype.ping`);
   publisher.publish(RedisSocket.MessageEnum.PING, JSON.stringify([id, key, message]));
 };
 
@@ -50,19 +50,19 @@ var initialize = Promise.coroutine(function* (subscriber) {
   }.bind(this));
 
   subscriber.on("subscribe", function(channel, count) {
-    this.log.info(`RedisSubscriber subscribed to ${channel}`);
+    log.info(`RedisSubscriber subscribed to ${channel}`);
   }.bind(this));
 
   subscriber.on("connect", function(err) {
-    this.log.debug("RedisSubscriber is connected to redis server");
+    log.debug("RedisSubscriber is connected to redis server");
   }.bind(this));
 
   subscriber.on("reconnecting", function(err) {
-    this.log.debug("RedisSubscriber is connected to redis server");
+    log.debug("RedisSubscriber is connected to redis server");
   }.bind(this));
 
   subscriber.on("error", function(err) {
-    this.log.error(err);
+    log.error(err);
   }.bind(this));
 
   yield subscriber.subscribeAsync(RedisSocket.MessageEnum.BROADCAST);

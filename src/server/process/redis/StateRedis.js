@@ -8,12 +8,12 @@ const PlayerManager     = require('../../player/PlayerManager');
 var adapter, database, playerManager, subscriber, stateEngine;
 
 var lazyInit = Promise.coroutine(function* () {
-  adapter       = yield this.factory.createReflectiveAdapter();
-  database      = yield this.factory.createNeDatabase();
-  stateEngine   = yield this.factory.createStateEngine();
-  playerManager = yield this.factory.createPlayerManager();
+  adapter       = this.factory.createReflectiveAdapter();
+  database      = this.factory.createNeDatabase();
+  stateEngine   = this.factory.createStateEngine();
+  playerManager = this.factory.createPlayerManager();
 
-  subscriber    = Redis.createClient(this.config.getConfig().redis);
+  subscriber    = Redis.createClient(config.getConfig().redis);
 
   console.log("StateEngine inited")
   stateEngine.initialize();
@@ -38,18 +38,18 @@ StateRedis.prototype.initialize = Promise.coroutine(function* () {
 });
 
 StateRedis.prototype.cleanUp = Promise.coroutine(function* () {
-  this.log.debug("ServerRedis.cleanUp");
+  log.debug("ServerRedis.cleanUp");
   if(typeof subscriber !== 'undefined' && subscriber) {
-    this.log.info('sub unscribe');
+    log.info('sub unscribe');
     yield subscriber.unsubscribeAsync("database");
     yield subscriber.unsubscribeAsync("state");
     yield subscriber.unsubscribeAsync("player");
     yield subscriber.unsubscribeAsync("session");
 
-    this.log.info('sub unref');
+    log.info('sub unref');
     subscriber.unref();
 
-    this.log.info('sub unlisten');
+    log.info('sub unlisten');
     subscriber.removeAllListeners("message");
     subscriber.removeAllListeners("subscribe");
     subscriber.removeAllListeners("connect");
@@ -69,23 +69,23 @@ function initialize(subscriber) {
     } else if(channel === "player") {
       yield adapter.callFunction(playerManager, message);
     } else if(channel === "session"){
-      yield adapter.callFunction(this.session, message);
+      yield adapter.callFunction(session, message);
     }
   }.bind(this)));
 
   subscriber.on("subscribe", function(channel, count) {
-    this.log.info(`Subscribed to ${channel}`);
+    log.info(`Subscribed to ${channel}`);
   }.bind(this));
 
   subscriber.on("connect", function(err) {
-    this.log.info("StateRedis is connected to redis server");
+    log.info("StateRedis is connected to redis server");
   }.bind(this));
 
   subscriber.on("reconnecting", function(err) {
-    this.log.info("StateRedis is connected to redis server");
+    log.info("StateRedis is connected to redis server");
   }.bind(this));
 
   subscriber.on("error", function(err) {
-    this.log.error(err);
+    log.error(err);
   }.bind(this));
 }

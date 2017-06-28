@@ -8,16 +8,16 @@ function Cache() { }
 Cache.prototype.initialize = function() {
   if(typeof Cache.prototype.lazyInit === 'undefined') {
     subCallbacks    = {};
-    publisher       = Redis.createClient(this.config.getConfig().redis);
-    client          = Redis.createClient(this.config.getConfig().redis);
+    publisher       = Redis.createClient(config.getConfig().redis);
+    client          = Redis.createClient(config.getConfig().redis);
 
     client.on("message", function(channel, message) {
-      this.log.debug('Subscribers onMessage ', channel);
+      log.debug('Subscribers onMessage ', channel);
       message = JSON.parse(message);
 
       var callbacks = subCallbacks.get(channel);
       if(callbacks) {
-        this.log.debug(`Subscribers returning data for key ${channel} and index ${message.index}`);
+        log.debug(`Subscribers returning data for key ${channel} and index ${message.index}`);
         if(message.data !== null) {
           message.data = new Buffer(new Uint8Array(message.data.data));
         }
@@ -33,12 +33,12 @@ Cache.prototype.initialize = function() {
 
 Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback) {
   var key = `${requestData.path}-${requestData.segment[0]}-${requestData.segment[1]}-${requestData.typeId}`;
-  this.log.debug('Cache.getSegment', key);
+  log.debug('Cache.getSegment', key);
 
   var handleCachedData = function(err, segment) {
     if(err === null) {
       if(segment !== undefined && segment !== null) {
-        this.log.info('Cache has data', key);
+        log.info('Cache has data', key);
         if(segment.name !== undefined && segment.name !== null) {
           if(segment.data !== null) {
             segment.data = new Buffer(new Uint8Array(segment.data.data));
@@ -53,7 +53,7 @@ Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback)
       } else if(subCallbacks.get(key) !== null && subCallbacks.get(key) !== undefined) {
         subscribeToRead(key, callback);
       } else {
-        this.log.info('Cache has no data', key);
+        log.info('Cache has no data', key);
         readFile.call(this, key, requestData);
         subscribeToRead(key, callback);
       }
@@ -66,12 +66,12 @@ Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback)
 module.exports = Cache;
 
 var readFile = Promise.coroutine(function* (key, requestData) {
-  this.log.debug(`Cache.readFile ${key}`);
-  var fileIO = yield this.factory.createFileIO();
+  log.debug(`Cache.readFile ${key}`);
+  var fileIO = this.factory.createFileIO();
 
-  var basePath = yield this.session.getMediaPath();
+  var basePath = yield session.getMediaPath();
   var readConfig = fileIO.createStreamConfig(basePath + requestData.path, function onData(data, index) {
-    this.log.debug('Cache on data', key);
+    log.debug('Cache on data', key);
     var segment = {};
     segment.typeId = requestData.typeId;
     segment.name = key;
@@ -80,9 +80,9 @@ var readFile = Promise.coroutine(function* (key, requestData) {
 
     var handleResponse = function(err, result) {
       if(err) {
-        this.log.error(`Could not insert segment into cache for key: ${key}:${index}`, err);
+        log.error(`Could not insert segment into cache for key: ${key}:${index}`, err);
       } else {
-        this.log.debug(`Publishing segment for key: ${key}:${index}`);
+        log.debug(`Publishing segment for key: ${key}:${index}`);
         publisher.publish(key, JSON.stringify(segment));
       }
     };
@@ -94,7 +94,7 @@ var readFile = Promise.coroutine(function* (key, requestData) {
   readConfig.options = options;
 
   readConfig.onFinish = function onFinish(index) {
-    this.log.debug('Cache finished read: ', key);
+    log.debug('Cache finished read: ', key);
     var segment = {};
     segment.typeId = requestData.typeId;
     segment.name = key;
@@ -103,9 +103,9 @@ var readFile = Promise.coroutine(function* (key, requestData) {
 
     var handleResponse = function(err, result) {
       if(err) {
-        this.log.error(`Could not insert segment into cache for key: ${key}:${index}`, err);
+        log.error(`Could not insert segment into cache for key: ${key}:${index}`, err);
       } else {
-        this.log.debug(`Publishing segment for key: ${key}:${index}`);
+        log.debug(`Publishing segment for key: ${key}:${index}`);
 
         publisher.publish(key, JSON.stringify(segment));
       }
@@ -118,7 +118,7 @@ var readFile = Promise.coroutine(function* (key, requestData) {
 });
 
 var setCacheData = function(key, data, callback) {
-  this.log.debug('setCacheData for key: ', key);
+  log.debug('setCacheData for key: ', key);
   var response = function(err, result) {
     if(err) {
       callback(err);
@@ -131,14 +131,14 @@ var setCacheData = function(key, data, callback) {
 };
 
 var getCacheData = function(key, callback) {
-  this.log.debug('getCacheData for key: ', key);
+  log.debug('getCacheData for key: ', key);
   publisher.get(key, function(err, reply) {
     callback(err, JSON.parse(reply));
   });
 };
 
 var subscribeToRead = function(key, callback) {
-  this.log.debug('subscribeToRead for key: ', key);
+  log.debug('subscribeToRead for key: ', key);
   var callbacks = subCallbacks.get(key);
 
   if(callbacks !== undefined && callbacks !== null) {
@@ -162,7 +162,7 @@ var createUnsubscribeListener = function(key) {
       }
 
       if(lastIndex && lastIndex === countIndex) {
-        this.log.debug(`Unsubscribing key: ${key} lastIndex: ${lastIndex}, countIndex: ${countIndex}`);
+        log.debug(`Unsubscribing key: ${key} lastIndex: ${lastIndex}, countIndex: ${countIndex}`);
         subCallbacks.delete(key);
         client.unsubscribe(key);
       }

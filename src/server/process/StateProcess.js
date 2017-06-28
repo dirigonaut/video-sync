@@ -3,10 +3,10 @@ const Promise   = require('bluebird');
 function StateProcess() { }
 
 StateProcess.prototype.initialize = Promise.coroutine(function* () {
-  var database = yield this.factory.createNeDatabase();
-  database.initialize(this.config);
+  var database = this.factory.createNeDatabase();
+  database.initialize();
 
-  this.stateRedis = yield this.factory.createStateRedis();
+  this.stateRedis = this.factory.createStateRedis();
   this.stateRedis.initialize();
 });
 

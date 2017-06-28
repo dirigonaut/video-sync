@@ -4,9 +4,13 @@ var validator;
 
 function VideoController() { }
 
-VideoController.prototype.initialize = Promise.coroutine(function* (io, socket) {
-  validator = yield this.factory.createValidator();
-  this.cache.initialize();
+VideoController.prototype.initialize = function(io, socket) {
+  if(typeof VideoController.prototype.lazyInit === 'undefined') {
+    validator = this.factory.createValidator();
+    this.cache.initialize();
+
+    VideoController.prototype.lazyInit = true;
+  }
 
   initialize.call(this, io, socket);
 };
@@ -14,12 +18,12 @@ VideoController.prototype.initialize = Promise.coroutine(function* (io, socket) 
 module.exports = VideoController;
 
 function initialize(io, socket) {
-  this.log.info("Attaching VideoController");
+  log.info("Attaching VideoController");
 
   socket.on('video-encode', Promise.coroutine(function* (data) {
-    var isAdmin = yield this.session.isAdmin(socket.id);
+    var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      this.log.debug('video-encode', data);
+      log.debug('video-encode', data);
       var fileIO = this.factory.createFileIO();
       var request = validator.sterilizeVideoInfo(data);
 
@@ -27,7 +31,7 @@ function initialize(io, socket) {
         var webmMetaData = new WebmMetaData();
 
         var saveMetaToMpd = function(meta) {
-          this.log.debug('Save webm metadata', meta);
+          log.debug('Save webm metadata', meta);
           var xmlUtil = new XmlUtil();
           var xmlMeta = xmlUtil.webmMetaToXml(meta);
 
@@ -42,7 +46,7 @@ function initialize(io, socket) {
 
       var encoderManager = new EncoderManager(request);
       encoderManager.on('webm', function(path) {
-        this.log.debug('Generate webm metadata', data);
+        log.debug('Generate webm metadata', data);
         genWebmMeta(path);
       }.bind(this)).on('finished', function(path) {
         socket.emit('video-encoded');
@@ -61,12 +65,12 @@ function initialize(io, socket) {
   }.bind(this)));
 
   socket.on('get-meta-files', Promise.coroutine(function* (requestId) {
-    this.log.debug('get-meta-files', requestId);
+    log.debug('get-meta-files', requestId);
 
-    var basePath = yield this.session.getMediaPath();
+    var basePath = yield session.getMediaPath();
     if(basePath) {
-      var fileIO = yield this.factory.createFileIO();
-      var fileUtils = yield this.factory.createFileSystemUtils();
+      var fileIO = this.factory.createFileIO();
+      var fileUtils = this.factory.createFileSystemUtils();
 
       var readConfig = fileIO.createStreamConfig(basePath, function(files) {
         if(files !== undefined && files !== null) {
@@ -95,13 +99,13 @@ function initialize(io, socket) {
   }.bind(this)));
 
   socket.on('get-segment', Promise.coroutine(function* (data) {
-    this.log.debug('get-segment', data);
+    log.debug('get-segment', data);
     var data = validator.sterilizeVideoInfo(data);
 
-    var basePath = yield this.session.getMediaPath();
+    var basePath = yield session.getMediaPath();
     if(basePath) {
       var handleResponse = function(segment) {
-        this.log.info('Returning segment for request: ', data);
+        log.info('Returning segment for request: ', data);
         socket.emit("segment-chunk", segment);
       };
 
@@ -110,10 +114,10 @@ function initialize(io, socket) {
   }.bind(this)));
 
   socket.on('get-meta-info', Promise.coroutine(function* (data) {
-    this.log.debug('get-meta-info', data);
+    log.debug('get-meta-info', data);
     var cleanData = validator.sterilizeVideoInfo(data);
 
-    var isAdmin = yield this.session.isAdmin(socket.id);
+    var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       var command = new Command(data);
       var ffprobeProcess = new FfprobeProcess();

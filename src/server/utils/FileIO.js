@@ -5,38 +5,38 @@ const Path        = require('path');
 function FileIO() { };
 
 FileIO.prototype.read = function(readConfig) {
-  this.log.debug('FileIO.read', readConfig);
+  log.debug('FileIO.read', readConfig);
   var readStream  = Fs.createReadStream(readConfig.path, readConfig.options);
   var index = 0;
 
   readStream.on('error', function(e) {
-    this.log.error("FileIO.read, Server: Error: " + e);
+    log.error("FileIO.read, Server: Error: " + e);
   });
 
   readStream.on('close', function() {
-    this.log.debug("FileIO.read, Server: Finished reading.");
+    log.debug("FileIO.read, Server: Finished reading.");
     if(readConfig.onFinish) {
       readConfig.onFinish(index);
     }
 	});
 
   readStream.on('data', function(chunk) {
-    this.log.silly("on data", readConfig);
+    log.silly("on data", readConfig);
     readConfig.callback(chunk, index);
     index += 1;
   });
 };
 
 FileIO.prototype.write = function(writeConfig, data) {
-  this.log.debug('FileIO.write', writeConfig);
+  log.debug('FileIO.write', writeConfig);
 	var writeStream = Fs.createWriteStream(writeConfig.path, writeConfig.options);
 
   writeStream.on('error', function(e) {
-		this.log.error("FileIO.write, Server: Error: " + e);
+		log.error("FileIO.write, Server: Error: " + e);
 	}.bind(this));
 
   writeStream.on('finish', function() {
-		this.log.debug("FileIO.write, Server: Finished writing file");
+		log.debug("FileIO.write, Server: Finished writing file");
     if(writeConfig.onFinish) {
       writeConfig.onFinish();
     }
@@ -46,11 +46,11 @@ FileIO.prototype.write = function(writeConfig, data) {
 };
 
 FileIO.prototype.readDir = function(readConfig, extType) {
-  this.log.debug('FileIO.readDir', readConfig);
+  log.debug('FileIO.readDir', readConfig);
 
   Fs.readdir(readConfig.path, function (err, files) {
     if (err) {
-      this.log.error("FileIO.write, Server: Error:", err);
+      log.error("FileIO.write, Server: Error:", err);
     }
 
     var matchingFiles = [];
@@ -69,7 +69,7 @@ FileIO.prototype.readDir = function(readConfig, extType) {
 };
 
 FileIO.prototype.readDirAsync = Promise.coroutine(function* (path, extType) {
-  this.log.debug('FileIO.readDirAsync ' + path + ' ' + extType);
+  log.debug('FileIO.readDirAsync ' + path + ' ' + extType);
   var files = yield Fs.readdirAsync(path);
 
   var matchingFiles = [];
@@ -85,7 +85,7 @@ FileIO.prototype.readDirAsync = Promise.coroutine(function* (path, extType) {
 });
 
 FileIO.prototype.ensureDirExists = function(path, mask, callback) {
-  this.log.debug('FileIO.ensureDirExists', path);
+  log.debug('FileIO.ensureDirExists', path);
 
   Fs.mkdir(path, mask, function(err) {
     var result;
@@ -94,7 +94,7 @@ FileIO.prototype.ensureDirExists = function(path, mask, callback) {
       if (err.code == 'EEXIST') {
         result = true;
       } else {
-        this.log.error(err);
+        log.error(err);
       }
     } else {
       result = true;
@@ -107,7 +107,7 @@ FileIO.prototype.ensureDirExists = function(path, mask, callback) {
 }
 
 FileIO.prototype.ensureDirExistsAsync = Promise.coroutine(function* (path, mask) {
-  this.log.debug('FileIO.ensureDirExistsAsync', path);
+  log.debug('FileIO.ensureDirExistsAsync', path);
 
   yield Fs.mkdirAsync(path, mask)
   .catch(function(err) {
@@ -118,15 +118,15 @@ FileIO.prototype.ensureDirExistsAsync = Promise.coroutine(function* (path, mask)
 });
 
 FileIO.prototype.dirExists = function(path, callback) {
-  this.log.debug('FileIO.dirExists', path);
+  log.debug('FileIO.dirExists', path);
   var isDir = true;
 
   Fs.stat(path, function(err, stats) {
     if (err) {
-      this.log.error('FileIO.dirExists err', err);
+      log.error('FileIO.dirExists err', err);
       isDir = false;
     } else if(!stats.isDirectory()) {
-      this.log.error('FileIO.dirExists is not dir', path);
+      log.error('FileIO.dirExists is not dir', path);
       isDir = false;
     }
 
@@ -137,7 +137,7 @@ FileIO.prototype.dirExists = function(path, callback) {
 }
 
 FileIO.prototype.createStreamConfig = function(path, callback) {
-  this.log.debug('FileIO.streamConfig');
+  log.debug('FileIO.streamConfig');
   
   var streamConfig = {};
   streamConfig.path = path;
@@ -149,7 +149,7 @@ FileIO.prototype.createStreamConfig = function(path, callback) {
 };
 
 FileIO.createStreamConfig = function(path, callback) {
-  this.log.debug('FileIO.streamConfig');
+  log.debug('FileIO.streamConfig');
   var streamConfig = {};
   streamConfig.path = path;
   streamConfig.options = {};

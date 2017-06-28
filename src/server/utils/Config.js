@@ -60,7 +60,7 @@ Config.prototype.getLogDir = function() {
 module.exports = Config;
 
 var setupAppDataDir = Promise.coroutine(function* () {
-  var fileIO = yield this.factory.createFileIO();
+  var fileIO = this.factory.createFileIO();
 
   yield fileIO.ensureDirExistsAsync(APP_DATA, 484);
 
@@ -72,7 +72,7 @@ var setupAppDataDir = Promise.coroutine(function* () {
 
 var ensureAssetExists = Promise.coroutine(function* (name, pattern, extType) {
   var fileExists;
-  var fileIO = yield this.factory.createFileIO();
+  var fileIO = this.factory.createFileIO();
 
   var files = yield fileIO.readDirAsync(APP_DATA, extType);
 

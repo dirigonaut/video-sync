@@ -1,14 +1,19 @@
 const Promise     = require('bluebird');
 const Validator   = require('../authentication/Validator');
 
-var validator, publisher;
+var validator, publisher, session, log;
 
 function DatabaseController() { }
 
-DatabaseController.prototype.initialize = Promise.coroutine(function* (io, socket) {
+DatabaseController.prototype.initialize = function(io, socket) {
   if(typeof DatabaseController.prototype.lazyInit === 'undefined') {
-    validator     = yield this.factory.createValidator();
-    publisher     = yield this.factory.createRedisPublisher();
+    validator     = this.factory.createValidator();
+    publisher     = this.factory.createRedisPublisher();
+    session       = this.factory.createSession();
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.DATABASE);
+
     DatabaseController.prototype.lazyInit = true;
   }
 
@@ -18,12 +23,12 @@ DatabaseController.prototype.initialize = Promise.coroutine(function* (io, socke
 module.exports = DatabaseController;
 
 function initialize(io, socket) {
-  this.log.debug("Attaching DatabaseController");
+  log.debug("Attaching DatabaseController");
 
   //Create
   socket.on('db-create-smtp', Promise.coroutine(function* (data) {
-    this.log.debug('db-create-smtp');
-    var isAdmin = yield this.session.isAdmin(socket.id);
+    log.debug('db-create-smtp');
+    var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       var emitResults = function() {
         socket.emit("db-refresh");
@@ -35,8 +40,8 @@ function initialize(io, socket) {
   }));
 
   socket.on('db-create-session', Promise.coroutine(function* (data) {
-    this.log.debug('db-create-session');
-    var isAdmin = yield this.session.isAdmin(socket.id);
+    log.debug('db-create-session');
+    var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       var emitResults = function() {
         socket.emit("db-refresh");
@@ -49,8 +54,8 @@ function initialize(io, socket) {
 
   //Read
   socket.on('db-read-smpts', Promise.coroutine(function* () {
-    this.log.debug('db-read-smpts');
-    var isAdmin = yield this.session.isAdmin(socket.id);
+    log.debug('db-read-smpts');
+    var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       var emitResults = function(smtp) {
         //Remove everything but the address
@@ -62,8 +67,8 @@ function initialize(io, socket) {
   }));
 
   socket.on('db-read-sessions', Promise.coroutine(function* () {
-    this.log.debug('db-read-sessions');
-    var isAdmin = yield this.session.isAdmin(socket.id);
+    log.debug('db-read-sessions');
+    var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       var emitResults = function(sessions) {
         socket.emit("db-sessions", sessions);
@@ -75,8 +80,8 @@ function initialize(io, socket) {
 
   //Update
   socket.on('db-update-smtp', Promise.coroutine(function* (data) {
-    this.log.debug('db-update-smtp');
-    var isAdmin = yield this.session.isAdmin(socket.id);
+    log.debug('db-update-smtp');
+    var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       var emitResults = function() {
         socket.emit("db-refresh");
@@ -88,8 +93,8 @@ function initialize(io, socket) {
   }));
 
   socket.on('db-update-session', Promise.coroutine(function* (data) {
-    this.log.debug('db-update-session');
-    var isAdmin = yield this.session.isAdmin(socket.id);
+    log.debug('db-update-session');
+    var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       var emitResults = function(docs) {
         socket.emit("db-refresh");
@@ -102,8 +107,8 @@ function initialize(io, socket) {
 
   //Delete
   socket.on('db-delete-smtp', Promise.coroutine(function* (data) {
-    this.log.debug('db-delete-smtp');
-    var isAdmin = yield this.session.isAdmin(socket.id);
+    log.debug('db-delete-smtp');
+    var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       var emitResults = function(deleted){
         if(deleted > 0){
@@ -117,8 +122,8 @@ function initialize(io, socket) {
   }));
 
   socket.on('db-delete-session', Promise.coroutine(function* (data) {
-    this.log.debug('db-delete-session');
-    var isAdmin = yield this.session.isAdmin(socket.id);
+    log.debug('db-delete-session');
+    var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       var emitResults = function(deleted){
         if(deleted > 0){

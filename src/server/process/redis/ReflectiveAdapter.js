@@ -10,7 +10,7 @@ function ReflectiveAdapter() { }
 
 ReflectiveAdapter.prototype.initialize = function() {
   if(typeof ReflectiveAdapter.prototype.lazyInit === 'undefined') {
-    client = Redis.createClient(this.config.getConfig().redis);
+    client = Redis.createClient(config.getConfig().redis);
     ReflectiveAdapter.prototype.lazyInit = true;
   }
 };

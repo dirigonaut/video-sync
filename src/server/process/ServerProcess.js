@@ -10,16 +10,18 @@ var app, io, server, serverRedis;
 function ServerProcess() { }
 
 ServerProcess.prototype.initialize = Promise.coroutine(function* () {
-  this.log.info(`Trying to start ServerProcess on port ${this.config.getConfig().port} with process ${process.pid}`);
-  serverRedis   = yield this.factory.createServerRedis();
+  var config = this.factory.createConfig();
 
-  var publisher = yield this.factory.createRedisPublisher();
+  log.info(`Trying to start ServerProcess on port ${config.getConfig().port} with process ${process.pid}`);
+  serverRedis   = this.factory.createServerRedis();
+
+  var publisher = this.factory.createRedisPublisher();
   publisher.initialize();
 
-  var certificate = yield this.factory.createCertificate();
+  var certificate = this.factory.createCertificate();
   var pem = yield certificate.getCertificates();
 
-  this.log.debug(`Certificates found initializing ${process.pid} ServerProcess`);
+  log.debug(`Certificates found initializing ${process.pid} ServerProcess`);
   var options = {
     key: pem.privateKey,
     cert: pem.certificate,
@@ -30,19 +32,19 @@ ServerProcess.prototype.initialize = Promise.coroutine(function* () {
   server = Https.createServer(options, app);
   io = SocketIO.listen(server);
 
-  var redisSocket = yield this.factory.createRedisSocket();
+  var redisSocket = this.factory.createRedisSocket();
   yield redisSocket.initialize(io);
 
-  app.use(Express.static(this.config.getConfig().static));
+  app.use(Express.static(config.getConfig().static));
   server.listen(0);
 
-  var socketLog = yield this.factory.createSocketLog();
+  var socketLog = this.factory.createSocketLog();
   socketLog.setSocketIO(io);
 
-  var authController = yield this.factory.createAuthenticationController();
+  var authController = this.factory.createAuthenticationController();
   authController.initialize(io);
 
-  this.log.info(`ServerProcess ${process.pid} ready to forward.`);
+  log.info(`ServerProcess ${process.pid} ready to forward.`);
 });
 
 ServerProcess.prototype.getServer = function() {
