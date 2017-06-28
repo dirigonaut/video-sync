@@ -1,18 +1,23 @@
 const Promise       = require('bluebird');
 
-var publisher, redisSocket, smtp, userAdmin, validator, authenticator, socketLog
+var publisher, redisSocket, smtp, userAdmin, validator, authenticator, socketLog, session;
 
 function AuthenticationController() { }
 
 AuthenticationController.prototype.initialize = function(io) {
   if(typeof AuthenticationController.prototype.lazyInit === 'undefined') {
-    publisher       = yield this.factory.createRedisPublisher();
-    redisSocket     = yield this.factory.createRedisSocket()
-    smtp            = yield this.factory.createSmtp();
-    userAdmin       = yield this.factory.createUserAdministration();
-    validator		    = yield this.factory.createValidator();
-    authenticator   = yield this.factory.createAuthenticator();
-    socketLog       = yield this.factory.createSocketLog();
+    publisher       = this.factory.createRedisPublisher();
+    redisSocket     = this.factory.createRedisSocket()
+    smtp            = this.factory.createSmtp();
+    userAdmin       = this.factory.createUserAdministration();
+    validator		    = this.factory.createValidator();
+    authenticator   = this.factory.createAuthenticator();
+    socketLog       = this.factory.createSocketLog();
+    session         = this.factory.createSession();
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);
+
     AuthenticationController.prototype.lazyInit = true;
   }
 
@@ -23,15 +28,15 @@ module.exports = AuthenticationController;
 function initialize(io) {
   io.on('connection', Promise.coroutine(function* (socket) {
     console.log(socket.handshake.address.toString());
-    this.log.info("socket has connected: " + socket.id + " ip: " + socket.handshake.address);
+    log.info("socket has connected: " + socket.id + " ip: " + socket.handshake.address);
     socket.logonAttempts = 0;
 
     yield isAdministrator.call(this, socket, io);
 
     socket.on('auth-get-token', Promise.coroutine(function* (data) {
-      this.log.debug('auth-get-token');
+      log.debug('auth-get-token');
       var requestSmtp = Promise.coroutine(function* (token) {
-        var activeSession = yield this.session.getSession();
+        var activeSession = yield session.getSession();
 
         var sendInvitations = function(hostAddress) {
           var mailOptions = smtp.createMailOptions(activeSession.smtp, token.address, "Video-Sync Token", "Session token: " + token.pass, "");
@@ -48,7 +53,7 @@ function initialize(io) {
     }.bind(this)));
 
     socket.on('auth-validate-token', Promise.coroutine(function* (data) {
-      this.log.debug('auth-validate-token');
+      log.debug('auth-validate-token');
       var cleanData = validator.sterilizeUser(data);
 
       var loginAttempt = Promise.coroutine(function* (authorized) {
@@ -67,14 +72,14 @@ function initialize(io) {
     }.bind(this)));
 
     socket.on('disconnect', Promise.coroutine(function* () {
-      this.log.info('disconnect', socket.id);
-      var chatEngine = yield this.factory.createChatEngine();
+      log.info('disconnect', socket.id);
+      var chatEngine = this.factory.createChatEngine();
       chatEngine.initialize();
       chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has left the session.`));
 
-      var isAdmin = yield this.session.isAdmin(socket.id);
+      var isAdmin = yield session.isAdmin(socket.id);
       if(isAdmin) {
-        this.session.removeAdmin(socket.id);
+        session.removeAdmin(socket.id);
       }
 
       yield publisher.publishAsync(Publisher.Enum.PLAYER, ['removePlayer', [socket.id]]);
@@ -82,14 +87,14 @@ function initialize(io) {
     }.bind(this)));
 
     socket.on('error', function (data) {
-      this.log.error("error", data);
+      log.error("error", data);
     }.bind(this));
 
     setTimeout(Promise.coroutine(function* () {
       //If the socket didn't authenticate, disconnect it
       if (!socket.auth) {
-        this.log.debug(socket.auth);
-        this.log.info("timing out socket", socket.id);
+        log.debug(socket.auth);
+        log.info("timing out socket", socket.id);
         yield userAdmin.disconnectSocket(socket);
       }
     }.bind(this)), 300000);
@@ -103,19 +108,19 @@ var userAuthorized = Promise.coroutine(function* (socket, io, handle) {
 
   yield publisher.publishAsync(Publisher.Enum.PLAYER, ['createPlayer', [socket.id, handle]]);
 
-  var videoController = yield this.factory.createVideoController();
-  var stateController = yield this.factory.createStateController();
-  var chatController = yield this.factory.createChatController();
+  var videoController = this.factory.createVideoController();
+  var stateController = this.factory.createStateController();
+  var chatController = this.factory.createChatController();
 
   videoController.initialize(io, socket);
   stateController.initialize(io, socket);
   chatController.initialize(io, socket);
 
-  var chatEngine = yield this.factory.createChatEngine();
+  var chatEngine = this.factory.createChatEngine();
   chatEngine.initialize();
 
   socket.emit('authenticated', Promise.coroutine(function* () {
-    var mediaPath = yield this.session.getMediaPath();
+    var mediaPath = yield session.getMediaPath();
     if(mediaPath && mediaPath.length > 0) {
       socket.emit('media-ready');
     }
@@ -125,22 +130,22 @@ var userAuthorized = Promise.coroutine(function* (socket, io, handle) {
     chatEngine.broadcast(ChatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has joined the session.`));
   }.bind(this)));
 
-  this.log.info("socket has been authenticated.", socket.id);
+  log.info("socket has been authenticated.", socket.id);
 });
 
 var isAdministrator = Promise.coroutine(function* (socket, io) {
   socket.auth = false;
 
-  var admin = yield this.session.getAdmin();
-  this.log.info(`Admin is ${admin} new socket is ${socket.id}`);
+  var admin = yield session.getAdmin();
+  log.info(`Admin is ${admin} new socket is ${socket.id}`);
   if(socket.handshake.address.includes("127.0.0.1")) {
-    var adminController = yield this.factory.createAdministrationController();
-    var databaseContoller = yield this.factory.createDatabaseController();
+    var adminController = this.factory.createAdministrationController();
+    var databaseContoller = this.factory.createDatabaseController();
 
     adminController.initialize(io, socket);
     databaseContoller.initialize(io, socket);
 
-    yield this.session.addAdmin(socket.id);
+    yield session.addAdmin(socket.id);
     userAuthorized.call(this, socket, io, 'admin');
   }
 });

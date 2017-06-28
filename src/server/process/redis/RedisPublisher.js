@@ -17,11 +17,11 @@ RedisPublisher.prototype.initialize = Promise.coroutine(function* () {
   yield cleanUp.call(this);
 
   requestMap    = new Map();
-  redisSocket   = yield this.factory.createRedisSocket();
+  redisSocket   = this.factory.createRedisSocket();
   asyncEmitter  = new Events();
 
-  publisher     = Redis.createClient(this.config.getConfig().redis);
-  subscriber    = Redis.createClient(this.config.getConfig().redis);
+  publisher     = Redis.createClient(config.getConfig().redis);
+  subscriber    = Redis.createClient(config.getConfig().redis);
 
   initialize.call(this, publisher, subscriber);
 
@@ -72,15 +72,15 @@ module.exports = RedisPublisher;
 
 var initialize = Promise.coroutine(function* (publisher, subscriber) {
   publisher.on("connect", function(err) {
-    this.log.debug("RedisPublisher is connected to redis server");
+    log.debug("RedisPublisher is connected to redis server");
   }.bind(this));
 
   publisher.on("reconnecting", function(err) {
-    this.log.debug("RedisPublisher is connected to redis server");
+    log.debug("RedisPublisher is connected to redis server");
   }.bind(this));
 
   publisher.on("error", function(err) {
-    this.log.error(err);
+    log.error(err);
   }.bind(this));
 
   subscriber.on("message", Promise.coroutine(function* (channel, message) {
@@ -120,19 +120,19 @@ var initialize = Promise.coroutine(function* (publisher, subscriber) {
   }.bind(this)));
 
   subscriber.on("subscribe", function(channel, count) {
-    this.log.info(`RedisSubscriber subscribed to ${channel}`);
+    log.info(`RedisSubscriber subscribed to ${channel}`);
   }.bind(this));
 
   subscriber.on("connect", function(err) {
-    this.log.debug("RedisSubscriber is connected to redis server");
+    log.debug("RedisSubscriber is connected to redis server");
   }.bind(this));
 
   subscriber.on("reconnecting", function(err) {
-    this.log.debug("RedisSubscriber is connected to redis server");
+    log.debug("RedisSubscriber is connected to redis server");
   }.bind(this));
 
   subscriber.on("error", function(err) {
-    this.log.error(err);
+    log.error(err);
   }.bind(this));
 
   yield subscriber.subscribeAsync("stateRedisResponse");
@@ -152,7 +152,7 @@ var getRedisData = function(key, callback) {
 };
 
 var cleanUp = Promise.coroutine(function* () {
-  this.log.debug("RedisPublisher._cleanUp");
+  log.debug("RedisPublisher._cleanUp");
   if(typeof subscriber !== 'undefined' && subscriber) {
     yield subscriber.unsubscribeAsync("stateRedisResponse");
     yield subscriber.unsubscribeAsync("stateRedisCommand");

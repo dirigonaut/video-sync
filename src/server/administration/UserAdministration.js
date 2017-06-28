@@ -1,25 +1,31 @@
 const Promise     = require('bluebird');
 
-var publisher, smtp;
+var publisher, smtp, session, config, log;
 
 function UserAdministration() { }
 
-UserAdministration.prototype.initialize = Promise.coroutine(function* () {
+UserAdministration.prototype.initialize = function () {
   if(typeof UserAdministration.prototype.lazyInit === 'undefined') {
-    publisher = yield this.factory.createRedisPublisher();
-    smtp      = yield this.factory.createSmtp();
+    config          = this.factory.createConfig();
+    publisher       = this.factory.createRedisPublisher();
+    smtp            = this.factory.createSmtp();
+    session         = this.factory.createSession();
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.ADMINISTRATION);
+
     UserAdministration.prototype.lazyInit = true;
   }
-});
+};
 
 UserAdministration.prototype.downgradeUser = Promise.coroutine(function* (user) {
   log.debug("UserAdministration.downgradeUser");
-  yield publisher.publishAsync(Publisher.Enum.PLAYER, ['setAuth', [user, Player.Auth.RESTRICTED]]);
+  yield publisher.publishAsync(publisher.Enum.PLAYER, ['setAuth', [user, Player.Auth.RESTRICTED]]);
 });
 
 UserAdministration.prototype.upgradeUser = Promise.coroutine(function*(user) {
   log.debug("UserAdministration.upgradeUser");
-  yield publisher.publishAsync(Publisher.Enum.PLAYER, ['setAuth', [user, Player.Auth.DEFAULT]]);
+  yield publisher.publishAsync(publisher.Enum.PLAYER, ['setAuth', [user, Player.Auth.DEFAULT]]);
 });
 
 UserAdministration.prototype.kickUser = Promise.coroutine(function* (user, callback) {
@@ -27,7 +33,7 @@ UserAdministration.prototype.kickUser = Promise.coroutine(function* (user, callb
   var isAdmin = yield session.isAdmin(user);
   if(!isAdmin) {
     yield session.removeInvitee(user);
-    var player = yield publisher.publish(Publisher.Enum.PLAYER, ['getPlayer', [user]]);
+    var player = yield publisher.publish(publisher.Enum.PLAYER, ['getPlayer', [user]]);
 
     if(player !== null && player !== undefined) {
       var socket = player.socket;

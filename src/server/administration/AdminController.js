@@ -1,29 +1,34 @@
 const Promise         = require('bluebird');
 
-var userAdmin, validator, commandEngine, chatEngine, redisSocket, publisher;
+var userAdmin, validator, commandEngine, chatEngine, redisSocket, publisher, session, log;
 
 function AdminController() { }
 
-AdminController.prototype.initialize = Promise.coroutine(function* (io, socket) {
+AdminController.prototype.initialize = function (io, socket) {
   if(typeof AdminController.prototype.lazyInit === 'undefined') {
-    userAdmin       = yield this.factory.createUserAdministration();
-    validator       = yield this.factory.createValidator();
-    commandEngine   = yield this.factory.createCommandEngine();
-    chatEngine      = yield this.factory.createChatEngine();
-    redisSocket     = yield this.factory.createRedisSocket();
-    publisher       = yield this.factory.createRedisPublisher();
+    userAdmin       = this.factory.createUserAdministration();
+    validator       = this.factory.createValidator();
+    commandEngine   = this.factory.createCommandEngine();
+    chatEngine      = this.factory.createChatEngine();
+    redisSocket     = this.factory.createRedisSocket();
+    publisher       = this.factory.createRedisPublisher();
+    session         = this.factory.createSession();
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.ADMINISTRATION);
+
     AdminController.prototype.lazyInit = true;
   }
 
   initialize.call(this, io, socket);
-});
+};
 
 function initialize(io, socket) {
   log.info("Attaching AdminController");
 
   socket.on('admin-smtp-invite', Promise.coroutine(function* () {
     log.debug("admin-smtp-invite");
-    var isAdmin = yield this.session.isAdmin(socket.id);
+    var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       userAdmin.inviteUsers();
     }
@@ -33,20 +38,20 @@ function initialize(io, socket) {
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       log.debug('admin-set-media');
-      var fileIO = yield this.factory.createFileIO();
+      var fileIO = this.factory.createFileIO();
 
       var setMedia = Promise.coroutine(function* () {
-        var fileUtils = yield this.factory.createFileSystemUtils();
+        var fileUtils = yield factory.createFileSystemUtils();
         data = fileUtils.ensureEOL(data);
 
         yield session.setMediaPath(data);
-        yield publisher.publishAsync(Publisher.Enum.PLAYER, ['initPlayers', []]);
+        yield publisher.publishAsync(publisher.Enum.PLAYER, ['initPlayers', []]);
 
-        var playerIds = yield publisher.publishAsync(Publisher.Enum.PLAYER, ['getPlayerIds', []]);
+        var playerIds = yield publisher.publishAsync(publisher.Enum.PLAYER, ['getPlayerIds', []]);
         if(playerIds) {
           log.debug('media-ready');
           var message = chatEngine.buildMessage(socket.id, "Video has been initialized.");
-          chatEngine.broadcast(ChatEngine.Enum.EVENT, message);
+          chatEngine.broadcast(chatEngine.Enum.EVENT, message);
           redisSocket.broadcast('media-ready');
         };
       }.bind(this));
@@ -64,47 +69,37 @@ function initialize(io, socket) {
   }.bind(this)));
 
   socket.on('chat-command', Promise.coroutine(function* (data) {
-    var isAdmin = yield session.isAdmin(socket.id);
-    if(isAdmin) {
-      log.debug('admin-chat-command');
+    log.debug('chat-command', data);
+    var player = yield publisher.publishAsync(Publisher.Enum.PLAYER, ['getPlayer', [socket.id]]);
 
-      var chatResponse = function(event, text) {
-        var message = chatEngine.buildMessage(socket.id, text);
+    if(player) {
+      var command = commandEngine.processAdminCommand(player, data);
 
-        if(event === ChatEngine.Enum.PING) {
-          log.silly('chat-command-response', data);
-          chatEngine.ping(event, message);
-        } else {
-          log.silly('chat-command-response', data);
-          chatEngine.broadcast(event, message);
-        }
-      }.bind(this);
+      if(command && command.length > 0) {
+        if(command[0] === CommandEngine.RespEnum.COMMAND) {
+          let params = command[1];
 
-      var stateResponse = function(command, chat) {
-        log.debug(`admin-chat-command emitting event`);
-        var onState = function(commands) {
-          for(var i in commands) {
-            redisSocket.ping.apply(null, commands[i]);
+          log.debug(`chat-command emitting event`);
+          var commands = yield publisher.publishAsync.apply(null, params[0]);
+          if(commands) {
+            for(var i in commands) {
+              redisSocket.ping.apply(null, commands[i]);
+            }
+
+            chatResponse.apply(null, params[1]);
           }
+        } else if(command[0] === CommandEngine.RespEnum.CHAT) {
+          let params = command[1];
+          var message = chatEngine.buildMessage(socket.id, params[1]);
 
-          chatResponse.apply(null, chat);
-        };
-
-        command.push(onState);
-        publisher.publish.apply(null, command);
-      }.bind(this);
-
-      var handleResponse = function(key, param) {
-        if(key === CommandEngine.RespEnum.COMMAND) {
-          stateResponse.apply(null, param);
-        } else if(key === CommandEngine.RespEnum.CHAT){
-          chatResponse.apply(null, param);
+          if(params[0] === ChatEngine.Enum.PING) {
+            log.silly('chat-command-response', data);
+            chatEngine.ping(params[0], message);
+          } else {
+            log.silly('chat-command-response', data);
+            chatEngine.broadcast(params[0], message);
+          }
         }
-      }.bind(this);
-
-      var admin = yield publisher.publishAsync(Publisher.Enum.PLAYER, ['getPlayer', [socket.id]]);
-      if(admin) {
-        commandEngine.processAdminCommand(admin, data, handleResponse);
       }
     }
   }.bind(this)));

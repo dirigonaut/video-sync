@@ -18,7 +18,7 @@ process.on('uncaughtException', function (err) {
 class MasterProcess { }
 
 MasterProcess.prototype.start = Promise.coroutine(function* () {
-  this.logManager.initialize(this.config);
+  this.logManager.initialize(config);
   this.logManager.addFileLogging();
 
   log = this.logManager.getLog(this.logManager.LogEnum.GENERAL);
@@ -43,7 +43,7 @@ var startMaster = Promise.coroutine(function* () {
   var numCPUs = require('os').cpus().length - 1;
   var workerIndex = 0;
 
-  proxy = yield this.factory.createProxy();
+  proxy = this.factory.createProxy();
   proxy.on('server-started', function(worker, index) {
     log.info(`server-started at index: ${index} with pid: ${worker.process.pid}`);
     worker.on('message', function(message) {
@@ -60,7 +60,7 @@ var startMaster = Promise.coroutine(function* () {
     });
   });
 
-  redisServer = yield this.factory.createRedisServer();
+  redisServer = this.factory.createRedisServer();
   redisServer.initialize();
   yield redisServer.start();
 
@@ -80,7 +80,7 @@ var startMaster = Promise.coroutine(function* () {
 });
 
 var startState = Promise.coroutine(function* () {
-  stateProcess = yield this.factory.createStateProcess();
+  stateProcess = this.factory.createStateProcess();
   stateProcess.initialize();
 
   log.info(`State Process: ${process.pid} started`);
@@ -89,8 +89,8 @@ var startState = Promise.coroutine(function* () {
 
 var startServer = Promise.coroutine(function* () {
   log.info(`Launching server Process: ${process.pid}`);
-  serverProcess = yield this.factory.createServerProcess();
-  proxy = yield this.factory.createProxy();
+  serverProcess = this.factory.createServerProcess();
+  proxy = this.factory.createProxy();
 
   yield serverProcess.initialize();
 

@@ -4,7 +4,7 @@ function SyncingRule() {
 }
 
 SyncingRule.prototype.evaluate = function(issuer, others) {
-  this.log.info("SyncingRule.evaluate", issuer);
+  log.info("SyncingRule.evaluate", issuer);
   if(issuer.sync === Player.Sync.SYNCING) {
     var leader = null;
 
@@ -17,10 +17,10 @@ SyncingRule.prototype.evaluate = function(issuer, others) {
     }
 
     if(leader) {
-      this.log.info("SyncingRule triggered syncing to user", leader);
+      log.info("SyncingRule triggered syncing to user", leader);
       return leader;
     } else {
-      this.log.info("SyncingRule triggered as there is no leader syncing to user", issuer);
+      log.info("SyncingRule triggered as there is no leader syncing to user", issuer);
       return issuer;
     }
   }

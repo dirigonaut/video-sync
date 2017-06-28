@@ -1,21 +1,28 @@
 const Promise       = require('bluebird');
 const Player        = require('../player/Player');
 
-var accuracy, interval, log;
+var accuracy, interval, session, log;
 
 function StateEngine() { };
 
 StateEngine.prototype.initialize = function() {
-  accuracy  = 2;
-  log       = this.logManager.getLog(this.logManager.LogEnum.STATE);
-  interval  = setInterval(Promise.coroutine(function* () {
-    resumeLogic.call(this, yield this.playerManager.getPlayers());
-  }.bind(this)), 500);
+  if(typeof StateEngine.prototype.lazyInit === 'undefined') {
+    session         = this.factory.createSession();
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.STATE);
+
+    accuracy  = 2;
+    interval  = setInterval(Promise.coroutine(function* () {
+      resumeLogic.call(this, yield this.playerManager.getPlayers());
+    }.bind(this)), 500);
+
+    StateEngine.prototype.lazyInit = true;
+  }
 };
 
 StateEngine.prototype.initPlayer = Promise.coroutine(function* (id) {
   log.debug('StateEngine.init');
-  var basePath = yield this.session.getMediaPath();
+  var basePath = yield session.getMediaPath();
   if(basePath && basePath.length > 0) {
     var player = yield this.playerManager.getPlayer(id);
 
@@ -28,10 +35,10 @@ StateEngine.prototype.initPlayer = Promise.coroutine(function* (id) {
 
 StateEngine.prototype.play = Promise.coroutine(function* (id) {
   log.debug(`StateEngine.play ${id}`);
-  var basePath = yield this.session.getMediaPath();
+  var basePath = yield session.getMediaPath();
 
   if(basePath && basePath.length > 0) {
-    var mediaStarted = yield this.session.getMediaStarted();
+    var mediaStarted = yield session.getMediaStarted();
     var player = yield this.playerManager.getPlayer(id);
 
     if(player) {
@@ -41,7 +48,7 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
         commands.push([player.id, 'state-play']);
         return new Promise.resolve(commands);
       } else {
-        var playRule = yield this.factory.createPlayRule();
+        var playRule = this.factory.createPlayRule();
         var players = playRule.evaluate(player, yield this.playerManager.getPlayers(), mediaStarted, accuracy);
 
         var commands = [];
@@ -58,7 +65,7 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
 
         if(commands.length > 0) {
           if(!mediaStarted) {
-            yield this.session.setMediaStarted(!mediaStarted);
+            yield session.setMediaStarted(!mediaStarted);
           }
 
           return new Promise.resolve(commands);
@@ -70,7 +77,7 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
 
 StateEngine.prototype.pause = Promise.coroutine(function* (id) {
   log.debug(`StateEngine.pause ${id}`);
-  var basePath = yield this.session.getMediaPath();
+  var basePath = yield session.getMediaPath();
 
   if(basePath && basePath.length > 0) {
     var issuer = yield this.playerManager.getPlayer(id);
@@ -102,8 +109,8 @@ StateEngine.prototype.pause = Promise.coroutine(function* (id) {
 
 StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
   log.debug('StateEngine.seek');
-  var basePath = yield this.session.getMediaPath();
-  var mediaStarted = yield this.session.getMediaStarted();
+  var basePath = yield session.getMediaPath();
+  var mediaStarted = yield session.getMediaStarted();
 
   if(basePath && basePath.length > 0) {
     var issuer = yield this.playerManager.getPlayer(id);
@@ -144,7 +151,7 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
 
 StateEngine.prototype.pauseSync = Promise.coroutine(function* (id) {
   log.debug(`StateEngine.pauseSync ${id}`);
-  var basePath = yield this.session.getMediaPath();
+  var basePath = yield session.getMediaPath();
 
   if(basePath && basePath.length > 0) {
     var player = yield this.playerManager.getPlayer(id);
@@ -175,7 +182,7 @@ StateEngine.prototype.pauseSync = Promise.coroutine(function* (id) {
 
 StateEngine.prototype.changeSyncState = Promise.coroutine(function* (id, syncState) {
   log.debug(`StateEngine.changeSyncState for ${id}, to ${syncState}`);
-  var basePath = yield this.session.getMediaPath();
+  var basePath = yield session.getMediaPath();
 
   if(basePath && basePath.length > 0) {
     var player = yield this.playerManager.getPlayer(id);
@@ -194,7 +201,7 @@ StateEngine.prototype.changeSyncState = Promise.coroutine(function* (id, syncSta
 
 StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
   log.silly(`StateEngine.syncingPing ${id}, ${data}`);
-  var basePath = yield this.session.getMediaPath();
+  var basePath = yield session.getMediaPath();
 
   if(basePath && basePath.length > 0) {
     var players = yield this.playerManager.getPlayers();
@@ -206,10 +213,10 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
       }
 
       if(players.size > 1) {
-        var isMediaStarted = yield this.session.getMediaStarted();
+        var isMediaStarted = yield session.getMediaStarted();
 
         if(player.sync === Player.Sync.SYNCING && isMediaStarted) {
-          var syncingRule = yield this.factory.createSyncingRule();
+          var syncingRule = this.factory.createSyncingRule();
           var leader = syncingRule.evaluate(player, yield this.playerManager.getOtherPlayers(player.id));
 
           if(leader) {
@@ -228,7 +235,7 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
             return new Promise.resolve(command);
           }
         } else if(player.sync === Player.Sync.SYNCED) {
-          var syncRule = yield this.factory.createSyncRule();
+          var syncRule = this.factory.createSyncRule();
           var triggered = syncRule.evaluate(player, yield this.playerManager.getPlayers(), accuracy);
 
           if(triggered) {
@@ -291,7 +298,7 @@ module.exports = StateEngine;
 var resumeLogic = Promise.coroutine(function* (players) {
   for(let waitingPlayer of players) {
     if(waitingPlayer[1].sync === Player.Sync.SYNCWAIT) {
-      var resumeRule = yield this.factory.createResumeRule();
+      var resumeRule = this.factory.createResumeRule();
       var triggered = resumeRule.evaluate(waitingPlayer[1], yield this.playerManager.getOtherPlayers(waitingPlayer.id), accuracy/4);
 
       if(triggered) {

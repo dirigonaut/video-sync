@@ -9,8 +9,10 @@ function NeDatabase(){
 
 NeDatabase.prototype.initialize = function() {
 	if(!db) {
-		this.log.info(`Loading db from path ${Path.join(this.config.getAppDataDir(), 'database_inst')}`);
-		db = new Datastore({ filename: Path.join(this.config.getAppDataDir(), 'database_inst'), autoload: true });
+		var config = this.factory.createConfig();
+		
+		log.info(`Loading db from path ${Path.join(config.getAppDataDir(), 'database_inst')}`);
+		db = new Datastore({ filename: Path.join(config.getAppDataDir(), 'database_inst'), autoload: true });
 		db = Promise.promisifyAll(db);
 	}
 };
@@ -87,21 +89,21 @@ NeDatabase.prototype.deleteCerts = function(date){
 module.exports = NeDatabase;
 
 function createJson(json) {
-	this.log.info("createJson", json);
+	log.info("createJson", json);
 	return db.insertAsync(json);
 };
 
 function readJson(query) {
-	this.log.info("readJson", query);
+	log.info("readJson", query);
 	return db.findAsync(query);
 };
 
 function updateJson(query, json) {
-	this.log.info("updateJson", query);
+	log.info("updateJson", query);
 	return db.updateAsync(query, json);
 };
 
 function deleteJson(query, options) {
-	this.log.info("removeJson", query);
+	log.info("removeJson", query);
 	return db.removeAsync(query, options);
 };
