@@ -144,7 +144,7 @@ var createUnsubscribeListener = function(key) {
 
   var unsubscribe = function(message) {
     if(message) {
-      if(message.data === null) {
+      if(!message.data) {
         lastIndex = message.index;
       }
 

@@ -65,7 +65,7 @@ FileIO.prototype.readDir = function(readConfig, extType) {
     }
 
     var matchingFiles = [];
-    if(extType !== undefined && extType !== null) {
+    if(extType) {
       for(var x = 0; x < files.length; ++x) {
         if(Path.extname(files[x]).includes(extType)) {
           matchingFiles.push(files[x]);

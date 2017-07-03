@@ -1,4 +1,4 @@
-var Redis = require('redis-server');
+const Redis = require('redis-server');
 
 var server, config, log;
 
@@ -24,14 +24,14 @@ RedisServer.prototype.initialize = function(force) {
       options.conf = config.getRedisConfigPath();
     }
 
-    if(options !== undefined && options !== null) {
+    if(options) {
       server = new Redis(options);
     }
   }
 };
 
 RedisServer.prototype.start = function() {
-  if(server !== undefined && server !== null) {
+  if(server) {
     return server.open().then(() => {
       log.info("Redis server has started.");
     });
@@ -41,7 +41,7 @@ RedisServer.prototype.start = function() {
 };
 
 RedisServer.prototype.stop = function() {
-  if(server !== undefined && server !== null) {
+  if(server) {
     return server.close().then(() => {
       log.info("Redis server has shut down.");
     });

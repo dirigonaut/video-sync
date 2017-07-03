@@ -90,7 +90,7 @@ var attachEvents = function() {
         }
       }
     } else if(channel === RedisPublisher.RespEnum.COMMAND) {
-      var commands = message !== null && message !== undefined ? JSON.parse(message) : [];
+      var commands = message ? JSON.parse(message) : [];
 
       if(commands) {
         for(var i in commands) {

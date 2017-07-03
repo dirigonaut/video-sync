@@ -19,7 +19,7 @@ SocketLog.prototype.log = Promise.coroutine(function* (msg, meta) {
   };
 
   var ids = yield session.getAdmin();
-  if(ids !== null && ids !== undefined) {
+  if(ids) {
     io.sockets.to(ids).emit('chat-log-resp', payload);
   }
 });

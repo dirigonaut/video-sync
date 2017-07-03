@@ -9,7 +9,7 @@ var imports, log;
 
 function ObjectFactory() { }
 
-ObjectFactory.prototype.initialize = Promise.coroutine(function* (enumUtil, dependencyFactory) {
+ObjectFactory.prototype.initialize = Promise.coroutine(function* (enumUtil) {
   if(typeof ObjectFactory.prototype.protoInit === 'undefined') {
     ObjectFactory.prototype.protoInit = true;
 
@@ -19,7 +19,7 @@ ObjectFactory.prototype.initialize = Promise.coroutine(function* (enumUtil, depe
     Object.assign(imports, rawImports);
     ObjectFactory.prototype.Enum = enumUtil.createEnums(imports);
 
-    generateFunctionHeaders.call(this, logger);
+    generateFunctionHeaders.call(this);
 
     var logManager  = this.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
@@ -28,10 +28,12 @@ ObjectFactory.prototype.initialize = Promise.coroutine(function* (enumUtil, depe
 
 module.exports = ObjectFactory;
 
-var generateFunctionHeaders = function(logger) {
+var generateFunctionHeaders = function() {
   for(let i in this.Enum) {
     this[`create${this.Enum[i]}`] = function () {
-      logger(this.Enum[i]);
+      if(log) {
+        log.silly(`Creating ${this.Enum[i]}`);
+      }
 
       var ObjectImport = require(imports[this.Enum[i]]);
       var object = Object.create(ObjectImport.prototype);
@@ -44,11 +46,5 @@ var generateFunctionHeaders = function(logger) {
 
       return object;
     }.bind(this);
-  }
-};
-
-var logger = function(name) {
-  if(log && typeof log.debug !== 'undefined') {
-    log.silly(`Creating ${name}`);
   }
 };

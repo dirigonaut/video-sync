@@ -35,10 +35,10 @@ UserAdministration.prototype.kickUser = Promise.coroutine(function* (user, callb
     yield session.removeInvitee(user);
     var player = yield publisher.publishAsync(publisher.Enum.PLAYER, ['getPlayer', [user]]);
 
-    if(player !== null && player !== undefined) {
+    if(player) {
       var socket = player.socket;
 
-      if(socket !== undefined && socket !== null) {
+      if(socket) {
         this.disconnectSocket(socket);
       }
     } else {
