@@ -1,4 +1,4 @@
-const Promise       = require('bluebird');
+const Promise = require('bluebird');
 
 var commandEngine, chatEngine, redisSocket, publisher;
 
@@ -6,6 +6,8 @@ function ChatController() { }
 
 ChatController.prototype.initialize = function() {
   if(typeof ChatController.prototype.protoInit === 'undefined') {
+    ChatController.prototype.protoInit = true;
+
     commandEngine   = this.factory.createCommandEngine();
     chatEngine      = this.factory.createChatEngine();
     redisSocket     = this.factory.createRedisSocket();
@@ -13,8 +15,6 @@ ChatController.prototype.initialize = function() {
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.CHAT);
-
-    ChatController.prototype.protoInit = true;
   }
 };
 

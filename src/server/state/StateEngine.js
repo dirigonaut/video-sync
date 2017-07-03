@@ -1,5 +1,5 @@
-const Promise       = require('bluebird');
-const Player        = require('../player/Player');
+const Promise = require('bluebird');
+const Player  = require('../player/Player');
 
 var playRule, syncRule, syncingRule, resumeRule, playerManager, accuracy, interval, session, log;
 
@@ -7,6 +7,8 @@ function StateEngine() { };
 
 StateEngine.prototype.initialize = function(force) {
   if(typeof StateEngine.prototype.protoInit === 'undefined') {
+    StateEngine.prototype.protoInit = true;
+
     playRule        = this.factory.createPlayRule();
     syncRule        = this.factory.createSyncRule();
     syncingRule     = this.factory.createSyncingRule();
@@ -19,15 +21,13 @@ StateEngine.prototype.initialize = function(force) {
     log             = logManager.getLog(logManager.LogEnum.STATE);
 
     interval = setInterval(Promise.coroutine(function* () {
-      resumeLogic.call(this, yield playerManager.getPlayers());
+      resumeLogic(yield playerManager.getPlayers());
     }.bind(this)), 500);
-
-    StateEngine.prototype.protoInit = true;
   }
 
   if(typeof StateEngine.prototype.stateInit === 'undefined' || force) {
-    accuracy = 2;
     StateEngine.prototype.stateInit = true;
+    accuracy = 2;
   }
 };
 
@@ -232,7 +232,7 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
             object.seekTime = leader.timestamp + 1;
             object.syncWait = true;
 
-            if(playerManager.getSyncedPlayersState() === Player.State.PLAY) {
+            if(this.playerManager.getSyncedPlayersState() === Player.State.PLAY) {
               object.play = true;
             } else {
               object.play = false;

@@ -8,10 +8,10 @@ function FileIO() { }
 
 FileIO.prototype.initialize = function() {
   if(typeof FileIO.prototype.protoInit === 'undefined') {
+    FileIO.prototype.protoInit = true;
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.UTILS);
-
-    FileIO.prototype.protoInit = true;
   }
 };
 

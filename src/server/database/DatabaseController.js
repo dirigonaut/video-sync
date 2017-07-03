@@ -1,4 +1,4 @@
-const Promise     = require('bluebird');
+const Promise = require('bluebird');
 
 var validator, publisher, session, log;
 
@@ -6,14 +6,14 @@ function DatabaseController() { }
 
 DatabaseController.prototype.initialize = function() {
   if(typeof DatabaseController.prototype.protoInit === 'undefined') {
+    DatabaseController.prototype.protoInit = true;
+
     validator     = this.factory.createValidator();
     publisher     = this.factory.createRedisPublisher();
     session       = this.factory.createSession();
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.DATABASE);
-
-    DatabaseController.prototype.protoInit = true;
   }
 };
 

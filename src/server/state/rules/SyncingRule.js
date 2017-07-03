@@ -6,9 +6,10 @@ function SyncingRule() { }
 
 SyncingRule.prototype.initialize = function() {
   if(typeof SyncingRule.prototype.protoInit === 'undefined') {
+    SyncingRule.prototype.protoInit = true;
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.STATE);
-    SyncingRule.prototype.protoInit = true;
   }
 };
 

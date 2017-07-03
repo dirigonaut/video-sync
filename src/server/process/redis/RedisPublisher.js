@@ -14,6 +14,8 @@ function RedisPublisher() { }
 
 RedisPublisher.prototype.initialize = function() {
   if(typeof RedisPublisher.prototype.protoInit === 'undefined') {
+    RedisPublisher.prototype.protoInit = true;
+
     requestMap = new Map();
 
     requestMap    = new Map();
@@ -28,8 +30,6 @@ RedisPublisher.prototype.initialize = function() {
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
 
     attachEvents.call(this);
-
-    RedisPublisher.prototype.protoInit = true;
   }
 };
 

@@ -9,6 +9,8 @@ function RedisSocket() { }
 
 RedisSocket.prototype.initialize = function() {
   if(typeof RedisSocket.prototype.protoInit === 'undefined') {
+    RedisSocket.prototype.protoInit = true;
+
     var config    = this.factory.createConfig();
     publisher     = Redis.createClient(config.getConfig().redis);
     subscriber    = Redis.createClient(config.getConfig().redis);
@@ -17,7 +19,6 @@ RedisSocket.prototype.initialize = function() {
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
-    RedisSocket.prototype.protoInit = true;
   }
 };
 

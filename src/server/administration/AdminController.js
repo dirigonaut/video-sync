@@ -1,4 +1,4 @@
-const Promise         = require('bluebird');
+const Promise = require('bluebird');
 
 var userAdmin, validator, commandEngine, chatEngine, redisSocket, publisher, session, fileIO, fileSystemUtils, log;
 
@@ -6,6 +6,8 @@ function AdminController() { }
 
 AdminController.prototype.initialize = function () {
   if(typeof AdminController.prototype.protoInit === 'undefined') {
+    AdminController.prototype.protoInit = true;
+
     userAdmin       = this.factory.createUserAdministration();
     validator       = this.factory.createValidator();
     commandEngine   = this.factory.createCommandEngine();
@@ -18,8 +20,6 @@ AdminController.prototype.initialize = function () {
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.ADMINISTRATION);
-
-    AdminController.prototype.protoInit = true;
   }
 };
 

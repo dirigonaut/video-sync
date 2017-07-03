@@ -1,4 +1,4 @@
-const Promise       = require('bluebird');
+const Promise = require('bluebird');
 
 var publisher, redisSocket, smtp, userAdmin, validator, authenticator, socketLog, session, chatEngine, log;
 
@@ -6,6 +6,8 @@ function AuthenticationController() { }
 
 AuthenticationController.prototype.initialize = function(io) {
   if(typeof AuthenticationController.prototype.protoInit === 'undefined') {
+    AuthenticationController.prototype.protoInit = true;
+
     publisher       = this.factory.createRedisPublisher();
     redisSocket     = this.factory.createRedisSocket()
     smtp            = this.factory.createSmtp();
@@ -18,8 +20,6 @@ AuthenticationController.prototype.initialize = function(io) {
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);
-
-    AuthenticationController.prototype.protoInit = true;
   }
 };
 

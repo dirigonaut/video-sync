@@ -1,4 +1,4 @@
-const Promise         = require('bluebird');
+const Promise = require('bluebird');
 
 var cache, session, fileIO, fileSystemUtils, validator, log;
 
@@ -6,6 +6,8 @@ function VideoController() { }
 
 VideoController.prototype.initialize = function(io, socket) {
   if(typeof VideoController.prototype.protoInit === 'undefined') {
+    VideoController.prototype.protoInit = true;
+
     cache           = this.factory.createCache();
     session         = this.factory.createSession();
     fileIO          = this.factory.createFileIO();
@@ -14,8 +16,6 @@ VideoController.prototype.initialize = function(io, socket) {
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.VIDEO);
-
-    VideoController.prototype.protoInit = true;
   }
 };
 

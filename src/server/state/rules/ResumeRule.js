@@ -6,9 +6,10 @@ function ResumeRule() { }
 
 ResumeRule.prototype.initialize = function() {
   if(typeof ResumeRule.prototype.protoInit === 'undefined') {
+    ResumeRule.prototype.protoInit = true;
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.STATE);
-    ResumeRule.prototype.protoInit = true;
   }
 };
 

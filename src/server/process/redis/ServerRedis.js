@@ -1,6 +1,6 @@
-const Promise           = require('bluebird');
-const Util              = require('util');
-const Redis             = require('redis');
+const Promise = require('bluebird');
+const Util    = require('util');
+const Redis   = require('redis');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
@@ -10,6 +10,8 @@ function ServerRedis() { }
 
 ServerRedis.prototype.initialize = Promise.coroutine(function* () {
   if(typeof ServerRedis.prototype.protoInit === 'undefined') {
+    ServerRedis.prototype.protoInit = true;
+
     var config = this.factory.createConfig();
     adapter    = this.factory.createReflectiveAdapter();
     subscriber = Redis.createClient(config.getConfig().redis);
@@ -18,7 +20,6 @@ ServerRedis.prototype.initialize = Promise.coroutine(function* () {
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
-    ServerRedis.prototype.protoInit = true;
   }
 });
 

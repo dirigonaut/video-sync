@@ -6,9 +6,10 @@ function PlayRule() { }
 
 PlayRule.prototype.initialize = function() {
   if(typeof PlayRule.prototype.protoInit === 'undefined') {
+    PlayRule.prototype.protoInit = true;
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.STATE);
-    PlayRule.prototype.protoInit = true;
   }
 };
 
