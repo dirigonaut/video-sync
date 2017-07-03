@@ -33,7 +33,7 @@ LogManager.prototype.addFileLogging = function() {
 
   var keys = Object.keys(LogManager.LogEnum);
   for(var i in keys) {
-    var fileTransport = buildFileTransport(Path.join(config.getLogDir(), FILE_NAME), keys[i], LevelEnum[keys[i]], false);
+    var fileTransport = buildFileTransport(Path.join(config.getLogDir(), FILE_NAME), LogManager.LogEnum[keys[i]], LevelEnum[keys[i]], false);
     var container = Winston.loggers.get(LogManager.LogEnum[keys[i]]);
 
     container.configure({
@@ -79,9 +79,12 @@ var buildFileTransport = function(path, label, level, handleExceptions) {
         timestamp: options.timestamp(),
         level: options.level,
         label: label,
-        message: options.message ? options.message : '',
-        meta: options.meta && Object.keys(options.meta).length ? JSON.stringify(options.meta) : undefined
+        message: options.message ? options.message : ''
       };
+
+      if(options.meta && Object.keys(options.meta).length) {
+        logMessage.meta =  JSON.stringify(options.meta)
+      }
 
       return JSON.stringify(logMessage);
     },
