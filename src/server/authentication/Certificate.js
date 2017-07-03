@@ -10,7 +10,7 @@ var config, log;
 function Certificate() { }
 
 Certificate.prototype.initialize = function() {
-  if(typeof Certificate.prototype.lazyInit === 'undefined') {
+  if(typeof Certificate.prototype.protoInit === 'undefined') {
     Moment().format('YYYY MM DD');
 
     config          = this.factory.createConfig();
@@ -18,7 +18,7 @@ Certificate.prototype.initialize = function() {
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);
 
-    Certificate.prototype.lazyInit = true;
+    Certificate.prototype.protoInit = true;
   }
 };
 

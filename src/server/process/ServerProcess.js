@@ -5,11 +5,20 @@ const Https       = require('https');
 const Express     = require('express');
 const SocketIO    = require('socket.io');
 
-var app, io, server, serverRedis;
+var app, io, server, serverRedis, log;
 
 function ServerProcess() { }
 
-ServerProcess.prototype.initialize = Promise.coroutine(function* () {
+ServerProcess.prototype.initialize = function() {
+  if(typeof ServerProcess.prototype.protoInit === 'undefined') {
+    ServerProcess.prototype.protoInit = true;
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.GENERAL);
+  }
+};
+
+ServerProcess.prototype.start = Promise.coroutine(function* () {
   var config = this.factory.createConfig();
 
   log.info(`Trying to start ServerProcess on port ${config.getConfig().port} with process ${process.pid}`);
@@ -33,7 +42,7 @@ ServerProcess.prototype.initialize = Promise.coroutine(function* () {
   io = SocketIO.listen(server);
 
   var redisSocket = this.factory.createRedisSocket();
-  yield redisSocket.initialize(io);
+  redisSocket.setIO(io);
 
   app.use(Express.static(config.getConfig().static));
   server.listen(0);
@@ -42,7 +51,7 @@ ServerProcess.prototype.initialize = Promise.coroutine(function* () {
   socketLog.setSocketIO(io);
 
   var authController = this.factory.createAuthenticationController();
-  authController.initialize(io);
+  authController.attachIO(io);
 
   log.info(`ServerProcess ${process.pid} ready to forward.`);
 });

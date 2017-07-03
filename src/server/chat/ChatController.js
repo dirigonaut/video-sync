@@ -4,8 +4,8 @@ var commandEngine, chatEngine, redisSocket, publisher;
 
 function ChatController() { }
 
-ChatController.prototype.initialize = function(io, socket) {
-  if(typeof ChatController.prototype.lazyInit === 'undefined') {
+ChatController.prototype.initialize = function() {
+  if(typeof ChatController.prototype.protoInit === 'undefined') {
     commandEngine   = this.factory.createCommandEngine();
     chatEngine      = this.factory.createChatEngine();
     redisSocket     = this.factory.createRedisSocket();
@@ -14,23 +14,19 @@ ChatController.prototype.initialize = function(io, socket) {
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.CHAT);
 
-    ChatController.prototype.lazyInit = true;
+    ChatController.prototype.protoInit = true;
   }
-
-  initialize.call(this, io, socket);
 };
 
-module.exports = ChatController;
-
-function initialize(io, socket) {
+ChatController.prototype.attachSocket = function(io, socket) {
   log.debug("Attaching ChatController");
 
-  socket.on('chat-broadcast', function(data) {
+  socket.on('chat-broadcast', Promise.coroutine(function* (data) {
     log.debug('chat-broadcast');
 
     var message = chatEngine.buildMessage(socket.id, data.text);
-    chatEngine.broadcast(ChatEngine.Enum.BROADCAST, message);
-  }.bind(this));
+    yield chatEngine.broadcast(chatEngine.Enum.BROADCAST, message);
+  }.bind(this)));
 
   socket.on('chat-command', Promise.coroutine(function* (data) {
     log.debug('chat-command', data);
@@ -47,7 +43,7 @@ function initialize(io, socket) {
           var commands = yield publisher.publishAsync.apply(null, params[0]);
           if(commands) {
             for(var i in commands) {
-              redisSocket.ping.apply(null, commands[i]);
+              yield redisSocket.ping.apply(null, commands[i]);
             }
 
             chatResponse.apply(null, params[1]);
@@ -56,15 +52,17 @@ function initialize(io, socket) {
           let params = command[1];
           var message = chatEngine.buildMessage(socket.id, params[1]);
 
-          if(params[0] === ChatEngine.Enum.PING) {
+          if(params[0] === chatEngine.Enum.PING) {
             log.silly('chat-command-response', data);
-            chatEngine.ping(params[0], message);
+            yield chatEngine.ping(params[0], message);
           } else {
             log.silly('chat-command-response', data);
-            chatEngine.broadcast(params[0], message);
+            yield chatEngine.broadcast(params[0], message);
           }
         }
       }
     }
   }.bind(this)));
-}
+};
+
+module.exports = ChatController;

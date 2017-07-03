@@ -1,7 +1,16 @@
 var Player        = require('../../player/Player');
 
-function PlayRule() {
-}
+var log;
+
+function PlayRule() { }
+
+PlayRule.prototype.initialize = function() {
+  if(typeof PlayRule.prototype.protoInit === 'undefined') {
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.STATE);
+    PlayRule.prototype.protoInit = true;
+  }
+};
 
 PlayRule.prototype.evaluate = function(issuer, players, mediaStarted, fuzzyRange) {
   log.debug("PlayRule.evaluate");

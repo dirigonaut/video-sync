@@ -5,7 +5,7 @@ var publisher, smtp, session, config, log;
 function UserAdministration() { }
 
 UserAdministration.prototype.initialize = function () {
-  if(typeof UserAdministration.prototype.lazyInit === 'undefined') {
+  if(typeof UserAdministration.prototype.protoInit === 'undefined') {
     config          = this.factory.createConfig();
     publisher       = this.factory.createRedisPublisher();
     smtp            = this.factory.createSmtp();
@@ -14,7 +14,7 @@ UserAdministration.prototype.initialize = function () {
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.ADMINISTRATION);
 
-    UserAdministration.prototype.lazyInit = true;
+    UserAdministration.prototype.protoInit = true;
   }
 };
 
@@ -33,7 +33,7 @@ UserAdministration.prototype.kickUser = Promise.coroutine(function* (user, callb
   var isAdmin = yield session.isAdmin(user);
   if(!isAdmin) {
     yield session.removeInvitee(user);
-    var player = yield publisher.publish(publisher.Enum.PLAYER, ['getPlayer', [user]]);
+    var player = yield publisher.publishAsync(publisher.Enum.PLAYER, ['getPlayer', [user]]);
 
     if(player !== null && player !== undefined) {
       var socket = player.socket;

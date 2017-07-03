@@ -72,9 +72,9 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
 
   self.bufferSegment = function(key, index, data) {
     var mapQueue = self.segmentsToBuffer.get(key);
-    var chunk = data !== null ? new Uint8Array(data) : null;
+    var chunk = data !== null ? data : null;
 
-    if(mapQueue !== undefined && mapQueue !== null) {
+    if(mapQueue) {
       log.debug(`Queue found for key: ${key}`);
       mapQueue.set(index, chunk);
     } else {
@@ -84,7 +84,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
     isReadyForNextSegment();
 
     if(!self.hasInitSeg) {
-      log.info("Init segment has been received.", self.type);
+      log.info(`Init segment has been received: ${self.type}`);
       self.hasInitSeg = true;
       var segmentInfo = metaManager.getActiveMetaData().getSegment(self.type, 0);
       var key = `${segmentInfo[0]}-${segmentInfo[1][0]}-${segmentInfo[1][1]}-${self.type}`;
@@ -127,7 +127,7 @@ function SourceBuffer(enum_type, video, metaManager, mediaSource){
           var segment = mapQueue.get(self.index);
 
           if(segment !== null) {
-            if(segment !== undefined) {
+            if(segment) {
               log.debug(`Appending from ${self.loadingSegment} mapQueue at index ${self.index} for buffer ${self.type}`);
               self.sourceBuffer.appendBuffer(segment);
               bufferUpdated = true;

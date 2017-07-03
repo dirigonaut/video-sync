@@ -1,11 +1,16 @@
-var LogManager    = require('../../log/LogManager');
 var Player        = require('../../player/Player');
 
-var log           = LogManager.getLog(LogManager.LogEnum.STATE);
+var log;
 
-function ResumeRule(fuzzyRange) {
-  this.fuzzyRange = fuzzyRange;
-}
+function ResumeRule() { }
+
+ResumeRule.prototype.initialize = function() {
+  if(typeof ResumeRule.prototype.protoInit === 'undefined') {
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.STATE);
+    ResumeRule.prototype.protoInit = true;
+  }
+};
 
 ResumeRule.prototype.evaluate = function(issuer, others) {
   log.silly("ResumeRule.evaluate");

@@ -1,25 +1,26 @@
 const Promise         = require('bluebird');
 
-var validator;
+var cache, session, fileIO, fileSystemUtils, validator, log;
 
 function VideoController() { }
 
 VideoController.prototype.initialize = function(io, socket) {
-  if(typeof VideoController.prototype.lazyInit === 'undefined') {
-    validator = this.factory.createValidator();
-    this.cache.initialize();
+  if(typeof VideoController.prototype.protoInit === 'undefined') {
+    cache           = this.factory.createCache();
+    session         = this.factory.createSession();
+    fileIO          = this.factory.createFileIO();
+    fileSystemUtils = this.factory.createFileSystemUtils();
+    validator       = this.factory.createValidator();
 
-    VideoController.prototype.lazyInit = true;
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.VIDEO);
+
+    VideoController.prototype.protoInit = true;
   }
-
-  initialize.call(this, io, socket);
 };
 
-module.exports = VideoController;
-
-function initialize(io, socket) {
-  log.info("Attaching VideoController");
-
+VideoController.prototype.attachSocket = function(io, socket) {
+  log.info("VideoController.attachSocket");
   socket.on('video-encode', Promise.coroutine(function* (data) {
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
@@ -69,18 +70,15 @@ function initialize(io, socket) {
 
     var basePath = yield session.getMediaPath();
     if(basePath) {
-      var fileIO = this.factory.createFileIO();
-      var fileUtils = this.factory.createFileSystemUtils();
-
       var readConfig = fileIO.createStreamConfig(basePath, function(files) {
-        if(files !== undefined && files !== null) {
+        if(files) {
           for(let i = 0; i < files.length; ++i) {
             var header = {};
             var splitName = files[i].split(".")[0].split("_");
             header.type = splitName[splitName.length - 1];
 
             socket.emit("file-register-response", {requestId: validator.sterilizeVideoInfo(requestId), header: header}, function(bufferId) {
-              var anotherReadConfig = fileIO.createStreamConfig(`${fileUtils.ensureEOL(basePath)}${files[i]}`, function(data) {
+              var anotherReadConfig = fileIO.createStreamConfig(`${fileSystemUtils.ensureEOL(basePath)}${files[i]}`, function(data) {
                 socket.emit("file-segment", {bufferId: bufferId, data: data});
               });
 
@@ -96,7 +94,7 @@ function initialize(io, socket) {
 
       fileIO.readDir(readConfig, "mpd");
     }
-  }.bind(this)));
+  }));
 
   socket.on('get-segment', Promise.coroutine(function* (data) {
     log.debug('get-segment', data);
@@ -104,14 +102,14 @@ function initialize(io, socket) {
 
     var basePath = yield session.getMediaPath();
     if(basePath) {
-      var handleResponse = function(segment) {
-        log.info('Returning segment for request: ', data);
+      var sendResponse = function(segment) {
+        log.info(`Returning segment ${segment.name} of size ${segment.data ? segment.data.byteLength : null}`);
         socket.emit("segment-chunk", segment);
       };
 
-      this.cache.getSegment(data, handleResponse);
+      cache.getSegment(data, sendResponse);
     }
-  }.bind(this)));
+  }));
 
   socket.on('get-meta-info', Promise.coroutine(function* (data) {
     log.debug('get-meta-info', data);
@@ -124,5 +122,7 @@ function initialize(io, socket) {
       var metaData = yield ffprobeProcess.process(command);
       socket.emit("meta-info", metaData);
     }
-  }.bind(this)));
-}
+  }));
+};
+
+module.exports = VideoController;

@@ -8,69 +8,60 @@ Promise.promisifyAll(Redis.RedisClient.prototype);
 
 const TIMEOUT   = 2000;
 
-var publisher, subscriber, redisSocket, requestMap, asyncEmitter;
+var publisher, subscriber, redisSocket, requestMap, asyncEmitter, log;
 
 function RedisPublisher() { }
 
-RedisPublisher.prototype.initialize = Promise.coroutine(function* () {
-  requestMap = new Map();
-  yield cleanUp.call(this);
+RedisPublisher.prototype.initialize = function() {
+  if(typeof RedisPublisher.prototype.protoInit === 'undefined') {
+    requestMap = new Map();
 
-  requestMap    = new Map();
-  redisSocket   = this.factory.createRedisSocket();
-  asyncEmitter  = new Events();
+    requestMap    = new Map();
+    redisSocket   = this.factory.createRedisSocket();
+    asyncEmitter  = new Events();
 
-  publisher     = Redis.createClient(config.getConfig().redis);
-  subscriber    = Redis.createClient(config.getConfig().redis);
+    var config    = this.factory.createConfig();
+    publisher     = Redis.createClient(config.getConfig().redis);
+    subscriber    = Redis.createClient(config.getConfig().redis);
 
-  initialize.call(this, publisher, subscriber);
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.GENERAL);
 
-  RedisPublisher.prototype.enum = RedisPublisher.Enum;
-  RedisPublisher.prototype.respEnum = RedisPublisher.RespEnum;
-});
+    attachEvents.call(this);
 
-RedisPublisher.prototype.publish = function(channel, args, callback) {
-  var key = createKey(channel);
-  args.push(key);
-
-  var response = function(err, data) {
-    if(err) {
-      requestMap.delete(key);
-    }
-  };
-
-  if(callback !== null && callback !== undefined) {
-    requestMap.set(key, callback);
+    RedisPublisher.prototype.protoInit = true;
   }
-
-  publisher.publish(channel, JSON.stringify(args), response);
 };
 
-RedisPublisher.prototype.publishAsync = function(channel, args) {
+RedisPublisher.prototype.publishAsync = Promise.coroutine(function* (channel, args) {
   var key = createKey(channel);
   args.push(key);
 
-  requestMap.set(key, "promise");
+  requestMap.set(key, process.pid);
 
   var promise = new Promise(function(resolve, reject) {
     asyncEmitter.once(key, resolve);
     setTimeout(function(err) {
+      requestMap.delete(key);
       asyncEmitter.removeListener(key, resolve);
       reject(err);
     },TIMEOUT, `Request for Key: ${key}, timed out.`);
   });
 
-  publisher.publish(channel, JSON.stringify(args));
+  yield publisher.publishAsync(channel, JSON.stringify(args));
 
   return promise;
-};
+});
 
 RedisPublisher.Enum = { DATABASE: 'database', STATE: 'state', PLAYER: 'player', SESSION: 'session'};
 RedisPublisher.RespEnum = { RESPONSE: 'stateRedisResponse', COMMAND: 'stateRedisCommand'};
 
+RedisPublisher.prototype.Enum = RedisPublisher.Enum;
+RedisPublisher.prototype.RespEnum = RedisPublisher.RespEnum;
+
 module.exports = RedisPublisher;
 
-var initialize = Promise.coroutine(function* (publisher, subscriber) {
+var attachEvents = function() {
   publisher.on("connect", function(err) {
     log.debug("RedisPublisher is connected to redis server");
   }.bind(this));
@@ -85,35 +76,26 @@ var initialize = Promise.coroutine(function* (publisher, subscriber) {
 
   subscriber.on("message", Promise.coroutine(function* (channel, message) {
     if(channel === RedisPublisher.RespEnum.RESPONSE) {
-      var key = message;
-      if(key !== null && key !== undefined) {
-        var callback = requestMap.get(key);
-
-        if(callback === "promise") {
-          requestMap.delete(key);
-          let data = yield getRedisData.call(this, key);
+      if(message) {
+        if(requestMap.get(message)) {
+          requestMap.delete(message);
+          let data = yield getRedisData.call(this, message);
 
           if(data) {
-            data = JSON.parse(data)[0];
-            //console.log(Util.inspect(data, { showHidden: false, depth: null }));
+            data = JSON.parse(data);
+            log.silly(Util.inspect(data, { showHidden: false, depth: null }));
           }
 
-          asyncEmitter.emit(key, data);
-        } else if(typeof callback === "function") {
-          requestMap.delete(key);
-          let data = yield getRedisData.call(this, key);
-          data = JSON.parse(data);
-          //console.log(Util.inspect(data, { showHidden: false, depth: null }));
-          callback.apply(callback, [data]);
+          asyncEmitter.emit(message, data);
         }
       }
     } else if(channel === RedisPublisher.RespEnum.COMMAND) {
       var commands = message !== null && message !== undefined ? JSON.parse(message) : [];
 
-      if(commands !== null && commands !== undefined) {
+      if(commands) {
         for(var i in commands) {
           log.silly(Util.inspect(commands[i], { showHidden: false, depth: null}));
-          redisSocket.ping.apply(null, commands[i]);
+          yield redisSocket.ping.apply(null, commands[i]);
         }
       }
     }
@@ -135,9 +117,9 @@ var initialize = Promise.coroutine(function* (publisher, subscriber) {
     log.error(err);
   }.bind(this));
 
-  yield subscriber.subscribeAsync("stateRedisResponse");
-  yield subscriber.subscribeAsync("stateRedisCommand");
-});
+  subscriber.subscribe("stateRedisResponse");
+  subscriber.subscribe("stateRedisCommand");
+};
 
 var createKey = function(seed) {
   return `${seed}-${Crypto.randomBytes(24).toString('hex')}`;
@@ -153,7 +135,7 @@ var getRedisData = function(key, callback) {
 
 var cleanUp = Promise.coroutine(function* () {
   log.debug("RedisPublisher._cleanUp");
-  if(typeof subscriber !== 'undefined' && subscriber) {
+  if(subscriber) {
     yield subscriber.unsubscribeAsync("stateRedisResponse");
     yield subscriber.unsubscribeAsync("stateRedisCommand");
 
@@ -166,7 +148,7 @@ var cleanUp = Promise.coroutine(function* () {
     subscriber.removeAllListeners("error");
   }
 
-  if(typeof publisher !== 'undefined' && publisher) {
+  if(publisher) {
     publisher.removeAllListenersAsync("connect");
     publisher.removeAllListenersAsync("reconnecting");
     publisher.removeAllListenersAsync("error");

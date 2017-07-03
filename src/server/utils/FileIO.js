@@ -2,7 +2,18 @@ const Promise     = require('bluebird');
 const Fs          = Promise.promisifyAll(require('fs'));
 const Path        = require('path');
 
-function FileIO() { };
+var log;
+
+function FileIO() { }
+
+FileIO.prototype.initialize = function() {
+  if(typeof FileIO.prototype.protoInit === 'undefined') {
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.UTILS);
+
+    FileIO.prototype.protoInit = true;
+  }
+};
 
 FileIO.prototype.read = function(readConfig) {
   log.debug('FileIO.read', readConfig);
@@ -117,7 +128,7 @@ FileIO.prototype.ensureDirExistsAsync = Promise.coroutine(function* (path, mask)
     });
 });
 
-FileIO.prototype.dirExists = function(path, callback) {
+FileIO.prototype.dirExists = function(path) {
   log.debug('FileIO.dirExists', path);
   var isDir = true;
 
@@ -129,16 +140,14 @@ FileIO.prototype.dirExists = function(path, callback) {
       log.error('FileIO.dirExists is not dir', path);
       isDir = false;
     }
+  });
 
-    if(isDir) {
-      callback();
-    }
-  }.bind(this));
+  return isDir;
 }
 
 FileIO.prototype.createStreamConfig = function(path, callback) {
   log.debug('FileIO.streamConfig');
-  
+
   var streamConfig = {};
   streamConfig.path = path;
   streamConfig.options = {};

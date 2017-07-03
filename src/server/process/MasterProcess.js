@@ -1,11 +1,7 @@
 const Promise = require('bluebird');
 const Cluster = require('cluster');
 
-var redisServer;
-var serverProcess;
-var stateProcess;
-var proxy;
-var log;
+var redisServer, serverProcess, stateProcess, proxy, log;
 
 process.on('uncaughtException', function (err) {
   if(log) {
@@ -15,26 +11,26 @@ process.on('uncaughtException', function (err) {
   }
 });
 
-class MasterProcess { }
+function MasterProcess() { }
+
+MasterProcess.prototype.initialize = function() {
+  if(typeof MasterProcess.prototype.protoInit === 'undefined') {
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.GENERAL);
+
+    MasterProcess.prototype.protoInit = true;
+  }
+};
 
 MasterProcess.prototype.start = Promise.coroutine(function* () {
-  this.logManager.initialize(config);
-  this.logManager.addFileLogging();
-
-  log = this.logManager.getLog(this.logManager.LogEnum.GENERAL);
-
   if(Cluster.isMaster) {
-    startMaster.apply(this);
+    yield startMaster.apply(this);
   } else if(process.env.processType === 'stateProcess') {
     startState.apply(this);
   } else if(process.env.processType === 'serverProcess') {
-    startServer.apply(this);
+    yield startServer.apply(this);
   }
 });
-
-MasterProcess.prototype.getLog = function() {
-  return log;
-};
 
 module.exports = MasterProcess;
 
@@ -61,7 +57,6 @@ var startMaster = Promise.coroutine(function* () {
   });
 
   redisServer = this.factory.createRedisServer();
-  redisServer.initialize();
   yield redisServer.start();
 
   var stateWorker = Cluster.fork({processType: 'stateProcess'});
@@ -71,28 +66,29 @@ var startMaster = Promise.coroutine(function* () {
   });
 
   stateWorker.on('message', function(message) {
-    if(message === 'state-process:started') {
-      log.info('starting servers');
-      proxy.initialize(numCPUs);
+    if(message[0] === 'state-process:started') {
+      log.info(`state-started with pid: ${message[1]}`);
+      log.info('starting server threads');
+      proxy.setOnConnect(numCPUs);
       proxy.spawnWorker(workerIndex);
     }
   });
 });
 
-var startState = Promise.coroutine(function* () {
+var startState = function() {
   stateProcess = this.factory.createStateProcess();
-  stateProcess.initialize();
+  stateProcess.start();
 
   log.info(`State Process: ${process.pid} started`);
-  process.send('state-process:started');
-});
+  process.send(['state-process:started', process.pid]);
+};
 
 var startServer = Promise.coroutine(function* () {
   log.info(`Launching server Process: ${process.pid}`);
   serverProcess = this.factory.createServerProcess();
   proxy = this.factory.createProxy();
 
-  yield serverProcess.initialize();
+  yield serverProcess.start();
 
   proxy.forwardWorker(serverProcess.getServer());
   log.info(`Started server Process: ${process.pid}`);

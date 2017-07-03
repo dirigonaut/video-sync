@@ -5,16 +5,18 @@ var publisher, smtpTransport, activeSmtp, log;
 
 function Smtp() { }
 
-Smtp.prototype.initializeTransport = Promise.coroutine(function* (address) {
-	if(typeof Smtp.prototype.lazyInit === 'undefined') {
+Smtp.prototype.initialize = function() {
+	if(typeof Smtp.prototype.protoInit === 'undefined') {
 		publisher 			= this.factory.createRedisPublisher();
 
 		var logManager  = this.factory.createLogManager();
 		log             = logManager.getLog(logManager.LogEnum.ADMINISTRATION);
 
-		Smtp.prototype.lazyInit = true;
+		Smtp.prototype.protoInit = true;
 	}
+};
 
+Smtp.prototype.initializeTransport = Promise.coroutine(function* (address) {
 	log.debug(`Smtp.initializeTransport for ${address}`);
 	if(address !== activeSmtp) {
 		this.closeTrasporter();

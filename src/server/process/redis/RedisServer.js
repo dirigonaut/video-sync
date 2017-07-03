@@ -6,31 +6,35 @@ var server, config, log;
 //process does not respect it and will always spin up 6379 instead.
 function RedisServer() { };
 
-RedisServer.prototype.initialize = function() {
-  if(typeof RedisServer.prototype.lazyInit === 'undefined') {
+RedisServer.prototype.initialize = function(force) {
+  if(typeof RedisServer.prototype.protoInit === 'undefined') {
     config 			= this.factory.createConfig();
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.ADMINISTRATION);
 
-    RedisServer.prototype.lazyInit = true;
+    RedisServer.prototype.protoInit = true;
   }
 
-  var options = config.getConfig().redisStartUp;
+  if(typeof RedisServer.prototype.stateInit === 'undefined' || force) {
+    var options = config.getConfig().redisStartUp;
 
-  if(options) {
-    options.conf = config.getRedisConfigPath();
-  }
+    if(options) {
+      options.conf = config.getRedisConfigPath();
+    }
 
-  if(options !== undefined && options !== null) {
-    server = new Redis(options);
+    if(options !== undefined && options !== null) {
+      server = new Redis(options);
+    }
+
+    RedisServer.prototype.stateInit = true;
   }
 };
 
 RedisServer.prototype.start = function() {
   if(server !== undefined && server !== null) {
     return server.open().then(() => {
-      console.log("Redis server has started.");
+      log.info("Redis server has started.");
     });
   }
 
@@ -40,7 +44,7 @@ RedisServer.prototype.start = function() {
 RedisServer.prototype.stop = function() {
   if(server !== undefined && server !== null) {
     return server.close().then(() => {
-      console.log("Redis server has shut down.");
+      log.info("Redis server has shut down.");
     });
   }
 

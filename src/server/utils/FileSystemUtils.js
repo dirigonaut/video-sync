@@ -1,8 +1,6 @@
 var Os = require('os');
 
-function FileSystemUtils() {
-
-}
+function FileSystemUtils() { }
 
 FileSystemUtils.prototype.splitPath = function(path) {
   var parsed_path = path.split("/");
