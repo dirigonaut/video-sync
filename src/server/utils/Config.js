@@ -17,25 +17,24 @@ const APP_DATA    = Path.join(process.env.APPDATA || Path.join(process.env.HOME,
   (process.platform == 'darwin' ?  Path.join('Library', 'Preferences') : '.config')), 'video-sync');
 const LOG_DIR     = Path.join(APP_DATA, "logs");
 
-var config;
+var fileIO, config;
 
 function Config() { }
 
-Config.prototype.initialize = Promise.coroutine(function* () {
-  if(Cluster.isMaster) {
-    yield setupAppDataDir.call(this);
-  }
+Config.prototype.initializeAsync = Promise.coroutine(function* () {
+  if(typeof Config.prototype.protoInit === 'undefined') {
+    //Must happen first otherwise infinite recursion happens
+    Config.prototype.protoInit = true;
 
-  var binaryConfig = yield Fs.readFileAsync(Path.join(APP_DATA, CONFIG_NAME));
+    fileIO = this.factory.createFileIO();
 
-  if(binaryConfig) {
-    config = JSON.parse(binaryConfig);
+    if(Cluster.isMaster) {
+      yield setupAppDataDir.call(this);
+    }
+
+    config = yield loadConfig();
   }
 });
-
-Config.prototype.isInit = function() {
-  return typeof config !== 'undefined';
-};
 
 Config.prototype.getConfig = function() {
   return config;
@@ -58,6 +57,16 @@ Config.prototype.getLogDir = function() {
 };
 
 module.exports = Config;
+
+var loadConfig = Promise.coroutine(function* () {
+  var binaryConfig = yield Fs.readFileAsync(Path.join(APP_DATA, CONFIG_NAME));
+
+  if(binaryConfig) {
+    config = JSON.parse(binaryConfig);
+  }
+
+  return config;
+});
 
 var setupAppDataDir = Promise.coroutine(function* () {
   var fileIO = this.factory.createFileIO();

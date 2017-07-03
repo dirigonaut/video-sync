@@ -1,43 +1,45 @@
 const Promise   = require('bluebird');
 const Player    = require('./Player');
 
-var players;
+var players, log;
 
-function PlayerManager () {
-};
+function PlayerManager () { };
 
-PlayerManager.prototype.initialize = function() {
-  if(typeof PlayerManager.prototype.lazyInit === 'undefined') {
+PlayerManager.prototype.initialize = function(force) {
+  if(typeof PlayerManager.prototype.protoInit === 'undefined') {
+    PlayerManager.prototype.protoInit = true;
 
     var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.PLAYER);
-
-    PlayerManager.prototype.lazyInit = true;
+    log             = logManager.getLog(logManager.LogEnum.STATE);
   }
 
-  players = new Map();
+  if(typeof PlayerManager.prototype.stateInit === 'undefined' || force) {
+    PlayerManager.prototype.stateInit = true;
+    players = new Map();
+  }
 };
 
 PlayerManager.prototype.createPlayer = function(id, handle) {
   var newPlayer = new Player(id, handle);
   players.set(id, newPlayer);
-  log.info(`Adding player ${id}, total players now: ${players.size}`);
+  log.info(`PlayerManager.createPlayer ${id}, total players now: ${players.size}`);
 
   return Promise.resolve();
 };
 
-PlayerManager.prototype.getPlayer = function(id, callback) {
-  log.silly("PlayerManager.getPlayer", id);
+PlayerManager.prototype.getPlayer = function(id) {
+  log.silly(`PlayerManager.getPlayer ${id}`);
   var player = players.get(id);
 
   if(player === null || player === undefined) {
-    player = players.get("/#" + id);
+    player = players.get('/#' + id);
   }
 
   return Promise.resolve(player);
 };
 
-PlayerManager.prototype.getPlayerIds = function(callback) {
+PlayerManager.prototype.getPlayerIds = function() {
+  log.silly('PlayerManager.getPlayerIds');
   var temp = [];
   for(var p of players.keys()) {
     temp.push(players.get(p).id);
@@ -47,24 +49,25 @@ PlayerManager.prototype.getPlayerIds = function(callback) {
 };
 
 PlayerManager.prototype.getPlayers = function() {
+  log.silly('PlayerManager.getPlayers');
   return Promise.resolve(players);
 };
 
 PlayerManager.prototype.removePlayer = function(id) {
-  log.debug("PlayerManager.removePlayer", id);
+  log.debug(`PlayerManager.removePlayer ${id}`);
   players.delete(id);
 
   var player = players.get(id);
 
   if(player === null || player === undefined) {
-    player = players.delete("/#" + id);
+    player = players.delete('/#' + id);
   }
 
   return Promise.resolve();
 };
 
 PlayerManager.prototype.getOtherPlayers = function(id) {
-  log.silly("PlayerManager.getOtherPlayers", id);
+  log.silly(`PlayerManager.getOtherPlayers ${id}`);
   var temp = [];
   for(var p of players.keys()) {
     if(p != id){
@@ -76,7 +79,7 @@ PlayerManager.prototype.getOtherPlayers = function(id) {
 };
 
 PlayerManager.prototype.getSyncedPlayersState = function() {
-  log.silly("PlayerManager.getSyncedPlayersState");
+  log.silly('PlayerManager.getSyncedPlayersState');
   var state = null;
   for(var p of players.keys()) {
     if(players.get(p).sync === Player.Sync.SYNCED) {
@@ -89,7 +92,7 @@ PlayerManager.prototype.getSyncedPlayersState = function() {
 };
 
 PlayerManager.prototype.removePlayersWithId = function(playerArray, id) {
-  log.silly("PlayerManager.removePlayersWithId", id);
+  log.silly(`PlayerManager.removePlayersWithId ${id}`);
   var temp = [];
   for(var p in playerArray) {
     if(playerArray[p].id != id) {
@@ -101,17 +104,17 @@ PlayerManager.prototype.removePlayersWithId = function(playerArray, id) {
 };
 
 PlayerManager.prototype.getHandles = function() {
-  log.silly("PlayerManager.getHandles");
+  log.debug('PlayerManager.getHandles');
   var temp = [];
   for(var p of players.keys()) {
     temp.push([players.get(p).id, players.get(p).handle]);
   }
 
-  return Promise.resolve([temp]);
+  return Promise.resolve(temp);
 };
 
 PlayerManager.prototype.setPlayerHandle = function(id, handle) {
-  log.silly("PlayerManager.setPlayerHandle", id);
+  log.silly('PlayerManager.setPlayerHandle', id);
   var handles = [];
 
   for(var p of players.keys()) {
@@ -130,6 +133,7 @@ PlayerManager.prototype.setPlayerHandle = function(id, handle) {
 };
 
 PlayerManager.prototype.initPlayers = function() {
+  log.debug('PlayerManager.initPlayers');
   for(var p of players.keys()) {
     players.get(p).init();
   }

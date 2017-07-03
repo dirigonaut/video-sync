@@ -5,32 +5,32 @@ var redisSocket, publisher, log;
 function ChatEngine() { }
 
 ChatEngine.prototype.initialize = function() {
-  if(typeof ChatEngine.prototype.lazyInit === 'undefined') {
+  if(typeof ChatEngine.prototype.protoInit === 'undefined') {
     redisSocket     = this.factory.createRedisSocket();
     publisher       = this.factory.createRedisPublisher();
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.CHAT);
 
-    ChatEngine.prototype.lazyInit = true;
+    ChatEngine.prototype.protoInit = true;
   }
 };
 
-ChatEngine.prototype.broadcast = function(eventName, message) {
-  log.debug(`ChatEngine.prototype.broadcast ${eventName}`);
-  if(eventName) {
-    redisSocket.broadcast(eventName, message);
+ChatEngine.prototype.broadcast = Promise.coroutine(function* (eventName, message) {
+  log.debug(`ChatEngine.broadcast ${eventName}`);
+  if(eventName && message) {
+    yield redisSocket.broadcast(eventName, message);
   }
-};
+});
 
-ChatEngine.prototype.ping = function(eventName, message) {
-  log.debug(`ChatEngine.prototype.ping ${eventName}`);
+ChatEngine.prototype.ping = Promise.coroutine(function* (eventName, message) {
+  log.debug(`ChatEngine.ping ${eventName}`);
   if(eventName && message) {
     if(message.from) {
-      redisSocket.ping(message.from, eventName, message);
+      yield redisSocket.ping(message.from, eventName, message);
     }
   }
-};
+});
 
 ChatEngine.prototype.buildMessage = function(sender, text) {
   var message = {};

@@ -8,7 +8,7 @@ var publisher, client, config, log;
 function Session() { }
 
 Session.prototype.initialize = function() {
-  if(typeof Session.prototype.lazyInit === 'undefined') {
+  if(typeof Session.prototype.protoInit === 'undefined') {
     config          = this.factory.createConfig();
     publisher 		  = this.factory.createRedisPublisher();
     client          = Redis.createClient(config.getConfig().redis);
@@ -16,7 +16,7 @@ Session.prototype.initialize = function() {
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.ADMINISTRATION);
 
-    Session.prototype.lazyInit = true;
+    Session.prototype.protoInit = true;
   }
 };
 
@@ -174,12 +174,12 @@ module.exports = Session;
 Session.Enum = { ACTIVE: "session-active", MEDIA: "session-media", ADMIN: "session-admin", IP: "session-ip", STARTED: "session-started", USERS: "session-users"};
 
 var setSessionData = function(key, data) {
-  log.debug('setSessionData for key: ', key);
+  log.silly('setSessionData for key: ', key);
   return client.setAsync(key, JSON.stringify(data));
 };
 
 var getSessionData = function(key) {
-  log.debug('getSessionData for key:', key);
+  log.silly('getSessionData for key:', key);
   return client.getAsync(key).then(function(results) {
     return JSON.parse(results);
   });

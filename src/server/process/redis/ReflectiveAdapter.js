@@ -4,14 +4,19 @@ const Publisher = require('./RedisPublisher');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-var config;
+var client, log;
 
 function ReflectiveAdapter() { }
 
 ReflectiveAdapter.prototype.initialize = function() {
-  if(typeof ReflectiveAdapter.prototype.lazyInit === 'undefined') {
+  if(typeof ReflectiveAdapter.prototype.protoInit === 'undefined') {
+    ReflectiveAdapter.prototype.protoInit = true;
+
+    var config = this.factory.createConfig();
     client = Redis.createClient(config.getConfig().redis);
-    ReflectiveAdapter.prototype.lazyInit = true;
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.GENERAL);
   }
 };
 
@@ -33,7 +38,7 @@ ReflectiveAdapter.prototype.callFunction = Promise.coroutine(function* (object, 
 
           yield client.publishAsync(Publisher.RespEnum.RESPONSE, key);
         } else {
-          console.log(`No function found with name ${functionHandle}`);
+          log.debug(`No function found with name ${functionHandle}`);
         }
       }
     }

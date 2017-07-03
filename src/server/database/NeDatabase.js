@@ -2,15 +2,24 @@ const Promise			= require('bluebird');
 const Path				= require('path');
 const Datastore		= require('nedb');
 
-var db;
+var db, log;
 
 function NeDatabase(){
 };
 
-NeDatabase.prototype.initialize = function() {
-	if(!db) {
+NeDatabase.prototype.initialize = function(force) {
+	if(typeof NeDatabase.prototype.protoInit === 'undefined') {
+		NeDatabase.prototype.protoInit = true;
+
+		var logManager  = this.factory.createLogManager();
+		log             = logManager.getLog(logManager.LogEnum.DATABASE);
+	}
+
+	if(typeof NeDatabase.prototype.stateInit === 'undefined') {
+		NeDatabase.prototype.stateInit = true;
+
 		var config = this.factory.createConfig();
-		
+
 		log.info(`Loading db from path ${Path.join(config.getAppDataDir(), 'database_inst')}`);
 		db = new Datastore({ filename: Path.join(config.getAppDataDir(), 'database_inst'), autoload: true });
 		db = Promise.promisifyAll(db);

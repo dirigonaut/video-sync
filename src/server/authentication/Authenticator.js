@@ -6,17 +6,17 @@ var publisher;
 function Authenticator() { }
 
 Authenticator.prototype.initialize = function() {
-  if(typeof Authenticator.prototype.lazyInit === 'undefined') {
+  if(typeof Authenticator.prototype.protoInit === 'undefined') {
     publisher       = this.factory.createRedisPublisher();
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);
 
-    Authenticator.prototype.lazyInit = true;
+    Authenticator.prototype.protoInit = true;
   }
 };
 
-Authenticator.prototype.requestToken = Promise.coroutine(function* (id, data, callback) {
+Authenticator.prototype.requestToken = Promise.coroutine(function* (id, data) {
   log.debug("Authenticator.requestToken");
   var invitees = yield session.getInvitees();
 
@@ -32,7 +32,7 @@ Authenticator.prototype.requestToken = Promise.coroutine(function* (id, data, ca
   }
 });
 
-Authenticator.prototype.validateToken = Promise.coroutine(function* (id, data, callback) {
+Authenticator.prototype.validateToken = Promise.coroutine(function* (id, data) {
   log.debug("Authenticator.validateToken");
   var authorized = false;
   var invitees = yield session.getInvitees();

@@ -7,9 +7,9 @@ var xmlFactory;
 
 class XmlUtil {
   constructor() {
-    if(typeof XmlUtil.prototype.lazyInit === 'undefined') {
+    if(typeof XmlUtil.prototype.protoInit === 'undefined') {
       xmlFactory = new XmlFactory();
-      XmlUtil.prototype.lazyInit = true;
+      XmlUtil.prototype.protoInit = true;
     }
   }
 }

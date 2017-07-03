@@ -1,15 +1,27 @@
 const Promise     = require('bluebird');
-const Redis         = require('redis');
+const Redis       = require('redis');
 
-var subCallbacks, publisher, client;
+Promise.promisifyAll(Redis.RedisClient.prototype);
+
+var subCallbacks, session, publisher, client, fileIO, log;
 
 function Cache() { }
 
 Cache.prototype.initialize = function() {
-  if(typeof Cache.prototype.lazyInit === 'undefined') {
-    subCallbacks    = {};
+  if(typeof Cache.prototype.protoInit === 'undefined') {
+    Cache.prototype.protoInit = true;
+
+    subCallbacks    = new Map();
+
+    fileIO          = this.factory.createFileIO();
+    session         = this.factory.createSession();
+    var config      = this.factory.createConfig();
+
     publisher       = Redis.createClient(config.getConfig().redis);
     client          = Redis.createClient(config.getConfig().redis);
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.VIDEO);
 
     client.on("message", function(channel, message) {
       log.debug('Subscribers onMessage ', channel);
@@ -18,7 +30,7 @@ Cache.prototype.initialize = function() {
       var callbacks = subCallbacks.get(channel);
       if(callbacks) {
         log.debug(`Subscribers returning data for key ${channel} and index ${message.index}`);
-        if(message.data !== null) {
+        if(typeof message.data !== 'undefined' && message.data) {
           message.data = new Buffer(new Uint8Array(message.data.data));
         }
 
@@ -27,124 +39,99 @@ Cache.prototype.initialize = function() {
         }
       }
     });
-    Cache.prototype.lazyInit = true;
   }
 };
 
 Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback) {
   var key = `${requestData.path}-${requestData.segment[0]}-${requestData.segment[1]}-${requestData.typeId}`;
-  log.debug('Cache.getSegment', key);
+  log.debug(`Cache.getSegment ${key}`);
+  var segment = yield getCacheData(`${key}:0`);
 
-  var handleCachedData = function(err, segment) {
-    if(err === null) {
-      if(segment !== undefined && segment !== null) {
-        log.info('Cache has data', key);
-        if(segment.name !== undefined && segment.name !== null) {
-          if(segment.data !== null) {
-            segment.data = new Buffer(new Uint8Array(segment.data.data));
-          }
-
-          callback(segment);
-
-          if(segment.data !== null && segment.index !== null) {
-            getCacheData.call(this, `${key}:${segment.index + 1}`, handleCachedData);
-          }
+  if(segment) {
+    log.info(`Cache has data ${key}`);
+    if(typeof segment.name !== 'undefined' && segment.name) {
+      while(segment) {
+        if(typeof segment.data !== 'undefined' && segment.data) {
+          segment.data = new Buffer(new Uint8Array(segment.data.data));
         }
-      } else if(subCallbacks.get(key) !== null && subCallbacks.get(key) !== undefined) {
-        subscribeToRead(key, callback);
-      } else {
-        log.info('Cache has no data', key);
-        readFile.call(this, key, requestData);
+
+        callback(segment);
+        segment = yield getCacheData(`${key}:${segment.index + 1}`);
+      }
+
+      if(subCallbacks.get(key)) {
         subscribeToRead(key, callback);
       }
     }
-  }.bind(this);
-
-  getCacheData.call(this, `${key}:0`, handleCachedData);
+  } else {
+    log.info('Cache has no data', key);
+    subscribeToRead(key, callback);
+    readFile(key, requestData);
+  }
 });
 
 module.exports = Cache;
 
 var readFile = Promise.coroutine(function* (key, requestData) {
   log.debug(`Cache.readFile ${key}`);
-  var fileIO = this.factory.createFileIO();
-
   var basePath = yield session.getMediaPath();
-  var readConfig = fileIO.createStreamConfig(basePath + requestData.path, function onData(data, index) {
-    log.debug('Cache on data', key);
-    var segment = {};
-    segment.typeId = requestData.typeId;
-    segment.name = key;
-    segment.data = data;
-    segment.index = index;
 
-    var handleResponse = function(err, result) {
-      if(err) {
-        log.error(`Could not insert segment into cache for key: ${key}:${index}`, err);
-      } else {
-        log.debug(`Publishing segment for key: ${key}:${index}`);
-        publisher.publish(key, JSON.stringify(segment));
-      }
-    };
+  if(basePath && basePath.length > 0) {
+    var readConfig = fileIO.createStreamConfig(basePath + requestData.path, Promise.coroutine(function* (data, index) {
+      log.debug(`Cache on data for key: ${key} of size: ${data ? data.length : null}`);
+      var segment = {};
+      segment.typeId = requestData.typeId;
+      segment.name = key;
+      segment.data = data;
+      segment.index = index;
 
-    setCacheData.call(this, `${key}:${index}`, segment, handleResponse);
-  }.bind(this));
+      yield setCacheData(segment.name, segment.index, segment);
+    }));
 
-  var options = {"start": parseInt(requestData.segment[0]), "end": parseInt(requestData.segment[1])};
-  readConfig.options = options;
+    var options = {"start": parseInt(requestData.segment[0]), "end": parseInt(requestData.segment[1])};
+    readConfig.options = options;
 
-  readConfig.onFinish = function onFinish(index) {
-    log.debug('Cache finished read: ', key);
-    var segment = {};
-    segment.typeId = requestData.typeId;
-    segment.name = key;
-    segment.data = null;
-    segment.index = index;
+    readConfig.onFinish = Promise.coroutine(function* (index) {
+      log.debug('Cache finished read: ', key);
+      var segment = {};
+      segment.typeId = requestData.typeId;
+      segment.name = key;
+      segment.data = null;
+      segment.index = index;
 
-    var handleResponse = function(err, result) {
-      if(err) {
-        log.error(`Could not insert segment into cache for key: ${key}:${index}`, err);
-      } else {
-        log.debug(`Publishing segment for key: ${key}:${index}`);
+      yield setCacheData(segment.name, segment.index, segment);
+    });
 
-        publisher.publish(key, JSON.stringify(segment));
-      }
-    };
-
-    setCacheData.call(this, `${key}:${index}`, segment, handleResponse);
-  }.bind(this);
-
-  fileIO.read(readConfig);
+    fileIO.read(readConfig);
+  }
 });
 
-var setCacheData = function(key, data, callback) {
-  log.debug('setCacheData for key: ', key);
-  var response = function(err, result) {
-    if(err) {
-      callback(err);
-    } else {
-      callback(null, data ? data.index : null);
-    }
-  };
+var setCacheData = Promise.coroutine(function* (key, index, data) {
+  log.debug(`setCacheData for key: ${key}`);
+  var json = JSON.stringify(data);
+  yield publisher.setAsync(`${key}:${index}`, json, 'EX', 30);
+  yield publisher.publishAsync(key, json);
+});
 
-  publisher.set(key, JSON.stringify(data), 'EX', 24, response);
-};
-
-var getCacheData = function(key, callback) {
+var getCacheData = Promise.coroutine(function* (key) {
   log.debug('getCacheData for key: ', key);
-  publisher.get(key, function(err, reply) {
-    callback(err, JSON.parse(reply));
-  });
-};
+  var data = yield publisher.getAsync(key);
+
+  if(data) {
+    data = JSON.parse(data);
+  }
+
+  return data;
+});
 
 var subscribeToRead = function(key, callback) {
   log.debug('subscribeToRead for key: ', key);
   var callbacks = subCallbacks.get(key);
 
-  if(callbacks !== undefined && callbacks !== null) {
-    callbacks.splice(callbacks.length - 1, 0, callback)
+  if(callbacks) {
+    callbacks.splice(callbacks.length - 1, 0, callback);
   } else {
-    callbacks = [ callback, createUnsubscribeListener.call(this, key)];
+    callbacks = [callback, createUnsubscribeListener(key)];
     client.subscribe(key);
   }
 
@@ -156,7 +143,7 @@ var createUnsubscribeListener = function(key) {
   var countIndex = 0;
 
   var unsubscribe = function(message) {
-    if(message !== null && message !== undefined) {
+    if(message) {
       if(message.data === null) {
         lastIndex = message.index;
       }
@@ -169,7 +156,7 @@ var createUnsubscribeListener = function(key) {
 
       ++countIndex;
     }
-  }.bind(this);
+  };
 
   return unsubscribe;
 };

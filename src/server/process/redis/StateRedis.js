@@ -1,41 +1,29 @@
 const Promise           = require('bluebird');
 const Redis             = require('redis');
 
-const ReflectiveAdapter = require('./ReflectiveAdapter');
-const NeDatabase        = require('../../database/NeDatabase');
-const PlayerManager     = require('../../player/PlayerManager');
-
-var adapter, database, playerManager, subscriber, stateEngine;
-
-var lazyInit = Promise.coroutine(function* () {
-  adapter       = this.factory.createReflectiveAdapter();
-  database      = this.factory.createNeDatabase();
-  stateEngine   = this.factory.createStateEngine();
-  playerManager = this.factory.createPlayerManager();
-
-  subscriber    = Redis.createClient(config.getConfig().redis);
-
-  console.log("StateEngine inited")
-  stateEngine.initialize();
-  adapter.initialize();
-});
+var adapter, database, playerManager, subscriber, stateEngine, log;
 
 function StateRedis() { };
 
-StateRedis.prototype.initialize = Promise.coroutine(function* () {
-  if(typeof StateRedis.prototype.lazyInit === 'undefined') {
-    yield lazyInit.call(this);
-    StateRedis.prototype.lazyInit = true;
+StateRedis.prototype.initialize = function() {
+  if(typeof StateRedis.prototype.protoInit === 'undefined') {
+    adapter       = this.factory.createReflectiveAdapter();
+    database      = this.factory.createNeDatabase();
+    stateEngine   = this.factory.createStateEngine();
+    playerManager = this.factory.createPlayerManager();
+
+    var config    = this.factory.createConfig();
+    subscriber    = Redis.createClient(config.getConfig().redis);
+
+    stateEngine.initialize();
+    attachEvents.call(this);
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.GENERAL);
+
+    StateRedis.prototype.protoInit = true;
   }
-
-  this.log = this.logManager.getLog(this.logManager.LogEnum.GENERAL);
-  initialize.call(this, subscriber);
-
-  yield subscriber.subscribeAsync("database");
-  yield subscriber.subscribeAsync("state");
-  yield subscriber.subscribeAsync("player");
-  yield subscriber.subscribeAsync("session");
-});
+};
 
 StateRedis.prototype.cleanUp = Promise.coroutine(function* () {
   log.debug("ServerRedis.cleanUp");
@@ -60,7 +48,7 @@ StateRedis.prototype.cleanUp = Promise.coroutine(function* () {
 
 module.exports = StateRedis;
 
-function initialize(subscriber) {
+function attachEvents() {
   subscriber.on("message", Promise.coroutine(function* (channel, message) {
     if(channel === "database") {
       yield adapter.callFunction(database, message);
@@ -88,4 +76,10 @@ function initialize(subscriber) {
   subscriber.on("error", function(err) {
     log.error(err);
   }.bind(this));
+
+
+  subscriber.subscribe("database");
+  subscriber.subscribe("state");
+  subscriber.subscribe("player");
+  subscriber.subscribe("session");
 }

@@ -48,7 +48,7 @@ MediaController.prototype.initialize = function(mediaSource, window, downloadMet
       _this.syncPing = true;
       _this.emit('meta-manager-ready');
 
-      if(callback !== null && callback !== undefined) {
+      if(callback) {
         callback();
       }
     };
@@ -331,8 +331,8 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     _this.syncPing = data;
   });
 
-  clientSocket.setEvent('segment-chunk', function(segment){
-    log.debug('segment-chunk');
+  clientSocket.setEvent('segment-chunk', function(segment) {
+    log.debug(`segment-chunk`);
     sourceBuffers[segment.typeId].bufferSegment(segment.name, segment.index, segment.data);
   });
 }
@@ -344,4 +344,4 @@ var removeSocketEvents = function () {
   clientSocket.clearEvent('state-seek');
   clientSocket.clearEvent('state-trigger-ping');
   clientSocket.clearEvent('segment-chunk');
-}
+};

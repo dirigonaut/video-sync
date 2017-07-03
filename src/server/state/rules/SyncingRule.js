@@ -1,7 +1,16 @@
 var Player        = require('../../player/Player');
 
-function SyncingRule() {
-}
+var log;
+
+function SyncingRule() { }
+
+SyncingRule.prototype.initialize = function() {
+  if(typeof SyncingRule.prototype.protoInit === 'undefined') {
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.STATE);
+    SyncingRule.prototype.protoInit = true;
+  }
+};
 
 SyncingRule.prototype.evaluate = function(issuer, others) {
   log.info("SyncingRule.evaluate", issuer);

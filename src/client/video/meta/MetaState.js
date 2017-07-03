@@ -31,7 +31,7 @@ MetaState.prototype.isSegmentBuffered = function(index) {
   var isBuffered = true;
   var buffered = this.bufferSegments[index];
 
-  if(buffered === null || buffered == undefined) {
+  if(!buffered) {
     isBuffered = false;
   } else if (this.forceBuffer) {
     if(buffered !== this.trackIndex) {

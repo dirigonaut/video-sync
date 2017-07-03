@@ -82,17 +82,17 @@ Validator.prototype.sterilizeUser = function(input) {
 
 Validator.prototype.logDataCleaning = function(dirty_data, dirtier_data){
 	if(this.debug){
-		console.log("dirty: ", dirty_data, "clean: ", dirtier_data);
+		//console.log("dirty: ", dirty_data, "clean: ", dirtier_data);
 	}
 };
 
 Validator.prototype.sterilizeVideoInfo = function(input){
-	console.log(input);
+	//console.log(input);
 	return input;
 };
 
 Validator.prototype.sterilize = function(input){
-	console.log(input);
+	//console.log(input);
 	return input;
 };
 

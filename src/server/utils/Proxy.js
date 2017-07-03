@@ -2,12 +2,25 @@ var Events  = require('events');
 var Cluster = require('cluster');
 var Net     = require('net');
 
-var proxyServer = null;
-var workers = [];
+var config, proxyServer, workers, log;
 
-class Proxy extends Events { }
+function Proxy() { }
 
-Proxy.prototype.initialize = function(numProcesses) {
+Proxy.prototype.initialize = function() {
+  if(typeof Proxy.prototype.protoInit === 'undefined') {
+    Proxy.prototype.protoInit = true;
+
+    Object.assign(this, Events.prototype);
+    workers = [];
+
+    config          = this.factory.createConfig();
+    
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.GENERAL);
+  }
+};
+
+Proxy.prototype.setOnConnect = function(numProcesses) {
   var getWorkerIndex = function(ip, len) {
     var s = '';
     for (let i = 0, _len = ip.length; i < _len; i++) {
@@ -19,18 +32,18 @@ Proxy.prototype.initialize = function(numProcesses) {
     return Number(s) % len;
   };
 
-	// Create the outside facing server listening on our port.
-	proxyServer = Net.createServer({ pauseOnConnect: true }, function(connection) {
-		var worker = workers[getWorkerIndex(connection.remoteAddress, numProcesses)];
-		worker.send('sticky-session:connection', connection);
-	});
+  // Create the outside facing server listening on our port.
+  proxyServer = Net.createServer({ pauseOnConnect: true }, function(connection) {
+    var worker = workers[getWorkerIndex(connection.remoteAddress, numProcesses)];
+    worker.send('sticky-session:connection', connection);
+  });
 };
 
 Proxy.prototype.spawnWorker = function(index) {
 	workers[index] = Cluster.fork({processType: 'serverProcess'});
 
 	workers[index].on('exit', function(code, signal) {
-		console.log('respawning worker', index);
+		log.info('respawning worker', index);
 		spawnWorker(index);
 	});
 

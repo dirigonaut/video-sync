@@ -1,12 +1,11 @@
 const Promise     = require('bluebird');
-const Validator   = require('../authentication/Validator');
 
 var validator, publisher, session, log;
 
 function DatabaseController() { }
 
-DatabaseController.prototype.initialize = function(io, socket) {
-  if(typeof DatabaseController.prototype.lazyInit === 'undefined') {
+DatabaseController.prototype.initialize = function() {
+  if(typeof DatabaseController.prototype.protoInit === 'undefined') {
     validator     = this.factory.createValidator();
     publisher     = this.factory.createRedisPublisher();
     session       = this.factory.createSession();
@@ -14,28 +13,21 @@ DatabaseController.prototype.initialize = function(io, socket) {
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.DATABASE);
 
-    DatabaseController.prototype.lazyInit = true;
+    DatabaseController.prototype.protoInit = true;
   }
-
-  initialize.call(this, io, socket);
 };
 
-module.exports = DatabaseController;
-
-function initialize(io, socket) {
-  log.debug("Attaching DatabaseController");
+DatabaseController.prototype.attachSocket = function(io, socket) {
+  log.debug("DatabaseController.attachSocket");
 
   //Create
   socket.on('db-create-smtp', Promise.coroutine(function* (data) {
     log.debug('db-create-smtp');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      var emitResults = function() {
-        socket.emit("db-refresh");
-      }
-
       var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['createSmtp', [cleanData]], emitResults);
+      yield publisher.publishAsync(publisher.Enum.DATABASE, ['createSmtp', [cleanData]]);
+      socket.emit("db-refresh");
     }
   }));
 
@@ -43,12 +35,9 @@ function initialize(io, socket) {
     log.debug('db-create-session');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      var emitResults = function() {
-        socket.emit("db-refresh");
-      }
-
       var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['createSession', [cleanData]], emitResults);
+      yield publisher.publishAsync(publisher.Enum.DATABASE, ['createSession', [cleanData]]);
+      socket.emit("db-refresh");
     }
   }));
 
@@ -57,12 +46,10 @@ function initialize(io, socket) {
     log.debug('db-read-smpts');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      var emitResults = function(smtp) {
-        //Remove everything but the address
+      var smtp = yield publisher.publishAsync(publisher.Enum.DATABASE, ['readAllSmtp', []]);
+      if(smtp) {
         socket.emit("db-smtps", smtp);
       }
-
-      publisher.publish(Publisher.Enum.DATABASE, ['readAllSmtp', []], emitResults);
     }
   }));
 
@@ -70,11 +57,10 @@ function initialize(io, socket) {
     log.debug('db-read-sessions');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      var emitResults = function(sessions) {
+      var sessions = yield publisher.publishAsync(publisher.Enum.DATABASE, ['readAllSessions', []]);
+      if(sessions) {
         socket.emit("db-sessions", sessions);
-      };
-
-      publisher.publish(Publisher.Enum.DATABASE, ['readAllSessions', []], emitResults);
+      }
     }
   }));
 
@@ -83,12 +69,9 @@ function initialize(io, socket) {
     log.debug('db-update-smtp');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      var emitResults = function() {
-        socket.emit("db-refresh");
-      };
-
       var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['updateSmtp', [cleanData[0], cleanData[1]]], emitResults);
+      yield publisher.publishAsync(publisher.Enum.DATABASE, ['updateSmtp', [cleanData[0], cleanData[1]]]);
+      socket.emit("db-refresh");
     }
   }));
 
@@ -96,12 +79,9 @@ function initialize(io, socket) {
     log.debug('db-update-session');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      var emitResults = function(docs) {
-        socket.emit("db-refresh");
-      };
-
       var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['updateSession', [cleanData[0], cleanData[1]]], emitResults);
+      yield publisher.publishAsync(publisher.Enum.DATABASE, ['updateSession', [cleanData[0], cleanData[1]]]);
+      socket.emit("db-refresh");
     }
   }));
 
@@ -110,14 +90,11 @@ function initialize(io, socket) {
     log.debug('db-delete-smtp');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      var emitResults = function(deleted){
-        if(deleted > 0){
-          socket.emit('db-refresh');
-        }
-      }
-
       var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['deleteSmtp', [cleanData]], emitResults);
+      var deleted = yield publisher.publishAsync(publisher.Enum.DATABASE, ['deleteSmtp', [cleanData]]);
+      if(deleted && deleted > 0){
+        socket.emit('db-refresh');
+      }
     }
   }));
 
@@ -125,14 +102,13 @@ function initialize(io, socket) {
     log.debug('db-delete-session');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      var emitResults = function(deleted){
-        if(deleted > 0){
-          socket.emit('db-refresh');
-        }
-      }
-
       var cleanData = validator.sterilizeSmtp(data);
-      publisher.publish(Publisher.Enum.DATABASE, ['deleteSession', [cleanData]], emitResults);
+      yield publisher.publishAsync(publisher.Enum.DATABASE, ['deleteSession', [cleanData]]);
+      if(deleted && deleted > 0){
+        socket.emit('db-refresh');
+      }
     }
   }));
-}
+};
+
+module.exports = DatabaseController;

@@ -8,6 +8,12 @@ var start = Promise.coroutine(function* () {
 
   var factory = yield factoryManager.initialize();
 
-  masterProcess = yield factory.createMasterProcess();
+  var logManager = factory.createLogManager();
+  logManager.addFileLogging();
+
+  var config = factory.createConfig();
+  yield config.initializeAsync();
+
+  masterProcess = factory.createMasterProcess();
   yield masterProcess.start();
 })();

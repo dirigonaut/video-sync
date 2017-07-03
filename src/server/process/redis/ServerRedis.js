@@ -4,27 +4,22 @@ const Redis             = require('redis');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-var adapter, subscriber;
-
-var lazyInit = Promise.coroutine(function* () {
-  adapter             = this.factory.createReflectiveAdapter();
-  subscriber          = Redis.createClient(config.getConfig().redis);
-
-  adapter.initialize();
-});
+var adapter, subscriber, log;
 
 function ServerRedis() { }
 
 ServerRedis.prototype.initialize = Promise.coroutine(function* () {
-  if(typeof ServerRedis.prototype.lazyInit === 'undefined') {
-    yield lazyInit.call(this);
-    ServerRedis.prototype.lazyInit = true;
+  if(typeof ServerRedis.prototype.protoInit === 'undefined') {
+    var config = this.factory.createConfig();
+    adapter    = this.factory.createReflectiveAdapter();
+    subscriber = Redis.createClient(config.getConfig().redis);
+
+    attachEvents.call(this);
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.GENERAL);
+    ServerRedis.prototype.protoInit = true;
   }
-
-  this.log = this.logManager.getLog(this.logManager.LogEnum.GENERAL);
-  initialize.call(this, subscriber);
-
-  yield subscriber.subscribeAsync("session");
 });
 
 ServerRedis.prototype.cleanUp = Promise.coroutine(function* () {
@@ -47,7 +42,7 @@ ServerRedis.prototype.cleanUp = Promise.coroutine(function* () {
 
 module.exports = ServerRedis;
 
-function initialize(subscriber) {
+function attachEvents() {
   subscriber.on("message", Promise.coroutine(function* (channel, message) {
     if(channel === "session"){
       yield adapter.callFunction(session, message);
@@ -69,4 +64,6 @@ function initialize(subscriber) {
   subscriber.on("error", function(err) {
     log.info(err);
   }.bind(this));
+
+  subscriber.subscribe("session");
 }

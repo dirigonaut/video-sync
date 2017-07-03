@@ -1,9 +1,16 @@
-var LogManager    = require('../../log/LogManager');
 var Player        = require('../../player/Player');
 
-var log           = LogManager.getLog(LogManager.LogEnum.STATE);
+var log;
 
 function SyncRule() { }
+
+SyncRule.prototype.initialize = function() {
+  if(typeof SyncRule.prototype.protoInit === 'undefined') {
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.STATE);
+    SyncRule.prototype.protoInit = true;
+  }
+};
 
 SyncRule.prototype.evaluate = function(issuer, players, fuzzyRange) {
   log.silly("SyncRule.evaluate");
