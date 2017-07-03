@@ -8,18 +8,20 @@ var adapter, subscriber, log;
 
 function ServerRedis() { }
 
-ServerRedis.prototype.initialize = Promise.coroutine(function* () {
+ServerRedis.prototype.initialize = Promise.coroutine(function* (force) {
   if(typeof ServerRedis.prototype.protoInit === 'undefined') {
     ServerRedis.prototype.protoInit = true;
+    var config      = this.factory.createConfig();
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.GENERAL);
+  }
 
-    var config = this.factory.createConfig();
+  if(force === undefined ? typeof ServerRedis.prototype.stateInit === 'undefined' : force) {
+    ServerRedis.prototype.stateInit = true;
     adapter    = this.factory.createReflectiveAdapter();
     subscriber = Redis.createClient(config.getConfig().redis);
 
-    attachEvents.call(this);
-
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.GENERAL);
+    attachEvents();
   }
 });
 
@@ -48,23 +50,23 @@ function attachEvents() {
     if(channel === "session"){
       yield adapter.callFunction(session, message);
     }
-  }.bind(this)));
+  }));
 
   subscriber.on("subscribe", function(channel, count) {
     log.info(`Subscribed to ${channel}`);
-  }.bind(this));
+  });
 
   subscriber.on("connect", function(err) {
     log.info("ServerRedis is connected to redis server");
-  }.bind(this));
+  });
 
   subscriber.on("reconnecting", function(err) {
     log.info("ServerRedis is connected to redis server");
-  }.bind(this));
+  });
 
   subscriber.on("error", function(err) {
     log.info(err);
-  }.bind(this));
+  });
 
   subscriber.subscribe("session");
 }

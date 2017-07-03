@@ -1,18 +1,21 @@
 const Promise     = require('bluebird');
 const NodeMailer	= require("nodemailer");
 
-var publisher, smtpTransport, activeSmtp, log;
+var publisher, smtpTransport, activeSmtp, database, log;
 
 function Smtp() { }
 
-Smtp.prototype.initialize = function() {
+Smtp.prototype.initialize = function(force) {
 	if(typeof Smtp.prototype.protoInit === 'undefined') {
 		Smtp.prototype.protoInit = true;
-
-		publisher 			= this.factory.createRedisPublisher();
-
 		var logManager  = this.factory.createLogManager();
 		log             = logManager.getLog(logManager.LogEnum.ADMINISTRATION);
+	}
+
+	if(force === undefined ? typeof Smtp.prototype.stateInit === 'undefined' : force) {
+		Smtp.prototype.stateInit = true;
+		publisher       = this.factory.createRedisPublisher();
+		database				= this.factory.createNeDatabase(false);
 	}
 };
 
@@ -21,7 +24,7 @@ Smtp.prototype.initializeTransport = Promise.coroutine(function* (address) {
 	if(address !== activeSmtp) {
 		this.closeTrasporter();
 
-		var result = yield publisher.publishAsync(publisher.Enum.DATABASE, ['readSmtp', [address]]).then(function(data) {
+		var result = yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.READSMTP, [address]]).then(function(data) {
 	    return data[0];
 	  });
 

@@ -9,7 +9,7 @@ var config, log;
 
 function Certificate() { }
 
-Certificate.prototype.initialize = function() {
+Certificate.prototype.initialize = function(force) {
   if(typeof Certificate.prototype.protoInit === 'undefined') {
     Certificate.prototype.protoInit = true;
     Moment().format('YYYY MM DD');

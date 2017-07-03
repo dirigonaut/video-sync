@@ -3,26 +3,29 @@ const Redis   = require('redis');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-var publisher, client, config, log;
+var publisher, client, config, database, log;
 
 function Session() { }
 
-Session.prototype.initialize = function() {
+Session.prototype.initialize = function(force) {
   if(typeof Session.prototype.protoInit === 'undefined') {
     Session.prototype.protoInit = true;
-
     config          = this.factory.createConfig();
-    publisher 		  = this.factory.createRedisPublisher();
-    client          = Redis.createClient(config.getConfig().redis);
-
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.ADMINISTRATION);
+  }
+
+  if(force === undefined ? typeof Session.prototype.stateInit === 'undefined' : force) {
+    Session.prototype.stateInit = true;
+    client      = Redis.createClient(config.getConfig().redis);
+    publisher   = this.factory.createRedisPublisher();
+    database    = this.factory.createNeDatabase(false);
   }
 };
 
 Session.prototype.setSession = Promise.coroutine(function* (id) {
   log.debug("Session.setActiveSession");
-  var session = yield publisher.publishAsync(publisher.Enum.DATABASE, ['readSession', [id]]).then(function(data) {
+  var session = yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.READSESSION, [id]]).then(function(data) {
     return data[0];
   });
 

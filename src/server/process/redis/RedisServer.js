@@ -9,14 +9,12 @@ function RedisServer() { };
 RedisServer.prototype.initialize = function(force) {
   if(typeof RedisServer.prototype.protoInit === 'undefined') {
     RedisServer.prototype.protoInit = true;
-
-    config 			= this.factory.createConfig();
-
+    config 			    = this.factory.createConfig();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.ADMINISTRATION);
   }
 
-  if(typeof RedisServer.prototype.stateInit === 'undefined' || force) {
+  if(force === undefined ? typeof RedisServer.prototype.stateInit === 'undefined' : force) {
     RedisServer.prototype.stateInit = true;
     var options = config.getConfig().redisStartUp;
 

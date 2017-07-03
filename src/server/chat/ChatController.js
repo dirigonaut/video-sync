@@ -1,20 +1,23 @@
 const Promise = require('bluebird');
 
-var commandEngine, chatEngine, redisSocket, publisher;
+var commandEngine, chatEngine, redisSocket, publisher, playerManager, log;
 
 function ChatController() { }
 
-ChatController.prototype.initialize = function() {
+ChatController.prototype.initialize = function(force) {
   if(typeof ChatController.prototype.protoInit === 'undefined') {
     ChatController.prototype.protoInit = true;
-
     commandEngine   = this.factory.createCommandEngine();
     chatEngine      = this.factory.createChatEngine();
-    redisSocket     = this.factory.createRedisSocket();
-    publisher       = this.factory.createRedisPublisher();
-
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.CHAT);
+  }
+
+  if(force === undefined ? typeof ChatController.prototype.stateInit === 'undefined' : force) {
+    ChatController.prototype.stateInit = true;
+    redisSocket     = this.factory.createRedisSocket();
+    publisher       = this.factory.createRedisPublisher();
+    playerManager   = this.factory.createPlayerManager(false);
   }
 };
 
@@ -30,7 +33,7 @@ ChatController.prototype.attachSocket = function(io, socket) {
 
   socket.on('chat-command', Promise.coroutine(function* (data) {
     log.debug('chat-command', data);
-    var player = yield publisher.publishAsync(publisher.Enum.PLAYER, ['getPlayer', [socket.id]]);
+    var player = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETPLAYER, [socket.id]]);
 
     if(player) {
       var command = commandEngine.processCommand(player, data);

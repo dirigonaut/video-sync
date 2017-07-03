@@ -2,7 +2,7 @@ var player, log;
 
 function SyncRule() { }
 
-SyncRule.prototype.initialize = function() {
+SyncRule.prototype.initialize = function(force) {
   if(typeof SyncRule.prototype.protoInit === 'undefined') {
     SyncRule.prototype.protoInit = true;
     player          = this.factory.createPlayer();
@@ -18,7 +18,7 @@ SyncRule.prototype.evaluate = function(issuer, players, fuzzyRange) {
   if(issuer.sync !== player.Sync.DESYNCED) {
     for(let player of players.values()){
       if(player.sync === player.Sync.SYNCED) {
-        if(parseFloat(issuer.timestamp) - parseFloat(player.timestamp) > fuzzyRange) {
+        if(parseFloat(issuer.timestamp) > parseFloat(player.timestamp) && Math.abs(parseFloat(issuer.timestamp) - parseFloat(player.timestamp)) > fuzzyRange) {
           sync = true;
           break;
         }
@@ -26,11 +26,7 @@ SyncRule.prototype.evaluate = function(issuer, players, fuzzyRange) {
   	}
   }
 
-  if(sync) {
-    return true;
-  }
-
-  return false;
+  return sync;
 };
 
 module.exports = SyncRule;

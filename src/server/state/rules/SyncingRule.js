@@ -2,7 +2,7 @@ var player, log;
 
 function SyncingRule() { }
 
-SyncingRule.prototype.initialize = function() {
+SyncingRule.prototype.initialize = function(force) {
   if(typeof SyncingRule.prototype.protoInit === 'undefined') {
     SyncingRule.prototype.protoInit = true;
     player          = this.factory.createPlayer();

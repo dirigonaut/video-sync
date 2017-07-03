@@ -1,25 +1,29 @@
 const Promise = require('bluebird');
 
-var publisher, redisSocket, smtp, userAdmin, validator, authenticator, socketLog, session, chatEngine, log;
+var publisher, redisSocket, smtp, userAdmin, validator, authenticator,
+      socketLog, session, chatEngine, playerManager, log;
 
 function AuthenticationController() { }
 
-AuthenticationController.prototype.initialize = function(io) {
+AuthenticationController.prototype.initialize = function(force) {
   if(typeof AuthenticationController.prototype.protoInit === 'undefined') {
     AuthenticationController.prototype.protoInit = true;
-
-    publisher       = this.factory.createRedisPublisher();
-    redisSocket     = this.factory.createRedisSocket()
-    smtp            = this.factory.createSmtp();
     userAdmin       = this.factory.createUserAdministration();
     validator		    = this.factory.createValidator();
-    authenticator   = this.factory.createAuthenticator();
     socketLog       = this.factory.createSocketLog();
-    session         = this.factory.createSession();
     chatEngine      = this.factory.createChatEngine();
-
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);
+  }
+
+  if(force === undefined ? typeof AuthenticationController.prototype.stateInit === 'undefined' : force) {
+    AuthenticationController.prototype.stateInit = true;
+    session         = this.factory.createSession();
+    authenticator   = this.factory.createAuthenticator();
+    publisher       = this.factory.createRedisPublisher();
+    redisSocket     = this.factory.createRedisSocket();
+    smtp            = this.factory.createSmtp();
+    playerManager   = this.factory.createPlayerManager(false);
   }
 };
 
@@ -71,7 +75,7 @@ AuthenticationController.prototype.attachIO = function (io) {
         session.removeAdmin(socket.id);
       }
 
-      yield publisher.publishAsync(publisher.Enum.PLAYER, ['removePlayer', [socket.id]]);
+      yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.REMOVEPLAYER, [socket.id]]);
       yield userAdmin.disconnectSocket(socket);
     }));
 
@@ -97,7 +101,7 @@ module.exports = AuthenticationController;
 var userAuthorized = Promise.coroutine(function* (socket, io, handle) {
   socket.auth = true;
 
-  yield publisher.publishAsync(publisher.Enum.PLAYER, ['createPlayer', [socket.id, handle]]);
+  yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.CREATEPLAYER, [socket.id, handle]]);
 
   var videoController = this.factory.createVideoController();
   var stateController = this.factory.createStateController();
@@ -115,7 +119,7 @@ var userAuthorized = Promise.coroutine(function* (socket, io, handle) {
       socket.emit('media-ready');
     }
 
-    var handles = yield publisher.publishAsync(publisher.Enum.PLAYER, ['getHandles', []]);
+    var handles = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETHANDLES, []]);
     yield redisSocket.broadcast('chat-handles', handles);
     yield chatEngine.broadcast(chatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has joined the session.`));
   }));

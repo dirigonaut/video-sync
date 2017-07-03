@@ -13,10 +13,9 @@ process.on('uncaughtException', function (err) {
 
 function MasterProcess() { }
 
-MasterProcess.prototype.initialize = function() {
+MasterProcess.prototype.initialize = function(force) {
   if(typeof MasterProcess.prototype.protoInit === 'undefined') {
     MasterProcess.prototype.protoInit = true;
-
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
   }

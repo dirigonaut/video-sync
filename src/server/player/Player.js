@@ -1,6 +1,6 @@
 function Player() { }
 
-Player.prototype.initialize = function() {
+Player.prototype.initialize = function(force) {
   if(typeof Player.prototype.protoInit === 'undefined') {
     Player.prototype.protoInit = true;
 

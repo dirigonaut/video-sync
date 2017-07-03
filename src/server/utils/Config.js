@@ -85,7 +85,7 @@ var ensureAssetExists = Promise.coroutine(function* (name, pattern, extType) {
 
   var files = yield fileIO.readDirAsync(APP_DATA, extType);
 
-  if(typeof files !== 'undefined' && files) {
+  if(files) {
     for(let i = 0; i < files.length; ++i) {
       if(files[i].includes(name)) {
         fileExists = true;
@@ -94,7 +94,7 @@ var ensureAssetExists = Promise.coroutine(function* (name, pattern, extType) {
     }
   }
 
-  if(typeof fileExists === 'undefined' || !fileExists) {
+  if(!fileExists) {
     var binaryData = yield Fs.readFileAsync(Path.join(CONFIG_DIR, pattern));
     fileExists = yield Fs.writeFileAsync(Path.join(APP_DATA, name), binaryData);
   }

@@ -4,18 +4,20 @@ var cache, session, fileIO, fileSystemUtils, validator, log;
 
 function VideoController() { }
 
-VideoController.prototype.initialize = function(io, socket) {
+VideoController.prototype.initialize = function(force) {
   if(typeof VideoController.prototype.protoInit === 'undefined') {
     VideoController.prototype.protoInit = true;
-
-    cache           = this.factory.createCache();
-    session         = this.factory.createSession();
-    fileIO          = this.factory.createFileIO();
     fileSystemUtils = this.factory.createFileSystemUtils();
     validator       = this.factory.createValidator();
-
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.VIDEO);
+  }
+
+  if(force === undefined ? typeof VideoController.prototype.stateInit === 'undefined' : force) {
+    VideoController.prototype.stateInit = true;
+    fileIO          = this.factory.createFileIO();
+    cache           = this.factory.createCache();
+    session         = this.factory.createSession();
   }
 };
 

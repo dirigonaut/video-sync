@@ -4,6 +4,7 @@ const Path      = require('path');
 const ROOT_DIR    = Path.join(__dirname, '../../server');
 const FACTORY_DIR = '/factory/';
 const FACTORY     = 'factory';
+const FUNCTIONS   = 'functions';
 
 var imports, log;
 
@@ -30,7 +31,7 @@ module.exports = ObjectFactory;
 
 var generateFunctionHeaders = function() {
   for(let i in this.Enum) {
-    this[`create${this.Enum[i]}`] = function () {
+    this[`create${this.Enum[i]}`] = function (init) {
       if(log) {
         log.silly(`Creating ${this.Enum[i]}`);
       }
@@ -38,13 +39,37 @@ var generateFunctionHeaders = function() {
       var ObjectImport = require(imports[this.Enum[i]]);
       var object = Object.create(ObjectImport.prototype);
 
-      object[FACTORY] = this;
+      if(!ObjectImport.prototype[FACTORY]) {
+        Object.defineProperty(ObjectImport.prototype, FACTORY, {
+          enumerable: false,
+          writeable: false,
+          value: this
+        });
+      }
+
+      if(!ObjectImport.prototype[FUNCTIONS]) {
+        Object.defineProperty(ObjectImport.prototype, FUNCTIONS, {
+          enumerable: false,
+          writeable: false,
+          value: generateObjectFunctionEnum(object)
+        });
+      }
 
       if(typeof object.initialize !== 'undefined') {
-        object.initialize();
+        object.initialize(init);
       }
 
       return object;
     }.bind(this);
   }
 };
+
+var generateObjectFunctionEnum = function(object) {
+  var funcs = {};
+  for (var property in object) {
+    if (typeof object[property] === 'function') {
+      funcs[property.toUpperCase()] = property;
+    }
+  }
+  return funcs;
+}

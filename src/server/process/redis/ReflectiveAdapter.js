@@ -7,16 +7,18 @@ var publisher, client, log;
 
 function ReflectiveAdapter() { }
 
-ReflectiveAdapter.prototype.initialize = function() {
+ReflectiveAdapter.prototype.initialize = function(force) {
   if(typeof ReflectiveAdapter.prototype.protoInit === 'undefined') {
     ReflectiveAdapter.prototype.protoInit = true;
-
-    var config  = this.factory.createConfig();
-    client      = Redis.createClient(config.getConfig().redis);
-    publisher   = this.factory.createRedisPublisher();
-
+    var config      = this.factory.createConfig();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
+  }
+
+  if(force === undefined ? typeof ReflectiveAdapter.prototype.stateInit === 'undefined' : force) {
+    ReflectiveAdapter.prototype.stateInit = true;
+    client      = Redis.createClient(config.getConfig().redis);
+    publisher   = this.factory.createRedisPublisher();
   }
 };
 
@@ -30,8 +32,12 @@ ReflectiveAdapter.prototype.callFunction = Promise.coroutine(function* (object, 
 
       if(functionHandle) {
         if(typeof object[functionHandle] === 'function') {
-          var response = yield object[functionHandle].apply(object, functionParams);
+          var response = object[functionHandle].apply(object, functionParams);
 
+          if(response instanceof Promise) {
+            response = yield response;
+          }
+          
           if(response) {
             yield client.setAsync(key, JSON.stringify(response));
           }
