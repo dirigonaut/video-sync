@@ -7,18 +7,20 @@ var publisher, subscriber, io, log;
 
 function RedisSocket() { }
 
-RedisSocket.prototype.initialize = function() {
+RedisSocket.prototype.initialize = function(force) {
   if(typeof RedisSocket.prototype.protoInit === 'undefined') {
     RedisSocket.prototype.protoInit = true;
+    var config      = this.factory.createConfig();
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.GENERAL);
+  }
 
-    var config    = this.factory.createConfig();
+  if(force === undefined ? typeof RedisSocket.prototype.stateInit === 'undefined' : force) {
+    RedisSocket.prototype.stateInit = true;
     publisher     = Redis.createClient(config.getConfig().redis);
     subscriber    = Redis.createClient(config.getConfig().redis);
 
     attachEvents.call(this);
-
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.GENERAL);
   }
 };
 

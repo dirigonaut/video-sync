@@ -6,28 +6,28 @@ const Redis       = require('redis');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-const TIMEOUT   = 2000;
+const TIMEOUT   = 3000;
 
 var publisher, subscriber, redisSocket, requestMap, asyncEmitter, log;
 
 function RedisPublisher() { }
 
-RedisPublisher.prototype.initialize = function() {
+RedisPublisher.prototype.initialize = function(force) {
   if(typeof RedisPublisher.prototype.protoInit === 'undefined') {
     RedisPublisher.prototype.protoInit = true;
+    var config    = this.factory.createConfig();
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.GENERAL);
+  }
 
-    requestMap = new Map();
-
+  if(force === undefined ? typeof RedisPublisher.prototype.stateInit === 'undefined' : force) {
+    RedisPublisher.prototype.stateInit = true;
     requestMap    = new Map();
     redisSocket   = this.factory.createRedisSocket();
     asyncEmitter  = new Events();
 
-    var config    = this.factory.createConfig();
-    publisher     = Redis.createClient(config.getConfig().redis);
     subscriber    = Redis.createClient(config.getConfig().redis);
-
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.GENERAL);
+    publisher     = Redis.createClient(config.getConfig().redis);
 
     attachEvents.call(this);
   }
@@ -36,7 +36,6 @@ RedisPublisher.prototype.initialize = function() {
 RedisPublisher.prototype.publishAsync = Promise.coroutine(function* (channel, args) {
   var key = createKey(channel);
   args.push(key);
-
   requestMap.set(key, process.pid);
 
   var promise = new Promise(function(resolve, reject) {
@@ -64,15 +63,15 @@ module.exports = RedisPublisher;
 var attachEvents = function() {
   publisher.on("connect", function(err) {
     log.debug("RedisPublisher is connected to redis server");
-  }.bind(this));
+  });
 
   publisher.on("reconnecting", function(err) {
     log.debug("RedisPublisher is connected to redis server");
-  }.bind(this));
+  });
 
   publisher.on("error", function(err) {
     log.error(err);
-  }.bind(this));
+  });
 
   subscriber.on("message", Promise.coroutine(function* (channel, message) {
     if(channel === RedisPublisher.RespEnum.RESPONSE) {
@@ -83,39 +82,41 @@ var attachEvents = function() {
 
           if(data) {
             data = JSON.parse(data);
-            log.silly(Util.inspect(data, { showHidden: false, depth: null }));
+            log.silly(Util.inspect(data, { showHidden: false, depth: 1}));
           }
 
           asyncEmitter.emit(message, data);
         }
       }
     } else if(channel === RedisPublisher.RespEnum.COMMAND) {
-      var commands = message ? JSON.parse(message) : [];
+      message = JSON.parse(message);
+      if(message) {
+        for(var i = 0; i < message.length; ++i) {
+          log.silly(Util.inspect(message[i], { showHidden: false, depth: 1}));
 
-      if(commands) {
-        for(var i in commands) {
-          log.silly(Util.inspect(commands[i], { showHidden: false, depth: null}));
-          yield redisSocket.ping.apply(null, commands[i]);
+          if(Array.isArray(message[i])) {
+            yield redisSocket.ping.apply(null, message[i]);
+          }
         }
       }
     }
-  }.bind(this)));
+  }));
 
   subscriber.on("subscribe", function(channel, count) {
     log.info(`RedisSubscriber subscribed to ${channel}`);
-  }.bind(this));
+  });
 
   subscriber.on("connect", function(err) {
     log.debug("RedisSubscriber is connected to redis server");
-  }.bind(this));
+  });
 
   subscriber.on("reconnecting", function(err) {
     log.debug("RedisSubscriber is connected to redis server");
-  }.bind(this));
+  });
 
   subscriber.on("error", function(err) {
     log.error(err);
-  }.bind(this));
+  });
 
   subscriber.subscribe("stateRedisResponse");
   subscriber.subscribe("stateRedisCommand");

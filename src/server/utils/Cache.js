@@ -7,21 +7,22 @@ var subCallbacks, session, publisher, client, fileIO, log;
 
 function Cache() { }
 
-Cache.prototype.initialize = function() {
+Cache.prototype.initialize = function(force) {
   if(typeof Cache.prototype.protoInit === 'undefined') {
     Cache.prototype.protoInit = true;
-
-    subCallbacks    = new Map();
-
     fileIO          = this.factory.createFileIO();
-    session         = this.factory.createSession();
     var config      = this.factory.createConfig();
-
-    publisher       = Redis.createClient(config.getConfig().redis);
-    client          = Redis.createClient(config.getConfig().redis);
-
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.VIDEO);
+  }
+
+  if(force === undefined ? typeof Cache.prototype.stateInit === 'undefined' : force) {
+    Cache.prototype.stateInit = true;
+    subCallbacks    = new Map();
+
+    session         = this.factory.createSession();
+    publisher       = Redis.createClient(config.getConfig().redis);
+    client          = Redis.createClient(config.getConfig().redis);
 
     client.on("message", function(channel, message) {
       log.debug('Subscribers onMessage ', channel);

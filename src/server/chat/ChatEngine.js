@@ -4,15 +4,17 @@ var redisSocket, publisher, log;
 
 function ChatEngine() { }
 
-ChatEngine.prototype.initialize = function() {
+ChatEngine.prototype.initialize = function(force) {
   if(typeof ChatEngine.prototype.protoInit === 'undefined') {
     ChatEngine.prototype.protoInit = true;
-
-    redisSocket     = this.factory.createRedisSocket();
-    publisher       = this.factory.createRedisPublisher();
-
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.CHAT);
+  }
+
+  if(force === undefined ? typeof ChatEngine.prototype.stateInit === 'undefined' : force) {
+    ChatEngine.prototype.stateInit = true;
+    redisSocket     = this.factory.createRedisSocket();
+    publisher       = this.factory.createRedisPublisher();
   }
 };
 

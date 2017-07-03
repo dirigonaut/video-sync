@@ -9,10 +9,9 @@ var app, io, server, serverRedis, log;
 
 function ServerProcess() { }
 
-ServerProcess.prototype.initialize = function() {
+ServerProcess.prototype.initialize = function(force) {
   if(typeof ServerProcess.prototype.protoInit === 'undefined') {
     ServerProcess.prototype.protoInit = true;
-
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
   }

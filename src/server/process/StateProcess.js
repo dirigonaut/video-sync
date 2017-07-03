@@ -4,10 +4,9 @@ var database, stateRedis, log;
 
 function StateProcess() { }
 
-StateProcess.prototype.initialize = function() {
+StateProcess.prototype.initialize = function(force) {
   if(typeof StateProcess.prototype.protoInit === 'undefined') {
     StateProcess.prototype.protoInit = true;
-
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
   }

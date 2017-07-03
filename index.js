@@ -5,7 +5,6 @@ var masterProcess, factoryManager;
 
 var start = Promise.coroutine(function* () {
   factoryManager = Object.create(FactoryManager.prototype);
-
   var factory = yield factoryManager.initialize();
 
   var logManager = factory.createLogManager();

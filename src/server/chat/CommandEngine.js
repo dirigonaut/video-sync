@@ -1,19 +1,23 @@
 const Promise = require('bluebird');
 
-var userAdmin, chatEngine, publisher, log;
+var userAdmin, chatEngine, publisher, stateEngine, playerManager, log;
 
 function CommandEngine() { }
 
-CommandEngine.prototype.initialize = function() {
+CommandEngine.prototype.initialize = function(force) {
   if(typeof CommandEngine.prototype.protoInit === 'undefined') {
     CommandEngine.prototype.protoInit = true;
-
     userAdmin       = this.factory.createUserAdministration();
     chatEngine      = this.factory.createChatEngine();
-    publisher       = this.factory.createRedisPublisher();
-
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.CHAT);
+  }
+
+  if(force === undefined ? typeof CommandEngine.prototype.stateInit === 'undefined' : force) {
+    CommandEngine.prototype.stateInit = true;
+    publisher       = this.factory.createRedisPublisher();
+    stateEngine     = this.factory.createStateEngine(false);
+    playerManager   = this.factory.createPlayerManager(false);
   }
 };
 
@@ -55,22 +59,22 @@ CommandEngine.prototype.processCommand = Promise.coroutine(function* (issuer, co
 
   switch(command.command) {
     case CommandEngine.ClientEnum.PLAY:
-      var engineCommand = [publisher.Enum.STATE, ['play', [issuer.id]]];
+      var engineCommand = [publisher.Enum.STATE, [stateEngine.functions.PLAY, [issuer.id]]];
       var chat = [chatEngine.Enum.EVENT, "issued play"];
       action = [CommandEngine.RespEnum.COMMAND, [engineCommand, chat]];
       break;
     case CommandEngine.ClientEnum.PAUSE:
-      var engineCommand = [publisher.Enum.STATE, ['pause', [issuer.id]]];
+      var engineCommand = [publisher.Enum.STATE, [stateEngine.functions.PAUSE, [issuer.id]]];
       var chat = [chatEngine.Enum.EVENT, "issued pause"];
       action = [CommandEngine.RespEnum.COMMAND, [engineCommand, chat]];
       break;
     case CommandEngine.ClientEnum.SEEK:
-      var engineCommand = [publisher.Enum.STATE, ['seek', [issuer.id, { seekTime: timestampToSeconds(command.param[0])}]]];
+      var engineCommand = [publisher.Enum.STATE, [stateEngine.functions.SEEK, [issuer.id, { seekTime: timestampToSeconds(command.param[0])}]]];
       var chat = [chatEngine.Enum.EVENT, `issued seek to ${timestampToSeconds(command.param[0])}`];
       action = [CommandEngine.RespEnum.COMMAND, [engineCommand, chat]];
       break;
     case CommandEngine.ClientEnum.HANDLE:
-      yield publisher.publishAsync(publisher.Enum.PLAYER, ['setPlayerHandle', [issuer.socket.id, command.param[0]]]);
+      yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.SETPLAYERHANDLE, [issuer.socket.id, command.param[0]]]);
       action = [CommandEngine.RespEnum.CHAT, [chatEngine.Enum.EVENT, `ID: ${issuer.id} changed their handle to ${command.param[0]}`]];
       break;
     case CommandEngine.ClientEnum.HELP:

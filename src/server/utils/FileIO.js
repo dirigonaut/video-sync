@@ -6,10 +6,9 @@ var log;
 
 function FileIO() { }
 
-FileIO.prototype.initialize = function() {
+FileIO.prototype.initialize = function(force) {
   if(typeof FileIO.prototype.protoInit === 'undefined') {
     FileIO.prototype.protoInit = true;
-
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.UTILS);
   }

@@ -1,5 +1,6 @@
 const Cluster    = require('cluster');
 const Path       = require('path');
+const Util       = require('util');
 const Winston    = require('winston');
 
 var config, log;
@@ -11,7 +12,7 @@ const EXCEPTION = `${TYPE}_${process.pid}_exception.txt`;
 
 function LogManager() { }
 
-LogManager.prototype.initialize = function() {
+LogManager.prototype.initialize = function(force) {
   if(typeof LogManager.prototype.protoInit === 'undefined') {
     LogManager.prototype.protoInit = true;
 
@@ -61,8 +62,8 @@ module.exports = LogManager;
 LogManager.LogEnum = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
                         CHAT: 'chat', DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};
 
-var LevelEnum = { GENERAL: 'debug', ADMINISTRATION: 'debug', AUTHENTICATION: 'debug',
-                        CHAT: 'debug', DATABASE: 'debug', LOG: 'debug', VIDEO: 'debug', ENCODING: 'debug', STATE: 'debug', UTILS: "debug"};
+var LevelEnum = { GENERAL: 'silly', ADMINISTRATION: 'info', AUTHENTICATION: 'info',
+                        CHAT: 'info', DATABASE: 'info', LOG: 'info', VIDEO: 'info', ENCODING: 'info', STATE: 'silly', UTILS: "info"};
 
 var buildFileTransport = function(path, label, level, handleExceptions) {
   var fileTransport = new (Winston.transports.File) ({
@@ -83,7 +84,7 @@ var buildFileTransport = function(path, label, level, handleExceptions) {
       };
 
       if(options.meta && Object.keys(options.meta).length) {
-        logMessage.meta =  JSON.stringify(options.meta)
+        logMessage.meta = Util.inspect(options.meta, { showHidden: false, depth: 1 });
       }
 
       return JSON.stringify(logMessage);

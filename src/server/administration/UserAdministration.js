@@ -1,31 +1,35 @@
 const Promise = require('bluebird');
 
-var publisher, smtp, session, config, log;
+var publisher, smtp, session, config, playerManager, log;
 
 function UserAdministration() { }
 
-UserAdministration.prototype.initialize = function () {
+UserAdministration.prototype.initialize = function (force) {
   if(typeof UserAdministration.prototype.protoInit === 'undefined') {
     UserAdministration.prototype.protoInit = true;
 
     config          = this.factory.createConfig();
-    publisher       = this.factory.createRedisPublisher();
-    smtp            = this.factory.createSmtp();
     session         = this.factory.createSession();
-
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.ADMINISTRATION);
+  }
+
+  if(force === undefined ? typeof UserAdministration.prototype.stateInit === 'undefined' : force) {
+    UserAdministration.prototype.stateInit = true;
+    publisher       = this.factory.createRedisPublisher();
+    smtp            = this.factory.createSmtp();
+    playerManager   = this.factory.createPlayerManager(false);
   }
 };
 
 UserAdministration.prototype.downgradeUser = Promise.coroutine(function* (user) {
   log.debug("UserAdministration.downgradeUser");
-  yield publisher.publishAsync(publisher.Enum.PLAYER, ['setAuth', [user, Player.Auth.RESTRICTED]]);
+  yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.SETAUTH, [user, Player.Auth.RESTRICTED]]);
 });
 
 UserAdministration.prototype.upgradeUser = Promise.coroutine(function*(user) {
   log.debug("UserAdministration.upgradeUser");
-  yield publisher.publishAsync(publisher.Enum.PLAYER, ['setAuth', [user, Player.Auth.DEFAULT]]);
+  yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.SETAUTH, [user, Player.Auth.DEFAULT]]);
 });
 
 UserAdministration.prototype.kickUser = Promise.coroutine(function* (user, callback) {
@@ -33,7 +37,7 @@ UserAdministration.prototype.kickUser = Promise.coroutine(function* (user, callb
   var isAdmin = yield session.isAdmin(user);
   if(!isAdmin) {
     yield session.removeInvitee(user);
-    var player = yield publisher.publishAsync(publisher.Enum.PLAYER, ['getPlayer', [user]]);
+    var player = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETPLAYER, [user]]);
 
     if(player) {
       var socket = player.socket;

@@ -2,11 +2,10 @@ var player, log;
 
 function PlayRule() { }
 
-PlayRule.prototype.initialize = function() {
+PlayRule.prototype.initialize = function(force) {
   if(typeof PlayRule.prototype.protoInit === 'undefined') {
     PlayRule.prototype.protoInit = true;
     player          = this.factory.createPlayer();
-
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.STATE);
   }

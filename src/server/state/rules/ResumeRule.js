@@ -2,7 +2,7 @@ var player, log;
 
 function ResumeRule() { }
 
-ResumeRule.prototype.initialize = function() {
+ResumeRule.prototype.initialize = function(force) {
   if(typeof ResumeRule.prototype.protoInit === 'undefined') {
     ResumeRule.prototype.protoInit = true;
     player          = this.factory.createPlayer();
@@ -11,13 +11,15 @@ ResumeRule.prototype.initialize = function() {
   }
 };
 
-ResumeRule.prototype.evaluate = function(issuer, others) {
+ResumeRule.prototype.evaluate = function(issuer, others, fuzzyRange) {
   log.silly("ResumeRule.evaluate");
+  var result = false;
   var rearguard;
   var waitguard;
 
-  for(var i in others){
-    if(rearguard || parseFloat(others[i].timestamp) < parseFloat(rearguard.timestamp)) {
+  for(var i in others) {
+    log.silly(`${!rearguard} || ${others[i].handle}:${parseFloat(others[i].timestamp)} < ${rearguard ? rearguard.handle : null}:${rearguard ? parseFloat(rearguard.timestamp) : null}`);
+    if(!rearguard || parseFloat(others[i].timestamp) < parseFloat(rearguard.timestamp)) {
       if(others[i].sync === player.Sync.SYNCED) {
         rearguard = others[i];
       } else if(others[i].sync === player.Sync.SYNCWAIT) {
@@ -32,16 +34,16 @@ ResumeRule.prototype.evaluate = function(issuer, others) {
   }
 
   if(rearguard) {
-    if((parseFloat(issuer.timestamp) - parseFloat(rearguard.timestamp)) < this.fuzzyRange) {
+    if((parseFloat(issuer.timestamp) - parseFloat(rearguard.timestamp)) < fuzzyRange) {
       log.info("ResumeRule triggered for", issuer);
-      return true;
+      result = true;
     }
   } else {
     log.silly("ResumeRule triggered as there are no other users synced", issuer);
-    return true;
+    result = true;
   }
 
-  return false;
+  return result;
 };
 
 module.exports = ResumeRule;

@@ -1,25 +1,30 @@
 const Promise = require('bluebird');
 
-var userAdmin, validator, commandEngine, chatEngine, redisSocket, publisher, session, fileIO, fileSystemUtils, log;
+var userAdmin, validator, commandEngine, chatEngine, redisSocket,
+  publisher, session, fileIO, fileSystemUtils, playerManager, log;
 
 function AdminController() { }
 
-AdminController.prototype.initialize = function () {
+AdminController.prototype.initialize = function (force) {
   if(typeof AdminController.prototype.protoInit === 'undefined') {
     AdminController.prototype.protoInit = true;
-
     userAdmin       = this.factory.createUserAdministration();
     validator       = this.factory.createValidator();
     commandEngine   = this.factory.createCommandEngine();
     chatEngine      = this.factory.createChatEngine();
-    redisSocket     = this.factory.createRedisSocket();
-    publisher       = this.factory.createRedisPublisher();
-    session         = this.factory.createSession();
     fileIO          = this.factory.createFileIO();
     fileSystemUtils = this.factory.createFileSystemUtils();
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.ADMINISTRATION);
+  }
+
+  if(force === undefined ? typeof AdminController.prototype.stateInit === 'undefined' : force) {
+    AdminController.prototype.stateInit = true;
+    publisher       = this.factory.createRedisPublisher();
+    redisSocket     = this.factory.createRedisSocket();
+    session         = this.factory.createSession();
+    playerManager   = this.factory.createPlayerManager(false);
   }
 };
 
@@ -43,9 +48,9 @@ AdminController.prototype.attachSocket = function(io, socket) {
         data = fileSystemUtils.ensureEOL(data);
 
         yield session.setMediaPath(data);
-        yield publisher.publishAsync(publisher.Enum.PLAYER, ['initPlayers', []]);
+        yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.INITPLAYERS, []]);
 
-        var playerIds = yield publisher.publishAsync(publisher.Enum.PLAYER, ['getPlayerIds', []]);
+        var playerIds = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETPLAYERIDS, []]);
         if(playerIds) {
           log.debug('media-ready');
           var message = chatEngine.buildMessage(socket.id, 'Video has been initialized.');
@@ -66,7 +71,7 @@ AdminController.prototype.attachSocket = function(io, socket) {
 
   socket.on('chat-command', Promise.coroutine(function* (data) {
     log.debug('chat-command', data);
-    var player = yield publisher.publishAsync(publisher.Enum.PLAYER, ['getPlayer', [socket.id]]);
+    var player = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETPLAYER, [socket.id]]);
 
     if(player) {
       var command = commandEngine.processAdminCommand(player, data);

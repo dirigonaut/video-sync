@@ -5,23 +5,24 @@ var adapter, database, playerManager, subscriber, stateEngine, log;
 
 function StateRedis() { };
 
-StateRedis.prototype.initialize = function() {
+StateRedis.prototype.initialize = function(force) {
   if(typeof StateRedis.prototype.protoInit === 'undefined') {
     StateRedis.prototype.protoInit = true;
-
-    adapter       = this.factory.createReflectiveAdapter();
-    database      = this.factory.createNeDatabase();
-    stateEngine   = this.factory.createStateEngine();
-    playerManager = this.factory.createPlayerManager();
-
-    var config    = this.factory.createConfig();
-    subscriber    = Redis.createClient(config.getConfig().redis);
-
-    stateEngine.initialize();
-    attachEvents.call(this);
-
+    var config      = this.factory.createConfig();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
+  }
+
+  if(force === undefined ? typeof StateRedis.prototype.stateInit === 'undefined' : force) {
+    StateRedis.prototype.stateInit = true;
+    playerManager   = this.factory.createPlayerManager();
+    adapter         = this.factory.createReflectiveAdapter();
+    subscriber      = Redis.createClient(config.getConfig().redis);
+    stateEngine     = this.factory.createStateEngine();
+    database        = this.factory.createNeDatabase();
+
+    stateEngine.initialize();
+    attachEvents();
   }
 };
 
@@ -59,24 +60,23 @@ function attachEvents() {
     } else if(channel === "session"){
       yield adapter.callFunction(session, message);
     }
-  }.bind(this)));
+  }));
 
   subscriber.on("subscribe", function(channel, count) {
     log.info(`Subscribed to ${channel}`);
-  }.bind(this));
+  });
 
   subscriber.on("connect", function(err) {
     log.info("StateRedis is connected to redis server");
-  }.bind(this));
+  });
 
   subscriber.on("reconnecting", function(err) {
     log.info("StateRedis is connected to redis server");
-  }.bind(this));
+  });
 
   subscriber.on("error", function(err) {
     log.error(err);
-  }.bind(this));
-
+  });
 
   subscriber.subscribe("database");
   subscriber.subscribe("state");
