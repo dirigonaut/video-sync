@@ -1,7 +1,7 @@
 const Promise  = require('bluebird');
 const Util     = require('util');
 
-var validator, chatEngine, redisSocket, publisher, log;
+var player, validator, chatEngine, redisSocket, publisher, log;
 
 function StateController() { }
 
@@ -9,6 +9,7 @@ StateController.prototype.initialize = function() {
   if(typeof StateController.prototype.protoInit === 'undefined') {
     StateController.prototype.protoInit = true;
 
+    player      = this.factory.createPlayer();
     validator   = this.factory.createValidator();
     chatEngine  = this.factory.createChatEngine();
     redisSocket = this.factory.createRedisSocket();
@@ -96,7 +97,7 @@ StateController.prototype.attachSocket = function(io, socket) {
       var message = chatEngine.buildMessage(socket.id, `is now in sync state ${value}`);
       yield chatEngine.broadcast(chatEngine.Enum.EVENT, message);
 
-      if(value === Player.Sync.SYNCING) {
+      if(value === player.Sync.SYNCING) {
         socket.emit('state-trigger-ping', true);
       } else {
         socket.emit('state-trigger-ping', false);

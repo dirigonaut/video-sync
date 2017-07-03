@@ -83,7 +83,7 @@ var insertMetaData = function(mpd, metaData) {
       var id = representationSets.item(j).getElementsByTagName('BaseURL').item(0).childNodes.item(0).data;
       var base = representationSets.item(j).getElementsByTagName('SegmentBase').item(0);
 
-      if(base !== undefined && base !== null) {
+      if(base) {
         representationSets.item(j).removeChild(base);
       }
 
@@ -94,7 +94,7 @@ var insertMetaData = function(mpd, metaData) {
   for(var key of metaData.keys()) {
 	  var strippedKey = `${fileUtil.splitNameFromPath(key)}.${fileUtil.splitExtensionFromPath(key)}`;
     var meta = representationMap.get(strippedKey);
-    if(meta !== undefined && meta !== null) {
+    if(meta) {
       meta.appendChild(metaData.get(key));
     }
   }

@@ -1,5 +1,4 @@
-const Promise   = require('bluebird');
-const Player    = require('./Player');
+const Promise  = require('bluebird');
 
 var players, log;
 
@@ -20,7 +19,9 @@ PlayerManager.prototype.initialize = function(force) {
 };
 
 PlayerManager.prototype.createPlayer = function(id, handle) {
-  var newPlayer = new Player(id, handle);
+  var newPlayer = this.factory.createPlayer();
+  newPlayer.assign(id, handle);
+
   players.set(id, newPlayer);
   log.info(`PlayerManager.createPlayer ${id}, total players now: ${players.size}`);
 
@@ -31,7 +32,7 @@ PlayerManager.prototype.getPlayer = function(id) {
   log.silly(`PlayerManager.getPlayer ${id}`);
   var player = players.get(id);
 
-  if(player === null || player === undefined) {
+  if(!player) {
     player = players.get('/#' + id);
   }
 
@@ -59,7 +60,7 @@ PlayerManager.prototype.removePlayer = function(id) {
 
   var player = players.get(id);
 
-  if(player === null || player === undefined) {
+  if(!player) {
     player = players.delete('/#' + id);
   }
 
@@ -135,7 +136,7 @@ PlayerManager.prototype.setPlayerHandle = function(id, handle) {
 PlayerManager.prototype.initPlayers = function() {
   log.debug('PlayerManager.initPlayers');
   for(var p of players.keys()) {
-    players.get(p).init();
+    players.get(p).reset();
   }
 
   return Promise.resolve();

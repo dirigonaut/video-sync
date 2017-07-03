@@ -1,4 +1,16 @@
-function Player(id, handle){
+function Player() { }
+
+Player.prototype.initialize = function() {
+  if(typeof Player.prototype.protoInit === 'undefined') {
+    Player.prototype.protoInit = true;
+
+    Player.prototype.State  = Player.State;
+    Player.prototype.Sync   = Player.Sync;
+    Player.prototype.Auth   = Player.Auth;
+  }
+};
+
+Player.prototype.assign = function(id, handle){
     this.id	  	      = id;
 
     this.initialized  = false;
@@ -10,7 +22,7 @@ function Player(id, handle){
     this.auth         = Player.Auth.DEFAULT;
 };
 
-Player.prototype.init = function() {
+Player.prototype.reset = function() {
   this.initialized = false;
   this.state 	  	 = null;
   this.sync        = Player.Sync.SYNCING;

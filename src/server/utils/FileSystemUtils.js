@@ -1,4 +1,4 @@
-var Os = require('os');
+const Os = require('os');
 
 function FileSystemUtils() { }
 

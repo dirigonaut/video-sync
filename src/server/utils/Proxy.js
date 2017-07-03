@@ -1,6 +1,6 @@
-var Events  = require('events');
-var Cluster = require('cluster');
-var Net     = require('net');
+const Events  = require('events');
+const Cluster = require('cluster');
+const Net     = require('net');
 
 var config, proxyServer, workers, log;
 
@@ -14,7 +14,7 @@ Proxy.prototype.initialize = function() {
     workers = [];
 
     config          = this.factory.createConfig();
-    
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
   }

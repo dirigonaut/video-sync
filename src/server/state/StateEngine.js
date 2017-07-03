@@ -1,13 +1,13 @@
 const Promise = require('bluebird');
-const Player  = require('../player/Player');
 
-var playRule, syncRule, syncingRule, resumeRule, playerManager, accuracy, interval, session, log;
+var player, playRule, syncRule, syncingRule, resumeRule, playerManager, accuracy, interval, session, log;
 
 function StateEngine() { };
 
 StateEngine.prototype.initialize = function(force) {
   if(typeof StateEngine.prototype.protoInit === 'undefined') {
     StateEngine.prototype.protoInit = true;
+    player          = this.factory.createPlayer();
 
     playRule        = this.factory.createPlayRule();
     syncRule        = this.factory.createSyncRule();
@@ -52,7 +52,7 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
     var player = yield playerManager.getPlayer(id);
 
     if(player) {
-      if(player.sync === Player.Sync.DESYNCED) {
+      if(player.sync === player.Sync.DESYNCED) {
         log.silly('StateEngine issuing play', player);
         var commands = [];
         commands.push([player.id, 'state-play']);
@@ -62,12 +62,12 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
 
         var commands = [];
         for(var i in players) {
-          if(players[i].sync !== Player.Sync.DESYNCED) {
+          if(players[i].sync !== player.Sync.DESYNCED) {
             log.info(`StateEngine issuing play ${players[i].id}`);
             commands.push([players[i].id, 'state-play']);
 
             if(mediaStarted === false && players[i].isInit()) {
-              players[i].sync = Player.Sync.SYNCED;
+              players[i].sync = player.Sync.SYNCED;
             }
           }
         }
@@ -92,7 +92,7 @@ StateEngine.prototype.pause = Promise.coroutine(function* (id) {
     var issuer = yield playerManager.getPlayer(id);
 
     if(issuer) {
-      if(issuer.sync === Player.Sync.DESYNCED) {
+      if(issuer.sync === player.Sync.DESYNCED) {
         log.silly('StateEngine issuing pause', issuer);
         var commands = [];
         commands.push([issuer.id, 'state-pause', false]);
@@ -100,11 +100,11 @@ StateEngine.prototype.pause = Promise.coroutine(function* (id) {
       } else {
         var commands = [];
         var players = yield playerManager.getPlayers();
-        for(var player of players.values()) {
-          if(player.sync !== Player.Sync.DESYNCED) {
-            var syncPause = player.sync === Player.Sync.SYNCED || player.sync === Player.Sync.SYNCWAIT ? true : false;
+        for(let player of players.values()) {
+          if(player.sync !== player.Sync.DESYNCED) {
+            var syncPause = player.sync === player.Sync.SYNCED || player.sync === player.Sync.SYNCWAIT ? true : false;
             commands.push([player.id, 'state-pause', syncPause]);
-            player.sync = Player.Sync.SYNCED;
+            player.sync = player.Sync.SYNCED;
           }
         }
 
@@ -125,13 +125,13 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
     var issuer = yield playerManager.getPlayer(id);
 
     if(issuer) {
-      if(issuer.sync === Player.Sync.DESYNCED) {
+      if(issuer.sync === player.Sync.DESYNCED) {
         log.silly('StateEngine issuing pause', issuer);
         var commands = [];
         commands.push([issuer.id, 'state-seek', data]);
 
         if(mediaStarted === false && issuer.isInit()) {
-          issuer.sync = Player.Sync.SYNCED;
+          issuer.sync = player.Sync.SYNCED;
           issuer.timestamp = data.seekTime;
         }
 
@@ -139,12 +139,12 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
       } else {
         var commands = [];
         var players = yield playerManager.getPlayers();
-        for(var player of players.values()) {
-          if(player.sync !== Player.Sync.DESYNCED) {
+        for(let player of players.values()) {
+          if(player.sync !== player.Sync.DESYNCED) {
             commands.push([player.id, 'state-seek', data]);
 
             if(mediaStarted === false && player.isInit()) {
-              player.sync = Player.Sync.SYNCED;
+              player.sync = player.Sync.SYNCED;
               player.timestamp = data.seekTime;
             }
           }
@@ -165,14 +165,14 @@ StateEngine.prototype.pauseSync = Promise.coroutine(function* (id) {
   if(basePath && basePath.length > 0) {
     var player = yield playerManager.getPlayer(id);
 
-    if(player !== null && player !== undefined) {
-      if(player.sync !== Player.Sync.DESYNCED) {
+    if(player) {
+      if(player.sync !== player.Sync.DESYNCED) {
         var players = yield playerManager.getPlayers();
         if(players.size > 1) {
           var syncTime = null;
 
-          for(var player of players.values()) {
-            if(syncTime === null || (player.sync === Player.Sync.SYNCED && syncTime > player.timestamp)) {
+          for(let player of players.values()) {
+            if(!syncTime || (player.sync === player.Sync.SYNCED && syncTime > player.timestamp)) {
               syncTime = player.timestamp;
             }
           }
@@ -198,12 +198,12 @@ StateEngine.prototype.changeSyncState = Promise.coroutine(function* (id, syncSta
 
     if(player) {
       if(syncState) {
-        player.sync = Player.Sync.SYNCING;
+        player.sync = player.Sync.SYNCING;
       } else {
-        player.sync = Player.Sync.DESYNCED;
+        player.sync = player.Sync.DESYNCED;
       }
 
-      return new Promise.resolve([player.sync]);
+      return new Promise.resolve(player.sync);
     }
   }
 });
@@ -224,7 +224,7 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
       if(players.size > 1) {
         var isMediaStarted = yield session.getMediaStarted();
 
-        if(player.sync === Player.Sync.SYNCING && isMediaStarted) {
+        if(player.sync === player.Sync.SYNCING && isMediaStarted) {
           var leader = syncingRule.evaluate(player, yield playerManager.getOtherPlayers(player.id));
 
           if(leader) {
@@ -232,7 +232,7 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
             object.seekTime = leader.timestamp + 1;
             object.syncWait = true;
 
-            if(this.playerManager.getSyncedPlayersState() === Player.State.PLAY) {
+            if(this.playerManager.getSyncedPlayersState() === player.State.PLAY) {
               object.play = true;
             } else {
               object.play = false;
@@ -242,11 +242,11 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
             command.push([player.id, "state-seek", object]);
             return new Promise.resolve(command);
           }
-        } else if(player.sync === Player.Sync.SYNCED) {
+        } else if(player.sync === player.Sync.SYNCED) {
           var triggered = syncRule.evaluate(player, yield playerManager.getPlayers(), accuracy);
 
           if(triggered) {
-            player.sync = Player.Sync.SYNCWAIT;
+            player.sync = player.Sync.SYNCWAIT;
             var command = [];
             command.push([player.id, "state-pause", false]);
             return new Promise.resolve(command);
@@ -278,7 +278,7 @@ StateEngine.prototype.updatePlayerState = Promise.coroutine(function* (id, times
   var player = yield playerManager.getPlayer(id);
 
   if(player) {
-    player.state      = state ? Player.State.PAUSE : Player.State.PLAY;
+    player.state      = state ? player.State.PAUSE : player.State.PLAY;
     player.timestamp  = timestamp;
   } else {
     log.silly("Could not find the player.");
@@ -291,9 +291,9 @@ StateEngine.prototype.updatePlayerSync = Promise.coroutine(function* (id, timest
   var player = yield playerManager.getPlayer(id);
 
   if(player) {
-    player.state      = state ? Player.State.PAUSE : Player.State.PLAY;
+    player.state      = state ? player.State.PAUSE : player.State.PLAY;
     player.timestamp  = timestamp;
-    player.sync       = Player.Sync.SYNCWAIT;
+    player.sync       = player.Sync.SYNCWAIT;
   } else {
     log.silly("Could not find the player.");
     log.silly("Current users: ", yield playerManager.getPlayers());
@@ -304,11 +304,11 @@ module.exports = StateEngine;
 
 var resumeLogic = Promise.coroutine(function* (players) {
   for(let waitingPlayer of players) {
-    if(waitingPlayer[1].sync === Player.Sync.SYNCWAIT) {
+    if(waitingPlayer[1].sync === player.Sync.SYNCWAIT) {
       var triggered = resumeRule.evaluate(waitingPlayer[1], yield playerManager.getOtherPlayers(waitingPlayer.id), accuracy/4);
 
       if(triggered) {
-        if(yield playerManager.getSyncedPlayersState() === Player.State.PLAY) {
+        if(yield playerManager.getSyncedPlayersState() === player.State.PLAY) {
           var commands = [];
           commands.push([waitingPlayer[1].id, 'state-play']);
           yield redisPublisher.publishAsync(redisPublisher.respEnum.COMMAND, commands);
@@ -318,7 +318,7 @@ var resumeLogic = Promise.coroutine(function* (players) {
           yield redisPublisher.publishAsync(redisPublisher.respEnum.COMMAND, commands);
         }
 
-        waitingPlayer[1].sync = Player.Sync.SYNCED;
+        waitingPlayer[1].sync = player.Sync.SYNCED;
       }
     }
   }
