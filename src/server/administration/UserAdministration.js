@@ -1,4 +1,4 @@
-const Promise     = require('bluebird');
+const Promise = require('bluebird');
 
 var publisher, smtp, session, config, log;
 
@@ -6,6 +6,8 @@ function UserAdministration() { }
 
 UserAdministration.prototype.initialize = function () {
   if(typeof UserAdministration.prototype.protoInit === 'undefined') {
+    UserAdministration.prototype.protoInit = true;
+
     config          = this.factory.createConfig();
     publisher       = this.factory.createRedisPublisher();
     smtp            = this.factory.createSmtp();
@@ -13,8 +15,6 @@ UserAdministration.prototype.initialize = function () {
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.ADMINISTRATION);
-
-    UserAdministration.prototype.protoInit = true;
   }
 };
 

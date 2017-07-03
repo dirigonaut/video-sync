@@ -11,6 +11,8 @@ function ObjectFactory() { }
 
 ObjectFactory.prototype.initialize = Promise.coroutine(function* (enumUtil, dependencyFactory) {
   if(typeof ObjectFactory.prototype.protoInit === 'undefined') {
+    ObjectFactory.prototype.protoInit = true;
+
     imports = Object.create(Object.prototype);
     var rawImports = yield enumUtil.getAllImports(ROOT_DIR, [FACTORY_DIR]);
 
@@ -21,8 +23,6 @@ ObjectFactory.prototype.initialize = Promise.coroutine(function* (enumUtil, depe
 
     var logManager  = this.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
-
-    ObjectFactory.prototype.protoInit = true;
   }
 });
 

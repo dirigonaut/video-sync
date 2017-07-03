@@ -1,6 +1,6 @@
-const Promise             = require('bluebird');
-const ObjectFactory       = require('./ObjectFactory');
-const EnumUtil            = require('../utils/EnumUtil');
+const Promise       = require('bluebird');
+const ObjectFactory = require('./ObjectFactory');
+const EnumUtil      = require('../utils/EnumUtil');
 
 function FactoryManager() { }
 

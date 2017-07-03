@@ -13,6 +13,8 @@ function LogManager() { }
 
 LogManager.prototype.initialize = function() {
   if(typeof LogManager.prototype.protoInit === 'undefined') {
+    LogManager.prototype.protoInit = true;
+
     config = this.factory.createConfig();
 
     var keys = Object.keys(LogManager.LogEnum);
@@ -23,7 +25,6 @@ LogManager.prototype.initialize = function() {
     log = Winston.loggers.get(LogManager.LogEnum.LOG);
 
     LogManager.prototype.LogEnum = LogManager.LogEnum;
-    LogManager.prototype.protoInit = true;
   }
 };
 

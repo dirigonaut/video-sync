@@ -1,4 +1,4 @@
-const Promise   = require('bluebird');
+const Promise = require('bluebird');
 
 var userAdmin, chatEngine, publisher, log;
 
@@ -6,14 +6,14 @@ function CommandEngine() { }
 
 CommandEngine.prototype.initialize = function() {
   if(typeof CommandEngine.prototype.protoInit === 'undefined') {
+    CommandEngine.prototype.protoInit = true;
+
     userAdmin       = this.factory.createUserAdministration();
     chatEngine      = this.factory.createChatEngine();
     publisher       = this.factory.createRedisPublisher();
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.CHAT);
-
-    CommandEngine.prototype.protoInit = true;
   }
 };
 

@@ -6,13 +6,13 @@ function ChatEngine() { }
 
 ChatEngine.prototype.initialize = function() {
   if(typeof ChatEngine.prototype.protoInit === 'undefined') {
+    ChatEngine.prototype.protoInit = true;
+
     redisSocket     = this.factory.createRedisSocket();
     publisher       = this.factory.createRedisPublisher();
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.CHAT);
-
-    ChatEngine.prototype.protoInit = true;
   }
 };
 

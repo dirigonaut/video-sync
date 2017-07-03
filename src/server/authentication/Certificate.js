@@ -11,14 +11,13 @@ function Certificate() { }
 
 Certificate.prototype.initialize = function() {
   if(typeof Certificate.prototype.protoInit === 'undefined') {
+    Certificate.prototype.protoInit = true;
     Moment().format('YYYY MM DD');
 
     config          = this.factory.createConfig();
 
     var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);
-
-    Certificate.prototype.protoInit = true;
+    log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);  
   }
 };
 

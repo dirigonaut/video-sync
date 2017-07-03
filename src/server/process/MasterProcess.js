@@ -15,10 +15,10 @@ function MasterProcess() { }
 
 MasterProcess.prototype.initialize = function() {
   if(typeof MasterProcess.prototype.protoInit === 'undefined') {
+    MasterProcess.prototype.protoInit = true;
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
-
-    MasterProcess.prototype.protoInit = true;
   }
 };
 

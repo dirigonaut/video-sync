@@ -7,12 +7,12 @@ function Smtp() { }
 
 Smtp.prototype.initialize = function() {
 	if(typeof Smtp.prototype.protoInit === 'undefined') {
+		Smtp.prototype.protoInit = true;
+		
 		publisher 			= this.factory.createRedisPublisher();
 
 		var logManager  = this.factory.createLogManager();
 		log             = logManager.getLog(logManager.LogEnum.ADMINISTRATION);
-
-		Smtp.prototype.protoInit = true;
 	}
 };
 

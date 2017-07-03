@@ -1,5 +1,5 @@
-const Promise           = require('bluebird');
-const Redis             = require('redis');
+const Promise = require('bluebird');
+const Redis   = require('redis');
 
 var adapter, database, playerManager, subscriber, stateEngine, log;
 
@@ -7,6 +7,8 @@ function StateRedis() { };
 
 StateRedis.prototype.initialize = function() {
   if(typeof StateRedis.prototype.protoInit === 'undefined') {
+    StateRedis.prototype.protoInit = true;
+
     adapter       = this.factory.createReflectiveAdapter();
     database      = this.factory.createNeDatabase();
     stateEngine   = this.factory.createStateEngine();
@@ -20,8 +22,6 @@ StateRedis.prototype.initialize = function() {
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
-
-    StateRedis.prototype.protoInit = true;
   }
 };
 

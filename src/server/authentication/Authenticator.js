@@ -1,5 +1,5 @@
-const Promise        = require('bluebird');
-const Crypto        = require('crypto');
+const Promise = require('bluebird');
+const Crypto  = require('crypto');
 
 var publisher;
 
@@ -7,12 +7,12 @@ function Authenticator() { }
 
 Authenticator.prototype.initialize = function() {
   if(typeof Authenticator.prototype.protoInit === 'undefined') {
+    Authenticator.prototype.protoInit = true;
+
     publisher       = this.factory.createRedisPublisher();
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);
-
-    Authenticator.prototype.protoInit = true;
   }
 };
 
