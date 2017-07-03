@@ -1,7 +1,7 @@
 const Promise = require('bluebird');
 const Crypto  = require('crypto');
 
-var publisher;
+var publisher, session;
 
 function Authenticator() { }
 
@@ -10,6 +10,7 @@ Authenticator.prototype.initialize = function() {
     Authenticator.prototype.protoInit = true;
 
     publisher       = this.factory.createRedisPublisher();
+    session         = this.factory.createSession();
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);
@@ -37,7 +38,7 @@ Authenticator.prototype.validateToken = Promise.coroutine(function* (id, data) {
   var authorized = false;
   var invitees = yield session.getInvitees();
 
-  var loggedInIds = yield publisher.publishAsync(Publisher.Enum.PLAYER, ['getPlayerIds', []]);
+  var loggedInIds = yield publisher.publishAsync(publisher.Enum.PLAYER, ['getPlayerIds', []]);
   if(loggedInIds) {
     for(var i in invitees) {
       if(invitees[i].pass === data.token && invitees[i].email === data.address && !loggedInIds.includes(invitees[i].id)) {

@@ -8,7 +8,7 @@ function Smtp() { }
 Smtp.prototype.initialize = function() {
 	if(typeof Smtp.prototype.protoInit === 'undefined') {
 		Smtp.prototype.protoInit = true;
-		
+
 		publisher 			= this.factory.createRedisPublisher();
 
 		var logManager  = this.factory.createLogManager();
@@ -21,18 +21,20 @@ Smtp.prototype.initializeTransport = Promise.coroutine(function* (address) {
 	if(address !== activeSmtp) {
 		this.closeTrasporter();
 
-		var result = yield publisher.publishAsync(publisher.Enum.DATABASE, ['readSmtp', [address]]);
-		var data = result[0];
-		if(data) {
+		var result = yield publisher.publishAsync(publisher.Enum.DATABASE, ['readSmtp', [address]]).then(function(data) {
+	    return data[0];
+	  });
+
+		if(result) {
 			log.debug("Found smtp options initializing transport");
 			smtpTransport = NodeMailer.createTransport({
-					service: data.smtpHost,
+					service: result.smtpHost,
 					auth: {
-							user: data.smtpAddress,
-							pass: data.smtpPassword
+							user: result.smtpAddress,
+							pass: result.smtpPassword
 					}
 			});
-			activeSmtp = data.smtpAddress;
+			activeSmtp = result.smtpAddress;
 		}
 	}
 });

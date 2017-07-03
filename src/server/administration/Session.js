@@ -22,7 +22,10 @@ Session.prototype.initialize = function() {
 
 Session.prototype.setSession = Promise.coroutine(function* (id) {
   log.debug("Session.setActiveSession");
-  var session = yield publisher.publishAsync(publisher.Enum.DATABASE, ['readSession', [id]]);
+  var session = yield publisher.publishAsync(publisher.Enum.DATABASE, ['readSession', [id]]).then(function(data) {
+    return data[0];
+  });
+
   yield setSessionData(Session.Enum.ACTIVE, session);
 
   var invitees = [];

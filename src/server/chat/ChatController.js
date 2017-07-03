@@ -30,7 +30,7 @@ ChatController.prototype.attachSocket = function(io, socket) {
 
   socket.on('chat-command', Promise.coroutine(function* (data) {
     log.debug('chat-command', data);
-    var player = yield publisher.publishAsync(Publisher.Enum.PLAYER, ['getPlayer', [socket.id]]);
+    var player = yield publisher.publishAsync(publisher.Enum.PLAYER, ['getPlayer', [socket.id]]);
 
     if(player) {
       var command = commandEngine.processCommand(player, data);
