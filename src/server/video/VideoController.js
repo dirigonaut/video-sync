@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-var cache, session, fileIO, fileSystemUtils, validator, log;
+var cache, session, fileIO, encoderManager, fileSystemUtils, validator, log;
 
 function VideoController() { }
 
@@ -16,6 +16,7 @@ VideoController.prototype.initialize = function(force) {
   if(force === undefined ? typeof VideoController.prototype.stateInit === 'undefined' : force) {
     VideoController.prototype.stateInit = true;
     fileIO          = this.factory.createFileIO();
+    encoderManager  = this.factory.createEncoderManager();
     cache           = this.factory.createCache();
     session         = this.factory.createSession();
   }
@@ -27,45 +28,17 @@ VideoController.prototype.attachSocket = function(io, socket) {
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       log.debug('video-encode', data);
-      var fileIO = this.factory.createFileIO();
       var request = validator.sterilizeVideoInfo(data);
+      var exists  = yield fileIO.ensureDirExistsAsync(request[0].outputDir, 484);
 
-      var genWebmMeta = function(path) {
-        var webmMetaData = new WebmMetaData();
-
-        var saveMetaToMpd = function(meta) {
-          log.debug('Save webm metadata', meta);
-          var xmlUtil = new XmlUtil();
-          var xmlMeta = xmlUtil.webmMetaToXml(meta);
-
-          var mpdUtil = new MpdUtil();
-          mpdUtil.addSegmentsToMpd(path, xmlMeta, function() {
-            socket.emit('webm-meta-generated');
-          });
-        };
-
-        webmMetaData.generateWebmMeta(path, saveMetaToMpd);
-      }.bind(this);
-
-      var encoderManager = new EncoderManager(request);
-      encoderManager.on('webm', function(path) {
-        log.debug('Generate webm metadata', data);
-        genWebmMeta(path);
-      }.bind(this)).on('finished', function(path) {
-        socket.emit('video-encoded');
-      });
-
-      var encode = function(flag) {
-        if(flag == true) {
-          encoderManager.encode();
-        }
-      }
-
-      if(request[0]) {
-        fileIO.ensureDirExists(request[0].outputDir, 484, encode);
+      if(exists) {
+        var processes = encoderManager.buildProcess(request);
+        yield encoderManager.encode(processes);
+      } else {
+        throw new Error(`Path ${request[0].outputDir} does not exist.`)
       }
     }
-  }.bind(this)));
+  }));
 
   socket.on('get-meta-files', Promise.coroutine(function* (requestId) {
     log.debug('get-meta-files', requestId);

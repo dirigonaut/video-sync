@@ -1,47 +1,49 @@
-const EventEmitter  = require('events');
-const util = require('util');
-
-var Command = require('./process/Command');
-var Ffmpeg = require('./process/FfmpegProcess');
-var Mp4Box = require('./process/Mp4BoxProcess');
-var LogManager = require('../../log/LogManager');
-var SocketLog = require('../../log/SocketLog');
+const Promise = require('bluebird');
+const Events  = require('events');
+const Util 	  = require('util');
 
 const webm_manifest = "webm_dash_manifest";
 const mp4_manifest = "-frag-rap";
 
-var log = LogManager.getLog(LogManager.LogEnum.ENCODING);
-var socketLog;
+var socketLog, command, encoding, processes, log;
 
-function lazyInit() {
-	socketLog = new SocketLog();
-}
+function EncoderManager() { }
 
-function EncoderManager(data){
-	log.debug("EncodingManager", data);
-	lazyInit();
+EncoderManager.prototype.initialize = function(force) {
+	if(typeof EncoderManager.prototype.protoInit === 'undefined') {
+    EncoderManager.prototype.protoInit = true;
+		command			    = this.factory.createCommand();
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.ENCODING);
+  }
 
-	var self = this;
-	self.commands = [];
-	self.postProcess = [];
+	if(force === undefined ? typeof EncoderManager.prototype.stateInit === 'undefined' : force) {
+    EncoderManager.prototype.stateInit = true;
+		Object.assign(this.prototype, Events.prototype);
+    socketLog		    = this.factory.createSocketLog();
+		encoding				= false;
+  }
+};
 
-	for(var i = 0; i < data.length; ++i){
+EncoderManager.prototype.buildProcess = function(data) {
+	var processes = [];
+	for(var i = 0; i < data.length; ++i) {
 		switch (data[i].codec) {
 			case "ffmpeg" :
 				log.silly("Found ffmpeg encoding", data[i]);
-				var ffmpeg = new Ffmpeg(Command(data[i].input));
-				setEvents(ffmpeg, self);
-				self.commands.push(ffmpeg);
+				var ffmpeg = this.factory.createFfmpeg();
+				ffmpeg.setCommand(command.parse(data[i].input));
+				processes.push(ffmpeg);
 
 				if(data[i].input.includes(webm_manifest)) {
-					self.postProcess.push(['webm', ffmpeg.command[ffmpeg.command.length - 1]]);
+					processes.push(['webm', ffmpeg.command[ffmpeg.command.length - 1]]);
 				}
 			break;
 			case "mp4Box" :
 				log.silly("Found mp4Box encoding", data[i]);
-				var mp4Box = new Mp4Box(Command(data[i].input));
-				setEvents(mp4Box, self);
-				self.commands.push(mp4Box);
+				var mp4Box = this.factory.createMp4Box();
+				mp4Box.setCommand(command.parse(data[i].input));
+				processes.push(mp4Box);
 			break;
 			default:
 				log.info("EncoderManager: " + command.codec + " is not supported process.");
@@ -49,46 +51,71 @@ function EncoderManager(data){
 		}
 	}
 
-	self.on('processed', function() {
-		log.debug("EncodingManager.processed");
-		if(self.commands.length > 0) {
-			var command = self.commands.shift();
-			command.process();
-		} else {
-			if(self.postProcess.length > 0) {
-				for(var x in self.postProcess){
-					self.emit(self.postProcess[x][0], self.postProcess[x][1]);
-				}
-			} else {
-				self.emit("finished");
-			}
-		}
-	});
+	return processes;
+};
 
-	self.encode = function() {
-		var command = self.commands.shift();
-		log.debug("EncodingManager.encode", command);
-		command.process();
-	};
+EncoderManager.prototype.encode = function(operations) {
+	log.debug("EncodingManager.encode");
+	var promise;
 
-	return self;
-}
+	if(Array.isArray(operations)) {
+		processes = processes ? processes.push(operations) : operations;
+	} else {
+		throw new Error(`EncodingManager.encode: ${operations} must be of type array.`);
+	}
 
-util.inherits(EncoderManager, EventEmitter);
+	if(!encoding) {
+		itterator.call(this);
+		encoding = true;
+		this.emit('processed');
+
+		promise = new Promise(function(resolve, reject) {
+			this.once('finished', resolve);
+			this.once('error', reject);
+		});
+	} else {
+		promise = new Promise().resolve('Queued encoding processes.');
+	}
+
+	return promise;
+};
 
 module.exports = EncoderManager;
 
-function setEvents(command, manager) {
-	log.debug("EncodingManager - setEvents");
-	command.on('start', function(command_line){
+function itterator() {
+	this.on('processed', Promise.coroutine(function* () {
+		if(processes.length > 0) {
+			var process = processes.shift();
+			attachEvents.call(this, process);
+			yield process.execute();
+		} else {
+			process.removeAllListeners('processed');
+			this.emit('finished', 'All files encoded.');
+			encoding = false;
+		}
+	}.bind(this)));
+}
+
+function attachEvents(process) {
+	process.on('start', function() {
 		log.debug("Server: Start encoding: " + new Date().getTime());
 	}).on('progress', function(percent) {
 		socketLog.log("encoding", percent);
 	}).on('close', function(exitCode) {
 		log.info('Server: file has been converted succesfully: ' + new Date().getTime());
 		socketLog.log('Server: file has been converted succesfully: ' + new Date().getTime());
-		manager.emit('processed');
-	}).on('error', function(err) {
+		removeEvents(process);
+		this.emit('processed');
+	}.bind(this)).on('error', function(err) {
 		log.error("There was an error encoding: ", err);
-	});
+		removeEvents(process);
+		this.emit('error');
+	}.bind(this));
+}
+
+function removeEvents(process) {
+	process.removeAllListeners("start");
+	process.removeAllListeners("progress");
+	process.removeAllListeners("close");
+	process.removeAllListeners("error");
 }

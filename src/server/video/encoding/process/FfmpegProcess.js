@@ -1,50 +1,65 @@
-const EventEmitter  = require('events');
-const Util = require('util');
+const Promise = require('bluebird');
+const Events  = require('events');
+const Util    = require('util');
 
 var Spawn = require('child_process').spawn;
 var Split = require('split');
 
-function FfmpegProcess(command) {
+var log;
+
+function FfmpegProcess() { }
+
+FfmpegProcess.prototype.initialize = function(force) {
+  if(typeof FfmpegProcess.prototype.protoInit === 'undefined') {
+    FfmpegProcess.prototype.protoInit = true;
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.ENCODING);
+  }
+
+  if(force === undefined ? typeof FfmpegProcess.prototype.stateInit === 'undefined' : force) {
+    FfmpegProcess.prototype.stateInit = true;
+		Object.assign(this.prototype, Events.prototype);
+  }
+};
+
+FfmpegProcess.prototype.setCommand = function(command) {
   this.command = command;
-}
+};
 
-Util.inherits(FfmpegProcess, EventEmitter);
-
-FfmpegProcess.prototype.process = function() {
-  var _this = this;
-
+FfmpegProcess.prototype.execute = function() {
   var ffmpeg = Spawn("ffmpeg", this.command);
-  console.log(`Spawned child pid: ${ffmpeg.pid}`);
+  log.info(`Spawned child pid: ${ffmpeg.pid}`);
 
-  var default_events = ['message', 'error', 'exit', 'close', 'disconnect'];
+  var defaultEvents = ['message', 'error', 'exit', 'close', 'disconnect'];
 
-  default_events.forEach(function(event) {
+  defaultEvents.forEach(function(event) {
     ffmpeg.on(event, function(data) {
-      _this.emit(event, data);
-    });
-  });
-
-  var handleInfo = function(line) {
-    var line = line.trim();
-
-    if (line.substring(0, 5) === 'frame') {
-      _this.emit('progress', parseProgress(line));
-    }
-    if (line.substring(0, 8) === 'Duration') {
-      _this.emit('properties', {from: 'input', data: parseInputProperties(line)});
-    }
-  };
+      this.emit(event, data);
+    }.bind(this));
+  }.bind(this));
 
   ffmpeg.stderr.pipe(Split(/[\r\n]+/)).on('data', handleInfo);
 
   ffmpeg.stdout.on('data', function(data) {
-    _this.emit('data', data);
-  });
+    this.emit('data', data);
+  }.bind(this));
 
   this.emit('start');
+
+  return new Promise(function(resolve, reject) {
+    this.once('close', resolve);
+    this.once('error', reject);
+  });
 };
 
 module.exports = FfmpegProcess;
+
+var handleInfo = function(line) {
+  var line = line.trim();
+  if (line.substring(0, 5) === 'frame') {
+    this.emit('progress', parseProgress(line));
+  }
+};
 
 var parseProgress = function(line) {
     var progressValues = line.match(/[\d.:]+/g)

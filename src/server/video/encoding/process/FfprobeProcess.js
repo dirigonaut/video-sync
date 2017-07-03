@@ -1,43 +1,64 @@
 const Events  = require('events');
-const Util = require('util');
+const Util    = require('util');
 const Promise = require('bluebird');
 
-var Spawn = require('child_process').spawn;
-var Split = require('split');
+const Spawn   = require('child_process').spawn;
+const Split   = require('split');
 
 const REGEXP_SPLIT = '[\\/[A-Z]*]([a-z\\s\\S]*?)[\\/[A-Z]*]';
 const REGEX_FIND_HEADERS = '[[A-Z]*]';
 const REGEX_REMOVE_HEADERS = '\\[\\/*[A-Z]*\\]';
 
-class FfprobeProcess extends Events { }
+var log;
 
-FfprobeProcess.prototype.process = function(command) {
-  var ffprobe = Spawn('ffprobe', command);
-  console.log(`Spawned child pid: ${ffprobe.pid}`);
+function FfprobeProcess { }
 
-  var default_events = ['message', 'error', 'exit', 'close', 'disconnect'];
+FfprobeProcess.prototype.initialize = function(force) {
+  if(typeof FfprobeProcess.prototype.protoInit === 'undefined') {
+    FfprobeProcess.prototype.protoInit = true;
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.ENCODING);
+  }
 
-  default_events.forEach(function(event) {
-    ffprobe.on(event, function(data) {
-      this.emit(event, data);
+  if(force === undefined ? typeof FfprobeProcess.prototype.stateInit === 'undefined' : force) {
+    FfprobeProcess.prototype.stateInit = true;
+		Object.assign(this.prototype, Events.prototype);
+  }
+};
+
+FfprobeProcess.prototype.setCommand = function(command) {
+  this.command = command;
+};
+
+FfprobeProcess.prototype.execute = function() {
+  if(this.command) {
+    var ffprobe = Spawn('ffprobe', this.command);
+    log.info(`Spawned child pid: ${ffprobe.pid}`);
+
+    var defaultEvents = ['message', 'error', 'exit', 'close', 'disconnect'];
+
+    defaultEvents.forEach(function(event) {
+      ffprobe.on(event, function(data) {
+        this.emit(event, data);
+      }.bind(this));
     }.bind(this));
-  }.bind(this));
 
-  var output = "";
-  ffprobe.stdout.on('data', function(data) {
-    output += data;
-  }.bind(this));
+    var output = "";
+    ffprobe.stdout.on('data', function(data) {
+      output += data;
+    }.bind(this));
 
-  return new Promise(function(resolve, reject) {
-    this.once('close', function() {
-      if(output) {
-        resolve(format(output, REGEXP_SPLIT));
-      } else {
-        reject(new Error('FFprobe: No output'));
-      }
-    });
-    this.once('error', reject);
-  }.bind(ffprobe));
+    return new Promise(function(resolve, reject) {
+      this.once('close', function() {
+        if(output) {
+          resolve(format(output, REGEXP_SPLIT));
+        } else {
+          reject(new Error('FFprobe: No output'));
+        }
+      });
+      this.once('error', reject);
+    }.bind(ffprobe));
+  }
 };
 
 module.exports = FfprobeProcess;
