@@ -105,9 +105,9 @@ var userAuthorized = Promise.coroutine(function* (socket, io, handle) {
   var stateController = this.factory.createStateController();
   var chatController  = this.factory.createChatController();
 
-  videoController.attachSocket(io, socket);
-  stateController.attachSocket(io, socket);
-  chatController.attachSocket(io, socket);
+  videoController.attachSocket(socket);
+  stateController.attachSocket(socket);
+  chatController.attachSocket(socket);
 
   var chatEngine = this.factory.createChatEngine();
 
@@ -134,8 +134,8 @@ var isAdministrator = Promise.coroutine(function* (socket, io) {
     var adminController   = this.factory.createAdminController();
     var databaseContoller = this.factory.createDatabaseController();
 
-    adminController.attachSocket(io, socket);
-    databaseContoller.attachSocket(io, socket);
+    adminController.attachSocket(socket);
+    databaseContoller.attachSocket(socket);
 
     yield session.addAdmin(socket.id);
     userAuthorized.call(this, socket, io, 'admin');
