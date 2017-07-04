@@ -28,7 +28,7 @@ MpdUtil.prototype.addSegmentsToMpd = Promise.coroutine(function* (path, metaMap)
   }
 
   var DomParser = XmlDom.DOMParser;
-  var mpd = new DomParser().parseFromString(file.toString(), "text/xml");
+  var mpd = new DomParser().parseFromString(rawMpd.toString(), "text/xml");
 
   cleanMpdPaths(mpd);
   insertMetaData(mpd, metaMap);
@@ -62,7 +62,7 @@ var insertMetaData = function(mpd, metaData) {
   }
 
   for(var key of metaData.keys()) {
-	  var strippedKey = `${fileUtil.splitNameFromPath(key)}.${fileSystemUtils.splitExtensionFromPath(key)}`;
+	  var strippedKey = `${fileSystemUtils.splitNameFromPath(key)}.${fileSystemUtils.splitExtensionFromPath(key)}`;
     var meta = representationMap.get(strippedKey);
     if(meta) {
       meta.appendChild(metaData.get(key));

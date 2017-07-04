@@ -19,9 +19,10 @@ EncoderManager.prototype.initialize = function(force) {
 
 	if(force === undefined ? typeof EncoderManager.prototype.stateInit === 'undefined' : force) {
     EncoderManager.prototype.stateInit = true;
-		Object.assign(this.prototype, Events.prototype);
-    socketLog		    = this.factory.createSocketLog();
+		Object.setPrototypeOf(EncoderManager.prototype, Events.prototype);
+    socketLog				= this.factory.createSocketLog();
 		encoding				= false;
+		processes 			= [];
   }
 };
 
@@ -31,7 +32,7 @@ EncoderManager.prototype.buildProcess = function(data) {
 		switch (data[i].codec) {
 			case "ffmpeg" :
 				log.silly("Found ffmpeg encoding", data[i]);
-				var ffmpeg = this.factory.createFfmpeg();
+				var ffmpeg = this.factory.createFfmpegProcess();
 				ffmpeg.setCommand(command.parse(data[i].input));
 				processes.push(ffmpeg);
 
@@ -43,7 +44,7 @@ EncoderManager.prototype.buildProcess = function(data) {
 			break;
 			case "mp4Box" :
 				log.silly("Found mp4Box encoding", data[i]);
-				var mp4Box = this.factory.createMp4Box();
+				var mp4Box = this.factory.createMp4BoxProcess();
 				mp4Box.setCommand(command.parse(data[i].input));
 				processes.push(mp4Box);
 			break;
@@ -61,7 +62,7 @@ EncoderManager.prototype.encode = function(operations) {
 	var promise;
 
 	if(Array.isArray(operations)) {
-		processes = processes ? processes.push(operations) : operations;
+		processes = processes ? processes.concat(operations) : operations;
 	} else {
 		throw new Error(`EncodingManager.encode: ${operations} must be of type array.`);
 	}
@@ -74,9 +75,9 @@ EncoderManager.prototype.encode = function(operations) {
 		promise = new Promise(function(resolve, reject) {
 			this.once('finished', resolve);
 			this.once('error', reject);
-		});
+		}.bind(this));
 	} else {
-		promise = new Promise().resolve('Queued encoding processes.');
+		promise = new Promise.resolve(function() { return 'Queued encoding processes.'; });
 	}
 
 	return promise;
@@ -85,31 +86,34 @@ EncoderManager.prototype.encode = function(operations) {
 module.exports = EncoderManager;
 
 function itterator() {
-	this.on('processed', Promise.coroutine(function* () {
+	this.on('processed', Promise.coroutine(function* (oldProcess) {
 		if(processes.length > 0) {
 			var process = processes.shift();
 			attachEvents.call(this, process);
 			yield process.execute();
 		} else {
-			process.removeAllListeners('processed');
 			this.emit('finished', 'All files encoded.');
 			encoding = false;
+		}
+
+		if(oldProcess) {
+			oldProcess.removeAllListeners('processed');
 		}
 	}.bind(this)));
 }
 
 function attachEvents(process) {
 	process.on('start', function() {
-		log.debug("Server: Start encoding: " + new Date().getTime());
-	}).on('progress', function(percent) {
-		socketLog.log("encoding", percent);
+		log.debug('Server: Start encoding: ' + new Date().getTime());
+	}).on('data', function(percent) {
+		socketLog.log('data', percent);
 	}).on('close', function(exitCode) {
 		log.info('Server: file has been converted succesfully: ' + new Date().getTime());
 		socketLog.log('Server: file has been converted succesfully: ' + new Date().getTime());
 		removeEvents(process);
-		this.emit('processed');
+		this.emit('processed', process);
 	}.bind(this)).on('error', function(err) {
-		log.error("There was an error encoding: ", err);
+		log.error('There was an error encoding: ', err);
 		removeEvents(process);
 		this.emit('error');
 	}.bind(this));

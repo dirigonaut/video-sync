@@ -23,29 +23,27 @@ ReflectiveAdapter.prototype.initialize = function(force) {
 };
 
 ReflectiveAdapter.prototype.callFunction = Promise.coroutine(function* (object, message) {
-  if(object) {
-    if(message) {
-      message = JSON.parse(message);
-      var key = message.pop();
-      var functionHandle = message[0];
-      var functionParams = message[1] ? message[1] : [];
+  if(object && message) {
+    message = JSON.parse(message);
+    var key = message.pop();
+    var functionHandle = message[0];
+    var functionParams = message[1] ? message[1] : [];
 
-      if(functionHandle) {
-        if(typeof object[functionHandle] === 'function') {
-          var response = object[functionHandle].apply(object, functionParams);
+    if(functionHandle) {
+      if(typeof object[functionHandle] === 'function') {
+        var response = object[functionHandle].apply(object, functionParams);
 
-          if(response instanceof Promise) {
-            response = yield response;
-          }
-          
-          if(response) {
-            yield client.setAsync(key, JSON.stringify(response));
-          }
-
-          yield client.publishAsync(publisher.RespEnum.RESPONSE, key);
-        } else {
-          log.debug(`No function found with name ${functionHandle}`);
+        if(response instanceof Promise) {
+          response = yield response;
         }
+
+        if(response) {
+          yield client.setAsync(key, JSON.stringify(response));
+        }
+
+        yield client.publishAsync(publisher.RespEnum.RESPONSE, key);
+      } else {
+        log.debug(`No function found with name ${functionHandle}`);
       }
     }
   }

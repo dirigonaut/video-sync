@@ -29,47 +29,41 @@ VideoController.prototype.attachSocket = function(io, socket) {
     if(isAdmin) {
       log.debug('video-encode', data);
       var request = validator.sterilizeVideoInfo(data);
-      var exists  = yield fileIO.ensureDirExistsAsync(request[0].outputDir, 484);
+      yield fileIO.ensureDirExistsAsync(request[0].outputDir, 484);
 
-      if(exists) {
-        var processes = encoderManager.buildProcess(request);
-        yield encoderManager.encode(processes).then(function() {
-          socket.emit('video-encoded');
-        });
-      } else {
-        throw new Error(`Path ${request[0].outputDir} does not exist.`)
-      }
+      var processes = encoderManager.buildProcess(request);
+      yield encoderManager.encode(processes).then(function() {
+        socket.emit('video-encoded');
+      });
     }
   }));
 
   socket.on('get-meta-files', Promise.coroutine(function* (requestId) {
     log.debug('get-meta-files', requestId);
-
     var basePath = yield session.getMediaPath();
+
     if(basePath) {
-      var readConfig = fileIO.createStreamConfig(basePath, function(files) {
-        if(files) {
-          for(let i = 0; i < files.length; ++i) {
-            var header = {};
-            var splitName = files[i].split(".")[0].split("_");
-            header.type = splitName[splitName.length - 1];
+      var files = yield fileIO.readDirAsync(basePath, "mpd");
 
-            socket.emit("file-register-response", {requestId: validator.sterilizeVideoInfo(requestId), header: header}, function(bufferId) {
-              var anotherReadConfig = fileIO.createStreamConfig(`${fileSystemUtils.ensureEOL(basePath)}${files[i]}`, function(data) {
-                socket.emit("file-segment", {bufferId: bufferId, data: data});
-              });
+      if(files) {
+        for(let i = 0; i < files.length; ++i) {
+          var header = { };
+          var splitName = files[i].split(".")[0].split("_");
+          header.type = splitName[splitName.length - 1];
 
-              anotherReadConfig.onFinish = function() {
-                socket.emit("file-end", {bufferId: bufferId});
-              };
-
-              fileIO.read(anotherReadConfig);
+          socket.emit("file-register-response", {requestId: validator.sterilizeVideoInfo(requestId), header: header}, function(bufferId) {
+            var readConfig = fileIO.createStreamConfig(`${fileSystemUtils.ensureEOL(basePath)}${files[i]}`, function(data) {
+              socket.emit("file-segment", {bufferId: bufferId, data: data});
             });
-          }
-        }
-      });
 
-      fileIO.readDir(readConfig, "mpd");
+            readConfig.onFinish = function() {
+              socket.emit("file-end", {bufferId: bufferId});
+            };
+
+            fileIO.read(readConfig);
+          });
+        }
+      }
     }
   }));
 

@@ -9,29 +9,30 @@ function WebmParser() { }
 WebmParser.prototype.initialize = function(force) {
 	if(typeof WebmParser.prototype.protoInit === 'undefined') {
     WebmParser.prototype.protoInit = true;
+		Object.setPrototypeOf(WebmParser.prototype, Events.prototype);
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.ENCODING);
-  }
-
-  if(force === undefined ? typeof WebmParser.prototype.stateInit === 'undefined' : force) {
-    WebmParser.prototype.stateInit = true;
-    Object.assign(this.prototype, Events.prototype);
   }
 };
 
 WebmParser.prototype.queuedDecode = function(metaRequests) {
   log.debug("WebmParser.queuedDecode");
   var emitter = this;
-  var counter = new EventEmitter();
+  var counter = new Events();
   counter.queue = metaRequests.length - 1;
 
-  counter.on('processed', function(manifest) {
-    if(this.queue > 0) {
+  counter.on('processed', function() {
+    if(counter.queue > 0) {
       --this.queue;
     } else {
-      emitter.emit('end');
+			this.removeAllListeners('processed');
+			this.emit('finished')
     }
   });
+
+	counter.once('finished', function() {
+		this.emit('end');
+	}.bind(this));
 
   for(var i in metaRequests) {
     this.readAndDecode(metaRequests[i].readConfig, metaRequests[i].manifest, counter);
@@ -48,11 +49,11 @@ WebmParser.prototype.readAndDecode = function(readConfig, manifest, counter) {
     decoder.write(data);
   });
   readStream.on('error', function(e) {
-    log.error("WebmParser.readAndDecode, Server: Error: " + e);
+		this.emit("WebmParser.readAndDecode, Server: Error: " + e)
   });
   readStream.on('end', function() {
     log.info("WebmParser.readAndDecode, Server: Finished reading stream");
-    counter.emit('processed', manifest);
+    counter.emit('processed');
   });
 
   decoder.on('data', function(data) {
