@@ -23,7 +23,7 @@ StateController.prototype.initialize = function(force) {
   }
 };
 
-StateController.prototype.attachSocket = function(io, socket) {
+StateController.prototype.attachSocket = function(socket) {
   log.info('StateController.attachSocket');
   socket.emit('state-trigger-ping', true);
 

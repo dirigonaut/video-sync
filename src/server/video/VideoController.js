@@ -22,7 +22,7 @@ VideoController.prototype.initialize = function(force) {
   }
 };
 
-VideoController.prototype.attachSocket = function(io, socket) {
+VideoController.prototype.attachSocket = function(socket) {
   log.info("VideoController.attachSocket");
   socket.on('video-encode', Promise.coroutine(function* (data) {
     var isAdmin = yield session.isAdmin(socket.id);

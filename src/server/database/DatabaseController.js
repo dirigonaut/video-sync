@@ -20,7 +20,7 @@ DatabaseController.prototype.initialize = function(force) {
   }
 };
 
-DatabaseController.prototype.attachSocket = function(io, socket) {
+DatabaseController.prototype.attachSocket = function(socket) {
   log.debug("DatabaseController.attachSocket");
 
   //Create

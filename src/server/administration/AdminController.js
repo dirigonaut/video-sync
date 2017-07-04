@@ -28,7 +28,7 @@ AdminController.prototype.initialize = function (force) {
   }
 };
 
-AdminController.prototype.attachSocket = function(io, socket) {
+AdminController.prototype.attachSocket = function(socket) {
   log.info('AdminController.attachSocket');
   socket.on('admin-smtp-invite', Promise.coroutine(function* () {
     log.debug('admin-smtp-invite');

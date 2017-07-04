@@ -21,7 +21,7 @@ ChatController.prototype.initialize = function(force) {
   }
 };
 
-ChatController.prototype.attachSocket = function(io, socket) {
+ChatController.prototype.attachSocket = function(socket) {
   log.debug("Attaching ChatController");
 
   socket.on('chat-broadcast', Promise.coroutine(function* (data) {
