@@ -1,7 +1,7 @@
 const Promise = require('bluebird');
 
 var publisher, redisSocket, smtp, userAdmin, validator, authenticator,
-      socketLog, session, chatEngine, playerManager, log;
+      session, chatEngine, playerManager, log;
 
 function AuthenticationController() { }
 
@@ -10,7 +10,6 @@ AuthenticationController.prototype.initialize = function(force) {
     AuthenticationController.prototype.protoInit = true;
     userAdmin       = this.factory.createUserAdministration();
     validator		    = this.factory.createValidator();
-    socketLog       = this.factory.createSocketLog();
     chatEngine      = this.factory.createChatEngine();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);
@@ -29,8 +28,7 @@ AuthenticationController.prototype.initialize = function(force) {
 
 AuthenticationController.prototype.attachIO = function (io) {
   io.on('connection', Promise.coroutine(function*(socket) {
-    console.log(`socket has connected: ${socket.id} ip: ${socket.handshake.address}`)
-    log.info(`socket has connected: ${socket.id} ip: ${socket.handshake.address}`);
+    log.socket(`socket has connected: ${socket.id} ip: ${socket.handshake.address}`);
     socket.logonAttempts = 0;
 
     yield isAdministrator.call(this, socket, io);

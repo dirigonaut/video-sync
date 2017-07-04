@@ -5,7 +5,7 @@ const Util 	  = require('util');
 const webm_manifest = "webm_dash_manifest";
 const mp4_manifest = "-frag-rap";
 
-var socketLog, command, encoding, processes, log;
+var command, encoding, processes, log;
 
 function EncoderManager() { }
 
@@ -20,7 +20,6 @@ EncoderManager.prototype.initialize = function(force) {
 	if(force === undefined ? typeof EncoderManager.prototype.stateInit === 'undefined' : force) {
     EncoderManager.prototype.stateInit = true;
 		Object.setPrototypeOf(EncoderManager.prototype, Events.prototype);
-    socketLog				= this.factory.createSocketLog();
 		encoding				= false;
 		processes 			= [];
   }
@@ -106,10 +105,10 @@ function attachEvents(process) {
 	process.on('start', function() {
 		log.debug('Server: Start encoding: ' + new Date().getTime());
 	}).on('data', function(percent) {
-		socketLog.log('data', percent);
+		log.socket('data', percent);
 	}).on('close', function(exitCode) {
 		log.info('Server: file has been converted succesfully: ' + new Date().getTime());
-		socketLog.log('Server: file has been converted succesfully: ' + new Date().getTime());
+		log.socket('Server: file has been converted succesfully: ' + new Date().getTime());
 		removeEvents(process);
 		this.emit('processed', process);
 	}.bind(this)).on('error', function(err) {

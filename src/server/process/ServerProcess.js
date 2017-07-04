@@ -5,14 +5,14 @@ const Https       = require('https');
 const Express     = require('express');
 const SocketIO    = require('socket.io');
 
-var app, io, server, serverRedis, log;
+var app, io, server, serverRedis, logManager, log;
 
 function ServerProcess() { }
 
 ServerProcess.prototype.initialize = function(force) {
   if(typeof ServerProcess.prototype.protoInit === 'undefined') {
     ServerProcess.prototype.protoInit = true;
-    var logManager  = this.factory.createLogManager();
+    logManager      = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
   }
 };
@@ -45,9 +45,6 @@ ServerProcess.prototype.start = Promise.coroutine(function* () {
 
   app.use(Express.static(config.getConfig().static));
   server.listen(0);
-
-  var socketLog = this.factory.createSocketLog();
-  socketLog.setSocketIO(io);
 
   var authController = this.factory.createAuthenticationController();
   authController.attachIO(io);
