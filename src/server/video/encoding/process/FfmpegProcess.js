@@ -2,8 +2,8 @@ const Promise = require('bluebird');
 const Events  = require('events');
 const Util    = require('util');
 
-var Spawn = require('child_process').spawn;
-var Split = require('split');
+const Spawn = require('child_process').spawn;
+const Split = require('split');
 
 var log;
 
@@ -18,7 +18,7 @@ FfmpegProcess.prototype.initialize = function(force) {
 
   if(force === undefined ? typeof FfmpegProcess.prototype.stateInit === 'undefined' : force) {
     FfmpegProcess.prototype.stateInit = true;
-		Object.assign(this.prototype, Events.prototype);
+    Object.setPrototypeOf(FfmpegProcess.prototype, Events.prototype);
   }
 };
 
@@ -38,6 +38,13 @@ FfmpegProcess.prototype.execute = function() {
     }.bind(this));
   }.bind(this));
 
+  var handleInfo = function(line) {
+    var line = line.trim();
+    if (line.substring(0, 5) === 'frame') {
+      this.emit('data', parseProgress(line));
+    }
+  }.bind(this);
+
   ffmpeg.stderr.pipe(Split(/[\r\n]+/)).on('data', handleInfo);
 
   ffmpeg.stdout.on('data', function(data) {
@@ -49,17 +56,10 @@ FfmpegProcess.prototype.execute = function() {
   return new Promise(function(resolve, reject) {
     this.once('close', resolve);
     this.once('error', reject);
-  });
+  }.bind(this));
 };
 
 module.exports = FfmpegProcess;
-
-var handleInfo = function(line) {
-  var line = line.trim();
-  if (line.substring(0, 5) === 'frame') {
-    this.emit('progress', parseProgress(line));
-  }
-};
 
 var parseProgress = function(line) {
     var progressValues = line.match(/[\d.:]+/g)

@@ -22,7 +22,7 @@ FfprobeProcess.prototype.initialize = function(force) {
 
   if(force === undefined ? typeof FfprobeProcess.prototype.stateInit === 'undefined' : force) {
     FfprobeProcess.prototype.stateInit = true;
-		Object.assign(this.prototype, Events.prototype);
+		Object.setPrototypeOf(FfprobeProcess.prototype, Events.prototype);
   }
 };
 
@@ -31,34 +31,36 @@ FfprobeProcess.prototype.setCommand = function(command) {
 };
 
 FfprobeProcess.prototype.execute = function() {
-  if(this.command) {
-    var ffprobe = Spawn('ffprobe', this.command);
-    log.info(`Spawned child pid: ${ffprobe.pid}`);
-
-    var defaultEvents = ['message', 'error', 'exit', 'close', 'disconnect'];
-
-    defaultEvents.forEach(function(event) {
-      ffprobe.on(event, function(data) {
-        this.emit(event, data);
-      }.bind(this));
-    }.bind(this));
-
-    var output = "";
-    ffprobe.stdout.on('data', function(data) {
-      output += data;
-    }.bind(this));
-
-    return new Promise(function(resolve, reject) {
-      this.once('close', function() {
-        if(output) {
-          resolve(format(output, REGEXP_SPLIT));
-        } else {
-          reject(new Error('FFprobe: No output'));
-        }
-      });
-      this.once('error', reject);
-    }.bind(ffprobe));
+  if(!this.command) {
+    throw new Error('FfprobeProcess this.command is not set.');
   }
+
+  var ffprobe = Spawn('ffprobe', this.command);
+  log.info(`Spawned child pid: ${ffprobe.pid}`);
+
+  var defaultEvents = ['message', 'error', 'exit', 'close', 'disconnect'];
+
+  defaultEvents.forEach(function(event) {
+    ffprobe.on(event, function(data) {
+      this.emit(event, data);
+    }.bind(this));
+  }.bind(this));
+
+  var output = "";
+  ffprobe.stdout.on('data', function(data) {
+    output += data;
+  }.bind(this));
+
+  return new Promise(function(resolve, reject) {
+    this.once('close', function() {
+      if(output) {
+        resolve(format(output, REGEXP_SPLIT));
+      } else {
+        reject(new Error('FFprobe: No output'));
+      }
+    });
+    this.once('error', reject);
+  }.bind(this));
 };
 
 module.exports = FfprobeProcess;

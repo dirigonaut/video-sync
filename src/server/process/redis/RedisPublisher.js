@@ -15,7 +15,7 @@ function RedisPublisher() { }
 RedisPublisher.prototype.initialize = function(force) {
   if(typeof RedisPublisher.prototype.protoInit === 'undefined') {
     RedisPublisher.prototype.protoInit = true;
-    var config    = this.factory.createConfig();
+    var config      = this.factory.createConfig();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
   }

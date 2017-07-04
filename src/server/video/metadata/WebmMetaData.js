@@ -3,21 +3,22 @@ const Events    = require('events');
 const Fs        = Promise.promisifyAll(require('fs'));
 const DOMParser = require('xmldom').DOMParser;
 
-var fileSystemUtils, log;
+var fileSystemUtils, fileIO, log;
 
 function WebmMetaData() { }
 
 WebmMetaData.prototype.initialize = function(force) {
   if(typeof WebmMetaData.prototype.protoInit === 'undefined') {
     WebmMetaData.prototype.protoInit = true;
+    fileSystemUtils  = this.factory.createFileSystemUtils();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.ENCODING);
   }
 
   if(force === undefined ? typeof WebmMetaData.prototype.stateInit === 'undefined' : force) {
     WebmMetaData.prototype.stateInit = true;
-    Object.assign(this.prototype, Events.prototype);
-    fileSystemUtils  = this.factory.createFileSystemUtils();
+    Object.setPrototypeOf(WebmMetaData.prototype, Events.prototype);
+    fileIO  = this.factory.createFileIO();
   }
 };
 
@@ -64,7 +65,7 @@ var parseMpdForTracks = function(blob) {
   return tracks;
 };
 
-var getClusters = Promise.coroutine(function* (dirPath, tracks) {
+var getClusters = function(dirPath, tracks) {
   log.debug("WebmMetaData.getClusters");
   var webmParser = this.factory.createWebmParser();
   var metaRequests = [];
@@ -73,11 +74,10 @@ var getClusters = Promise.coroutine(function* (dirPath, tracks) {
     var metaRequest = {};
     var fileName    = fileSystemUtils.splitNameFromPath(tracks[i].baseUrl);
     var fileExt     = fileSystemUtils.splitExtensionFromPath(tracks[i].baseUrl);
-    var readConfig  = FileIO.createStreamConfig(`${dirPath}${fileName}.${fileExt}`, parseEBML);
+    var readConfig  = fileIO.createStreamConfig(`${dirPath}${fileName}.${fileExt}`, parseEBML);
 
     metaRequest.manifest      = this.factory.createManifest();
-    metaRequest.manifest.path = `${fileName}.${fileExt}`;
-    metaRequest.manifest.init = tracks[i].initRange.split('-');
+    metaRequest.manifest.prime(`${fileName}.${fileExt}`, tracks[i].initRange.split('-'));
     metaRequest.readConfig    = readConfig;
     metaRequests.push(metaRequest);
   }
@@ -86,16 +86,16 @@ var getClusters = Promise.coroutine(function* (dirPath, tracks) {
     this.emit('error', err);
   });
 
-  webmParser.on('end', function() {
+  webmParser.once('end', function() {
     var metaData = [];
-    for(var i in metaRequests) {
+    for(var i = 0; i < metaRequests.length; ++i) {
       var flatManifest = metaRequests[i].manifest.flattenManifest();
       flatManifest.duration = flatManifest.clusters[1].time;
       metaData.push(flatManifest);
     }
 
     this.emit('end', metaData);
-  });
+  }.bind(this));
 
   log.debug("Meta requests: ", metaRequests);
   webmParser.queuedDecode(metaRequests);
@@ -103,23 +103,23 @@ var getClusters = Promise.coroutine(function* (dirPath, tracks) {
   return new Promise(function(resolve, reject) {
     this.once('end', resolve);
     this.once('error', reject);
-  });
-});
+  }.bind(this));
+};
 
 var parseEBML = function(manifest, data) {
   log.silly("WebmMetaData.parseEBML", data);
   var tagType = data[0];
   var tagData = data[1];
 
-  if(tagType == "start") {
+  if(tagType == 'start') {
     if(tagData.name == 'Cluster') {
       var cluster = manifest.createCluster();
       cluster.start = tagData.start;
       cluster.end = parseInt(tagData.end) - 1;
       manifest.addCluster(cluster);
     }
-  } else if(tagType == "tag") {
-    if(tagData.name == 'Timecode') {
+  } else if(tagType === "tag") {
+    if(tagData.name === 'Timecode') {
       var cluster = manifest.getCluster(tagData.start);
       cluster.time = tagData.data.readUIntBE(0, tagData.data.length);
     } else if(tagData.name === 'Duration') {

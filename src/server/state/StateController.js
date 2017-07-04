@@ -160,5 +160,4 @@ StateController.prototype.attachSocket = function(io, socket) {
   }));
 };
 
-
 module.exports = StateController;

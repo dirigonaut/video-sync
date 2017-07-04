@@ -12,9 +12,9 @@ Manifest.prototype.initialize = function(force) {
 
 Manifest.prototype.createCluster = function() {
   return {
-    cluster.start,
-    cluster.end,
-    cluster.time
+    start: undefined,
+    end: undefined,
+    time: undefined,
   };
 };
 
@@ -22,7 +22,7 @@ Manifest.prototype.prime = function(path, init) {
   log.debug('Manifest.prime', path);
   this.path = path;
   this.init = init;
-  this.linkedClusters = createLinkedCluster();
+  this.linkedClusters;
 }
 
 Manifest.prototype.setTimecodeScale = function(timecodeScale) {
@@ -40,21 +40,27 @@ Manifest.prototype.addCluster = function(cluster) {
   var linkedCluster = createLinkedCluster();
   linkedCluster.cluster = cluster;
 
+	var last;
   for(var pointer = this.linkedClusters; pointer; pointer = pointer.next) {
-    if(pointer.next == null) {
-      linkedCluster.prev = pointer;
-      linkedCluster.cluster = cluster;
-
-      pointer.next = linkedCluster;
+    if(!pointer.next) {
+			last = pointer;
       break;
     }
   }
+
+	if(!last && !this.linkedClusters) {
+		linkedCluster.prev = 'head';
+		this.linkedClusters = linkedCluster;
+	} else if(last) {
+		linkedCluster.prev = last;
+		last.next = linkedCluster;
+	}
 };
 
 Manifest.prototype.getCluster = function(position) {
-  var cluster = null;
+  var cluster;
 
-  for(var pointer = this.linkedClusters.next; pointer; pointer = pointer.next) {
+  for(var pointer = this.linkedClusters; pointer; pointer = pointer.next) {
     if(pointer.cluster.start < position && position < pointer.cluster.end) {
       cluster = pointer.cluster;
       break;
@@ -68,7 +74,7 @@ Manifest.prototype.flattenManifest = function() {
   log.debug('Manifest.flattenManifest');
   var clusterList = [];
 
-  for(var pointer = this.linkedClusters.next; pointer; pointer = pointer.next) {
+  for(var pointer = this.linkedClusters; pointer; pointer = pointer.next) {
     clusterList.push(pointer.cluster);
   }
 
@@ -83,8 +89,8 @@ module.exports = Manifest;
 
 function createLinkedCluster() {
   return {
-    this.next,
-    this.prev,
-    this.cluster
+    next: undefined,
+    prev: undefined,
+    cluster: undefined,
   };
 }

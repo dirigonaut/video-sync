@@ -16,7 +16,7 @@ Proxy.prototype.initialize = function(force) {
 
   if(force === undefined ? typeof Proxy.prototype.stateInit === 'undefined' : force) {
     Proxy.prototype.stateInit = true;
-    Object.assign(this, Events.prototype);
+    Object.setPrototypeOf(Proxy.prototype, Events.prototype);
     workers = [];
   }
 };

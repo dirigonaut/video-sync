@@ -4,7 +4,7 @@ const Promise = require('bluebird');
 
 var webmMetaData, xmlUtil, mpdUtil, log;
 
-function WebmMetaProcess { }
+function WebmMetaProcess() { }
 
 WebmMetaProcess.prototype.initialize = function(force) {
   if(typeof WebmMetaProcess.prototype.protoInit === 'undefined') {
@@ -15,7 +15,7 @@ WebmMetaProcess.prototype.initialize = function(force) {
 
   if(force === undefined ? typeof WebmMetaProcess.prototype.stateInit === 'undefined' : force) {
     WebmMetaProcess.prototype.stateInit = true;
-		Object.assign(this.prototype, Events.prototype);
+		Object.setPrototypeOf(WebmMetaProcess.prototype, Events.prototype);
     webmMetaData    = this.factory.createWebmMetaData();
     xmlUtil         = this.factory.createXmlUtil();
     mpdUtil         = this.factory.createMpdUtil();
@@ -27,14 +27,14 @@ WebmMetaProcess.prototype.setCommand = function(command) {
 };
 
 WebmMetaProcess.prototype.execute = Promise.coroutine(function* () {
-  var meta = yield webmMetaData.generateWebmMeta(path, saveMetaToMpd);
+  var meta = yield webmMetaData.generateWebmMeta(this.command);
 
   if(!meta) {
     throw new Error('meta data is not defined.');
   }
 
   var xmlMeta = xmlUtil.webmMetaToXml(meta);
-  return mpdUtil.addSegmentsToMpd(path, xmlMeta);
+  yield mpdUtil.addSegmentsToMpd(this.command, xmlMeta);
 });
 
 module.exports = WebmMetaProcess;

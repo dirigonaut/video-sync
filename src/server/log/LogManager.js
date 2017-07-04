@@ -62,8 +62,8 @@ module.exports = LogManager;
 LogManager.LogEnum = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
                         CHAT: 'chat', DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};
 
-var LevelEnum = { GENERAL: 'silly', ADMINISTRATION: 'info', AUTHENTICATION: 'info',
-                        CHAT: 'info', DATABASE: 'info', LOG: 'info', VIDEO: 'info', ENCODING: 'info', STATE: 'silly', UTILS: "info"};
+var LevelEnum = { GENERAL: 'info', ADMINISTRATION: 'info', AUTHENTICATION: 'info',
+                        CHAT: 'info', DATABASE: 'info', LOG: 'info', VIDEO: 'info', ENCODING: 'silly', STATE: 'info', UTILS: "info"};
 
 var buildFileTransport = function(path, label, level, handleExceptions) {
   var fileTransport = new (Winston.transports.File) ({

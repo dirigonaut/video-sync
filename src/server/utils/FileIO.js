@@ -73,7 +73,7 @@ FileIO.prototype.readDirAsync = Promise.coroutine(function* (path, extType) {
 
 FileIO.prototype.ensureDirExistsAsync = Promise.coroutine(function* (path, mask) {
   log.debug('FileIO.ensureDirExistsAsync', path);
-  yield Fs.mkdirAsync(path, mask)
+  return Fs.mkdirAsync(path, mask)
   .catch(function(err) {
     if (err.code !== 'EEXIST') {
       throw new Error(err);
