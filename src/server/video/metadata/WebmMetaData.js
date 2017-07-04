@@ -1,35 +1,35 @@
-var Util = require('util');
-var DOMParser   = require('xmldom').DOMParser;
+const Promise   = require('bluebird');
+const Events    = require('events');
+const Fs        = Promise.promisifyAll(require('fs'));
+const DOMParser = require('xmldom').DOMParser;
 
-var FileIO      = require('../../utils/FileIO');
-var WebmParser  = require('./parser/WebmParser');
-var Manifest    = require('./Manifest');
-var LogManager    = require('../../log/LogManager');
-var FileUtil    = require('../../utils/FileSystemUtils');
+var fileSystemUtils, log;
 
-var fileUtil = new FileUtil();
-var log      = LogManager.getLog(LogManager.LogEnum.ENCODING);
+function WebmMetaData() { }
 
-function WebmMetaData() {
-
-}
-
-WebmMetaData.prototype.generateWebmMeta = function(path, callback) {
-  log.debug("WebmMetaData.generateWebmMeta", path);
-  var fileIO = new FileIO();
-  var buffer = [];
-
-  var readConfig = fileIO.createStreamConfig(path, function(data) {
-      buffer.push(data);
-  });
-
-  readConfig.onFinish = function() {
-    var tracks = parseMpdForTracks(Buffer.concat(buffer));
-    getClusters(fileUtil.splitDirFromPath(path), tracks, callback);
+WebmMetaData.prototype.initialize = function(force) {
+  if(typeof WebmMetaData.prototype.protoInit === 'undefined') {
+    WebmMetaData.prototype.protoInit = true;
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.ENCODING);
   }
 
-  fileIO.read(readConfig);
-}
+  if(force === undefined ? typeof WebmMetaData.prototype.stateInit === 'undefined' : force) {
+    WebmMetaData.prototype.stateInit = true;
+    Object.assign(this.prototype, Events.prototype);
+    fileSystemUtils  = this.factory.createFileSystemUtils();
+  }
+};
+
+WebmMetaData.prototype.generateWebmMeta = Promise.coroutine(function* (path) {
+  log.debug("WebmMetaData.generateWebmMeta", path);
+  var meta = yield Fs.readFileAsync(path);
+
+  var tracks = parseMpdForTracks(meta);
+  var dir = fileSystemUtils.splitDirFromPath(path);
+
+  return getClusters.call(this, dir, tracks);
+});
 
 module.exports = WebmMetaData;
 
@@ -64,36 +64,47 @@ var parseMpdForTracks = function(blob) {
   return tracks;
 };
 
-var getClusters = function(dirPath, tracks, callback) {
-  log.debug("WebmMetaData._getClusters");
-  var webmParser = new WebmParser();
+var getClusters = Promise.coroutine(function* (dirPath, tracks) {
+  log.debug("WebmMetaData.getClusters");
+  var webmParser = this.factory.createWebmParser();
   var metaRequests = [];
 
   for(var i in tracks) {
     var metaRequest = {};
-    var fileName = fileUtil.splitNameFromPath(tracks[i].baseUrl);
-    var fileExt  = fileUtil.splitExtensionFromPath(tracks[i].baseUrl);
-    var readConfig = FileIO.createStreamConfig(`${dirPath}${fileName}.${fileExt}`, parseEBML);
+    var fileName    = fileSystemUtils.splitNameFromPath(tracks[i].baseUrl);
+    var fileExt     = fileSystemUtils.splitExtensionFromPath(tracks[i].baseUrl);
+    var readConfig  = FileIO.createStreamConfig(`${dirPath}${fileName}.${fileExt}`, parseEBML);
 
-    metaRequest.manifest = new Manifest(`${fileName}.${fileExt}`, tracks[i].initRange.split('-'));
-    metaRequest.readConfig = readConfig;
+    metaRequest.manifest      = this.factory.createManifest();
+    metaRequest.manifest.path = `${fileName}.${fileExt}`;
+    metaRequest.manifest.init = tracks[i].initRange.split('-');
+    metaRequest.readConfig    = readConfig;
     metaRequests.push(metaRequest);
   }
+
+  webmParser.on('error', function(err) {
+    this.emit('error', err);
+  });
 
   webmParser.on('end', function() {
     var metaData = [];
     for(var i in metaRequests) {
-      var flatManifest = Manifest.flattenManifest(metaRequests[i].manifest);
+      var flatManifest = metaRequests[i].manifest.flattenManifest();
       flatManifest.duration = flatManifest.clusters[1].time;
       metaData.push(flatManifest);
     }
 
-    callback(metaData);
+    this.emit('end', metaData);
   });
 
   log.debug("Meta requests: ", metaRequests);
   webmParser.queuedDecode(metaRequests);
-};
+
+  return new Promise(function(resolve, reject) {
+    this.once('end', resolve);
+    this.once('error', reject);
+  });
+});
 
 var parseEBML = function(manifest, data) {
   log.silly("WebmMetaData.parseEBML", data);
@@ -102,23 +113,21 @@ var parseEBML = function(manifest, data) {
 
   if(tagType == "start") {
     if(tagData.name == 'Cluster') {
-      var cluster = Manifest.cluster();
+      var cluster = manifest.createCluster();
       cluster.start = tagData.start;
       cluster.end = parseInt(tagData.end) - 1;
-      Manifest.addCluster(manifest, cluster);
+      manifest.addCluster(cluster);
     }
   } else if(tagType == "tag") {
     if(tagData.name == 'Timecode') {
-      var cluster = Manifest.getCluster(manifest, tagData.start);
+      var cluster = manifest.getCluster(tagData.start);
       cluster.time = tagData.data.readUIntBE(0, tagData.data.length);
     } else if(tagData.name === 'Duration') {
       var duration = tagData.data.readFloatBE(0, tagData.data.length);
-      Manifest.setDuration(manifest, duration);
+      manifest.setDuration(duration);
     } else if(tagData.name === 'TimecodeScale') {
       var timecodeScale = tagData.data.readUIntBE(0, tagData.data.length)
-      Manifest.setTimecodeScale(manifest, timecodeScale);
+      manifest.setTimecodeScale(timecodeScale);
     }
   }
-
-  return true;
 };

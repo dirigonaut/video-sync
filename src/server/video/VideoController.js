@@ -33,7 +33,9 @@ VideoController.prototype.attachSocket = function(io, socket) {
 
       if(exists) {
         var processes = encoderManager.buildProcess(request);
-        yield encoderManager.encode(processes);
+        yield encoderManager.encode(processes).then(function() {
+          socket.emit('video-encoded');
+        });
       } else {
         throw new Error(`Path ${request[0].outputDir} does not exist.`)
       }
@@ -92,9 +94,11 @@ VideoController.prototype.attachSocket = function(io, socket) {
 
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      var command = new Command(data);
-      var ffprobeProcess = new FfprobeProcess();
-      var metaData = yield ffprobeProcess.process(command);
+      var command = this.factory.createCommand();
+      var ffprobe = this.factory.createFfprobeProcess();
+      ffprobe.setCommand(command.parse(data[i].input));
+
+      var metaData = yield ffprobe.execute();
       socket.emit("meta-info", metaData);
     }
   }));

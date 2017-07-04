@@ -1,18 +1,22 @@
-var DOMParser  = require('xmldom').DOMParser;
-var XmlFactory = require('./XmlFactory');
-var LogManager = require('../../../log/LogManager');
+const DOMParser  = require('xmldom').DOMParser;
+const XmlFactory = require('./XmlFactory');
 
-var log = LogManager.getLog(LogManager.LogEnum.ENCODING);
-var xmlFactory;
+var xmlFactory, log;
 
-class XmlUtil {
-  constructor() {
-    if(typeof XmlUtil.prototype.protoInit === 'undefined') {
-      xmlFactory = new XmlFactory();
-      XmlUtil.prototype.protoInit = true;
-    }
+function XmlUtil() { }
+
+XmlUtil.prototype.initialize = function(force) {
+	if(typeof XmlUtil.prototype.protoInit === 'undefined') {
+    XmlUtil.prototype.protoInit = true;
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.ENCODING);
   }
-}
+
+  if(force === undefined ? typeof XmlUtil.prototype.stateInit === 'undefined' : force) {
+    XmlUtil.prototype.stateInit = true;
+    xmlFactory = this.factory.createXmlFactory();
+  }
+};
 
 XmlUtil.prototype.webmMetaToXml = function(meta) {
   log.debug("XmlUtil.webmMetaToXml", meta);
