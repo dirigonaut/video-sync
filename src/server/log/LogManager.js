@@ -1,3 +1,4 @@
+const Promise    = require('bluebird');
 const Cluster    = require('cluster');
 const Path       = require('path');
 const Util       = require('util');
@@ -15,9 +16,6 @@ function LogManager() { }
 LogManager.prototype.initialize = function(force) {
   if(typeof LogManager.prototype.protoInit === 'undefined') {
     LogManager.prototype.protoInit = true;
-
-    config = this.factory.createConfig();
-
     var keys = Object.keys(LogManager.LogEnum);
     for(var i in keys) {
       Winston.loggers.get(LogManager.LogEnum[keys[i]]);
@@ -27,6 +25,11 @@ LogManager.prototype.initialize = function(force) {
 
     LogManager.prototype.LogEnum = LogManager.LogEnum;
   }
+
+  if(force === undefined ? typeof LogManager.prototype.stateInit === 'undefined' : force) {
+    LogManager.prototype.stateInit = true;
+    config = this.factory.createConfig();
+  }
 };
 
 LogManager.prototype.addFileLogging = function() {
@@ -34,10 +37,11 @@ LogManager.prototype.addFileLogging = function() {
 
   var keys = Object.keys(LogManager.LogEnum);
   for(var i in keys) {
-    var fileTransport = buildFileTransport(Path.join(config.getLogDir(), FILE_NAME), LogManager.LogEnum[keys[i]], LevelEnum[keys[i]], false);
+    var fileTransport = buildFileTransport.call(this, Path.join(config.getLogDir(), FILE_NAME), LogManager.LogEnum[keys[i]], LevelEnum[keys[i]], false);
     var container = Winston.loggers.get(LogManager.LogEnum[keys[i]]);
 
     container.configure({
+      levels: LogManager.Levels,
       transports: [fileTransport]
     });
   }
@@ -53,16 +57,13 @@ LogManager.prototype.getLog = function(id) {
   return Winston.loggers.get(id);
 };
 
-LogManager.getLog = function(id) {
-  return Winston.loggers.get(id);
-};
-
 module.exports = LogManager;
 
-LogManager.LogEnum = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
+LogManager.Levels   = { socket: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
+LogManager.LogEnum  = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
                         CHAT: 'chat', DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};
 
-var LevelEnum = { GENERAL: 'info', ADMINISTRATION: 'info', AUTHENTICATION: 'info',
+var LevelEnum       = { GENERAL: 'info', ADMINISTRATION: 'info', AUTHENTICATION: 'info',
                         CHAT: 'info', DATABASE: 'info', LOG: 'info', VIDEO: 'info', ENCODING: 'silly', STATE: 'info', UTILS: "info"};
 
 var buildFileTransport = function(path, label, level, handleExceptions) {
@@ -75,20 +76,7 @@ var buildFileTransport = function(path, label, level, handleExceptions) {
     handleExceptions: handleExceptions,
     humanReadableUnhandledException: true,
     json: false,
-    formatter: function(options) {
-      var logMessage = {
-        timestamp: options.timestamp(),
-        level: options.level,
-        label: label,
-        message: options.message ? options.message : ''
-      };
-
-      if(options.meta && Object.keys(options.meta).length) {
-        logMessage.meta = Util.inspect(options.meta, { showHidden: false, depth: 1 });
-      }
-
-      return JSON.stringify(logMessage);
-    },
+    formatter: createFormatter.call(this, label),
     timestamp: function() {
       return new Date().toTimeString();
     }
@@ -96,3 +84,39 @@ var buildFileTransport = function(path, label, level, handleExceptions) {
 
   return fileTransport;
 };
+
+function createFormatter(label) {
+  var session, redisSocket;
+
+  return function(options) {
+    var logMessage = {
+      timestamp: options.timestamp(),
+      level: options.level,
+      label: label,
+      message: options.message ? options.message : ''
+    };
+
+    if(options.meta && Object.keys(options.meta).length) {
+      logMessage.meta = Util.inspect(options.meta, { showHidden: false, depth: 1 });
+    }
+
+    var json = JSON.stringify(logMessage);
+    if(LogManager.Levels[options.level] === LogManager.Levels.socket) {
+      if(!session) {
+        session = this.factory.createSession();
+      }
+
+      if(!redisSocket) {
+        redisSocket = this.factory.createRedisSocket();
+      }
+
+      session.getAdmin().then(function(ids) {
+        if(ids) {
+          redisSocket.ping(ids, 'chat-log-resp', logMessage);
+        }
+      });
+    }
+
+    return json;
+  }.bind(this);
+}
