@@ -1,17 +1,23 @@
-var Fs      = require('fs');
-var Ebml    = require('ebml');
-var LogManager = require('../../../log/LogManager');
+const Fs      = require('fs');
+const Ebml    = require('ebml');
+const Events  = require('events');
 
-const Util = require('util');
-const EventEmitter = require('events');
+var log;
 
-var log = LogManager.getLog(LogManager.LogEnum.ENCODING);
+function WebmParser() { }
 
-function WebmParser() {
-  EventEmitter.call(this);
-}
+WebmParser.prototype.initialize = function(force) {
+	if(typeof WebmParser.prototype.protoInit === 'undefined') {
+    WebmParser.prototype.protoInit = true;
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.ENCODING);
+  }
 
-Util.inherits(WebmParser, EventEmitter);
+  if(force === undefined ? typeof WebmParser.prototype.stateInit === 'undefined' : force) {
+    WebmParser.prototype.stateInit = true;
+    Object.assign(this.prototype, Events.prototype);
+  }
+};
 
 WebmParser.prototype.queuedDecode = function(metaRequests) {
   log.debug("WebmParser.queuedDecode");

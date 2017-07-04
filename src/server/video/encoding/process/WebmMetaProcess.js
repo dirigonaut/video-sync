@@ -2,7 +2,7 @@ const Events  = require('events');
 const Util    = require('util');
 const Promise = require('bluebird');
 
-var webmMetaData, log;
+var webmMetaData, xmlUtil, mpdUtil, log;
 
 function WebmMetaProcess { }
 
@@ -17,6 +17,8 @@ WebmMetaProcess.prototype.initialize = function(force) {
     WebmMetaProcess.prototype.stateInit = true;
 		Object.assign(this.prototype, Events.prototype);
     webmMetaData    = this.factory.createWebmMetaData();
+    xmlUtil         = this.factory.createXmlUtil();
+    mpdUtil         = this.factory.createMpdUtil();
   }
 };
 
@@ -24,19 +26,15 @@ WebmMetaProcess.prototype.setCommand = function(command) {
   this.command = command;
 };
 
-WebmMetaProcess.prototype.execute = function() {
+WebmMetaProcess.prototype.execute = Promise.coroutine(function* () {
   var meta = yield webmMetaData.generateWebmMeta(path, saveMetaToMpd);
 
-  if(meta) {
-    log.debug('Save webm metadata', meta);
-    var xmlUtil = new XmlUtil();
-    var xmlMeta = xmlUtil.webmMetaToXml(meta);
-
-    var mpdUtil = new MpdUtil();
-    mpdUtil.addSegmentsToMpd(path, xmlMeta, function() {
-      socket.emit('webm-meta-generated');
-    });
+  if(!meta) {
+    throw new Error('meta data is not defined.');
   }
-};
+
+  var xmlMeta = xmlUtil.webmMetaToXml(meta);
+  return mpdUtil.addSegmentsToMpd(path, xmlMeta);
+});
 
 module.exports = WebmMetaProcess;

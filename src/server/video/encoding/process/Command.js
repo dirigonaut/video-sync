@@ -31,6 +31,7 @@ Command.prototype.parse = function(input) {
   log.debug("Parsed Arguments: ", args);
   return args;
 }
+
 module.exports = Command;
 
 function getKeyValuePair(pair) {

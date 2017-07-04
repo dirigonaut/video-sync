@@ -36,7 +36,9 @@ EncoderManager.prototype.buildProcess = function(data) {
 				processes.push(ffmpeg);
 
 				if(data[i].input.includes(webm_manifest)) {
-					processes.push(['webm', ffmpeg.command[ffmpeg.command.length - 1]]);
+					var webm = this.factory.createWebmMetaProcess();
+					webm.setCommand(ffmpeg.command[ffmpeg.command.length - 1]);
+					processes.push(webm);
 				}
 			break;
 			case "mp4Box" :

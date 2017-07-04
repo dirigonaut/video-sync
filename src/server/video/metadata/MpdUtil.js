@@ -1,75 +1,45 @@
-var XmlDom   = require('xmldom');
+const Promise   = require('bluebird');
+const XmlDom    = require('xmldom');
+const Fs        = Promise.promisifyAll(require('fs'));
 
-var FileIO = require('../../utils/FileIO');
-var FileUtil = require('../../utils/FileSystemUtils');
-var LogManager = require('../../log/LogManager');
-
-var log = LogManager.getLog(LogManager.LogEnum.ENCODING);
-
-var fileUtil = new FileUtil();
+var fileSystemUtils, log;
 
 function MpdUtil() { }
 
-MpdUtil.prototype.addSegmentsToMpd = function(path, metaMap, callback) {
+MpdUtil.prototype.initialize = function(force) {
+	if(typeof MpdUtil.prototype.protoInit === 'undefined') {
+    MpdUtil.prototype.protoInit = true;
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.ENCODING);
+  }
+
+  if(force === undefined ? typeof MpdUtil.prototype.stateInit === 'undefined' : force) {
+    MpdUtil.prototype.stateInit = true;
+    fileSystemUtils = this.factory.createFileSystemUtils();
+  }
+};
+
+MpdUtil.prototype.addSegmentsToMpd = Promise.coroutine(function* (path, metaMap) {
   log.debug('MpdUtil.addSegmentsToMpd', metaMap);
-  var processMpd = function(mpd) {
-    cleanMpdPaths(mpd);
-    insertMetaData(mpd, metaMap);
+  var rawMpd = yield Fs.readFileAsync(path);
 
-    var XMLSerializer = XmlDom.XMLSerializer;
-    var text = new XMLSerializer().serializeToString(mpd);
-    saveMpd(path, text, callback);
-  };
+  if(!rawMpd) {
+    throw new Error(`Mpd could not be loaded from path ${path}`);
+  }
 
-  loadMpd(path, processMpd);
-};
+  var DomParser = XmlDom.DOMParser;
+  var mpd = new DomParser().parseFromString(file.toString(), "text/xml");
 
-MpdUtil.prototype.removeFullPathsFromMpd = function(path) {
-  log.debug('MpdUtil.removeFullPathsFromMpd');
-  var processMpd = function(mpd) {
-    cleanMpdPaths(mpd);
+  cleanMpdPaths(mpd);
+  insertMetaData(mpd, metaMap);
 
-    var XMLSerializer = XmlDom.XMLSerializer;
-    var text = new XMLSerializer().serializeToString(mpd);
-    saveMpd(path, text, callback);
-  };
+  var XMLSerializer = XmlDom.XMLSerializer;
+  var text = new XMLSerializer().serializeToString(mpd);
 
-  loadMpd(path, processMpd);
-};
+  return Fs.writeFileAsync(path, text);
+});
 
 module.exports = MpdUtil;
-
-var loadMpd = function(path, callback) {
-  log.debug('MpdUtil.loadMpd');
-  var fileStream = new FileIO();
-  var buffer = [];
-
-  var bufferData = function(data) {
-    buffer.push(data);
-  };
-
-  var readConfig = fileStream.createStreamConfig(path, bufferData);
-  readConfig.onFinish = function() {
-    var file = Buffer.concat(buffer);
-    var DomParser = XmlDom.DOMParser;
-    var mpd = new DomParser().parseFromString(file.toString(), "text/xml");
-    callback(mpd);
-  };
-
-  fileStream.read(readConfig);
-};
-
-var saveMpd = function(path, mpd, callback) {
-  log.debug('MpdUtil.saveMpd');
-  var fileStream = new FileIO();
-  var writeConfig = fileStream.createStreamConfig(path, null);
-
-  writeConfig.onFinish = function() {
-    callback();
-  };
-
-  fileStream.write(writeConfig, mpd);
-};
 
 var insertMetaData = function(mpd, metaData) {
   log.debug("MpdUtil.insertMetaData", metaData);
@@ -92,7 +62,7 @@ var insertMetaData = function(mpd, metaData) {
   }
 
   for(var key of metaData.keys()) {
-	  var strippedKey = `${fileUtil.splitNameFromPath(key)}.${fileUtil.splitExtensionFromPath(key)}`;
+	  var strippedKey = `${fileUtil.splitNameFromPath(key)}.${fileSystemUtils.splitExtensionFromPath(key)}`;
     var meta = representationMap.get(strippedKey);
     if(meta) {
       meta.appendChild(metaData.get(key));
@@ -110,7 +80,7 @@ var cleanMpdPaths = function(mpd) {
 
     for(var j = 0; j < representationSets.length; ++j) {
       var baseUrlData = representationSets.item(j).getElementsByTagName('BaseURL').item(0).childNodes.item(0)
-      var name = `${fileUtil.splitNameFromPath(baseUrlData.data)}.${fileUtil.splitExtensionFromPath(baseUrlData.data)}`;
+      var name = `${fileSystemUtils.splitNameFromPath(baseUrlData.data)}.${fileSystemUtils.splitExtensionFromPath(baseUrlData.data)}`;
       baseUrlData.data = name;
       baseUrlData.nodeValue = name;
     }

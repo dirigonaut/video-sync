@@ -1,45 +1,46 @@
-var LogManager = require('../../log/LogManager');
+var log;
 
-var log        = LogManager.getLog(LogManager.LogEnum.ENCODING);
+function Manifest() { }
 
-function LinkedCluster() {
-  this.next = null;
-  this.prev = null;
-  this.cluster = null;
-}
+Manifest.prototype.initialize = function(force) {
+	if(typeof Manifest.prototype.protoInit === 'undefined') {
+    Manifest.prototype.protoInit = true;
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.LogEnum.ENCODING);
+  }
+};
 
-function Manifest(path, init) {
-  log.debug('Manifest', path);
+Manifest.prototype.createCluster = function() {
+  return {
+    cluster.start,
+    cluster.end,
+    cluster.time
+  };
+};
+
+Manifest.prototype.prime = function(path, init) {
+  log.debug('Manifest.prime', path);
   this.path = path;
   this.init = init;
-  this.linkedClusters = new LinkedCluster();
+  this.linkedClusters = createLinkedCluster();
 }
 
-Manifest.cluster = function() {
-  var cluster = {};
-  cluster.start = null;
-  cluster.end = null;
-  cluster.time = null;
-
-  return cluster;
-};
-
-Manifest.setTimecodeScale = function(manifest, timecodeScale) {
+Manifest.prototype.setTimecodeScale = function(timecodeScale) {
   log.silly('Manifest.setTimecodeScale', timecodeScale);
-  manifest.timecodeScale = timecodeScale;
+  this.timecodeScale = timecodeScale;
 };
 
-Manifest.setDuration = function(manifest, duration) {
+Manifest.prototype.setDuration = function(duration) {
   log.silly('Manifest.setDuration', duration);
-  manifest.duration = duration;
+  this.duration = duration;
 };
 
-Manifest.addCluster = function(manifest, cluster) {
+Manifest.prototype.addCluster = function(cluster) {
   log.silly('Manifest.addCluster', cluster);
-  var linkedCluster = new LinkedCluster();
+  var linkedCluster = createLinkedCluster();
   linkedCluster.cluster = cluster;
 
-  for(var pointer = manifest.linkedClusters; pointer; pointer = pointer.next) {
+  for(var pointer = this.linkedClusters; pointer; pointer = pointer.next) {
     if(pointer.next == null) {
       linkedCluster.prev = pointer;
       linkedCluster.cluster = cluster;
@@ -50,30 +51,40 @@ Manifest.addCluster = function(manifest, cluster) {
   }
 };
 
-Manifest.getCluster = function(manifest, position) {
+Manifest.prototype.getCluster = function(position) {
   var cluster = null;
 
-  for(var pointer = manifest.linkedClusters.next; pointer; pointer = pointer.next) {
+  for(var pointer = this.linkedClusters.next; pointer; pointer = pointer.next) {
     if(pointer.cluster.start < position && position < pointer.cluster.end) {
       cluster = pointer.cluster;
       break;
     }
   }
+
   return cluster;
 };
 
-Manifest.flattenManifest = function(manifest) {
+Manifest.prototype.flattenManifest = function() {
   log.debug('Manifest.flattenManifest');
   var clusterList = [];
 
-  for(var pointer = manifest.linkedClusters.next; pointer; pointer = pointer.next) {
+  for(var pointer = this.linkedClusters.next; pointer; pointer = pointer.next) {
     clusterList.push(pointer.cluster);
   }
 
-  manifest.clusters = clusterList;
-  delete manifest.linkedClusters;
-
-  return manifest;
+  return {
+    clusters: clusterList,
+    path: this.path,
+    init: this.init
+  };
 };
 
 module.exports = Manifest;
+
+function createLinkedCluster() {
+  return {
+    this.next,
+    this.prev,
+    this.cluster
+  };
+}
