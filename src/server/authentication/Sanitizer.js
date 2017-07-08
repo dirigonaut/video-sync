@@ -1,35 +1,35 @@
-const schemaFactory	= require('schemaFactory');
+const validator	= require('validator');
 
-var schemaFactory;
+const PATHWHITELIST = '/';
 
 function Sanitizer() { }
 
 Sanitizer.prototype.initialize = function(force) {
 	if(typeof Sanitizer.prototype.protoInit === 'undefined') {
     Sanitizer.prototype.protoInit = true;
-    schemaFactory = this.factory.createSchemaFactory();
   }
 };
 
 Sanitizer.prototype.sanitize = function(object, schema, required) {
-	var entries = object.entries();
-	for(var i = 0; i < object.keys(); ++i) {
-		var entry = entries.next().value;
-		if(schema.keys()[entry[0]]) {
+	var entries = Object.entries(object);
+	for(var entry of entries) {
+		if(schema[entry[0]]) {
 			if(required && required.length > 0) {
 				var indexOf = required.indexOf(entry[0]);
-				if(indexOf) {
-					required = required.splice(indexOf, 1);
+				if(indexOf > -1) {
+					required.splice(indexOf, 1);
 				}
 			}
 
-			if(checkInput(schema[entry[0]], entry[1])) {
-				schema[entry[0]] = entry[1];
-			} else {
-				throw new Error(`Input ${entry[1]} is not of type ${schema.keys()[entry[0]]}`);
+			if(object[entry[0]]) {
+				if(handleInputs(schema[entry[0]], entry[1])) {
+					schema[entry[0]] = entry[1];
+				} else {
+					throw new Error(`Input ${entry[0]} should be a ${schema[entry[0]]} instead of a ${entry[1]}`);
+				}
 			}
 		} else {
-			throw new Error(`Entry ${entry[0]} does not exist in ${schema}`);
+			throw new Error(`Entry ${schema[entry[0]]} does not exist in ${JSON.stringify(object)}`);
 		}
 	}
 
@@ -42,17 +42,45 @@ Sanitizer.prototype.sanitize = function(object, schema, required) {
 
 module.exports = Sanitizer;
 
+function handleInputs(type, input) {
+	var clean;
+	if(Array.isArray(input)) {
+		for(var i = 0; i < input.length; ++i) {
+			clean = checkInput(type, input[i]);
+			if(!clean) {
+				break;
+			}
+		}
+	} else {
+		clean = checkInput(type, input);
+	}
+
+	return clean;
+}
+
 function checkInput(type, input) {
 	var clean;
 	switch (type) {
 	  case 'string':
-			clean = schemaFactory.isAlphanumeric(input);
+			clean = validator.isAlphanumeric(input);
 	    break;
 	  case 'number':
-			clean = schemaFactory.isNumeric(input);
+			clean = validator.isNumeric(input);
 	    break;
+		case 'range':
+			if(input.contains('-')) {
+				var values = input.split('-');
+				if(values.length === 2) {
+					clean = validator.isNumeric(values[0]);
+					clean &= validator.isNumeric(values[1]);
+				}
+			}
+			break;
+		case 'path':
+			clean = true;//validator.isWhitelisted(input, PATHWHITELIST);
+			break;
 	  case 'email':
-			clean = schemaFactory.isEmail(input);
+			clean = validator.isEmail(input);
 	    break;
 	  default:
 			throw new Error(`${type} is not a supported input type`);

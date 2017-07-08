@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-var publisher, redisSocket, smtp, userAdmin, schemaFactory, authenticator,
+var publisher, redisSocket, smtp, userAdmin, schemaFactory, sanitizer, authenticator,
       session, chatEngine, playerManager, log;
 
 function AuthenticationController() { }
@@ -9,7 +9,8 @@ AuthenticationController.prototype.initialize = function(force) {
   if(typeof AuthenticationController.prototype.protoInit === 'undefined') {
     AuthenticationController.prototype.protoInit = true;
     userAdmin       = this.factory.createUserAdministration();
-    schemaFactory		    = this.factory.createSchemaFactory();
+    schemaFactory		= this.factory.createSchemaFactory();
+    sanitizer		    = this.factory.createSanitizer();
     chatEngine      = this.factory.createChatEngine();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);
@@ -35,31 +36,41 @@ AuthenticationController.prototype.attachIO = function (io) {
 
     socket.on('auth-get-token', Promise.coroutine(function* (data) {
       log.debug('auth-get-token');
-      var requestSmtp = Promise.coroutine(function* (token) {
+      var schema = schemaFactory.createDefinition(schemaFactory.Enum.LOGIN);
+      var request = sanitizer.sanitize(data, schema, [schema.Enum.ADDRESS]);
+
+      if(request) {
         var activeSession = yield session.getSession();
 
-        smtp.initializeTransport(activeSession.smtp);
-        var mailOptions = smtp.createMailOptions(activeSession.smtp, token.address, "Video-Sync Token", "Session token: " + token.pass, "");
+        if(activeSession) {
+          var token = yield authenticator.requestToken(socket.id, request);
 
-        smtp.sendMail(mailOptions);
-        socket.emit('login-token-sent');
-      });
+          if(token) {
+            smtp.initializeTransport(activeSession.smtp);
+            var mailOptions = smtp.createMailOptions(activeSession.smtp, token.address, "Video-Sync Token", "Session token: " + token.pass, "");
 
-      authenticator.requestToken(socket.id, data, requestSmtp);
+            smtp.sendMail(mailOptions);
+            socket.emit('login-token-sent');
+          }
+        }
+      }
     }));
 
     socket.on('auth-validate-token', Promise.coroutine(function*(data) {
       log.debug('auth-validate-token');
-      var cleanData = data;
+      var schema = schemaFactory.createDefinition(schemaFactory.Enum.LOGIN);
+      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
-      var authorized = yield authenticator.validateToken(socket.id, cleanData);
-      if(authorized) {
-        yield userAuthorized.call(this, socket, cleanData.handle);
-      } else {
-        socket.logonAttempts += 1;
+      if(request) {
+        var authorized = yield authenticator.validateToken(socket.id, request);
+        if(authorized) {
+          yield userAuthorized.call(this, socket, request.handle);
+        } else {
+          socket.logonAttempts += 1;
 
-        if(socket.logonAttempts > 4) {
-          yield userAdmin.disconnectSocket(socket);
+          if(socket.logonAttempts > 4) {
+            yield userAdmin.disconnectSocket(socket);
+          }
         }
       }
     }.bind(this)));

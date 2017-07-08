@@ -116,7 +116,7 @@ StateEngine.prototype.pause = Promise.coroutine(function* (id) {
   return commands;
 });
 
-StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
+StateEngine.prototype.seek = Promise.coroutine(function* (id, seekTime) {
   log.debug(`StateEngine.seek ${id}`);
   var commands;
   var basePath = yield session.getMediaPath();
@@ -140,11 +140,11 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
         var players = playerManager.getPlayers();
         for(let player of players.values()) {
           if(player.sync !== player.Sync.DESYNCED) {
-            commands.push([player.id, 'state-seek', data]);
+            commands.push([player.id, 'state-seek', seekTime]);
 
             if(mediaStarted === false && player.isInit()) {
               player.sync = player.Sync.SYNCED;
-              player.timestamp = data.seekTime;
+              player.timestamp = seekTime.data;
             }
           }
         }

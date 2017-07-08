@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-var commandEngine, chatEngine, redisSocket, publisher, playerManager, log;
+var commandEngine, chatEngine, redisSocket, publisher, playerManager, schemaFactory, sanitizer, log;
 
 function ChatController() { }
 
@@ -9,6 +9,8 @@ ChatController.prototype.initialize = function(force) {
     ChatController.prototype.protoInit = true;
     commandEngine   = this.factory.createCommandEngine();
     chatEngine      = this.factory.createChatEngine();
+    schemaFactory   = this.factory.createSchemaFactory();
+    sanitizer       = this.factory.createSanitizer();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.CHAT);
   }
@@ -26,41 +28,50 @@ ChatController.prototype.attachSocket = function(socket) {
 
   socket.on('chat-broadcast', Promise.coroutine(function* (data) {
     log.debug('chat-broadcast');
+    var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
-    var message = chatEngine.buildMessage(socket.id, data.text);
-    yield chatEngine.broadcast(chatEngine.Enum.BROADCAST, message);
+    if(request) {
+      var message = chatEngine.buildMessage(socket.id, request.data);
+      yield chatEngine.broadcast(chatEngine.Enum.BROADCAST, message);
+    }
   }.bind(this)));
 
   socket.on('chat-command', Promise.coroutine(function* (data) {
     log.debug('chat-command', data);
-    var player = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETPLAYER, [socket.id]]);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enum.COMMAND);
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
-    if(player) {
-      var command = commandEngine.processCommand(player, data);
+    if(request) {
+      var player = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETPLAYER, [socket.id]]);
 
-      if(command && command.length > 0) {
-        if(command[0] === CommandEngine.RespEnum.COMMAND) {
-          let params = command[1];
+      if(player) {
+        var command = commandEngine.processCommand(player, request);
 
-          log.debug(`chat-command emitting event`);
-          var commands = yield publisher.publishAsync.apply(null, params[0]);
-          if(commands) {
-            for(var i in commands) {
-              yield redisSocket.ping.apply(null, commands[i]);
+        if(command && command.length > 0) {
+          if(command[0] === CommandEngine.RespEnum.COMMAND) {
+            let params = command[1];
+
+            log.debug(`chat-command emitting event`);
+            var commands = yield publisher.publishAsync.apply(null, params[0]);
+            if(commands) {
+              for(var i in commands) {
+                yield redisSocket.ping.apply(null, commands[i]);
+              }
+
+              chatResponse.apply(null, params[1]);
             }
+          } else if(command[0] === CommandEngine.RespEnum.CHAT) {
+            let params = command[1];
+            var message = chatEngine.buildMessage(socket.id, params[1]);
 
-            chatResponse.apply(null, params[1]);
-          }
-        } else if(command[0] === CommandEngine.RespEnum.CHAT) {
-          let params = command[1];
-          var message = chatEngine.buildMessage(socket.id, params[1]);
-
-          if(params[0] === chatEngine.Enum.PING) {
-            log.silly('chat-command-response', data);
-            yield chatEngine.ping(params[0], message);
-          } else {
-            log.silly('chat-command-response', data);
-            yield chatEngine.broadcast(params[0], message);
+            if(params[0] === chatEngine.Enum.PING) {
+              log.silly('chat-command-response', request);
+              yield chatEngine.ping(params[0], message);
+            } else {
+              log.silly('chat-command-response', request);
+              yield chatEngine.broadcast(params[0], message);
+            }
           }
         }
       }

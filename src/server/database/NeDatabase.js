@@ -24,71 +24,56 @@ NeDatabase.prototype.initialize = function(force) {
 };
 
 //Create Calls
-NeDatabase.prototype.createSmtp = function(json){
+NeDatabase.prototype.createSmtp = function(json) {
 	return createJson.call(this, json);
 };
 
-NeDatabase.prototype.createSession = function(json){
-	return createJson.call(this, json);
-};
-
-NeDatabase.prototype.createCerts = function(json){
+NeDatabase.prototype.createSession = function(json) {
 	return createJson.call(this, json);
 };
 
 //Read Calls
-NeDatabase.prototype.readSmtp = function(address){
+NeDatabase.prototype.readSmtp = function(address) {
 	var query = { smtpAddress : address };
 	return readJson.call(this, query);
 };
 
-NeDatabase.prototype.readAllSmtp = function(){
+NeDatabase.prototype.readAllSmtp = function() {
 	var query = { smtpAddress : { $exists: true } };
 	return readJson.call(this, query);
 };
 
-NeDatabase.prototype.readSession = function(id){
+NeDatabase.prototype.readSession = function(id) {
 	var query = { _id: id };
 	return readJson.call(this, query);
 };
 
-NeDatabase.prototype.readAllSessions = function(){
+NeDatabase.prototype.readAllSessions = function() {
 	var query = { title: { $exists: true } };
 	return readJson.call(this, query);
 };
 
-NeDatabase.prototype.readCerts = function(){
-	var query = { pem : { $exists: true } };
-	return readJson.call(this, query);
-};
-
 //Update Calls
-NeDatabase.prototype.updateSmtp = function(id, json){
-	var query = { _id : id };
+NeDatabase.prototype.updateSmtp = function(json) {
+	var query = { _id : json._id };
 	return updateJson.call(this, query, json);
 };
 
-NeDatabase.prototype.updateSession = function(id, json){
-	var query = { _id: id };
+NeDatabase.prototype.updateSession = function(json) {
+	var query = { _id: json._id };
 	return updateJson.call(this, query, json);
 };
 
 //Delete Calls
-NeDatabase.prototype.deleteSmtp = function(id){
+NeDatabase.prototype.deleteSmtp = function(id) {
 	var query = { _id : id };
 	var option = {};
 	return deleteJson.call(this, query, option);
 };
 
-NeDatabase.prototype.deleteSession = function(id){
+NeDatabase.prototype.deleteSession = function(id) {
 	var query = { _id: id };
 	var option = {};
-	return deleteJson.call(this, query, option);
-};
-
-NeDatabase.prototype.deleteCerts = function(date){
-	var query = { expire: { $gt: date } };
-	var option = { multi: true };
 	return deleteJson.call(this, query, option);
 };
 
