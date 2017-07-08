@@ -1,9 +1,11 @@
 const Promise   = require('bluebird');
 const Path      = require('path');
 
-const ROOT_DIR    = Path.join(__dirname, '../../server');
+const SERVER_DIR  = Path.join(__dirname, '../../server');
+const COMMON_DIR  = Path.join(__dirname, '../../common');
 const FACTORY_DIR = '/factory/';
 const FACTORY     = 'factory';
+const SCHEMAS     = 'Schemas.js'
 const FUNCTIONS   = 'functions';
 
 var imports, log;
@@ -15,14 +17,16 @@ ObjectFactory.prototype.initialize = Promise.coroutine(function* (enumUtil) {
     ObjectFactory.prototype.protoInit = true;
 
     imports = Object.create(Object.prototype);
-    var rawImports = yield enumUtil.getAllImports(ROOT_DIR, [FACTORY_DIR]);
+    var serverImports   = yield enumUtil.getAllImports(SERVER_DIR, [FACTORY_DIR]);
+    var commmonImports  = yield enumUtil.getAllImports(COMMON_DIR, [SCHEMAS]);
 
-    Object.assign(imports, rawImports);
+    Object.assign(imports, serverImports);
+    Object.assign(imports, commmonImports);
     ObjectFactory.prototype.Enum = enumUtil.createEnums(imports);
 
     generateFunctionHeaders.call(this);
 
-    var logManager  = this.createLogManager();
+    var logManager  = this.createLogManager(false);
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
   }
 });
@@ -56,7 +60,10 @@ var generateFunctionHeaders = function() {
       }
 
       if(typeof object.initialize !== 'undefined') {
-        object.initialize(init);
+        var result = object.initialize(init);
+        if(result instanceof Promise) {
+          object = result;
+        }
       }
 
       return object;

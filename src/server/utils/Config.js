@@ -1,6 +1,7 @@
 const Promise   = require('bluebird');
 const Cluster   = require('cluster');
 const Path      = require('path');
+const Events    = require('events');
 const Fs        = Promise.promisifyAll(require('fs'));
 
 const CONFIG_NAME     = "config.json";
@@ -21,20 +22,29 @@ var fileIO, config;
 
 function Config() { }
 
-Config.prototype.initializeAsync = Promise.coroutine(function* () {
-  if(typeof Config.prototype.protoInit === 'undefined') {
+Config.prototype.initialize = function(force) {
+  if(force === undefined ? typeof Config.prototype.stateInit === 'undefined' : force) {
     //Must happen first otherwise infinite recursion happens
-    Config.prototype.protoInit = true;
+    Config.prototype.stateInit = true;
+    Object.setPrototypeOf(Config.prototype, Events.prototype);
 
     fileIO = this.factory.createFileIO();
+    setupAppDataDir().then(Promise.coroutine(function* () {
+      config = yield loadConfig();
 
-    if(Cluster.isMaster) {
-      yield setupAppDataDir.call(this);
-    }
+      if(config) {
+        this.emit('loaded', this);
+      } else {
+        this.emit('error');
+      }
+    }.bind(this)));
 
-    config = yield loadConfig();
+    return new Promise(function(resolve, reject) {
+      this.once('loaded', resolve);
+      this.once('error', reject);
+    }.bind(this));
   }
-});
+};
 
 Config.prototype.getConfig = function() {
   return config;
@@ -69,19 +79,18 @@ var loadConfig = Promise.coroutine(function* () {
 });
 
 var setupAppDataDir = Promise.coroutine(function* () {
-  var fileIO = this.factory.createFileIO();
+  if(Cluster.isMaster) {
+    yield fileIO.ensureDirExistsAsync(APP_DATA, 484);
 
-  yield fileIO.ensureDirExistsAsync(APP_DATA, 484);
+    yield ensureAssetExists(REDIS_CONFIG, REDIS_CONFIG_OS, "conf");
+    yield ensureAssetExists(CONFIG_NAME, CONFIG_NAME_OS, "json");
 
-  yield ensureAssetExists.call(this, REDIS_CONFIG, REDIS_CONFIG_OS, "conf");
-  yield ensureAssetExists.call(this, CONFIG_NAME, CONFIG_NAME_OS, "json");
-
-  yield fileIO.ensureDirExistsAsync(LOG_DIR, 484);
+    yield fileIO.ensureDirExistsAsync(LOG_DIR, 484);
+  }
 });
 
 var ensureAssetExists = Promise.coroutine(function* (name, pattern, extType) {
   var fileExists;
-  var fileIO = this.factory.createFileIO();
 
   var files = yield fileIO.readDirAsync(APP_DATA, extType);
 
