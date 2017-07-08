@@ -82,7 +82,9 @@ function initGUI() {
   $('#btnSessionMedia').click(function() {
     console.log("Load new video.")
       var media = $('#locationBar').val();
-      clientSocket.sendRequest("admin-set-media", media);
+      var request = {};
+      request.data = media;
+      clientSocket.sendRequest("admin-set-media", request);
   });
 
   //Session Events --------------------------------------------------------------
@@ -114,8 +116,9 @@ function initGUI() {
   });
 
   $('#setSession').click(function setSession() {
-    var sessionId = $('#sessionId').val();
-    clientSocket.sendRequest("admin-load-session", sessionId);
+    var request = {};
+    request.data = $('#sessionId').val();
+    clientSocket.sendRequest("admin-load-session", request);
   });
 
   $('#sendInvitation').click(function readSessions() {

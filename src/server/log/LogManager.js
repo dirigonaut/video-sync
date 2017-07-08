@@ -60,8 +60,8 @@ LogManager.Levels   = { socket: 0, error: 1, warn: 2, info: 3, verbose: 4, debug
 LogManager.LogEnum  = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
                         CHAT: 'chat', DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};
 
-var LevelEnum       = { GENERAL: 'info', ADMINISTRATION: 'info', AUTHENTICATION: 'info',
-                        CHAT: 'info', DATABASE: 'info', LOG: 'info', VIDEO: 'info', ENCODING: 'silly', STATE: 'info', UTILS: "info"};
+var LevelEnum       = { GENERAL: 'debug', ADMINISTRATION: 'debug', AUTHENTICATION: 'debug',
+                        CHAT: 'debug', DATABASE: 'debug', LOG: 'debug', VIDEO: 'debug', ENCODING: 'debug', STATE: 'debug', UTILS: "debug"};
 
 var buildFileTransport = function(path, label, level, handleExceptions) {
   var fileTransport = new (Winston.transports.File) ({

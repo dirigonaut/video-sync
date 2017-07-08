@@ -1,7 +1,6 @@
 const Promise  = require('bluebird');
-const Util     = require('util');
 
-var player, schemaFactory, chatEngine, redisSocket, publisher, stateEngine, log;
+var player, schemaFactory, sanitizer, chatEngine, redisSocket, publisher, stateEngine, log;
 
 function StateController() { }
 
@@ -9,7 +8,8 @@ StateController.prototype.initialize = function(force) {
   if(typeof StateController.prototype.protoInit === 'undefined') {
     StateController.prototype.protoInit = true;
     player          = this.factory.createPlayer();
-    schemaFactory       = this.factory.createSchemaFactory();
+    schemaFactory   = this.factory.createSchemaFactory();
+    sanitizer       = this.factory.createSanitizer();
     chatEngine      = this.factory.createChatEngine();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.STATE);
@@ -49,8 +49,8 @@ StateController.prototype.attachSocket = function(socket) {
     }
   }));
 
-  socket.on('state-req-pause', Promise.coroutine(function* (data) {
-    log.debug('state-req-pause', data);
+  socket.on('state-req-pause', Promise.coroutine(function* () {
+    log.debug('state-req-pause');
 
     var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.PAUSE, [socket.id]]);
     if(commands) {
@@ -65,15 +65,19 @@ StateController.prototype.attachSocket = function(socket) {
 
   socket.on('state-req-seek', Promise.coroutine(function* (data) {
     log.debug('state-req-seek', data);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enum.NUMBER);
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
-    var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SEEK, [socket.id, data]]);
-    if(commands) {
-      for(var i in commands) {
-        yield redisSocket.ping.apply(null, commands[i]);
+    if(request) {
+    var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SEEK, [socket.id, request]]);
+      if(commands) {
+        for(var i in commands) {
+          yield redisSocket.ping.apply(null, commands[i]);
+        }
+
+        var message = chatEngine.buildMessage(socket.id, `issued seek to ${request.data}`);
+        yield chatEngine.broadcast(chatEngine.Enum.EVENT, message);
       }
-
-      var message = chatEngine.buildMessage(socket.id, `issued seek to ${data.seekTime}`);
-      yield chatEngine.broadcast(chatEngine.Enum.EVENT, message);
     }
   }));
 
@@ -94,51 +98,33 @@ StateController.prototype.attachSocket = function(socket) {
 
   socket.on('state-change-sync', Promise.coroutine(function* (data) {
     log.debug('state-change-sync', data);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
-    var value = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.CHANGESYNCSTATE, [socket.id, data]]);
-    if(value) {
-      var message = chatEngine.buildMessage(socket.id, `is now in sync state ${value}`);
-      yield chatEngine.broadcast(chatEngine.Enum.EVENT, message);
+    if(request) {
+      var value = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.CHANGESYNCSTATE, [socket.id, request]]);
+      if(value) {
+        var message = chatEngine.buildMessage(socket.id, `is now in sync state ${value}`);
+        yield chatEngine.broadcast(chatEngine.Enum.EVENT, message);
 
-      if(value === player.Sync.SYNCING) {
-        socket.emit('state-trigger-ping', true);
-      } else {
-        socket.emit('state-trigger-ping', false);
+        if(value === player.Sync.SYNCING) {
+          socket.emit('state-trigger-ping', true);
+        } else {
+          socket.emit('state-trigger-ping', false);
+        }
+
+        socket.emit('state-sync-state', value);
       }
-
-      socket.emit('state-sync-state', value);
     }
   }));
 
-  socket.on('state-sync-ping', Promise.coroutine(function* () {
+  socket.on('state-sync-ping', Promise.coroutine(function* (data) {
     log.silly('state-sync-ping');
+    var schema = schemaFactory.createDefinition(schemaFactory.Enum.STATE);
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
-    var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SYNCINGPING, [socket.id]]);
-    if(commands) {
-      for(var i in commands) {
-        yield redisSocket.ping.apply(null, commands[i]);
-      }
-    }
-  }));
-
-  socket.on('state-time-update', Promise.coroutine(function* (data) {
-    log.silly('state-time-update', data);
-
-    var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SYNCINGPING, [socket.id, data]]);
-    if(commands) {
-      for(var i in commands) {
-        yield redisSocket.ping.apply(null, commands[i]);
-      }
-    }
-  }));
-
-  socket.on('state-update-init', Promise.coroutine(function* (data, acknowledge) {
-    log.info(`state-update-init`, data);
-    acknowledge(null, true);
-
-    var id = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.PLAYERINIT, [data.id]]);
-    if(id) {
-      var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SYNCINGPING, [id]]);
+    if(request) {
+      var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SYNCINGPING, [socket.id, request]]);
       if(commands) {
         for(var i in commands) {
           yield redisSocket.ping.apply(null, commands[i]);
@@ -147,16 +133,68 @@ StateController.prototype.attachSocket = function(socket) {
     }
   }));
 
+  socket.on('state-time-update', Promise.coroutine(function* (data) {
+    log.silly('state-time-update', data);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enum.STATE);
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+
+    if(request) {
+      var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SYNCINGPING, [socket.id, request]]);
+      if(commands) {
+        for(var i in commands) {
+          yield redisSocket.ping.apply(null, commands[i]);
+        }
+      }
+    }
+  }));
+
+  socket.on('state-update-init', Promise.coroutine(function* (data, acknowledge) {
+    log.info(`state-update-init`);
+    if(typeof acknowledge === 'function') {
+      acknowledge(null, true);
+
+      var id = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.PLAYERINIT, [socket.id]]);
+      if(id) {
+        var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SYNCINGPING, [id]]);
+        if(commands) {
+          for(var i in commands) {
+            yield redisSocket.ping.apply(null, commands[i]);
+          }
+        }
+      }
+    }
+  }));
+
   socket.on('state-update-state', Promise.coroutine(function* (data, acknowledge) {
     log.info('state-update-state', data);
-    acknowledge(null, true);
-    yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.UPDATEPLAYERSTATE, [data.id, data.timestamp, data.state]]);
+    if(typeof acknowledge === 'function') {
+      acknowledge(null, true);
+
+      var schema = schemaFactory.createDefinition(schemaFactory.Enum.STATE);
+      var request = sanitizer.sanitize(data, schema, [schema.Enum.TIMESTAMP, schema.Enum.STATE]);
+
+      if(request) {
+        yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.UPDATEPLAYERSTATE, [socket.id, request.timestamp, request.state]]);
+      }
+    } else {
+      throw new Error(`acknowledge is of type ${typeof acknowledge}, it should be a function.`);
+    }
   }));
 
   socket.on('state-update-sync', Promise.coroutine(function* (data, acknowledge) {
     log.info('state-update-sync', data);
-    acknowledge(null, true);
-    yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.UPDATEPLAYERSYNC, [data.id, data.timestamp, data.state]]);
+    if(typeof acknowledge === 'function') {
+      acknowledge(null, true);
+
+      var schema = schemaFactory.createDefinition(schemaFactory.Enum.STATE);
+      var request = sanitizer.sanitize(data, schema, [schema.Enum.TIMESTAMP, schema.Enum.STATE]);
+
+      if(request) {
+        yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.UPDATEPLAYERSYNC, [socket.id, request.timestamp, request.state]]);
+      }
+    } else {
+      throw new Error(`acknowledge is of type ${typeof acknowledge}, it should be a function.`);
+    }
   }));
 };
 

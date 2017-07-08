@@ -266,9 +266,7 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     log.debug("state-init");
 
     var onInit = function() {
-      var request = {};
-      request.id = clientSocket.getSocketId();
-      clientSocket.sendRequest('state-update-init', request, true);
+      clientSocket.sendRequest('state-update-init', undefined, true);
     };
 
     videoSingleton.init(onInit);
@@ -280,7 +278,6 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     videoSingleton.play();
 
     var request = {};
-    request.id = clientSocket.getSocketId();
     request.timestamp = video.currentTime;
     request.state = video.paused;
 
@@ -293,7 +290,6 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     videoSingleton.pause();
 
     var request = {};
-    request.id = clientSocket.getSocketId();
     request.timestamp = video.currentTime;
     request.state = video.paused;
 

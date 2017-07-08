@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-var cache, session, fileIO, encoderManager, fileSystemUtils, schemaFactory, log;
+var cache, session, fileIO, encoderManager, fileSystemUtils, schemaFactory, sanitizer, log;
 
 function VideoController() { }
 
@@ -8,7 +8,8 @@ VideoController.prototype.initialize = function(force) {
   if(typeof VideoController.prototype.protoInit === 'undefined') {
     VideoController.prototype.protoInit = true;
     fileSystemUtils = this.factory.createFileSystemUtils();
-    schemaFactory       = this.factory.createSchemaFactory();
+    schemaFactory   = this.factory.createSchemaFactory();
+    sanitizer       = this.factory.createSanitizer();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.VIDEO);
   }
@@ -25,30 +26,35 @@ VideoController.prototype.initialize = function(force) {
 VideoController.prototype.attachSocket = function(socket) {
   log.info("VideoController.attachSocket");
 
-  socket.on('get-meta-files', Promise.coroutine(function* (requestId) {
-    log.debug('get-meta-files', requestId);
-    var basePath = yield session.getMediaPath();
+  socket.on('get-meta-files', Promise.coroutine(function* (data) {
+    log.debug('get-meta-files', data);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
-    if(basePath) {
-      var files = yield fileIO.readDirAsync(basePath, "mpd");
+    if(request) {
+      var basePath = yield session.getMediaPath();
 
-      if(files) {
-        for(let i = 0; i < files.length; ++i) {
-          var header = { };
-          var splitName = files[i].split(".")[0].split("_");
-          header.type = splitName[splitName.length - 1];
+      if(basePath) {
+        var files = yield fileIO.readDirAsync(basePath, "mpd");
 
-          socket.emit("file-register-response", {requestId: requestId, header: header}, function(bufferId) {
-            var readConfig = fileIO.createStreamConfig(`${fileSystemUtils.ensureEOL(basePath)}${files[i]}`, function(data) {
-              socket.emit("file-segment", {bufferId: bufferId, data: data});
+        if(files) {
+          for(let i = 0; i < files.length; ++i) {
+            var header = { };
+            var splitName = files[i].split(".")[0].split("_");
+            header.type = splitName[splitName.length - 1];
+
+            socket.emit("file-register-response", {requestId: request.data, header: header}, function(bufferId) {
+              var readConfig = fileIO.createStreamConfig(`${fileSystemUtils.ensureEOL(basePath)}${files[i]}`, function(bufferData) {
+                socket.emit("file-segment", { bufferId: request.data, data: bufferData });
+              });
+
+              readConfig.onFinish = function() {
+                socket.emit("file-end", { bufferId: request.data });
+              };
+
+              fileIO.read(readConfig);
             });
-
-            readConfig.onFinish = function() {
-              socket.emit("file-end", {bufferId: bufferId});
-            };
-
-            fileIO.read(readConfig);
-          });
+          }
         }
       }
     }
@@ -56,16 +62,19 @@ VideoController.prototype.attachSocket = function(socket) {
 
   socket.on('get-segment', Promise.coroutine(function* (data) {
     log.debug('get-segment', data);
-    var data = data;
+    var schema = schemaFactory.createDefinition(schemaFactory.Enum.VIDEO);
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
-    var basePath = yield session.getMediaPath();
-    if(basePath) {
-      var sendResponse = function(segment) {
-        log.info(`Returning segment ${segment.name} of size ${segment.data ? segment.data.byteLength : null}`);
-        socket.emit("segment-chunk", segment);
-      };
+    if(request) {
+      var basePath = yield session.getMediaPath();
+      if(basePath) {
+        var sendResponse = function(segment) {
+          log.info(`Returning segment ${segment.name} of size ${segment.data ? segment.data.byteLength : null}`);
+          socket.emit("segment-chunk", segment);
+        };
 
-      cache.getSegment(data, sendResponse);
+        cache.getSegment(request, sendResponse);
+      }
     }
   }));
 };

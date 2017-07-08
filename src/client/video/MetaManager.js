@@ -50,7 +50,9 @@ MetaManager.prototype.requestMetaData = function(fileBuffer) {
     _this.emit('meta-data-loaded');
   };
 
-  clientSocket.sendRequest('get-meta-files', fileBuffer.registerRequest(addMetaData));
+  var request = {};
+  request.data = fileBuffer.registerRequest(addMetaData)
+  clientSocket.sendRequest('get-meta-files', request);
 };
 
 MetaManager.prototype.setActiveMetaData = function(metaInfo) {
