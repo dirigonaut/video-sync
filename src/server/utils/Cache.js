@@ -3,7 +3,7 @@ const Redis       = require('redis');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-var subCallbacks, session, publisher, client, fileIO, log;
+var subCallbacks, session, publisher, client, fileIO, schemaFactory, log;
 
 function Cache() { }
 
@@ -11,6 +11,7 @@ Cache.prototype.initialize = function(force) {
   if(typeof Cache.prototype.protoInit === 'undefined') {
     Cache.prototype.protoInit = true;
     fileIO          = this.factory.createFileIO();
+    schemaFactory   = this.factory.createSchemaFactory();
     var config      = this.factory.createConfig();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.VIDEO);
@@ -80,11 +81,8 @@ var readFile = Promise.coroutine(function* (key, requestData) {
   if(basePath && basePath.length > 0) {
     var readConfig = fileIO.createStreamConfig(basePath + requestData.path, Promise.coroutine(function* (data, index) {
       log.debug(`Cache on data for key: ${key} of size: ${data ? data.length : null}`);
-      var segment = {};
-      segment.typeId = requestData.typeId;
-      segment.name = key;
-      segment.data = data;
-      segment.index = index;
+      var args = [requestData.typeId, key, data, index];
+      var segment = schemaFactory.createPopulatedSchema(schemaFactory.Enum.VIDEORESPONSE, args);
 
       yield setCacheData(segment.name, segment.index, segment);
     }));
@@ -94,11 +92,8 @@ var readFile = Promise.coroutine(function* (key, requestData) {
 
     readConfig.onFinish = Promise.coroutine(function* (index) {
       log.debug('Cache finished read: ', key);
-      var segment = {};
-      segment.typeId = requestData.typeId;
-      segment.name = key;
-      segment.data = null;
-      segment.index = index;
+      var args = [requestData.typeId, key, null, index];
+      var segment = schemaFactory.createPopulatedSchema(schemaFactory.Enum.VIDEORESPONSE, args);
 
       yield setCacheData(segment.name, segment.index, segment);
     });

@@ -42,8 +42,7 @@ ChatUtil.prototype.getUserHandle = function(id) {
 
 module.exports = ChatUtil;
 
-function loadUserHandles(data) {
+function loadUserHandles(handles) {
   console.log('Got Handles');
-  console.log(data);
-  handleList = new Map(data);
+  handleList = new Map(handles.data);
 }

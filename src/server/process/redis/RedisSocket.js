@@ -3,20 +3,21 @@ const Redis       = require('redis');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-var publisher, subscriber, io, log;
+var publisher, subscriber, io, schemaFactory, log;
 
 function RedisSocket() { }
 
 RedisSocket.prototype.initialize = function(force) {
   if(typeof RedisSocket.prototype.protoInit === 'undefined') {
     RedisSocket.prototype.protoInit = true;
-    var config      = this.factory.createConfig();
+    schemaFactory   = this.factory.createSchemaFactory();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
   }
 
   if(force === undefined ? typeof RedisSocket.prototype.stateInit === 'undefined' : force) {
     RedisSocket.prototype.stateInit = true;
+    var config    = this.factory.createConfig();
     publisher     = Redis.createClient(config.getConfig().redis);
     subscriber    = Redis.createClient(config.getConfig().redis);
 
@@ -47,14 +48,16 @@ var attachEvents = function() {
     if(channel === RedisSocket.MessageEnum.BROADCAST) {
       payload = JSON.parse(payload);
 
-      if(io) {
-        io.emit(payload[0], payload[1]);
+      if(io && payload) {
+        var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [payload[1]]);
+        io.emit(payload[0], result);
       }
     } else if(channel === RedisSocket.MessageEnum.PING) {
       payload = JSON.parse(payload);
 
-      if(io) {
-        io.sockets.to(payload[0]).emit(payload[1], payload[2]);
+      if(io && payload) {
+        var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [payload[2]]);
+        io.sockets.to(payload[0]).emit(payload[1], result);
       }
     }
   }.bind(this));

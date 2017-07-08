@@ -1,4 +1,5 @@
-var Schema = {
+var Schemas = {
+  //Request
   path: { schema: { data: undefined},
     definition: { data: 'path',
     Enum: { DATA: 'data' } } },
@@ -37,7 +38,14 @@ var Schema = {
 
   encode: { schema: { timestamp: undefined, state: undefined, buffering: undefined },
     definition: { timestamp: 'number', state: 'string', buffering: 'string',
-    Enum: { TIMESTAMP: 'timestamp', STATE: 'state', BUFFERING: 'buffering' } } }
+    Enum: { TIMESTAMP: 'timestamp', STATE: 'state', BUFFERING: 'buffering' } } },
+
+  //Response
+  response: { schema: { data: undefined } },
+
+  idResponse: { schema: { id: undefined, data: undefined } },
+
+  videoResponse: { schema: { typeId: undefined, name: undefined, data: undefined, index: undefined } }
 };
 
-module.exports = Schema;
+module.exports = Schemas;

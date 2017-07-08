@@ -43,13 +43,16 @@ VideoController.prototype.attachSocket = function(socket) {
             var splitName = files[i].split(".")[0].split("_");
             header.type = splitName[splitName.length - 1];
 
-            socket.emit("file-register-response", {requestId: request.data, header: header}, function(bufferId) {
+            var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [request.data, header]);
+            socket.emit("file-register-response", result, function(bufferId) {
               var readConfig = fileIO.createStreamConfig(`${fileSystemUtils.ensureEOL(basePath)}${files[i]}`, function(bufferData) {
-                socket.emit("file-segment", { bufferId: request.data, data: bufferData });
+                var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [request.data, bufferData]);
+                socket.emit("file-segment", result);
               });
 
               readConfig.onFinish = function() {
-                socket.emit("file-end", { bufferId: request.data });
+                var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [request.data, null]);
+                socket.emit("file-end", result);
               };
 
               fileIO.read(readConfig);

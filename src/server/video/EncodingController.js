@@ -56,7 +56,8 @@ EncodingController.prototype.attachSocket = function(socket) {
         ffprobe.setCommand(command.parse(request[i].input));
 
         var metaData = yield ffprobe.execute();
-        socket.emit("meta-info", metaData);
+        var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [metaData]);
+        socket.emit("meta-info", result);
       }
     }
   }));
