@@ -1,7 +1,7 @@
 const Promise  = require('bluebird');
 const Util     = require('util');
 
-var player, validator, chatEngine, redisSocket, publisher, stateEngine, log;
+var player, schemaFactory, chatEngine, redisSocket, publisher, stateEngine, log;
 
 function StateController() { }
 
@@ -9,7 +9,7 @@ StateController.prototype.initialize = function(force) {
   if(typeof StateController.prototype.protoInit === 'undefined') {
     StateController.prototype.protoInit = true;
     player          = this.factory.createPlayer();
-    validator       = this.factory.createValidator();
+    schemaFactory       = this.factory.createSchemaFactory();
     chatEngine      = this.factory.createChatEngine();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.STATE);

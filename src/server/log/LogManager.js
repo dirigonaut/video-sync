@@ -14,31 +14,27 @@ const EXCEPTION = `${TYPE}_${process.pid}_exception.txt`;
 function LogManager() { }
 
 LogManager.prototype.initialize = function(force) {
+  if(force === undefined ? typeof LogManager.prototype.stateInit === 'undefined' : force) {
+    LogManager.prototype.stateInit = true;
+    config = this.factory.createConfig(false);
+  }
+
   if(typeof LogManager.prototype.protoInit === 'undefined') {
     LogManager.prototype.protoInit = true;
     var keys = Object.keys(LogManager.LogEnum);
-    for(var i in keys) {
-      Winston.loggers.get(LogManager.LogEnum[keys[i]]);
-    }
-
     log = Winston.loggers.get(LogManager.LogEnum.LOG);
-
     LogManager.prototype.LogEnum = LogManager.LogEnum;
-  }
-
-  if(force === undefined ? typeof LogManager.prototype.stateInit === 'undefined' : force) {
-    LogManager.prototype.stateInit = true;
-    config = this.factory.createConfig();
   }
 };
 
 LogManager.prototype.addFileLogging = function() {
-  log.debug('LogManager.addFileLogging');
-
   var keys = Object.keys(LogManager.LogEnum);
+  var logLevels = typeof config.getConfig().logLevels !== 'undefined' ? config.getConfig().logLevels : LevelEnum;
+
   for(var i in keys) {
-    var fileTransport = buildFileTransport.call(this, Path.join(config.getLogDir(), FILE_NAME), LogManager.LogEnum[keys[i]], LevelEnum[keys[i]], false);
-    var container = Winston.loggers.get(LogManager.LogEnum[keys[i]]);
+    var fileTransport = buildFileTransport.call(this, Path.join(config.getLogDir(), FILE_NAME),
+                          LogManager.LogEnum[keys[i]], logLevels[keys[i]], false);
+    var container     = Winston.loggers.get(LogManager.LogEnum[keys[i]]);
 
     container.configure({
       levels: LogManager.Levels,
@@ -50,6 +46,7 @@ LogManager.prototype.addFileLogging = function() {
   Winston.loggers.add(EXCEPTION, { transports: [exceptionTransport] });
   Winston.loggers.get(EXCEPTION).exitOnError = false;
 
+  log.debug('LogManager.addFileLogging');
   log.info('Attached file logging.');
 };
 

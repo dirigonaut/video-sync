@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-var userAdmin, validator, commandEngine, chatEngine, redisSocket,
+var userAdmin, schemaFactory, commandEngine, chatEngine, redisSocket,
   publisher, session, fileIO, fileSystemUtils, playerManager, log;
 
 function AdminController() { }
@@ -9,7 +9,7 @@ AdminController.prototype.initialize = function (force) {
   if(typeof AdminController.prototype.protoInit === 'undefined') {
     AdminController.prototype.protoInit = true;
     userAdmin       = this.factory.createUserAdministration();
-    validator       = this.factory.createValidator();
+    schemaFactory       = this.factory.createSchemaFactory();
     commandEngine   = this.factory.createCommandEngine();
     chatEngine      = this.factory.createChatEngine();
     fileIO          = this.factory.createFileIO();

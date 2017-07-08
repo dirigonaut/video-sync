@@ -1,13 +1,13 @@
 const Promise = require('bluebird');
 
-var validator, publisher, session, database, log;
+var schemaFactory, publisher, session, database, log;
 
 function DatabaseController() { }
 
 DatabaseController.prototype.initialize = function(force) {
   if(typeof DatabaseController.prototype.protoInit === 'undefined') {
     DatabaseController.prototype.protoInit = true;
-    validator       = this.factory.createValidator();
+    schemaFactory       = this.factory.createSchemaFactory();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.DATABASE);
   }
@@ -28,7 +28,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
     log.debug('db-create-smtp');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      var cleanData = validator.sterilizeSmtp(data);
+      var cleanData = data;
       yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.CREATESMTP, [cleanData]]);
       socket.emit("db-refresh");
     }
@@ -38,7 +38,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
     log.debug('db-create-session');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      var cleanData = validator.sterilizeSmtp(data);
+      var cleanData = data;
       yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.CREATESESSION, [cleanData]]);
       socket.emit("db-refresh");
     }
@@ -72,7 +72,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
     log.debug('db-update-smtp');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      var cleanData = validator.sterilizeSmtp(data);
+      var cleanData = data;
       yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.UPDATESMTP, [cleanData[0], cleanData[1]]]);
       socket.emit("db-refresh");
     }
@@ -82,7 +82,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
     log.debug('db-update-session');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      var cleanData = validator.sterilizeSmtp(data);
+      var cleanData = data;
       yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.UPDATESESSION, [cleanData[0], cleanData[1]]]);
       socket.emit("db-refresh");
     }
@@ -93,7 +93,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
     log.debug('db-delete-smtp');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      var cleanData = validator.sterilizeSmtp(data);
+      var cleanData = data;
       var deleted = yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.DELETESMTP, [cleanData]]);
       if(deleted && deleted > 0){
         socket.emit('db-refresh');
@@ -105,7 +105,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
     log.debug('db-delete-session');
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
-      var cleanData = validator.sterilizeSmtp(data);
+      var cleanData = data;
       yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.DELETESESSION, [cleanData]]);
       if(deleted && deleted > 0){
         socket.emit('db-refresh');

@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-var publisher, redisSocket, smtp, userAdmin, validator, authenticator,
+var publisher, redisSocket, smtp, userAdmin, schemaFactory, authenticator,
       session, chatEngine, playerManager, log;
 
 function AuthenticationController() { }
@@ -9,7 +9,7 @@ AuthenticationController.prototype.initialize = function(force) {
   if(typeof AuthenticationController.prototype.protoInit === 'undefined') {
     AuthenticationController.prototype.protoInit = true;
     userAdmin       = this.factory.createUserAdministration();
-    validator		    = this.factory.createValidator();
+    schemaFactory		    = this.factory.createSchemaFactory();
     chatEngine      = this.factory.createChatEngine();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);
@@ -31,7 +31,7 @@ AuthenticationController.prototype.attachIO = function (io) {
     log.socket(`socket has connected: ${socket.id} ip: ${socket.handshake.address}`);
     socket.logonAttempts = 0;
 
-    yield isAdministrator.call(this, socket, io);
+    yield isAdministrator.call(this, socket);
 
     socket.on('auth-get-token', Promise.coroutine(function* (data) {
       log.debug('auth-get-token');
@@ -45,16 +45,16 @@ AuthenticationController.prototype.attachIO = function (io) {
         socket.emit('login-token-sent');
       });
 
-      authenticator.requestToken(socket.id, validator.sterilizeUser(data), requestSmtp);
+      authenticator.requestToken(socket.id, data, requestSmtp);
     }));
 
     socket.on('auth-validate-token', Promise.coroutine(function*(data) {
       log.debug('auth-validate-token');
-      var cleanData = validator.sterilizeUser(data);
+      var cleanData = data;
 
       var authorized = yield authenticator.validateToken(socket.id, cleanData);
       if(authorized) {
-        yield userAuthorized.call(this, socket, io, cleanData.handle);
+        yield userAuthorized.call(this, socket, cleanData.handle);
       } else {
         socket.logonAttempts += 1;
 
@@ -96,7 +96,7 @@ AuthenticationController.prototype.attachIO = function (io) {
 
 module.exports = AuthenticationController;
 
-var userAuthorized = Promise.coroutine(function* (socket, io, handle) {
+var userAuthorized = Promise.coroutine(function* (socket, handle) {
   socket.auth = true;
 
   yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.CREATEPLAYER, [socket.id, handle]]);
@@ -125,7 +125,7 @@ var userAuthorized = Promise.coroutine(function* (socket, io, handle) {
   log.info("socket has been authenticated.", socket.id);
 });
 
-var isAdministrator = Promise.coroutine(function* (socket, io) {
+var isAdministrator = Promise.coroutine(function* (socket) {
   socket.auth = false;
 
   var admin = yield session.getAdmin();
@@ -133,11 +133,13 @@ var isAdministrator = Promise.coroutine(function* (socket, io) {
   if(socket.handshake.address.includes("127.0.0.1")) {
     var adminController   = this.factory.createAdminController();
     var databaseContoller = this.factory.createDatabaseController();
+    var encodingContoller = this.factory.createEncodingController();
 
     adminController.attachSocket(socket);
     databaseContoller.attachSocket(socket);
+    encodingContoller.attachSocket(socket);
 
     yield session.addAdmin(socket.id);
-    userAuthorized.call(this, socket, io, 'admin');
+    userAuthorized.call(this, socket, 'admin');
   }
 });
