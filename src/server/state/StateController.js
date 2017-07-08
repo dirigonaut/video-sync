@@ -25,13 +25,13 @@ StateController.prototype.initialize = function(force) {
 
 StateController.prototype.attachSocket = function(socket) {
   log.info('StateController.attachSocket');
-  socket.emit('state-trigger-ping', true);
+  socket.emit('state-trigger-ping', schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [true]));
 
   socket.on('state-req-init', Promise.coroutine(function*() {
     log.debug('state-req-init');
-    var payload = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.INITPLAYER, [socket.id]]);
-    if(payload) {
-      socket.emit(payload[1]);
+    var command = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.INITPLAYER, [socket.id]]);
+    if(command) {
+      socket.emit(schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [command[1]]));
     }
   }));
 
@@ -108,12 +108,12 @@ StateController.prototype.attachSocket = function(socket) {
         yield chatEngine.broadcast(chatEngine.Enum.EVENT, message);
 
         if(value === player.Sync.SYNCING) {
-          socket.emit('state-trigger-ping', true);
+          socket.emit('state-trigger-ping', schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [true]));
         } else {
-          socket.emit('state-trigger-ping', false);
+          socket.emit('state-trigger-ping', schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [false]));
         }
 
-        socket.emit('state-sync-state', value);
+        socket.emit('state-sync-state', schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [value]));
       }
     }
   }));

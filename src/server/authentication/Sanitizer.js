@@ -1,12 +1,13 @@
 const validator	= require('validator');
 
-const PATHWHITELIST = '/';
+var fileSystemUtils;
 
 function Sanitizer() { }
 
 Sanitizer.prototype.initialize = function(force) {
 	if(typeof Sanitizer.prototype.protoInit === 'undefined') {
     Sanitizer.prototype.protoInit = true;
+		fileSystemUtils = this.factory.createFileSystemUtils();
   }
 };
 
@@ -77,7 +78,7 @@ function checkInput(type, input) {
 			}
 			break;
 		case 'path':
-			clean = true;//validator.isWhitelisted(input, PATHWHITELIST);
+			clean = fileSystemUtils.isPath(input);
 			break;
 	  case 'email':
 			clean = validator.isEmail(input);

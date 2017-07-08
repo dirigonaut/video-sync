@@ -27,6 +27,20 @@ SchemaFactory.prototype.createDefinition = function (id) {
   return Object.assign({}, getSchemaData.call(this, id).definition);
 };
 
+SchemaFactory.prototype.createPopulatedSchema = function (id, args) {
+  var object = Object.assign({}, getSchemaData.call(this, id).schema);
+  if(object && Array.isArray(args)) {
+    var keys = Object.keys(object);
+    for(var i = 0; i < keys.length; ++i) {
+      if(typeof args[i] !== 'undefined') {
+        object[keys[i]] = args[i];
+      }
+    }
+  }
+
+  return object;
+};
+
 module.exports = SchemaFactory;
 
 function getSchemaData(id) {

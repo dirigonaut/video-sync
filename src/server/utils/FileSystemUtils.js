@@ -1,4 +1,5 @@
-const Os = require('os');
+const Os    = require('os');
+const Path  = require('path');
 
 function FileSystemUtils() { }
 
@@ -32,15 +33,7 @@ FileSystemUtils.prototype.splitExtensionFromPath = function(path) {
 };
 
 FileSystemUtils.prototype.isPath = function(path) {
-  var isPath = false;
-
-  if(path.charAt(0) === "/") {
-    isPath = true;
-  } else if(path.charAt(1) === ":") {
-    isPath = true;
-  }
-
-  return isPath;
+  return path !== Path.basename(path);
 };
 
 FileSystemUtils.prototype.ensureEOL = function(string) {
