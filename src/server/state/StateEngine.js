@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-var player, playRule, syncRule, syncingRule, resumeRule,
+var player, playRule, syncRule, syncingRule, resumeRule, schemaFactory,
     playerManager, accuracy, interval, session, publisher, log;
 
 function StateEngine() { };
@@ -8,6 +8,8 @@ function StateEngine() { };
 StateEngine.prototype.initialize = function(force) {
   if(typeof StateEngine.prototype.protoInit === 'undefined') {
     StateEngine.prototype.protoInit = true;
+    schemaFactory   = this.factory.createSchemaFactory();
+
     player          = this.factory.createPlayer();
 
     playRule        = this.factory.createPlayRule();
@@ -99,20 +101,23 @@ StateEngine.prototype.pause = Promise.coroutine(function* (id) {
       if(issuer.sync === player.Sync.DESYNCED) {
         log.silly('StateEngine issuing pause', issuer);
         commands = [];
-        commands.push([issuer.id, 'state-pause', false]);
+        var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, false]);
+        commands.push([issuer.id, 'state-pause', schema]);
       } else {
         commands = [];
         var players = playerManager.getPlayers();
         for(let player of players.values()) {
           if(player.sync !== player.Sync.DESYNCED) {
             var syncPause = player.sync === player.Sync.SYNCED || player.sync === player.Sync.SYNCWAIT ? true : false;
-            commands.push([player.id, 'state-pause', syncPause]);
+            var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, syncPause]);
+            commands.push([player.id, 'state-pause', schema]);
             player.sync = player.Sync.SYNCED;
           }
         }
       }
     }
   }
+
   return commands;
 });
 
@@ -129,7 +134,8 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, seekTime) {
       if(issuer.sync === player.Sync.DESYNCED) {
         log.silly('StateEngine issuing pause', issuer);
         commands = [];
-        commands.push([issuer.id, 'state-seek', data]);
+        var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, seekTime, undefined]);
+        commands.push([issuer.id, 'state-seek', schema]);
 
         if(mediaStarted === false && issuer.isInit()) {
           issuer.sync = player.Sync.SYNCED;
@@ -140,7 +146,8 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, seekTime) {
         var players = playerManager.getPlayers();
         for(let player of players.values()) {
           if(player.sync !== player.Sync.DESYNCED) {
-            commands.push([player.id, 'state-seek', seekTime]);
+            var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, seekTime, undefined]);
+            commands.push([player.id, 'state-seek', schema]);
 
             if(mediaStarted === false && player.isInit()) {
               player.sync = player.Sync.SYNCED;
@@ -166,7 +173,7 @@ StateEngine.prototype.pauseSync = Promise.coroutine(function* (id) {
       if(player.sync !== player.Sync.DESYNCED) {
         var players = playerManager.getPlayers();
         if(players.size > 1) {
-          var syncTime = null;
+          var syncTime;
 
           for(let player of players.values()) {
             if(!syncTime || (player.sync === player.Sync.SYNCED && syncTime > player.timestamp)) {
@@ -174,12 +181,13 @@ StateEngine.prototype.pauseSync = Promise.coroutine(function* (id) {
             }
           }
 
-          var response = {};
-          response.seekTime = syncTime;
           var command = [];
-          command.push([id, 'state-seek', response]);
+          var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, syncTime, undefined]);
+          command.push([id, 'state-seek', schema]);
 
-          return command;
+          return
+
+          ;
         }
       }
     }
@@ -226,6 +234,7 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
           var leader = syncingRule.evaluate(player, playerManager.getOtherPlayers(player.id));
 
           if(leader) {
+
             var object = {};
             object.seekTime = leader.timestamp + 1;
             object.syncWait = true;
@@ -237,6 +246,7 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
             }
 
             commands = [];
+            var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [object.play, object.seekTime, object.syncWait]);
             commands.push([player.id, "state-seek", object]);
           }
         } else if(player.sync === player.Sync.SYNCED) {
@@ -245,6 +255,7 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
           if(triggered) {
             player.sync = player.Sync.SYNCWAIT;
             commands = [];
+            var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, false]);
             commands.push([player.id, "state-pause", false]);
           }
         }
@@ -310,7 +321,8 @@ var resumeLogic = Promise.coroutine(function* (players) {
           yield publisher.publishAsync(publisher.RespEnum.COMMAND, commands);
         } else {
           var commands = [];
-          commands.push([waitingPlayer.id, 'state-pause', false]);
+          var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, false]);
+          commands.push([waitingPlayer.id, 'state-pause', schema]);
           yield publisher.publishAsync(publisher.RespEnum.COMMAND, commands);
         }
 

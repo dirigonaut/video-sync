@@ -17,7 +17,7 @@ var Schemas = {
     Enum: { HANDLE: 'handle', ADDRESS: 'address', TOKEN: 'token' } } },
 
   command: { schema: { command: undefined, param: undefined },
-    definition: { command: 'string', param: 'email',
+    definition: { command: 'string', param: 'string',
     Enum: { COMMAND: 'command', PARAM: 'param' } } },
 
   smtp: { schema: { _id: undefined, smtpType: undefined, smtpHost: undefined, smtpAddress: undefined, smtpPassword: undefined },
@@ -45,7 +45,11 @@ var Schemas = {
 
   idResponse: { schema: { id: undefined, data: undefined } },
 
-  videoResponse: { schema: { typeId: undefined, name: undefined, data: undefined, index: undefined } }
+  chatResponse: { schema: { from: undefined, data: undefined } },
+
+  videoResponse: { schema: { typeId: undefined, name: undefined, data: undefined, index: undefined } },
+
+  stateResponse: { schema: { play: undefined, time: undefined, sync: undefined } }
 };
 
 module.exports = Schemas;

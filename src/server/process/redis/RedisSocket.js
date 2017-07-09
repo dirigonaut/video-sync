@@ -49,14 +49,26 @@ var attachEvents = function() {
       payload = JSON.parse(payload);
 
       if(io && payload) {
-        var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [payload[1]]);
+        var result;
+        if(Array.isArray(payload[1])) {
+          result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [payload[1]]);
+        } else {
+          result = payload[1];
+        }
+
         io.emit(payload[0], result);
       }
     } else if(channel === RedisSocket.MessageEnum.PING) {
       payload = JSON.parse(payload);
 
       if(io && payload) {
-        var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [payload[2]]);
+        var result;
+        if(Array.isArray(payload[2])) {
+          result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [payload[2]]);
+        } else {
+          result = payload[2];
+        }
+
         io.sockets.to(payload[0]).emit(payload[1], result);
       }
     }

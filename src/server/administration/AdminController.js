@@ -60,8 +60,8 @@ AdminController.prototype.attachSocket = function(socket) {
           var playerIds = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETPLAYERIDS, []]);
           if(playerIds) {
             log.debug('media-ready');
-            var message = chatEngine.buildMessage(socket.id, 'Video has been initialized.');
-            yield chatEngine.broadcast(chatEngine.Enum.EVENT, message);
+            var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'Video has been initialized.']);
+            yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
             yield redisSocket.broadcast('media-ready');
           };
         }
@@ -113,14 +113,14 @@ AdminController.prototype.attachSocket = function(socket) {
               }
             } else if(command[0] === commandEngine.RespEnum.CHAT) {
               let params = command[1];
-              var message = chatEngine.buildMessage(socket.id, params[1]);
+              var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, params[1]]);
 
               if(params[0] === chatEngine.Enum.PING) {
                 log.silly('chat-command-response', request);
-                yield chatEngine.ping(params[0], message);
+                yield chatEngine.ping(params[0], response);
               } else {
                 log.silly('chat-command-response', request);
-                yield chatEngine.broadcast(params[0], message);
+                yield chatEngine.broadcast(params[0], response);
               }
             }
           }

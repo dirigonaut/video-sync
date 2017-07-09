@@ -63,7 +63,8 @@ DatabaseController.prototype.attachSocket = function(socket) {
     if(isAdmin) {
       var smtp = yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.READALLSMTP, []]);
       if(smtp) {
-        socket.emit("db-smtps", smtp);
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [smtp]);
+        socket.emit("db-smtps", response);
       }
     }
   }));
@@ -75,7 +76,8 @@ DatabaseController.prototype.attachSocket = function(socket) {
     if(isAdmin) {
       var sessions = yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.READALLSESSIONS, []]);
       if(sessions) {
-        socket.emit("db-sessions", sessions);
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [sessions]);
+        socket.emit("db-sessions", response);
       }
     }
   }));

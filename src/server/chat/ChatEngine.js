@@ -34,17 +34,8 @@ ChatEngine.prototype.ping = Promise.coroutine(function* (eventName, message) {
   }
 });
 
-ChatEngine.prototype.buildMessage = function(sender, text) {
-  var message = {};
-  message.from = sender;
-  message.text = text;
-  return message;
-};
-
 module.exports = ChatEngine;
 
-ChatEngine.SYSTEM = "System";
 ChatEngine.Enum   = {BROADCAST : "chat-broadcast-resp", PING : "chat-ping-resp", LOG : "chat-log-resp", EVENT : "chat-event-resp"};
 
-ChatEngine.prototype.SYSTEM = ChatEngine.SYSTEM;
 ChatEngine.prototype.Enum   = ChatEngine.Enum;
