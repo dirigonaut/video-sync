@@ -284,7 +284,7 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     clientSocket.sendRequest('state-update-state', request, true);
   });
 
-  clientSocket.setEvent('state-pause', function(isSynced) {
+  clientSocket.setEvent('state-pause', function(command) {
     log.debug(`state-pause sync: ${isSynced}`);
     var video = videoSingleton.getVideoElement();
     videoSingleton.pause();
@@ -295,18 +295,18 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
 
     clientSocket.sendRequest('state-update-state', request, true);
 
-    if(isSynced) {
+    if(command.sync) {
       clientSocket.sendRequest('state-sync');
     }
   });
 
-  clientSocket.setEvent('state-seek', function(data) {
+  clientSocket.setEvent('state-seek', function(command) {
     log.debug("state-seek", data);
     var video = videoSingleton.getVideoElement();
     videoSingleton.pause();
-    video.currentTime = data.seekTime;
+    video.currentTime = command.time;
 
-    if(data.play) {
+    if(command.play) {
       videoSingleton.play();
     }
 
@@ -315,16 +315,16 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     request.timestamp = video.currentTime;
     request.state = video.paused;
 
-    if(data.syncWait){
+    if(command.sync){
       clientSocket.sendRequest('state-update-sync', request, true);
     } else {
       clientSocket.sendRequest('state-update-state', request, true);
     }
   });
 
-  clientSocket.setEvent('state-trigger-ping', function(data) {
+  clientSocket.setEvent('state-trigger-ping', function(command) {
     log.debug("state-trigger-ping");
-    _this.syncPing = data;
+    _this.syncPing = command.sync;
   });
 
   clientSocket.setEvent('segment-chunk', function(segment) {

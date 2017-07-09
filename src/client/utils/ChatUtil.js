@@ -19,9 +19,9 @@ ChatUtil.prototype.parseInput = function(input) {
 };
 
 ChatUtil.prototype.createMessage = function(text) {
-  var message = {};
-  message.text = text;
-  return message;
+  var response = {};
+  response.data = text;
+  return response;
 };
 
 ChatUtil.prototype.createCommand = function(command, param) {

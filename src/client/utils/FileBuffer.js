@@ -89,16 +89,16 @@ module.exports = FileBuffer;
 var setSocketEvents = function(fileBuffer) {
   clientSocket.setEvent('file-register-response', function(response, callback){
     console.log('file-register-response');
-    fileBuffer.registerResponse(response.requestId, response.header, callback);
+    fileBuffer.registerResponse(response.id, response.data, callback);
   });
 
   clientSocket.setEvent('file-segment', function(response){
     console.log('file-segment');
-    fileBuffer.onData(response.bufferId, response.data);
+    fileBuffer.onData(response.id, response.data);
   });
 
   clientSocket.setEvent('file-end', function(response){
     console.log('file-end');
-    fileBuffer.onFinish(response.bufferId);
+    fileBuffer.onFinish(response.id);
   });
 }

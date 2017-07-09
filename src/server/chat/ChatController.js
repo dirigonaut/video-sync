@@ -32,8 +32,8 @@ ChatController.prototype.attachSocket = function(socket) {
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
     if(request) {
-      var message = chatEngine.buildMessage(socket.id, request.data);
-      yield chatEngine.broadcast(chatEngine.Enum.BROADCAST, message);
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, request.data]);
+      yield chatEngine.broadcast(chatEngine.Enum.BROADCAST, response);
     }
   }.bind(this)));
 
@@ -63,14 +63,14 @@ ChatController.prototype.attachSocket = function(socket) {
             }
           } else if(command[0] === CommandEngine.RespEnum.CHAT) {
             let params = command[1];
-            var message = chatEngine.buildMessage(socket.id, params[1]);
+            var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, params[1]]);
 
             if(params[0] === chatEngine.Enum.PING) {
               log.silly('chat-command-response', request);
-              yield chatEngine.ping(params[0], message);
+              yield chatEngine.ping(params[0], response);
             } else {
               log.silly('chat-command-response', request);
-              yield chatEngine.broadcast(params[0], message);
+              yield chatEngine.broadcast(params[0], response);
             }
           }
         }

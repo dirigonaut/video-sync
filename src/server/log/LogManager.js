@@ -4,7 +4,7 @@ const Path       = require('path');
 const Util       = require('util');
 const Winston    = require('winston');
 
-var config, log;
+var config, schemaFactory, log;
 
 const LOG_LEVEL = "debug";
 const TYPE      = Cluster.isMaster ? "masterProcess" : process.env.processType;
@@ -16,7 +16,8 @@ function LogManager() { }
 LogManager.prototype.initialize = function(force) {
   if(force === undefined ? typeof LogManager.prototype.stateInit === 'undefined' : force) {
     LogManager.prototype.stateInit = true;
-    config = this.factory.createConfig(false);
+    config          = this.factory.createConfig(false);
+    schemaFactory   = this.factory.createSchemaFactory();
   }
 
   if(typeof LogManager.prototype.protoInit === 'undefined') {
@@ -87,10 +88,10 @@ function createFormatter(label) {
 
   return function(options) {
     var logMessage = {
-      timestamp: options.timestamp(),
+      time: options.timestamp(),
       level: options.level,
       label: label,
-      message: options.message ? options.message : ''
+      text: options.message ? options.message : ''
     };
 
     if(options.meta && Object.keys(options.meta).length) {
@@ -109,7 +110,8 @@ function createFormatter(label) {
 
       session.getAdmin().then(function(ids) {
         if(ids) {
-          redisSocket.ping(ids, 'chat-log-resp', logMessage);
+          var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, ['System', logMessage]);
+          redisSocket.ping(ids, 'chat-log-resp', response);
         }
       });
     }

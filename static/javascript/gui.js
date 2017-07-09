@@ -439,13 +439,13 @@ function initGUI() {
 
   function systemMessage(message) {
     $('#chatManuscript').append(`<p><span class="chat-message" title="System" style="color:gray; font-weight: bold;">
-      ${new Date().toTimeString().split(" ")[0]} System: </span>${client.getChatUtil().getUserHandle(message.from)} ${message.text}</p>`);
+      ${new Date().toTimeString().split(" ")[0]} System: </span>${client.getChatUtil().getUserHandle(message.from)} ${message.data}</p>`);
     autoScroll('#chatManuscript');
   }
 
   clientSocket.setEvent('chat-broadcast-resp', function(message) {
     $('#chatManuscript').append(`<p><span class="chat-message" title="${message.from}" style="color:blue; font-weight: bold;">
-      ${new Date().toTimeString().split(" ")[0]} ${client.getChatUtil().getUserHandle(message.from)}: </span>${message.text}</p>`);
+      ${new Date().toTimeString().split(" ")[0]} ${client.getChatUtil().getUserHandle(message.from)}: </span>${message.data}</p>`);
     autoScroll('#chatManuscript');
   });
 
@@ -458,8 +458,8 @@ function initGUI() {
   });
 
   clientSocket.setEvent('chat-log-resp', function(message) {
-    $('#logManuscript').append(`<p><span class="chat-message" title="${message.log}" style="color:blue; font-weight: bold;">
-      ${message.time} ${message.level}: </span>${message.message} ${message.meta !== undefined ? message.meta : ""}</p>`);
+    $('#logManuscript').append(`<p><span class="chat-message" title="${message.label}" style="color:blue; font-weight: bold;">
+      ${message.time} ${message.level}: </span>${message.text} ${message.meta !== undefined ? message.meta : ""}</p>`);
       autoScroll('#logManuscript');
   });
 

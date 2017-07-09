@@ -77,7 +77,8 @@ AuthenticationController.prototype.attachIO = function (io) {
 
     socket.on('disconnect', Promise.coroutine(function*() {
       log.info('disconnect', socket.id);
-      yield chatEngine.broadcast(chatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has left the session.`));
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'has left the session..']);
+      yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
 
       var isAdmin = yield session.isAdmin(socket.id);
       if(isAdmin) {
@@ -130,7 +131,9 @@ var userAuthorized = Promise.coroutine(function* (socket, handle) {
 
     var handles = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETHANDLES, []]);
     yield redisSocket.broadcast('chat-handles', handles);
-    yield chatEngine.broadcast(chatEngine.Enum.EVENT, chatEngine.buildMessage(socket.id, ` has joined the session.`));
+    
+    var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'has joined.']);
+    yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
   }));
 
   log.info("socket has been authenticated.", socket.id);

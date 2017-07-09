@@ -41,12 +41,12 @@ module.exports = FormDataSingleton;
 
 var dbSmtps = function(response){
   console.log('db-smtps');
-  smtpList = response;
+  smtpList = response.data;
 };
 
 var dbSessions = function(response) {
   console.log('db-sessions');
-  sessionList = response;
+  sessionList = response.data;
 };
 
 var dbRefresh = function() {

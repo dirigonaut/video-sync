@@ -44,8 +44,8 @@ StateController.prototype.attachSocket = function(socket) {
         yield redisSocket.ping.apply(null, commands[i]);
       }
 
-      var message = chatEngine.buildMessage(socket.id, "issued play");
-      yield chatEngine.broadcast(chatEngine.Enum.EVENT, message);
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'issued play.']);
+      yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
     }
   }));
 
@@ -58,8 +58,8 @@ StateController.prototype.attachSocket = function(socket) {
         yield redisSocket.ping.apply(null, commands[i]);
       }
 
-      var message = chatEngine.buildMessage(socket.id, "issued pause");
-      yield chatEngine.broadcast(chatEngine.Enum.EVENT, message);
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'issued pause.']);
+      yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
     }
   }));
 
@@ -75,8 +75,8 @@ StateController.prototype.attachSocket = function(socket) {
           yield redisSocket.ping.apply(null, commands[i]);
         }
 
-        var message = chatEngine.buildMessage(socket.id, `issued seek to ${request.data}`);
-        yield chatEngine.broadcast(chatEngine.Enum.EVENT, message);
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, `issued seek to ${request.data}.`]);
+        yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
       }
     }
   }));
@@ -91,8 +91,8 @@ StateController.prototype.attachSocket = function(socket) {
         yield redisSocket.ping.apply(null, commands[i]);
       }
 
-      var message = chatEngine.buildMessage(socket.id, "issued sync");
-      yield chatEngine.broadcast(chatEngine.Enum.EVENT, message);
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'issued sync.']);
+      yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
     }
   }));
 
@@ -104,8 +104,8 @@ StateController.prototype.attachSocket = function(socket) {
     if(request) {
       var value = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.CHANGESYNCSTATE, [socket.id, request]]);
       if(value) {
-        var message = chatEngine.buildMessage(socket.id, `is now in sync state ${value}`);
-        yield chatEngine.broadcast(chatEngine.Enum.EVENT, message);
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, `is now in a sync state ${value}.`]);
+        yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
 
         if(value === player.Sync.SYNCING) {
           socket.emit('state-trigger-ping', schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [true]));
