@@ -277,10 +277,7 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     var video = videoSingleton.getVideoElement();
     videoSingleton.play();
 
-    var request = {};
-    request.timestamp = video.currentTime;
-    request.state = video.paused;
-
+    var request = new RequestFactory().buildVideoStateRequest(video);
     clientSocket.sendRequest('state-update-state', request, true);
   });
 
@@ -289,10 +286,7 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     var video = videoSingleton.getVideoElement();
     videoSingleton.pause();
 
-    var request = {};
-    request.timestamp = video.currentTime;
-    request.state = video.paused;
-
+    var request = new RequestFactory().buildVideoStateRequest(video);
     clientSocket.sendRequest('state-update-state', request, true);
 
     if(command.sync) {
@@ -310,11 +304,8 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
       videoSingleton.play();
     }
 
-    var request = {};
-    request.id = clientSocket.getSocketId();
-    request.timestamp = video.currentTime;
-    request.state = video.paused;
-
+    var request = new RequestFactory().buildVideoStateRequest(video);
+    
     if(command.sync){
       clientSocket.sendRequest('state-update-sync', request, true);
     } else {

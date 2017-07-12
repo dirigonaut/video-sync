@@ -49,7 +49,7 @@ var Schemas = {
 
   videoResponse: { schema: { typeId: undefined, name: undefined, data: undefined, index: undefined } },
 
-  stateResponse: { schema: { play: undefined, time: undefined, sync: undefined } }
+  stateResponse: { schema: { play: undefined, time: undefined, sync: undefined, buffered: undefined } }
 };
 
 module.exports = Schemas;

@@ -49,11 +49,13 @@ FileBuffer.prototype.onData = function(bufferId, data) {
   log.info('FileBuffer.onData');
   var buffer = this.buffers.get(bufferId);
 
-  if(data instanceof Buffer) {
-    buffer.data.push(data);
-  } else {
-    var buff = new Buffer(data);
-    buffer.data.push(buff);
+  if(data) {
+    if(data instanceof Buffer) {
+      buffer.data.push(data);
+    } else {
+      var buff = new Buffer(data);
+      buffer.data.push(buff);
+    }
   }
 };
 

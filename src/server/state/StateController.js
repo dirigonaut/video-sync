@@ -65,8 +65,8 @@ StateController.prototype.attachSocket = function(socket) {
 
   socket.on('state-req-seek', Promise.coroutine(function* (data) {
     log.debug('state-req-seek', data);
-    var schema = schemaFactory.createDefinition(schemaFactory.Enum.NUMBER);
-    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+    var schema = schemaFactory.createDefinition(schemaFactory.Enum.STATE);
+    var request = sanitizer.sanitize(data, schema, [schema.Enum.TIMESTAMP]);
 
     if(request) {
     var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SEEK, [socket.id, request]]);
@@ -118,17 +118,12 @@ StateController.prototype.attachSocket = function(socket) {
     }
   }));
 
-  socket.on('state-sync-ping', Promise.coroutine(function* (data) {
+  socket.on('state-sync-ping', Promise.coroutine(function* () {
     log.silly('state-sync-ping');
-    var schema = schemaFactory.createDefinition(schemaFactory.Enum.STATE);
-    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
-
-    if(request) {
-      var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SYNCINGPING, [socket.id, request]]);
-      if(commands) {
-        for(var i in commands) {
-          yield redisSocket.ping.apply(null, commands[i]);
-        }
+    var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SYNCINGPING, [socket.id]]);
+    if(commands) {
+      for(var i in commands) {
+        yield redisSocket.ping.apply(null, commands[i]);
       }
     }
   }));

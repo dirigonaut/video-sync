@@ -261,7 +261,7 @@ describe('StateEngine', function() {
       mockMixin.playerManager.pushReturn(mockMixin.playerManager.Enum.GETPLAYER,
         function() {
           player.id = "test1";
-          player.sync = Player.Sync.DESYNCED;
+          player.desynced = true;
           return player;
         });
 

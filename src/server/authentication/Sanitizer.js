@@ -30,7 +30,7 @@ Sanitizer.prototype.sanitize = function(object, schema, required) {
 				}
 			}
 		} else {
-			throw new Error(`Entry ${schema[entry[0]]} does not exist in ${JSON.stringify(object)}`);
+			throw new Error(`Entry ${entry[0]} does not exist in ${JSON.stringify(object)}`);
 		}
 	}
 
