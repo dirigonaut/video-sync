@@ -15,7 +15,7 @@ SyncRule.prototype.evaluate = function(issuer, players, fuzzyRange) {
   log.silly("SyncRule.evaluate");
   var sync = false;
 
-  if(issuer.sync !== player.Sync.DESYNCED) {
+  if(!issuer.desynced) {
     for(let player of players.values()){
       if(player.sync === player.Sync.SYNCED) {
         if(parseFloat(issuer.timestamp) > parseFloat(player.timestamp) && Math.abs(parseFloat(issuer.timestamp) - parseFloat(player.timestamp)) > fuzzyRange) {

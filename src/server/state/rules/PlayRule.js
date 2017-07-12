@@ -15,7 +15,7 @@ PlayRule.prototype.evaluate = function(issuer, players, mediaStarted, fuzzyRange
   log.debug("PlayRule.evaluate");
   var issuees = [];
 
-  if(issuer.sync === player.Sync.DESYNCED) {
+  if(issuer.desynced) {
     log.silly("PlayRule triggered", [issuer]);
     return [issuer];
   } else {

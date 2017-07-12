@@ -36,6 +36,7 @@ MetaManager.prototype.requestMetaData = function(fileBuffer) {
       util = new Mp4Parser();
     }
 
+    console.log(fileBuffer)
     _this.metaDataList.set(header.type, new MpdMeta(binaryFile.toString(), util));
 
     if(_this.activeMetaData === null && header.type === 'webm') {

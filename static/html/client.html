@@ -64,7 +64,7 @@
 
         $.getScript("../javascript/clientLog.js", function() {
           var clientLogManager = new (Client.ClientLogManager());
-          clientLogManager.addGUILogging(Client.ClientLogManager().LogEnum.CLIENT, guiLog());
+          clientLogManager.addGUILogging(guiLog());
 
           clientSocket = Client.GetClientSocket();
           clientSocket.connect(clientSocket.buildServerUrl(window), buildClient);
