@@ -1,15 +1,19 @@
-var io 		= require('socket.io-client');
-var async = require('async');
+const Promise = require('bluebird');
+const io 			= require('socket.io-client');
+const async 	= require('async');
 
-var ClientLog 	= require('../log/ClientLogManager');
-var log         = ClientLog.getLog(ClientLog.LogEnum.CLIENT);
+var socket, log;
 
-var socket;
+function ClientSocket() { }
 
-function ClientSocket() {
-}
+ClientSocket.prototype.initialize = function() {
+	if(typeof ClientSocket.prototype.protoInit === 'undefined') {
+		var logManager = this.createClientLogManager();
+		log = logManager.getLog(logManager.Enum.GENERAL);
+	}
+};
 
-ClientSocket.prototype.connect = function(serverUrl, callback) {
+ClientSocket.prototype.connectAsync = function(serverUrl) {
 	log.info("Socket connecting to: " + serverUrl);
 
 	socket = io.connect(serverUrl, {rejectUnauthorized: false});
@@ -22,9 +26,30 @@ ClientSocket.prototype.connect = function(serverUrl, callback) {
 		log.info("Socket authenticated with server." );
 		callback(acknowledge);
 	});
+
+	return
 };
 
-ClientSocket.prototype.sendRequest = function(event, request, isPromised) {
+ClientSocket.prototype.requestAsync = function(event, request, isPromised) {
+	if(isPromised) {
+		async.retry({times: 10, interval: 250}, function (callback, result) {
+		  socket.emit(event, request, function (err, result) {
+		    if (err) {
+					return callback(err);
+				}
+
+		    callback(null, result);
+		  });
+		},
+		function (err, result) {
+		   log.silly(`${event} responded with err ${err} and result ${result}`);
+		});
+	} else {
+		socket.emit(event, request);
+	}
+};
+
+ClientSocket.prototype.request = function(event, request, isPromised) {
 	if(isPromised) {
 		async.retry({times: 10, interval: 250}, function (callback, result) {
 		  socket.emit(event, request, function (err, result) {
@@ -53,14 +78,6 @@ ClientSocket.prototype.clearEvent = function(event, callback) {
 	} else {
 		socket.off(event);
 	}
-};
-
-ClientSocket.prototype.getSocketId = function() {
-	return socket.id;
-};
-
-ClientSocket.prototype.buildServerUrl = function(window) {
-  return window.location.host;
 };
 
 module.exports = ClientSocket;

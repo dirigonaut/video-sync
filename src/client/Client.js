@@ -1,66 +1,36 @@
-var ClientSocket = require('./socket/ClientSocket.js');
-var ClientLogManager = require('./log/ClientLogManager');
-var FormDataSingleton = require('./utils/FormDataSingleton');
-var MediaController = require('./video/MediaController');
-var RequestFactory = require('./utils/RequestFactory');
-var CommandFactory = require('./utils/EncoderCommandFactory');
-var FileBuffer = require('./utils/FileBuffer');
-var ChatUtil = require('./utils/ChatUtil');
-var FileUtil = require('../server/utils/FileSystemUtils');
+const Promise               = require('bluebird');
+const ClientFactoryManager  = require('./factory/ClientFactoryManager');
 
-var mediaController;
-var fileBuffer;
-var formData;
-var chatUtil;
-var fileUtil;
+var factory;
 
-var clientLog = ClientLogManager.getLog();
+function Client() { }
 
-function Client(videoElement) {
-  clientLog.info("Client created");
+Client.prototype.initialize = function(video, serverUrl, logCallback) {
+  if(typeof Client.prototype.protoInit === 'undefined') {
+    Client.prototype.protoInit = true;
+    var factoryManager = Object.create(ClientFactoryManager.prototype);
+    factory = factoryManager.initialize();
 
-  fileBuffer = new FileBuffer();
-  formData = new FormDataSingleton();
-  mediaController = new MediaController(videoElement, fileBuffer);
-  chatUtil = new ChatUtil();
-  fileUtil = new FileUtil();
+    var logManager = factory.createClientLogManager();
+    logManager.addUILogging(logCallback);
 
-  fileBuffer.setupEvents();
-  chatUtil.setupEvents();
-  formData.setupEvents();
-  formData.initializeData();
-}
+    clientSocket = factory.createClientSocket();
+    yield clientSocket.connect(serverUrl, function() { /*resolve promise*/ });
 
-Client.prototype.getMediaController = function() {
-  return mediaController;
-};
+    var fileBuffer = factory.createFileBuffer();
+    var formData = factory.createFormDataSingleton();
+    var mediaController = factory.createMediaController();
+    var chatUtil = factory.createChatUtil();
 
-Client.prototype.getRequestFactory = function() {
-  return new RequestFactory();
-};
+    fileBuffer.setupEvents();
+    chatUtil.setupEvents();
+    formData.setupEvents();
+    formData.initializeData();
+  }
+});
 
-Client.prototype.getCommandFactory = function() {
-  return CommandFactory;
-};
-
-Client.prototype.getFormDataSingleton = function() {
-  return formData;
-};
-
-Client.prototype.getChatUtil = function() {
-  return chatUtil;
-};
-
-Client.prototype.getFileUtil = function() {
-  return fileUtil;
-};
-
-Client.GetClientSocket = function() {
-  return new ClientSocket();
-};
-
-Client.ClientLogManager = function() {
-  return ClientLogManager;
+Client.prototype.getFactory = function() {
+  return factory;
 };
 
 module.exports = Client;

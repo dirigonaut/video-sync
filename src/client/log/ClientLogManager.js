@@ -47,7 +47,7 @@ ClientLogManager.prototype.getLog = function(id) {
 
 module.exports = ClientLogManager;
 
-ClientLogManager.LogEnum = { FACTORY: 'factory', SOCKET: 'socket', UTILS: 'utils', VIDEO: 'video'};
+ClientLogManager.LogEnum = { FACTORY: 'factory', GENERAL: 'general', SOCKET: 'socket', VIDEO: 'video'};
 
 var buildUITransport = function(label, level, enableConsoleLogging, callback) {
   var uiTransport = new (Winston.transports.Console) ({
