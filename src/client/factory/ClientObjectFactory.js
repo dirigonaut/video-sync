@@ -1,10 +1,8 @@
-const Promise = require('bluebird');
-
 var imports;
 
 function ClientObjectFactory() { }
 
-ClientObjectFactory.prototype.initialize = Promise.coroutine(function* (requires) {
+ClientObjectFactory.prototype.initialize = function(requires) {
   if(typeof ClientObjectFactory.prototype.protoInit === 'undefined') {
     ClientObjectFactory.prototype.protoInit = true;
     imports = requires;
@@ -19,7 +17,7 @@ ClientObjectFactory.prototype.initialize = Promise.coroutine(function* (requires
 
     generateFunctionHeaders.call(this);
   }
-});
+};
 
 module.exports = ObjectFactory;
 
