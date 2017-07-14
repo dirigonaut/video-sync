@@ -1,9 +1,8 @@
-var RequestFactory  = require('../utils/RequestFactory.js');
 var ClientSocket    = require('../socket/ClientSocket.js');
 var ClientLog       = require('../log/ClientLogManager');
 
-var log             = ClientLog.getLog();
-var clientSocket    = new ClientSocket();
+//var log             = ClientLog.getLog();
+//var clientSocket    = new ClientSocket();
 
 var sessionList = [];
 var smtpList = [];

@@ -1,9 +1,8 @@
 const util          = require('util');
 const EventEmitter  = require('events');
 
-var ClientSocket    = require('../socket/ClientSocket.js');
 
-var clientSocket = new ClientSocket();
+//var clientSocket = new ClientSocket();
 
 var handleList = null;
 

@@ -54,24 +54,16 @@
           $("#control-container").load("menu/controls.html");
           $("#chat-container").load("menu/chat.html");
 
-          var buildClient = function(callback) {
-            client = new Client(document.getElementById('video'));
-
-            $.getScript("../javascript/gui.js", function() {
-              $('#loginModal').modal('hide');
-              $('#btnLogin').remove();
-
-              initGUI();
-              callback();
-            });
-          };
-
           $.getScript("../javascript/clientLog.js", function() {
-            var clientLogManager = new (Client.ClientLogManager());
-            clientLogManager.addGUILogging(guiLog());
+            client = Object.create(Client.prototype);
+            client.initialize(document.getElementById('video'), window.location.host, guiLog()).then(function() {
+              $.getScript("../javascript/gui.js", function() {
+                $('#loginModal').modal('hide');
+                $('#btnLogin').remove();
 
-            clientSocket = Client.GetClientSocket();
-            clientSocket.connect(clientSocket.buildServerUrl(window), buildClient);
+                initGUI();
+              });
+            });
           });
         };
     </script>

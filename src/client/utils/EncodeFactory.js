@@ -1,5 +1,5 @@
 var FileUtils = require('../../server/utils/FileSystemUtils');
-var fileUtils = new FileUtils();
+//var fileUtils = new FileUtils();
 
 function EncoderCommandFactory(){ }
 

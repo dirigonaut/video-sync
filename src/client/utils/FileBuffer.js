@@ -1,8 +1,8 @@
 var ClientSocket = require('../socket/ClientSocket.js');
 var ClientLog    = require('../log/ClientLogManager');
 
-var clientSocket = new ClientSocket();
-var log = ClientLog.getLog();
+//var clientSocket = new ClientSocket();
+//var log = ClientLog.getLog();
 
 function FileBuffer() {
   log.info('FileBuffer');

@@ -4,7 +4,7 @@ var MetaState  = require('./MetaState');
 var ClientLog = require('../../log/ClientLogManager');
 var SourceBuffer  = require('../SourceBuffer');
 
-var log = ClientLog.getLog();
+//var log = ClientLog.getLog();
 
 function MpdMeta(mpdXML, util) {
   log.info('MpdMeta');

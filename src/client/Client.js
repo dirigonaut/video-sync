@@ -5,7 +5,7 @@ var factory;
 
 function Client() { }
 
-Client.prototype.initialize = function(video, serverUrl, logCallback) {
+Client.prototype.initialize = Promise.coroutine(function* (video, serverUrl, logCallback) {
   if(typeof Client.prototype.protoInit === 'undefined') {
     Client.prototype.protoInit = true;
     var factoryManager = Object.create(ClientFactoryManager.prototype);
@@ -15,8 +15,10 @@ Client.prototype.initialize = function(video, serverUrl, logCallback) {
     logManager.addUILogging(logCallback);
 
     clientSocket = factory.createClientSocket();
-    yield clientSocket.connect(serverUrl, function() { /*resolve promise*/ });
+    var acknowledge = yield clientSocket.connectAsync(serverUrl);
+    acknowledge();
 
+    /*
     var fileBuffer = factory.createFileBuffer();
     var formData = factory.createFormDataSingleton();
     var mediaController = factory.createMediaController();
@@ -26,6 +28,9 @@ Client.prototype.initialize = function(video, serverUrl, logCallback) {
     chatUtil.setupEvents();
     formData.setupEvents();
     formData.initializeData();
+    */
+
+    return new Promise.resolve();
   }
 });
 

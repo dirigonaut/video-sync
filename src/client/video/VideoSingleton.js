@@ -5,8 +5,8 @@ var ClientLog       = require('../log/ClientLogManager');
 var ClientSocket    = require('../socket/ClientSocket');
 
 var self = null;
-var clientSocket = new ClientSocket();
-var log = ClientLog.getLog();
+//var clientSocket = new ClientSocket();
+//var log = ClientLog.getLog();
 
 function VideoSingleton(video, meta) {
   log.info('VideoSingleton');
