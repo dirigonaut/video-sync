@@ -1,4 +1,7 @@
-var imports;
+const FACTORY     = 'factory';
+const FUNCTIONS   = 'functions';
+
+var imports, log;
 
 function ClientObjectFactory() { }
 
@@ -6,11 +9,10 @@ ClientObjectFactory.prototype.initialize = function(requires) {
   if(typeof ClientObjectFactory.prototype.protoInit === 'undefined') {
     ClientObjectFactory.prototype.protoInit = true;
     imports = requires;
-    var enumerator;
 
-    var keys = Object.keys(imports);
-    for(var i = 0; i < keys.length; ++i) {
-      enumerator[keys[i].toUpperCase()] = keys[i];
+    var enumerator = Object.create(null);
+    for (var property in imports) {
+      enumerator[property] = imports[property];
     }
 
     ClientObjectFactory.prototype.Enum = enumerator;
@@ -19,16 +21,16 @@ ClientObjectFactory.prototype.initialize = function(requires) {
   }
 };
 
-module.exports = ObjectFactory;
+module.exports = ClientObjectFactory;
 
 var generateFunctionHeaders = function() {
   for(let i in this.Enum) {
-    this[`create${this.Enum[i]}`] = function (init) {
+    this[`create${[i]}`] = function (init) {
       if(log) {
-        log.silly(`Creating ${this.Enum[i]}`);
+        log.silly(`Creating ${[i]}`);
       }
 
-      var ObjectImport = imports[this.Enum[i]];
+      var ObjectImport = imports[i];
       var object = Object.create(ObjectImport.prototype);
 
       if(!ObjectImport.prototype[FACTORY]) {

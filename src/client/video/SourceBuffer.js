@@ -1,8 +1,7 @@
 var ClientLog         = require('../log/ClientLogManager');
 var ClientSocket      = require('../socket/ClientSocket.js');
-var RequestFactory    = require('../utils/RequestFactory.js');
 
-var log = ClientLog.getLog();
+//var log = ClientLog.getLog();
 
 function SourceBuffer(enum_type, video, metaManager, mediaSource){
   var self = {};

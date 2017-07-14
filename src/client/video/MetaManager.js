@@ -7,7 +7,7 @@ var MpdMeta         = require('./meta/MpdMeta.js');
 var Mp4Parser       = require('./meta/Mp4Parser.js');
 var WebmParser      = require('./meta/WebmParser.js');
 
-var clientSocket = new ClientSocket();
+//var clientSocket = new ClientSocket();
 
 var _this = null;
 

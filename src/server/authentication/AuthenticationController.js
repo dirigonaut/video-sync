@@ -56,7 +56,7 @@ AuthenticationController.prototype.attachIO = function (io) {
       }
     }));
 
-    socket.on('auth-validate-token', Promise.coroutine(function*(data) {
+    socket.on('auth-validate-token', Promise.coroutine(function* (data) {
       log.debug('auth-validate-token');
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.LOGIN);
       var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
@@ -131,7 +131,7 @@ var userAuthorized = Promise.coroutine(function* (socket, handle) {
 
     var handles = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETHANDLES, []]);
     yield redisSocket.broadcast('chat-handles', handles);
-    
+
     var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'has joined.']);
     yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
   }));

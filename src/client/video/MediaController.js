@@ -5,11 +5,10 @@ var MetaManager     = require('./MetaManager.js');
 var SourceBuffer    = require('./SourceBuffer.js');
 var VideoSingleton  = require('./VideoSingleton.js');
 var ClientSocket    = require('../socket/ClientSocket.js');
-var RequestFactory  = require('../utils/RequestFactory.js');
 var ClientLog       = require('../log/ClientLogManager');
 
-var log             = ClientLog.getLog();
-var clientSocket    = new ClientSocket();
+//var log             = ClientLog.getLog();
+//var clientSocket    = new ClientSocket();
 
 var videoElement    = null;
 var fileBuffer      = null;
@@ -305,7 +304,7 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     }
 
     var request = new RequestFactory().buildVideoStateRequest(video);
-    
+
     if(command.sync){
       clientSocket.sendRequest('state-update-sync', request, true);
     } else {

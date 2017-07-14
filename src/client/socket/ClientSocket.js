@@ -8,45 +8,33 @@ function ClientSocket() { }
 
 ClientSocket.prototype.initialize = function() {
 	if(typeof ClientSocket.prototype.protoInit === 'undefined') {
-		var logManager = this.createClientLogManager();
-		log = logManager.getLog(logManager.Enum.GENERAL);
+		var logManager = this.factory.createClientLogManager();
+		log = logManager.getLog(logManager.LogEnum.GENERAL);
 	}
 };
 
 ClientSocket.prototype.connectAsync = function(serverUrl) {
 	log.info("Socket connecting to: " + serverUrl);
-
+	
 	socket = io.connect(serverUrl, {rejectUnauthorized: false});
 
-	socket.on('connected', function(acknowledge) {
+	socket.on('connected', function() {
 		log.info("Socket connected to server.");
 	});
 
-	socket.on('authenticated', function(acknowledge) {
-		log.info("Socket authenticated with server." );
-		callback(acknowledge);
-	});
-
-	return
+	return new Promise(function(resolve, reject) {
+    socket.once('authenticated', resolve);
+		socket.once('disconnect', reject);
+  });
 };
 
-ClientSocket.prototype.requestAsync = function(event, request, isPromised) {
-	if(isPromised) {
-		async.retry({times: 10, interval: 250}, function (callback, result) {
-		  socket.emit(event, request, function (err, result) {
-		    if (err) {
-					return callback(err);
-				}
+ClientSocket.prototype.requestAsync = function(requestId, responseId, request) {
+	socket.emit(requestId, request);
 
-		    callback(null, result);
-		  });
-		},
-		function (err, result) {
-		   log.silly(`${event} responded with err ${err} and result ${result}`);
-		});
-	} else {
-		socket.emit(event, request);
-	}
+	return new Promise(function(resolve, reject) {
+    socket.once(responseId, resolve);
+		socket.once('disconnect', reject);
+  });
 };
 
 ClientSocket.prototype.request = function(event, request, isPromised) {
@@ -73,7 +61,7 @@ ClientSocket.prototype.setEvent = function(event, callback) {
 };
 
 ClientSocket.prototype.clearEvent = function(event, callback) {
-	if(callback !== null && callback !== undefined) {
+	if(callback) {
 		socket.off(event, callback);
 	} else {
 		socket.off(event);

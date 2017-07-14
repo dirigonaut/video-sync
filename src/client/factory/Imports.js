@@ -1,6 +1,5 @@
 const ClientLogManager  = require('../log/ClientLogManager');
-const ClientTransport   = require('../log/ClientTransport');
-const ClientSocket      = require('../Socket');
+const ClientSocket      = require('../socket/ClientSocket');
 const ChatUtil          = require('../utils/ChatUtil');
 const EncodeFactory     = require('../utils/EncodeFactory');
 const FileBuffer        = require('../utils/FileBuffer');
@@ -17,7 +16,6 @@ const SchemaFactory     = require('../../common/schemas/SchemaFactory');
 
 module.exports = {
   ClientLogManager: ClientLogManager,
-  ClientTransport:  ClientTransport,
   ClientSocket:     ClientSocket,
   ChatUtil:         ChatUtil,
   EncodeFactory:    EncodeFactory,
