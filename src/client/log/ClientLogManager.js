@@ -1,84 +1,76 @@
-var Winston = require('winston');
-
-var clientLog;
+var logs;
 
 function ClientLogManager() {
 }
 
 ClientLogManager.prototype.initialize = function(force) {
+  if(typeof ClientLogManager.prototype.protoInit === 'undefined') {
+    ClientLogManager.prototype.protoInit = true;
+    ClientLogManager.prototype.LogEnum = ClientLogManager.LogEnum;
+  }
+
   if(force === undefined ? typeof ClientLogManager.prototype.stateInit === 'undefined' : force) {
     ClientLogManager.prototype.stateInit = true;
     schemaFactory   = this.factory.createSchemaFactory();
   }
-
-  if(typeof ClientLogManager.prototype.protoInit === 'undefined') {
-    ClientLogManager.prototype.protoInit = true;
-    var keys = Object.keys(ClientLogManager.LogEnum);
-
-    log = Winston.loggers.get(ClientLogManager.LogEnum.GENERAL);
-    ClientLogManager.prototype.LogEnum = ClientLogManager.LogEnum;
-  }
 };
 
 ClientLogManager.prototype.addUILogging = function(callback) {
+  logs = [];
+
   var keys = Object.keys(ClientLogManager.LogEnum);
-
-  for(var i in keys) {
-    var uiTransport   = buildUITransport.call(this, ClientLogManager.LogEnum[keys[i]], 'debug', true, callback);
-    var container     = Winston.loggers.get(ClientLogManager.LogEnum[keys[i]]);
-
-    container.configure({
-      transports: [uiTransport]
-    });
+  for(var i of keys) {
+    var logger = buildUILogger(ClientLogManager.LogEnum[i], 'debug', false, callback);
+    logs[ClientLogManager.LogEnum[i]] = logger;
   }
-
-  log.debug('LogManager.addFileLogging');
-  log.info('Attached file logging.');
 };
 
 ClientLogManager.prototype.getLog = function(id) {
-  return Winston.loggers.get(id);
+  return logs[id];
 };
 
 module.exports = ClientLogManager;
 
 ClientLogManager.LogEnum = { FACTORY: 'factory', GENERAL: 'general', SOCKET: 'socket', VIDEO: 'video'};
+ClientLogManager.LogLevel = { ui: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
 
-var buildUITransport = function(label, level, enableConsoleLogging, callback) {
-  var uiTransport = new (Winston.transports.Console) ({
+var buildUILogger = function(label, level, enableConsoleLogging, callback) {
+  var uiLogger = {
     level: level,
-    lable: label,
+    label: label,
     silent: enableConsoleLogging,
-    handleExceptions: true,
-    json: false,
-    humanReadableUnhandledException: true,
-    formatter: createFormatter.call(this, label, callback),
-    timestamp: function() {
-      return new Date().toTimeString();
-    }
-  });
+    uiLog: callback,
+    log: log
+  };
 
-  return uiTransport;
+  var keys = Object.keys(ClientLogManager.LogLevel);
+  for(let i of keys) {
+    uiLogger[i] = function(message, meta) {
+       uiLogger.log.call(uiLogger, i, message, meta);
+    }
+  }
+
+  return Object.create(uiLogger);
 };
 
-function createFormatter(label, callback) {
-  return function(options) {
-    var logMessage = {
-      time: options.timestamp(),
-      level: options.level,
-      label: label,
-      text: options.message ? options.message : ''
-    };
+function log(level, message, meta) {
+  var logMessage = {
+    time: new Date().toTimeString(),
+    level: level,
+    label: this.label,
+    text: message ? message : ''
+  };
 
-    if(options.meta && Object.keys(options.meta).length) {
-      logMessage.meta = Util.inspect(options.meta, { showHidden: false, depth: 1 });
-    }
+  if(meta && Object.keys(meta).length) {
+    logMessage.meta = Util.inspect(meta, { showHidden: false, depth: 1 });
+  }
 
-    var json = JSON.stringify(logMessage);
-    if(options.level === 'info') {
-      callback(json);
-    }
+  if(ClientLogManager.LogLevel[level] === ClientLogManager.LogLevel.ui) {
+    this.uiLog(logMessage);
+  }
 
-    console.log(json);
-  }.bind(this);
+  if(!this.silent && ClientLogManager.LogLevel[level] <= ClientLogManager.LogLevel[this.level]) {
+    var logLevel = typeof console[level] !== 'undefined' ? level : 'trace';
+    console[logLevel](logMessage);
+  }
 }

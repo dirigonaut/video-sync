@@ -1,7 +1,7 @@
 const Promise               = require('bluebird');
 const ClientFactoryManager  = require('./factory/ClientFactoryManager');
 
-var factory;
+var factory, log;
 
 function Client() { }
 
@@ -13,9 +13,13 @@ Client.prototype.initialize = Promise.coroutine(function* (video, serverUrl, log
 
     var logManager = factory.createClientLogManager();
     logManager.addUILogging(logCallback);
+    log = logManager.getLog(logManager.LogEnum.GENERAL);
+    log.ui('Added UI logging.');
 
     clientSocket = factory.createClientSocket();
     var acknowledge = yield clientSocket.connectAsync(serverUrl);
+    log.ui('Authenticated with server.');
+    
     acknowledge();
 
     /*
