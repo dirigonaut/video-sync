@@ -1,37 +1,63 @@
-var ClientSocket = require('../socket/ClientSocket.js');
-var ClientLog    = require('../log/ClientLogManager');
+const Promise  = require('bluebird');
+const Event    = require('event');
 
-//var clientSocket = new ClientSocket();
-//var log = ClientLog.getLog();
+const TIMEOUT  = 6000;
 
-function FileBuffer() {
-  log.info('FileBuffer');
+var fileRequests, buffers, trigger, socket, schemaFactory, log;
 
-  this.fileRequests = new Map();
-  this.buffers = new Map();
-}
+function FileBuffer() { }
 
-FileBuffer.prototype.reinitialize = function() {
-  log.info('FileBuffer.reinitialize');
-  this.fileRequests = new Map();
-  this.buffers = new Map();
+FileBuffer.prototype.initialize = function(force) {
+  if(typeof FileBuffer.prototype.protoInit === 'undefined') {
+    FileBuffer.prototype.protoInit = true;
+    var logManager  = this.factory.createClientLogManager();
+		log             = logManager.getLog(logManager.LogEnum.GENERAL);
+    schemaFactory   = this.factory.createSchemaFactory();
+  }
+
+  if(force === undefined ? typeof FileBuffer.prototype.stateInit === 'undefined' : force) {
+    FileBuffer.prototype.stateInit = true;
+    removeTriggerEvents();
+    removeSocketEvents();
+    setSocketEvents();
+
+    fileRequests  = new Map();
+    buffers       = new Map();
+    trigger       = new Event();
+  }
 };
 
-FileBuffer.prototype.registerRequest = function(callback) {
+FileBuffer.prototype.requestFilesAsync = function(requestEvent) {
   log.info('FileBuffer.registerRequest');
   var requestInfo       = new Object();
-  requestInfo.onFinish  = callback;
   requestInfo.requestId = "r" + this._genId();
   requestInfo.buffCount = 0;
+  requestInfo.files     = [];
 
-  this.fileRequests.set(requestInfo.requestId, requestInfo);
+  fileRequests.set(requestInfo.requestId, requestInfo);
 
-  return requestInfo.requestId;
+  var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STRING, [requestInfo.requestId]);
+  socket.request(requestEvent, request);
+
+  return new Promise(function(resolve, reject) {
+    trigger.once(`${requestInfo.requestId}`, resolve);
+    setTimeout(function(err) {
+      fileRequests.delete(requestInfo.requestId);
+      trigger.removeListener(requestInfo.requestId, resolve);
+      reject(err);
+    },TIMEOUT, `Request for Key: ${requestInfo.requestId}, timed out.`);
+  });
 };
 
-FileBuffer.prototype.registerResponse = function(requestId, header, callback) {
+module.exports = FileBuffer;
+
+function genId() {
+  return Math.random().toString(36).slice(-8);
+}
+
+function registerResponse(requestId, header, serverCallback) {
   log.info('FileBuffer.registerResponse');
-  var fileRequest = this.fileRequests.get(requestId);
+  var fileRequest = fileRequests.get(requestId);
   fileRequest.buffCount++;
 
   var buffer = new Object();
@@ -40,16 +66,16 @@ FileBuffer.prototype.registerResponse = function(requestId, header, callback) {
   buffer.info = header;
   buffer.data = [];
 
-  this.buffers.set(buffer.id, buffer);
+  buffers.set(buffer.id, buffer);
 
-  callback(buffer.id);
-};
+  serverCallback(buffer.id);
+}
 
-FileBuffer.prototype.onData = function(bufferId, data) {
+function onData(bufferId, data) {
   log.info('FileBuffer.onData');
-  var buffer = this.buffers.get(bufferId);
+  var buffer = buffers.get(bufferId);
 
-  if(data) {
+  if(buffer && data) {
     if(data instanceof Buffer) {
       buffer.data.push(data);
     } else {
@@ -57,50 +83,54 @@ FileBuffer.prototype.onData = function(bufferId, data) {
       buffer.data.push(buff);
     }
   }
-};
-
-FileBuffer.prototype.onFinish = function(bufferId) {
-  log.info('FileBuffer.onFinish');
-  var buffer = this.buffers.get(bufferId);
-  var fileRequest = this.fileRequests.get(buffer.requestId);
-
-  fileRequest.onFinish(buffer.info, Buffer.concat(buffer.data));
-  this.buffers.delete(bufferId);
-  fileRequest.buffCount--;
-
-  if(fileRequest.buffCount <= 0) {
-    log.info("Deleting request: " + fileRequest.requestId + " from map.");
-    this.fileRequests.delete(fileRequest.requestId);
-  }
-};
-
-FileBuffer.prototype._genId = function() {
-    return Math.random().toString(36).slice(-8);
-};
-
-FileBuffer.prototype.setupEvents = function() {
-  clientSocket.clearEvent('file-register-response');
-  clientSocket.clearEvent('file-segment');
-  clientSocket.clearEvent('file-end');
-
-  setSocketEvents(this);
 }
 
-module.exports = FileBuffer;
+function onFinish(bufferId) {
+  log.info('FileBuffer.onFinish');
+  var buffer = buffers.get(bufferId);
+  var fileRequest = fileRequests.get(buffer.requestId);
 
-var setSocketEvents = function(fileBuffer) {
-  clientSocket.setEvent('file-register-response', function(response, callback){
-    console.log('file-register-response');
-    fileBuffer.registerResponse(response.id, response.data, callback);
+  if(buffer && fileRequest) {
+    fileRequest.files.push([buffer.info, Buffer.concat(buffer.data)]);
+    buffers.delete(bufferId);
+    fileRequest.buffCount--;
+
+    if(fileRequest.buffCount <= 0) {
+      log.info("Deleting request: " + fileRequest.requestId + " from map.");
+      fileRequests.delete(fileRequest.requestId);
+      trigger.emit(fileRequest.requestId, fileRequest.files);
+    }
+  }
+}
+
+function setSocketEvents() {
+  socket.setEvent('file-register-response', function(response, callback){
+    log.debug('file-register-response');
+    registerResponse(response.id, response.data, callback);
   });
 
-  clientSocket.setEvent('file-segment', function(response){
-    console.log('file-segment');
-    fileBuffer.onData(response.id, response.data);
+  socket.setEvent('file-segment', function(response){
+    log.debug('file-segment');
+    onData(response.id, response.data);
   });
 
-  clientSocket.setEvent('file-end', function(response){
-    console.log('file-end');
-    fileBuffer.onFinish(response.id);
+  socket.setEvent('file-end', function(response){
+    log.debug('file-end');
+    onFinish(response.id);
   });
+}
+
+function removeSocketEvents() {
+  socket.clearEvent('file-register-response');
+  socket.clearEvent('file-segment');
+  socket.clearEvent('file-end');
+}
+
+function removeTriggerEvents() {
+  if(trigger) {
+    var allEvents = trigger.eventNames();
+    for(var i = 0; i < allEvents.length; ++i) {
+      trigger.removeAllListeners(allEvents[i]);
+    }
+  }
 }

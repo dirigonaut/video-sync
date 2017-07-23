@@ -8,11 +8,6 @@ ClientLogManager.prototype.initialize = function(force) {
     ClientLogManager.prototype.protoInit = true;
     ClientLogManager.prototype.LogEnum = ClientLogManager.LogEnum;
   }
-
-  if(force === undefined ? typeof ClientLogManager.prototype.stateInit === 'undefined' : force) {
-    ClientLogManager.prototype.stateInit = true;
-    schemaFactory   = this.factory.createSchemaFactory();
-  }
 };
 
 ClientLogManager.prototype.addUILogging = function(callback) {

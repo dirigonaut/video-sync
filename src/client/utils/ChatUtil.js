@@ -1,38 +1,37 @@
-const util          = require('util');
-const EventEmitter  = require('events');
+const Promise  = require('bluebird');
 
+var handleList, schemaFactory, socket, log;
 
-//var clientSocket = new ClientSocket();
+function ChatUtil() { }
 
-var handleList = null;
+ChatUtil.prototype.initialize = function(force) {
+  if(typeof ChatUtil.prototype.protoInit === 'undefined') {
+    ChatUtil.prototype.protoInit = true;
+    var logManager  = this.factory.createClientLogManager();
+		log             = logManager.getLog(logManager.LogEnum.GENERAL);
+    schemaFactory   = this.factory.createSchemaFactory();
+  }
 
-function ChatUtil() {
+  if(force === undefined ? typeof ChatUtil.prototype.stateInit === 'undefined' : force) {
+    ChatUtil.prototype.stateInit = true;
+    socket = this.factory.createClientSocket();
 
-}
-
-util.inherits(ChatUtil, EventEmitter);
-
-ChatUtil.prototype.parseInput = function(input) {
-  var parsedInput = input.split(" ");
-  return this.createCommand(parsedInput.shift(), parsedInput);
+    removeSocketEvents();
+    setSocketEvents();
+  }
 };
 
-ChatUtil.prototype.createMessage = function(text) {
-  var response = {};
-  response.data = text;
-  return response;
-};
-
-ChatUtil.prototype.createCommand = function(command, param) {
-  var request = {};
-  request.command = command;
-  request.param = param;
-  return request;
-};
-
-ChatUtil.prototype.setupEvents = function() {
-  clientSocket.clearEvent('chat-handles', loadUserHandles);
-  clientSocket.setEvent('chat-handles', loadUserHandles);
+ChatUtil.prototype.send = function(input) {
+  if(input && input.trim().length > 0) {
+    if(input.match(/^\//)) {
+      var parsedInput = input.split(" ");
+      var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.COMMAND, [parsedInput.shift(), parsedInput]);
+      socket.request('chat-command', request);
+    } else {
+      var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STRING, [input]);
+      socket.request('chat-broadcast', request);
+    }
+  }
 };
 
 ChatUtil.prototype.getUserHandle = function(id) {
@@ -42,6 +41,14 @@ ChatUtil.prototype.getUserHandle = function(id) {
 module.exports = ChatUtil;
 
 function loadUserHandles(handles) {
-  console.log('Got Handles');
+  log.debug('ChatUtil.loadUserHandles');
   handleList = new Map(handles.data);
+}
+
+function setSocketEvents() {
+  socket.setEvent('chat-handles', loadUserHandles);
+}
+
+function removeSocketEvents() {
+  socket.clearEvent('chat-handles', loadUserHandles);
 }

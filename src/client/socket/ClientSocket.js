@@ -13,9 +13,9 @@ ClientSocket.prototype.initialize = function() {
 	}
 };
 
-ClientSocket.prototype.connectAsync = function(serverUrl) {
+ClientSocket.prototype.connectAsync = function(serverUrl, isAdmin) {
 	log.info("Socket connecting to: " + serverUrl);
-	
+
 	socket = io.connect(serverUrl, {rejectUnauthorized: false});
 
 	socket.on('connected', function() {
@@ -23,7 +23,14 @@ ClientSocket.prototype.connectAsync = function(serverUrl) {
 	});
 
 	return new Promise(function(resolve, reject) {
-    socket.once('authenticated', resolve);
+    socket.once('authenticated', function(admin, callback) {
+			if(typeof admin === 'function' && !callback) {
+				resolve(admin);
+			} else if(admin === true && callback) {
+				isAdmin = admin;
+				resolve(callback);
+			}
+		});
 		socket.once('disconnect', reject);
   });
 };
@@ -61,10 +68,12 @@ ClientSocket.prototype.setEvent = function(event, callback) {
 };
 
 ClientSocket.prototype.clearEvent = function(event, callback) {
-	if(callback) {
-		socket.off(event, callback);
-	} else {
-		socket.off(event);
+	if(socket) {
+		if(callback) {
+			socket.off(event, callback);
+		} else {
+			socket.off(event);
+		}
 	}
 };
 

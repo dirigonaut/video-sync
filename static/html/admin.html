@@ -36,32 +36,50 @@
     <script type="text/javascript" src="../resources/bootstrap/js/bootstrap.min.js"></script>
     <script>
       var client = null;
-      var clientSocket = null;
 
         window.onload = function() {
           window.URL = window.URL || window.webkitURL;
           window.MediaSource = window.MediaSource || window.WebKitMediaSource
 
           $("#control-container").load("menu/controls.html");
-          $("#location-container").load("menu/location.html");
-          $("#side-container").load("menu/side.html");
           $("#chat-container").load("menu/chat.html");
+          $("#loginOverlay").load("menu/overlays/login.html", function() {
+            $('#loginModal').modal('show');
+          });
 
-          $("#sessionOverlay").load("menu/overlays/session.html");
-          $("#smtpOverlay").load("menu/overlays/smtp.html");
-          $("#encodeOverlay").load("menu/overlays/encode.html");
+          var adminOnload = function(isAdmin) {
+            if(isAdmin) {
+              $("#side-container").load("menu/side.html");
+              $("#sessionOverlay").load("menu/overlays/session.html");
+              $("#smtpOverlay").load("menu/overlays/smtp.html");
+              $("#encodeOverlay").load("menu/overlays/encode.html");
 
-          $("#control-container").load("menu/controls.html");
-          $("#chat-container").load("menu/chat.html");
+              $("#location-container").load("menu/location.html");
+            }
+          };
 
           $.getScript("../javascript/clientLog.js", function() {
             client = Object.create(Client.prototype);
-            client.initialize(document.getElementById('video'), window.location.host, guiLog()).then(function() {
+            client.initialize(document.getElementById('video'), window.location.host, guiLog()).then(function(isAdmin) {
+              //emitter.on('initComponents', client.initComponents(isAdmin).then(function() { }));
+
+              adminOnload(isAdmin);
+
+              var setupGUI = function() {
+                var factory = client.getFactory();
+                var container = {
+                  socket: factory.createClientSocket(),
+                  chatUtil: factory.createChatUtil(),
+                };
+
+                initGUI(container, isAdmin);
+              };
+
               $.getScript("../javascript/gui.js", function() {
                 $('#loginModal').modal('hide');
                 $('#btnLogin').remove();
 
-                initGUI();
+                setupGUI();
               });
             });
           });
