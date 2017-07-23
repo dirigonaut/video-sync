@@ -108,7 +108,7 @@ AuthenticationController.prototype.attachIO = function (io) {
 
 module.exports = AuthenticationController;
 
-var userAuthorized = Promise.coroutine(function* (socket, handle) {
+var userAuthorized = Promise.coroutine(function* (socket, handle, isAdmin) {
   socket.auth = true;
 
   yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.CREATEPLAYER, [socket.id, handle]]);
@@ -123,7 +123,7 @@ var userAuthorized = Promise.coroutine(function* (socket, handle) {
 
   var chatEngine = this.factory.createChatEngine();
 
-  socket.emit('authenticated', Promise.coroutine(function* () {
+  socket.emit('authenticated', isAdmin, Promise.coroutine(function* () {
     var mediaPath = yield session.getMediaPath();
     if(mediaPath && mediaPath.length > 0) {
       socket.emit('media-ready');
@@ -154,6 +154,6 @@ var isAdministrator = Promise.coroutine(function* (socket) {
     encodingContoller.attachSocket(socket);
 
     yield session.addAdmin(socket.id);
-    userAuthorized.call(this, socket, 'admin');
+    userAuthorized.call(this, socket, 'admin', true);
   }
 });

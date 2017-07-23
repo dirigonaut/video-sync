@@ -17,25 +17,28 @@ Client.prototype.initialize = Promise.coroutine(function* (video, serverUrl, log
     log.ui('Added UI logging.');
 
     clientSocket = factory.createClientSocket();
-    var acknowledge = yield clientSocket.connectAsync(serverUrl);
+    var isAdmin = false;
+    var acknowledge = yield clientSocket.connectAsync(serverUrl, isAdmin);
     log.ui('Authenticated with server.');
-    
+
+    yield initComponents(isAdmin);
     acknowledge();
 
-    /*
-    var fileBuffer = factory.createFileBuffer();
-    var formData = factory.createFormDataSingleton();
-    var mediaController = factory.createMediaController();
-    var chatUtil = factory.createChatUtil();
-
-    fileBuffer.setupEvents();
-    chatUtil.setupEvents();
-    formData.setupEvents();
-    formData.initializeData();
-    */
-
-    return new Promise.resolve();
+    return new Promise.resolve(isAdmin);
   }
+});
+
+Client.prototype.initComponents = Promise.coroutine(function* (isAdmin) {
+  var fileBuffer      = factory.createFileBuffer(true);
+  var chatUtil        = factory.createChatUtil(true);
+  //var mediaController = factory.createMediaController(true);
+
+  if(isAdmin) {
+    var formData = factory.createFormData(true);
+    yield formData.getFormData();
+  }
+
+  return new Promise.resolve();
 });
 
 Client.prototype.getFactory = function() {

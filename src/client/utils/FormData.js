@@ -1,55 +1,69 @@
-var ClientSocket    = require('../socket/ClientSocket.js');
-var ClientLog       = require('../log/ClientLogManager');
+const Promise  = require('bluebird');
 
-//var log             = ClientLog.getLog();
-//var clientSocket    = new ClientSocket();
+var sessionList, smtpList, socket, log;
 
-var sessionList = [];
-var smtpList = [];
+function FormData() { }
 
-function FormDataSingleton() {
+FormData.prototype.initialize = function(force) {
+  if(typeof FormData.prototype.protoInit === 'undefined') {
+    FormData.prototype.protoInit = true;
+    var logManager  = this.factory.createClientLogManager();
+		log             = logManager.getLog(logManager.LogEnum.GENERAL);
+  }
 
+  if(force === undefined ? typeof FormData.prototype.stateInit === 'undefined' : force) {
+    FormData.prototype.stateInit = true;
+    socket      = this.factory.createClientSocket();
+    sessionList = [];
+    smtpList    = [];
+
+    removeSocketEvents();
+    setSocketEvents();
+  }
 };
 
-FormDataSingleton.prototype.setupEvents = function() {
-  log.debug("FormDataSingleton.setupEvents");
-  clientSocket.clearEvent('db-smtps', dbSmtps);
-  clientSocket.clearEvent('db-sessions', dbSessions);
-  clientSocket.clearEvent('db-refresh', dbRefresh);
+FormData.prototype.requestFormData = Promise.coroutine(function* () {
+  log.debug("FormData.initializeData");
+  yield socket.requestAsync('db-read-smpts', 'db-smtps');
+  yield socket.requestAsync('db-read-sessions', 'db-sessions');
+});
 
-  clientSocket.setEvent('db-smtps', dbSmtps);
-  clientSocket.setEvent('db-sessions', dbSessions);
-  clientSocket.setEvent('db-refresh', dbRefresh);
-};
-
-FormDataSingleton.prototype.initializeData = function() {
-  log.debug("FormDataSingleton.initializeData");
-  clientSocket.sendRequest('db-read-smpts');
-  clientSocket.sendRequest('db-read-sessions');
-};
-
-FormDataSingleton.prototype.getSessionList = function() {
+FormData.prototype.getSessionList = function() {
   return sessionList;
 };
 
-FormDataSingleton.prototype.getSmtpList = function() {
+FormData.prototype.getSmtpList = function() {
   return smtpList;
 };
 
-module.exports = FormDataSingleton;
+module.exports = FormData;
 
-var dbSmtps = function(response){
-  console.log('db-smtps');
+function setSocketEvents() {
+  log.debug("FormData.setSocketEvents");
+  socket.setEvent('db-smtps', dbSmtps);
+  socket.setEvent('db-sessions', dbSessions);
+  socket.setEvent('db-refresh', dbRefresh);
+}
+
+function removeSocketEvents() {
+  log.debug("FormData.removeSocketEvents");
+  socket.clearEvent('db-smtps', dbSmtps);
+  socket.clearEvent('db-sessions', dbSessions);
+  socket.clearEvent('db-refresh', dbRefresh);
+}
+
+function dbSmtps(response){
+  log.debug('FormData.dbSmtps');
   smtpList = response.data;
 };
 
-var dbSessions = function(response) {
-  console.log('db-sessions');
+function dbSessions(response) {
+  log.debug('FormData.dbSessions');
   sessionList = response.data;
 };
 
-var dbRefresh = function() {
-  log.debug("FormDataSingleton._dbRefresh");
-  clientSocket.sendRequest('db-read-smpts');
-  clientSocket.sendRequest('db-read-sessions');
+function dbRefresh() {
+  log.debug("FormData.dbRefresh");
+  socket.request('db-read-smpts');
+  socket.request('db-read-sessions');
 }
