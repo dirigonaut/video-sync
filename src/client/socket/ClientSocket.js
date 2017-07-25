@@ -13,7 +13,7 @@ ClientSocket.prototype.initialize = function() {
 	}
 };
 
-ClientSocket.prototype.connectAsync = function(serverUrl, isAdmin) {
+ClientSocket.prototype.connectAsync = function(serverUrl) {
 	log.info("Socket connecting to: " + serverUrl);
 
 	socket = io.connect(serverUrl, {rejectUnauthorized: false});

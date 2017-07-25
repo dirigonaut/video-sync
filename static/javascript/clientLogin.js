@@ -1,14 +1,14 @@
-function initClientLogin() {
-  $('#submitCreds').click(function readContacts() {
-    var request = {};
-    request.handle	= $('#loginHandle').val();
-    request.address	= $('#loginUser').val();
-    request.token	= $('#loginToken').val();
+function initClientLogin(socket, schemaFactory) {
+  $('#submitCreds').click(function() {
+    var handle	= $('#loginHandle').val();
+    var address	= $('#loginUser').val();
+    var token	  = $('#loginToken').val();
+    var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.LOGIN, [handle, address, token]);
 
     if(request.token.length > 0) {
-      clientSocket.sendRequest('auth-validate-token', request, true);
+      socket.request('auth-validate-token', request, true);
     } else {
-      clientSocket.sendRequest('auth-get-token', request, true);
+      socket.request('auth-get-token', request, true);
     }
   });
 
