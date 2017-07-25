@@ -1,42 +1,33 @@
-const Util          = require('util');
-const EventEmitter  = require('events');
+const Promise = require('bluebird');
+const Util    = require('util');
+const Events  = require('events');
 
-var MetaManager     = require('./MetaManager.js');
-var SourceBuffer    = require('./SourceBuffer.js');
-var VideoSingleton  = require('./VideoSingleton.js');
-var ClientSocket    = require('../socket/ClientSocket.js');
-var ClientLog       = require('../log/ClientLogManager');
 
-//var log             = ClientLog.getLog();
-//var clientSocket    = new ClientSocket();
-
-var videoElement    = null;
-var fileBuffer      = null;
-
-function MediaController(video, fBuffer) {
-  console.log("MediaController");
+function MediaController() {
   this.metaManager = new MetaManager();
   this.metaManager.initialize();
 
-  this.initialized = false;
-
-  fileBuffer = fBuffer;
-  videoElement = video;
-
-  var _this = this;
   this.metaManager.on('meta-data-loaded', function() {
-    _this.emit('meta-data-loaded', _this.metaManager.getTrackInfo());
+    this.emit('meta-data-loaded', this.metaManager.getTrackInfo());
     clientSocket.sendRequest('state-req-init');
   });
 
-  _this.on('meta-manager-ready', function() {
-    _this.metaManager.requestMetaData(fileBuffer);
+  this.on('meta-manager-ready', function() {
+    this.metaManager.requestMetaData(fileBuffer);
   });
 }
 
-Util.inherits(MediaController, EventEmitter);
+MediaController.prototype.initialize = function(force) {
+  if(typeof MediaController.prototype.protoInit === 'undefined') {
+    MediaController.prototype.protoInit = true;
 
-MediaController.prototype.initialize = function(mediaSource, window, downloadMeta, callback) {
+  }
+
+  if(force === undefined ? typeof MediaController.prototype.stateInit === 'undefined' : force) {
+    MediaController.prototype.stateInit = true;
+
+  }
+
   log.debug("MediaController.initialize");
   var _this = this;
 
@@ -75,6 +66,10 @@ MediaController.prototype.initialize = function(mediaSource, window, downloadMet
   }
 };
 
+MediaController.prototype.reset = function() {
+
+};
+
 MediaController.prototype.getTrackInfo = function() {
   return this.metaManager.getTrackInfo();
 };
@@ -87,11 +82,11 @@ MediaController.prototype.setForceBuffer = function(forceBuffer) {
   log.debug('MediaController.setForceBuffer')
   var activeMeta = this.metaManager.getActiveMetaData();
 
-  if(activeMeta.active.get(SourceBuffer.Enum.VIDEO) !== undefined){
+  if(activeMeta.active.get(SourceBuffer.Enum.VIDEO)){
     activeMeta.setForceBuffer(SourceBuffer.Enum.VIDEO, forceBuffer);
   }
 
-  if(activeMeta.active.get(SourceBuffer.Enum.AUDIO) !== undefined){
+  if(activeMeta.active.get(SourceBuffer.Enum.AUDIO)){
     activeMeta.setForceBuffer(SourceBuffer.Enum.AUDIO, forceBuffer);
   }
 };
@@ -324,10 +319,10 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
 }
 
 var removeSocketEvents = function () {
-  clientSocket.clearEvent('state-init');
-  clientSocket.clearEvent('state-play');
-  clientSocket.clearEvent('state-pause');
-  clientSocket.clearEvent('state-seek');
-  clientSocket.clearEvent('state-trigger-ping');
-  clientSocket.clearEvent('segment-chunk');
+  clientSocket.removeEvent('state-init');
+  clientSocket.removeEvent('state-play');
+  clientSocket.removeEvent('state-pause');
+  clientSocket.removeEvent('state-seek');
+  clientSocket.removeEvent('state-trigger-ping');
+  clientSocket.removeEvent('segment-chunk');
 };
