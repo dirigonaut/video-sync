@@ -35,9 +35,8 @@
     <script type="text/javascript" src="../resources/video-js/video.js"></script>
     <script type="text/javascript" src="../resources/bootstrap/js/bootstrap.min.js"></script>
     <script>
-      var client = null;
-
-        window.onload = function() {
+      var client;
+        $(document).ready(function() {
           window.URL = window.URL || window.webkitURL;
           window.MediaSource = window.MediaSource || window.WebKitMediaSource
 
@@ -47,31 +46,30 @@
             $('#loginModal').modal('show');
           });
 
-          var adminOnload = function(isAdmin) {
-            if(isAdmin) {
-              $("#side-container").load("menu/side.html");
-              $("#sessionOverlay").load("menu/overlays/session.html");
-              $("#smtpOverlay").load("menu/overlays/smtp.html");
-              $("#encodeOverlay").load("menu/overlays/encode.html");
-
-              $("#location-container").load("menu/location.html");
-            }
-          };
-
           $.getScript("../javascript/clientLog.js", function() {
             client = Object.create(Client.prototype);
             client.initialize(document.getElementById('video'), window.location.host, guiLog()).then(function(isAdmin) {
               //emitter.on('initComponents', client.initComponents(isAdmin).then(function() { }));
 
-              adminOnload(isAdmin);
+              if(isAdmin) {
+                $("#side-container").load("menu/side.html");
+                $("#sessionOverlay").load("menu/overlays/session.html");
+                $("#smtpOverlay").load("menu/overlays/smtp.html");
+                $("#encodeOverlay").load("menu/overlays/encode.html");
+                $("#location-container").load("menu/location.html");
+              }
 
               var setupGUI = function() {
                 var factory = client.getFactory();
+                var logManager = factory.createClientLogManager();
+
                 var container = {
-                  socket: factory.createClientSocket(),
+                  socket:   factory.createClientSocket(),
                   chatUtil: factory.createChatUtil(),
+                  log:      logManager.getLog(logManager.LogEnum.GENERAL),
                 };
 
+                //The init function of gui.js
                 initGUI(container, isAdmin);
               };
 
@@ -83,7 +81,7 @@
               });
             });
           });
-        };
+        });
     </script>
   </body>
 </html>

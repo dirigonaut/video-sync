@@ -50,5 +50,5 @@ function setSocketEvents() {
 }
 
 function removeSocketEvents() {
-  socket.clearEvent('chat-handles', loadUserHandles);
+  socket.removeEvent('chat-handles', loadUserHandles);
 }

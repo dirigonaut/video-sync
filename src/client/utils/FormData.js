@@ -47,9 +47,9 @@ function setSocketEvents() {
 
 function removeSocketEvents() {
   log.debug("FormData.removeSocketEvents");
-  socket.clearEvent('db-smtps', dbSmtps);
-  socket.clearEvent('db-sessions', dbSessions);
-  socket.clearEvent('db-refresh', dbRefresh);
+  socket.removeEvent('db-smtps', dbSmtps);
+  socket.removeEvent('db-sessions', dbSessions);
+  socket.removeEvent('db-refresh', dbRefresh);
 }
 
 function dbSmtps(response){

@@ -23,13 +23,8 @@ ClientSocket.prototype.connectAsync = function(serverUrl, isAdmin) {
 	});
 
 	return new Promise(function(resolve, reject) {
-    socket.once('authenticated', function(admin, callback) {
-			if(typeof admin === 'function' && !callback) {
-				resolve(admin);
-			} else if(admin === true && callback) {
-				isAdmin = admin;
-				resolve(callback);
-			}
+    socket.once('authenticated', function(isAdmin, callback) {
+			resolve([callback, isAdmin]);
 		});
 		socket.once('disconnect', reject);
   });
@@ -67,7 +62,7 @@ ClientSocket.prototype.setEvent = function(event, callback) {
 	socket.on(event, callback);
 };
 
-ClientSocket.prototype.clearEvent = function(event, callback) {
+ClientSocket.prototype.removeEvent = function(event, callback) {
 	if(socket) {
 		if(callback) {
 			socket.off(event, callback);
