@@ -1,4 +1,4 @@
-function initGUI() {
+function initGUI(client, isAdmin) {
   console.log("Gui initialized");
 
   //Control Bar Events ----------------------------------------------------------
@@ -370,16 +370,7 @@ function initGUI() {
   function sendChat() {
     var value = $('#chatMessage').val();
     $('#chatMessage').val("");
-
-    if(value.trim().length > 0) {
-      if(value.match(/^\//)) {
-        var command = client.getChatUtil().parseInput(value);
-        clientSocket.sendRequest('chat-command', command);
-      } else {
-        var message = client.getChatUtil().createMessage(value);
-        clientSocket.sendRequest('chat-broadcast', message);
-      }
-    }
+    client.chatUtil.send(value);
   }
 
   function autoScroll(id) {
@@ -439,13 +430,13 @@ function initGUI() {
 
   function systemMessage(message) {
     $('#chatManuscript').append(`<p><span class="chat-message" title="System" style="color:gray; font-weight: bold;">
-      ${new Date().toTimeString().split(" ")[0]} System: </span>${client.getChatUtil().getUserHandle(message.from)} ${message.data}</p>`);
+      ${new Date().toTimeString().split(" ")[0]} System: </span>${client.chatUtil.getUserHandle(message.from)} ${message.data}</p>`);
     autoScroll('#chatManuscript');
   }
 
   clientSocket.setEvent('chat-broadcast-resp', function(message) {
     $('#chatManuscript').append(`<p><span class="chat-message" title="${message.from}" style="color:blue; font-weight: bold;">
-      ${new Date().toTimeString().split(" ")[0]} ${client.getChatUtil().getUserHandle(message.from)}: </span>${message.data}</p>`);
+      ${new Date().toTimeString().split(" ")[0]} ${client.chatUtil.getUserHandle(message.from)}: </span>${message.data}</p>`);
     autoScroll('#chatManuscript');
   });
 

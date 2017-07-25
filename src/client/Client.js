@@ -17,11 +17,17 @@ Client.prototype.initialize = Promise.coroutine(function* (video, serverUrl, log
     log.ui('Added UI logging.');
 
     clientSocket = factory.createClientSocket();
-    var isAdmin = false;
-    var acknowledge = yield clientSocket.connectAsync(serverUrl, isAdmin);
+    var response = yield clientSocket.connectAsync(serverUrl, isAdmin);
     log.ui('Authenticated with server.');
+    
+    if(response[0]) {
+      var acknowledge = response[0];
+    } else {
+      throw new Error('The server did not send an acknowledge hook.');
+    }
 
-    yield initComponents(isAdmin);
+    var isAdmin = response[1] ? response[1] : false;
+    yield this.initComponents(isAdmin);
     acknowledge();
 
     return new Promise.resolve(isAdmin);
@@ -35,7 +41,7 @@ Client.prototype.initComponents = Promise.coroutine(function* (isAdmin) {
 
   if(isAdmin) {
     var formData = factory.createFormData(true);
-    yield formData.getFormData();
+    yield formData.requestFormData();
   }
 
   return new Promise.resolve();
