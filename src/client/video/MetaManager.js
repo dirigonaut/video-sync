@@ -7,72 +7,85 @@ var metaDataList, activeMetaData, socket, schemaFactory, log;
 function MetaManager() { }
 
 MetaManager.prototype.initialize = function() {
-  metaDataList   = new Map();
+  if(typeof MetaManager.prototype.protoInit === 'undefined') {
+    MetaManager.prototype.protoInit = true;
+    var logManager  = this.factory.createClientLogManager();
+    log             = logManager.getLog(logManager.LogEnum.VIDEO);
+    schemaFactory   = this.factory.createSchemaFactory();
+  }
+
+  if(force === undefined ? typeof MetaManager.prototype.stateInit === 'undefined' : force) {
+    MetaManager.prototype.stateInit = true;
+    socket        = this.factory.createClientSocket();
+    metaDataList  = new Map();
+
+    removeSocketEvents();
+    setSocketEvents();
+  }
 };
 
-MetaManager.prototype.requestMetaData = function(fileBuffer) {
-  var addMetaData = function(header, binaryFile) {
-    console.log('MetaManager.addMetaData');
-    var util = null;
+MetaManager.prototype.requestMetaData = Promise.coroutine(function* () {
+  var fileBuffer = this.factory.createFileBuffer();
+  var files = yield fileBuffer.requestFilesAsync();
 
-    if(header.type === 'webm') {
-      util = new WebmParser();
-    } else if(header.type === 'mp4') {
-      util = new Mp4Parser();
+  if(files) {
+    for(var i = 0; i < files.length(); ++i) {
+      var type = files[i][0];
+      var binary = files[i][1];
+      var util;
+
+      if(type === 'webm') {
+        util = new WebmParser();
+      } else if(type === 'mp4') {
+        util = new Mp4Parser();
+      }
+
+      metaDataList.set(type, new MpdMeta(binaryFile.toString(), util));
+
+      if(activeMetaData === null && type === 'webm') {
+        var trackInfo = this.getTrackInfo().get(type);
+        var videoIndex = trackInfo.video && trackInfo.video.length > 0 ? trackInfo.video[0].index : null;
+        var audioIndex = trackInfo.audio && trackInfo.audio.length > 0 ? trackInfo.audio[0].index : null;
+
+        var metaInfo = this.buildMetaInfo(type, videoIndex, audioIndex, trackInfo.subtitle);
+        this.setActiveMetaData(metaInfo);
+      }
     }
-
-    console.log(fileBuffer)
-    _this.metaDataList.set(header.type, new MpdMeta(binaryFile.toString(), util));
-
-    if(_this.activeMetaData === null && header.type === 'webm') {
-      var trackInfo = _this.getTrackInfo().get(header.type);
-      var videoIndex = trackInfo.video && trackInfo.video.length > 0 ? trackInfo.video[0].index : null;
-      var audioIndex = trackInfo.audio && trackInfo.audio.length > 0 ? trackInfo.audio[0].index : null;
-
-      var metaInfo = _this.buildMetaInfo(header.type, videoIndex, audioIndex, trackInfo.subtitle);
-      _this.setActiveMetaData(metaInfo);
-    }
-
-    _this.emit('meta-data-loaded');
-  };
-
-  var request = {};
-  request.data = fileBuffer.registerRequest(addMetaData)
-  clientSocket.sendRequest('get-meta-files', request);
+  }
 };
 
 MetaManager.prototype.setActiveMetaData = function(metaInfo) {
-  var metaData = _this.metaDataList.get(metaInfo.key);
+  var metaData = metaDataList.get(metaInfo.key);
 
-  if(metaInfo.video !== null) {
+  if(metaInfo.video) {
     metaData.selectTrackQuality(SourceBuffer.Enum.VIDEO, metaInfo.video);
   }
 
-  if(metaInfo.audio !== null) {
+  if(metaInfo.audio) {
     metaData.selectTrackQuality(SourceBuffer.Enum.AUDIO, metaInfo.audio);
   }
 
-  if(_this.activeMetaData !== metaData) {
-    _this.activeMetaData = metaData;
-    _this.emit('meta-data-activated');
+  if(_activeMetaData !== metaData) {
+    activeMetaData = metaData;
+    this.emit('meta-data-activated');
   }
 };
 
 MetaManager.prototype.setBufferThreshold = function(threshold) {
-  for(var meta of _this.metaDataList) {
+  for(var meta of metaDataList) {
     meta[1].setThreshold(threshold);
   }
 };
 
 MetaManager.prototype.getActiveMetaData = function() {
-  return _this.activeMetaData;
+  return activeMetaData;
 };
 
 MetaManager.prototype.getTrackInfo = function() {
   var tracks = new Map();
   var activeKeys = null;
 
-  for(var meta of _this.metaDataList) {
+  for(var meta of metaDataList) {
     var videoTracks = [];
     var audioTracks = [];
 
@@ -89,7 +102,7 @@ MetaManager.prototype.getTrackInfo = function() {
       }
     }
 
-    if(meta[1] === _this.activeMetaData) {
+    if(meta[1] === activeMetaData) {
       var trackInfo = meta[1].getActiveTrackInfo();
       activeKeys = {};
       activeKeys.type = meta[0];

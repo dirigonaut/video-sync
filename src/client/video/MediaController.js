@@ -6,7 +6,7 @@ var video, buffers, metaManager, schemaFactory, syncPing, log;
 
 function MediaController() { }
 
-MediaController.prototype.initialize = Promise.coroutine(function* (force) {
+MediaController.prototype.initialize = function(force) {
   if(typeof MediaController.prototype.protoInit === 'undefined') {
     MediaController.prototype.protoInit = true;
     var logManager = this.factory.createClientLogManager();
@@ -14,28 +14,17 @@ MediaController.prototype.initialize = Promise.coroutine(function* (force) {
 
     metaManager = this.factory.createMetaManager();
   }
+};
 
-  if(typeof MediaController.prototype.stateInit !== 'undefined' && MediaController.prototype.stateInit) {
-    yield this.reset();
-  }
+MediaController.prototype.setup = Promise.coroutine(function* (mediaSource, window, videoElement) {
+  log.debug("MediaController.setup");
+  yield metaManager.requestMetaData();
+  this.emit('meta-data-loaded', metaManager.getTrackInfo());
 
-  if(force === undefined ? typeof MediaController.prototype.stateInit === 'undefined' : force) {
-    MediaController.prototype.stateInit = true;
-    yield metaManager.requestMetaData();
-    this.emit('meta-data-loaded', metaManager.getTrackInfo());
-    clientSocket.sendRequest('state-req-init');
+  socket.request('state-req-init');
+  yield initializeClientPlayer.call(this, mediaSource, window);
 
-    this.on('meta-manager-ready', function() {
-      metaManager.requestMetaData(fileBuffer);
-    });
-
-    yield initializeClientPlayer.call(this, mediaSource, window);
-    this.syncPing = true;
-    this.emit('meta-manager-ready');
-    metaManager.on('meta-data-activated', initializeClientPlayer);
-  }
-
-  log.debug("MediaController.initialize");
+  this.syncPing = true;
 };
 
 MediaController.prototype.reset = Promise.coroutine(function* () {
@@ -43,7 +32,7 @@ MediaController.prototype.reset = Promise.coroutine(function* () {
 };
 
 MediaController.prototype.getTrackInfo = function() {
-  return this.metaManager.getTrackInfo();
+  return metaManager.getTrackInfo();
 };
 
 MediaController.prototype.setBufferAhead = function(bufferThreshold) {
@@ -52,7 +41,7 @@ MediaController.prototype.setBufferAhead = function(bufferThreshold) {
 
 MediaController.prototype.setForceBuffer = function(forceBuffer) {
   log.debug('MediaController.setForceBuffer')
-  var activeMeta = this.metaManager.getActiveMetaData();
+  var activeMeta = metaManager.getActiveMetaData();
 
   if(activeMeta.active.get(SourceBuffer.Enum.VIDEO)){
     activeMeta.setForceBuffer(SourceBuffer.Enum.VIDEO, forceBuffer);
