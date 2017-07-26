@@ -23,7 +23,6 @@ MetaState.prototype.getAdaptSetIndex = function() {
 };
 
 MetaState.prototype.setSegmentBuffered = function(index) {
-  console.log(`MetaState.prototype.setSegmentBuffered | index: ${index}`);
   this.bufferSegments[index] = this.trackIndex;
 };
 
