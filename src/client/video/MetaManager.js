@@ -1,28 +1,13 @@
-const Util          = require('util');
-const EventEmitter  = require('events');
+const Promise = require('bluebird');
+const Util    = require('util');
+const Events  = require('events');
 
-var ClientSocket    = require('../socket/ClientSocket.js');
-var SourceBuffer    = require('./SourceBuffer.js');
-var MpdMeta         = require('./meta/MpdMeta.js');
-var Mp4Parser       = require('./meta/Mp4Parser.js');
-var WebmParser      = require('./meta/WebmParser.js');
+var metaDataList, activeMetaData, socket, schemaFactory, log;
 
-//var clientSocket = new ClientSocket();
-
-var _this = null;
-
-function MetaManager() {
-  this.metaDataList   = null;
-  this.activeMetaData = null;
-
-  _this = this;
-}
-
-Util.inherits(MetaManager, EventEmitter);
+function MetaManager() { }
 
 MetaManager.prototype.initialize = function() {
-  _this.metaDataList   = new Map();
-  _this.activeMetaData = null;
+  metaDataList   = new Map();
 };
 
 MetaManager.prototype.requestMetaData = function(fileBuffer) {
@@ -41,8 +26,8 @@ MetaManager.prototype.requestMetaData = function(fileBuffer) {
 
     if(_this.activeMetaData === null && header.type === 'webm') {
       var trackInfo = _this.getTrackInfo().get(header.type);
-      var videoIndex = trackInfo.video !== null && trackInfo.video.length > 0 ? trackInfo.video[0].index : null;
-      var audioIndex = trackInfo.audio !== null && trackInfo.audio.length > 0 ? trackInfo.audio[0].index : null;
+      var videoIndex = trackInfo.video && trackInfo.video.length > 0 ? trackInfo.video[0].index : null;
+      var audioIndex = trackInfo.audio && trackInfo.audio.length > 0 ? trackInfo.audio[0].index : null;
 
       var metaInfo = _this.buildMetaInfo(header.type, videoIndex, audioIndex, trackInfo.subtitle);
       _this.setActiveMetaData(metaInfo);
@@ -122,14 +107,12 @@ MetaManager.prototype.getTrackInfo = function() {
 };
 
 MetaManager.prototype.buildMetaInfo = function(key, video, audio, subtitle) {
-  var metaInfo = {};
-
-  metaInfo.key = key;
-  metaInfo.video = video;
-  metaInfo.audio = audio;
-  metaInfo.subtitle = subtitle;
-
-  return metaInfo;
+  return {
+    key: key,
+    video: video,
+    audio: audio,
+    subtitle: subtitle,
+  };
 };
 
 module.exports = MetaManager;

@@ -1,22 +1,50 @@
-const util          = require('util');
-const EventEmitter  = require('events');
+const Util   = require('util');
+const Events = require('events');
 
-var ClientLog       = require('../log/ClientLogManager');
-var ClientSocket    = require('../socket/ClientSocket');
+var videoElement, metaData, socket, log;
 
-var self = null;
-//var clientSocket = new ClientSocket();
-//var log = ClientLog.getLog();
 
-function VideoSingleton(video, meta) {
-  log.info('VideoSingleton');
-  this.videoElement = video;
-  this.meta         = meta;
-  this.initialized  = false;
-  self              = this;
-}
+function VideoSingleton() { }
 
-util.inherits(VideoSingleton, EventEmitter);
+VideoSingleton.prototype.initialize = function(mediaSource) {
+  var onTimeUpdateState = function() {
+    clientSocket.sendRequest('state-time-update', new RequestFactory().buildVideoStateRequest(videoElement));
+  };
+
+  videoElement.currentTime = 0;
+  videoElement.addEventListener('timeupdate', onTimeUpdateState, false);
+
+  var videoEvents = [];
+  var audioEvents = [];
+  var activeMeta = _this.metaManager.getActiveMetaData();
+
+  if(activeMeta.active.get(SourceBuffer.Enum.VIDEO) !== undefined) {clientSocket
+    videoEvents = createVideoEvents(videoSingleton, SourceBuffer.Enum.VIDEO);
+  }
+
+  if(activeMeta.active.get(SourceBuffer.Enum.AUDIO) !== undefined) {
+    audioEvents = createVideoEvents(videoSingleton, SourceBuffer.Enum.AUDIO);
+  }
+
+  var resetVideo = function() {
+    log.info(`Video reset.`);
+    videoElement.removeEventListener('timeupdate', onTimeUpdateState, false);
+
+    if(videoEvents.length > 0) {
+      videoElement.removeEventListener('timeupdate', videoEvents[0], false);
+      videoElement.removeEventListener('seeking', videoEvents[1], false);
+    }
+
+    if(audioEvents.length > 0) {
+      videoElement.removeEventListener('timeupdate', audioEvents[0], false);
+      videoElement.removeEventListener('seeking', audioEvents[1], false);
+    }
+
+    mediaSource.removeEventListener('sourceended', resetVideo);
+  };
+
+  mediaSource.addEventListener('sourceended', resetVideo);
+};
 
 VideoSingleton.prototype.getVideoElement = function() {
   return self.videoElement;
@@ -50,7 +78,7 @@ VideoSingleton.prototype.onSeek = function(typeId) {
   return seek;
 };
 
-VideoSingleton.prototype.init = function(callback) {
+VideoSingleton.prototype.setup = function(callback) {
   log.info("VideoSingleton.init");
   self.initialized = true;
   self.emit("get-init");
@@ -81,4 +109,19 @@ function resume() {
   var video = self.videoElement;
   log.debug("Set video to play");
   video.play();
+}
+
+var createVideoEvents = function(videoSingleton, typeEnum) {
+  log.info(`Creating video events for buffer of type: ${typeEnum}.`);
+  var bufferEvents = [];
+
+  var bufferUpdate = videoSingleton.onProgress(typeEnum);
+  videoElement.addEventListener('timeupdate', bufferUpdate, false);
+  bufferEvents.push(bufferUpdate);
+
+  var bufferSeek = videoSingleton.onSeek(typeEnum);
+  videoElement.addEventListener('seeking', bufferSeek, false);
+  bufferEvents.push(bufferSeek);
+
+  return bufferEvents;
 }

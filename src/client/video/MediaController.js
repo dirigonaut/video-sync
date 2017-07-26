@@ -2,72 +2,44 @@ const Promise = require('bluebird');
 const Util    = require('util');
 const Events  = require('events');
 
+var video, buffers, metaManager, schemaFactory, syncPing, log;
 
-function MediaController() {
-  this.metaManager = new MetaManager();
-  this.metaManager.initialize();
+function MediaController() { }
 
-  this.metaManager.on('meta-data-loaded', function() {
-    this.emit('meta-data-loaded', this.metaManager.getTrackInfo());
-    clientSocket.sendRequest('state-req-init');
-  });
-
-  this.on('meta-manager-ready', function() {
-    this.metaManager.requestMetaData(fileBuffer);
-  });
-}
-
-MediaController.prototype.initialize = function(force) {
+MediaController.prototype.initialize = Promise.coroutine(function* (force) {
   if(typeof MediaController.prototype.protoInit === 'undefined') {
     MediaController.prototype.protoInit = true;
+    var logManager = this.factory.createClientLogManager();
+    log = logManager.getLog(logManager.LogEnum.VIDEO);
 
+    metaManager = this.factory.createMetaManager();
+  }
+
+  if(typeof MediaController.prototype.stateInit !== 'undefined' && MediaController.prototype.stateInit) {
+    yield this.reset();
   }
 
   if(force === undefined ? typeof MediaController.prototype.stateInit === 'undefined' : force) {
     MediaController.prototype.stateInit = true;
+    yield metaManager.requestMetaData();
+    this.emit('meta-data-loaded', metaManager.getTrackInfo());
+    clientSocket.sendRequest('state-req-init');
 
+    this.on('meta-manager-ready', function() {
+      metaManager.requestMetaData(fileBuffer);
+    });
+
+    yield initializeClientPlayer.call(this, mediaSource, window);
+    this.syncPing = true;
+    this.emit('meta-manager-ready');
+    metaManager.on('meta-data-activated', initializeClientPlayer);
   }
 
   log.debug("MediaController.initialize");
-  var _this = this;
-
-  if(!this.initialized) {
-    var setInitialized = function() {
-      log.info('clientPlayerInitialized');
-      _this.initialized = true;
-      _this.syncPing = true;
-      _this.emit('meta-manager-ready');
-
-      if(callback) {
-        callback();
-      }
-    };
-
-    initializeClientPlayer(this, mediaSource, window, setInitialized);
-  } else {
-    this.emit('end-media-source');
-
-    this.once('readyToInitialize', function() {
-      log.info('clientPlayerInitialized');
-
-      var getMedia = function() {
-        if(downloadMeta) {
-          _this.metaManager.initialize();
-          _this.emit('meta-manager-ready');
-        }
-
-        if(callback !== null && callback !== undefined) {
-          callback();
-        }
-      };
-
-      initializeClientPlayer(_this, mediaSource, window, getMedia);
-    });
-  }
 };
 
-MediaController.prototype.reset = function() {
-
+MediaController.prototype.reset = Promise.coroutine(function* () {
+  this.emit('end-media-source');
 };
 
 MediaController.prototype.getTrackInfo = function() {
@@ -98,54 +70,37 @@ MediaController.prototype.setActiveMetaData = function(key, videoIndex, audioInd
 
 module.exports = MediaController;
 
-var initializeClientPlayer = function(_this, mediaSource, window, callback) {
-  var buildClientPlayer = function() {
-    var activeMeta = _this.metaManager.getActiveMetaData();
-    var videoSingleton = new VideoSingleton(videoElement, activeMeta);
+var initializeClientPlayer = function(mediaSource, window) {
+  var activeMeta = metaManager.getActiveMetaData();
+  var videoSingleton = new VideoSingleton(videoElement, activeMeta);
 
-    var sourceBuffers = [];
-    var createVideo = activeMeta.active.get(SourceBuffer.Enum.VIDEO);
-    if(createVideo !== null && createVideo !== undefined) {
-      sourceBuffers[SourceBuffer.Enum.VIDEO] = initializeBuffer(SourceBuffer.Enum.VIDEO,
-        videoSingleton, mediaSource, _this.metaManager);
+  removeSocketEvents();
+  setSocketEvents.call(this, videoSingleton, sourceBuffers);
+
+  var pingTimer = setInterval(function() {
+    if(_this.syncPing) {
+      clientSocket.request('state-sync-ping');
+    }
+  }, 1000);
+
+  var resetMediaSource = function() {
+    log.info("MediaSource Reset");
+    delete videoSingleton._events;
+
+    mediaSource.removeEventListener('sourceended', resetMediaSource);
+
+    if(pingTimer) {
+      clearInterval(pingTimer);
     }
 
-    var createAudio = activeMeta.active.get(SourceBuffer.Enum.AUDIO);
-    if(createAudio !== null && createAudio !== undefined) {
-      sourceBuffers[SourceBuffer.Enum.AUDIO] = initializeBuffer(SourceBuffer.Enum.AUDIO,
-        videoSingleton, mediaSource, _this.metaManager);
-    }
-
-    initializeVideo(_this, videoSingleton, mediaSource);
-
-    removeSocketEvents();
-    setSocketEvents(_this, videoSingleton, sourceBuffers, new RequestFactory());
-
-    var pingTimer = setInterval(function() {
-      if(_this.syncPing) {
-        clientSocket.sendRequest('state-sync-ping');
-      }
-    }, 1000);
-
-    var resetMediaSource = function() {
-      log.info("MediaSource Reset");
-      delete videoSingleton._events;
-
-      mediaSource.removeEventListener('sourceended', resetMediaSource);
-
-      if(pingTimer) {
-        clearInterval(pingTimer);
-      }
-
-      _this.metaManager.removeAllListeners('meta-data-activated');
-      _this.emit('readyToInitialize');
-    };
+    metaManager.removeAllListeners('meta-data-activated');
+    this.emit('readyToInitialize');
 
     mediaSource.addEventListener('sourceended', resetMediaSource);
     videoElement.src = window.URL.createObjectURL(mediaSource);
     videoElement.load();
 
-    _this.once('end-media-source', function() {
+    this.once('end-media-source', function() {
       for(var i in sourceBuffers) {
         sourceBuffers[i].setForceStop();
       }
@@ -173,97 +128,13 @@ var initializeClientPlayer = function(_this, mediaSource, window, callback) {
       setTimeout(canEndStream, 250);
     });
   };
-
-  _this.metaManager.on('meta-data-activated', buildClientPlayer);
-
-  callback();
 };
-
-var initializeBuffer = function(typeId, videoSingleton, mediaSource, metaManager) {
-  log.info(`Buffer of type: ${typeId} initialized.`);
-  var sourceBuffer = new SourceBuffer(typeId, videoSingleton, metaManager, mediaSource);
-  var codec = metaManager.getActiveMetaData().getMimeType(typeId);
-
-  var bufferEvents = sourceBuffer.setSourceBufferCallback(codec);
-  mediaSource.addEventListener('sourceopen', bufferEvents, false);
-
-  var resetBuffer = function() {
-    log.info(`Buffer of type: ${typeId} reset.`);
-    mediaSource.removeSourceBuffer(sourceBuffer.sourceBuffer);
-    mediaSource.removeEventListener('sourceopen', bufferEvents);
-    mediaSource.removeEventListener('sourceended', resetBuffer);
-    sourceBuffer.clearEvents();
-  };
-
-  mediaSource.addEventListener('sourceended', resetBuffer);
-
-  return sourceBuffer;
-};
-
-var initializeVideo = function(_this, videoSingleton, mediaSource) {
-  var onTimeUpdateState = function() {
-    clientSocket.sendRequest('state-time-update', new RequestFactory().buildVideoStateRequest(videoElement));
-  };
-
-  videoElement.currentTime = 0;
-  videoElement.addEventListener('timeupdate', onTimeUpdateState, false);
-
-  var videoEvents = [];
-  var audioEvents = [];
-  var activeMeta = _this.metaManager.getActiveMetaData();
-
-  if(activeMeta.active.get(SourceBuffer.Enum.VIDEO) !== undefined) {clientSocket
-    videoEvents = createVideoEvents(videoSingleton, SourceBuffer.Enum.VIDEO);
-  }
-
-  if(activeMeta.active.get(SourceBuffer.Enum.AUDIO) !== undefined) {
-    audioEvents = createVideoEvents(videoSingleton, SourceBuffer.Enum.AUDIO);
-  }
-
-  var resetVideo = function() {
-    log.info(`Video reset.`);
-    videoElement.removeEventListener('timeupdate', onTimeUpdateState, false);
-
-    if(videoEvents.length > 0) {
-      videoElement.removeEventListener('timeupdate', videoEvents[0], false);
-      videoElement.removeEventListener('seeking', videoEvents[1], false);
-    }
-
-    if(audioEvents.length > 0) {
-      videoElement.removeEventListener('timeupdate', audioEvents[0], false);
-      videoElement.removeEventListener('seeking', audioEvents[1], false);
-    }
-
-    mediaSource.removeEventListener('sourceended', resetVideo);
-  };
-
-  mediaSource.addEventListener('sourceended', resetVideo);
-};
-
-var createVideoEvents = function(videoSingleton, typeEnum) {
-  log.info(`Creating video events for buffer of type: ${typeEnum}.`);
-  var bufferEvents = [];
-
-  var bufferUpdate = videoSingleton.onProgress(typeEnum);
-  videoElement.addEventListener('timeupdate', bufferUpdate, false);
-  bufferEvents.push(bufferUpdate);
-
-  var bufferSeek = videoSingleton.onSeek(typeEnum);
-  videoElement.addEventListener('seeking', bufferSeek, false);
-  bufferEvents.push(bufferSeek);
-
-  return bufferEvents;
-}
 
 var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFactory) {
-  clientSocket.setEvent('state-init', function() {
+  socket.setEvent('state-init', function() {
     log.debug("state-init");
-
-    var onInit = function() {
-      clientSocket.sendRequest('state-update-init', undefined, true);
-    };
-
-    videoSingleton.init(onInit);
+    yield videoSingleton.setup();
+    socket.request('state-update-init', undefined, true);
   });
 
   clientSocket.setEvent('state-play', function() {
@@ -271,7 +142,7 @@ var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFact
     var video = videoSingleton.getVideoElement();
     videoSingleton.play();
 
-    var request = new RequestFactory().buildVideoStateRequest(video);
+    var request = schemaFactory;
     clientSocket.sendRequest('state-update-state', request, true);
   });
 
