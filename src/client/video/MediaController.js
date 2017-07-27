@@ -61,7 +61,9 @@ module.exports = MediaController;
 
 var initializeClientPlayer = function(mediaSource, window) {
   var activeMeta = metaManager.getActiveMetaData();
-  var videoSingleton = new VideoSingleton(videoElement, activeMeta);
+  video = this.factory.createVideo();
+  video.setVideoElement(videoElement);
+  var buffers
 
   removeSocketEvents();
   setSocketEvents.call(this, videoSingleton, sourceBuffers);
