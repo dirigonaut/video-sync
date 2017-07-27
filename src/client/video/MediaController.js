@@ -2,17 +2,18 @@ const Promise = require('bluebird');
 const Util    = require('util');
 const Events  = require('events');
 
-var video, buffers, metaManager, schemaFactory, syncPing, log;
+var video, buffers, metaManager, schemaFactory, log;
 
 function MediaController() { }
 
 MediaController.prototype.initialize = function(force) {
   if(typeof MediaController.prototype.protoInit === 'undefined') {
     MediaController.prototype.protoInit = true;
-    var logManager = this.factory.createClientLogManager();
-    log = logManager.getLog(logManager.LogEnum.VIDEO);
+    var logManager  = this.factory.createClientLogManager();
+    log             = logManager.getLog(logManager.LogEnum.VIDEO);
 
-    metaManager = this.factory.createMetaManager();
+    metaManager     = this.factory.createMetaManager();
+    schemaFactory   = this.factory.createSchemaFactory();
   }
 };
 
@@ -21,14 +22,27 @@ MediaController.prototype.setup = Promise.coroutine(function* (mediaSource, wind
   yield metaManager.requestMetaData();
   this.emit('meta-data-loaded', metaManager.getTrackInfo());
 
-  socket.request('state-req-init');
-  yield initializeClientPlayer.call(this, mediaSource, window);
+  yield socket.requestAsync('state-req-init', 'state-init');
+  video = this.factory.createVideo();
 
-  this.syncPing = true;
-};
+  var activeMeta = metaManager.getActiveMetaData();
+  var mediaPromises = [video.setup(videoElement, window, mediaSource)];
+  var buffers = [];
 
-MediaController.prototype.reset = Promise.coroutine(function* () {
-  this.emit('end-media-source');
+  if(activeMeta.active.get(SourceBuffer.Enum.VIDEO)) {
+    buffers[SourceBuffer.Enum.VIDEO] = this.factory.createSourceBuffer();
+    mediaPromises.push(buffers[SourceBuffer.Enum.VIDEO].setup(SourceBuffer.Enum.VIDEO, mediaSource));
+  }
+
+  if(activeMeta.active.get(SourceBuffer.Enum.AUDIO)) {
+    buffers[SourceBuffer.Enum.AUDIO] = this.factory.createSourceBuffer();
+    mediaPromises.push(buffers[SourceBuffer.Enum.AUDIO].setup(SourceBuffer.Enum.AUDIO, mediaSource));
+  }
+
+  var resetCallbacks = yield Promise.all(mediaPromises);
+  video.emit('get-init');
+
+  return onReset.call(this, resetCallbacks, mediaSource);
 };
 
 MediaController.prototype.getTrackInfo = function() {
@@ -59,132 +73,41 @@ MediaController.prototype.setActiveMetaData = function(key, videoIndex, audioInd
 
 module.exports = MediaController;
 
-var initializeClientPlayer = function(mediaSource, window) {
-  var activeMeta = metaManager.getActiveMetaData();
-  video = this.factory.createVideo();
-  video.setVideoElement(videoElement);
-  var buffers
-
-  removeSocketEvents();
-  setSocketEvents.call(this, videoSingleton, sourceBuffers);
-
-  var pingTimer = setInterval(function() {
-    if(_this.syncPing) {
-      clientSocket.request('state-sync-ping');
-    }
-  }, 1000);
-
-  var resetMediaSource = function() {
-    log.info("MediaSource Reset");
-    delete videoSingleton._events;
-
-    mediaSource.removeEventListener('sourceended', resetMediaSource);
-
-    if(pingTimer) {
-      clearInterval(pingTimer);
+function onReset(resets, mediaSource) {
+  return resetMedia = function() {
+    for(var i = 0; i < buffers.length(); ++i) {
+      buffers[i].setForceStop();
     }
 
-    metaManager.removeAllListeners('meta-data-activated');
-    this.emit('readyToInitialize');
+    var canEndStream = function() {
+      var isUpdating = false;
 
-    mediaSource.addEventListener('sourceended', resetMediaSource);
-    videoElement.src = window.URL.createObjectURL(mediaSource);
-    videoElement.load();
-
-    this.once('end-media-source', function() {
-      for(var i in sourceBuffers) {
-        sourceBuffers[i].setForceStop();
+      for(var i = 0; i < buffers.length(); ++i) {
+        if(buffers[i].sourceBuffer) {
+          if(buffers[i].sourceBuffer.updating) {
+            isUpdating = true;
+          }
+        }
       }
 
-      var canEndStream = function() {
-        var isUpdating = false;
-
-        for(var i in sourceBuffers) {
-          if(sourceBuffers[i].sourceBuffer !== null && sourceBuffers[i].sourceBuffer !== undefined) {
-            if(sourceBuffers[i].sourceBuffer.updating) {
-              isUpdating = true;
-            }
+      if(!isUpdating) {
+        if(mediaSource.readyState === 'open') {
+          for(let i = 0; i < resets.length(); ++i) {
+            resets[i]();
           }
+
+          mediaSource.endOfStream();
+          this.emit('media-reset');
         }
+      } else {
+        setTimeout(canEndStream, 250);
+      }
+    };
 
-        if(!isUpdating) {
-          if(mediaSource.readyState === 'open') {
-            mediaSource.endOfStream();
-          }
-        } else {
-          setTimeout(canEndStream, 250);
-        }
-      };
+    setTimeout(canEndStream, 250);
 
-      setTimeout(canEndStream, 250);
-    });
-  };
-};
-
-var setSocketEvents = function(_this, videoSingleton, sourceBuffers, requestFactory) {
-  socket.setEvent('state-init', function() {
-    log.debug("state-init");
-    yield videoSingleton.setup();
-    socket.request('state-update-init', undefined, true);
-  });
-
-  clientSocket.setEvent('state-play', function() {
-    log.debug("state-play");
-    var video = videoSingleton.getVideoElement();
-    videoSingleton.play();
-
-    var request = schemaFactory;
-    clientSocket.sendRequest('state-update-state', request, true);
-  });
-
-  clientSocket.setEvent('state-pause', function(command) {
-    log.debug(`state-pause sync: ${isSynced}`);
-    var video = videoSingleton.getVideoElement();
-    videoSingleton.pause();
-
-    var request = new RequestFactory().buildVideoStateRequest(video);
-    clientSocket.sendRequest('state-update-state', request, true);
-
-    if(command.sync) {
-      clientSocket.sendRequest('state-sync');
-    }
-  });
-
-  clientSocket.setEvent('state-seek', function(command) {
-    log.debug("state-seek", data);
-    var video = videoSingleton.getVideoElement();
-    videoSingleton.pause();
-    video.currentTime = command.time;
-
-    if(command.play) {
-      videoSingleton.play();
-    }
-
-    var request = new RequestFactory().buildVideoStateRequest(video);
-
-    if(command.sync){
-      clientSocket.sendRequest('state-update-sync', request, true);
-    } else {
-      clientSocket.sendRequest('state-update-state', request, true);
-    }
-  });
-
-  clientSocket.setEvent('state-trigger-ping', function(command) {
-    log.debug("state-trigger-ping");
-    _this.syncPing = command.sync;
-  });
-
-  clientSocket.setEvent('segment-chunk', function(segment) {
-    log.debug(`segment-chunk`);
-    sourceBuffers[segment.typeId].bufferSegment(segment.name, segment.index, segment.data);
-  });
+    return new Promise(function(resolve, reject) {
+      this.once('media-reset', resolve);
+    }.bind(this));
+  }.bind(this);
 }
-
-var removeSocketEvents = function () {
-  clientSocket.removeEvent('state-init');
-  clientSocket.removeEvent('state-play');
-  clientSocket.removeEvent('state-pause');
-  clientSocket.removeEvent('state-seek');
-  clientSocket.removeEvent('state-trigger-ping');
-  clientSocket.removeEvent('segment-chunk');
-};

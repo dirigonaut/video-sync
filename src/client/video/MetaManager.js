@@ -42,7 +42,7 @@ MetaManager.prototype.requestMetaData = Promise.coroutine(function* () {
 
       metaDataList.set(type, new MpdMeta(binaryFile.toString(), util));
 
-      if(activeMetaData === null && type === 'webm') {
+      if(!activeMetaData && type === 'webm') {
         var trackInfo = this.getTrackInfo().get(type);
         var videoIndex = trackInfo.video && trackInfo.video.length > 0 ? trackInfo.video[0].index : null;
         var audioIndex = trackInfo.audio && trackInfo.audio.length > 0 ? trackInfo.audio[0].index : null;
@@ -52,7 +52,7 @@ MetaManager.prototype.requestMetaData = Promise.coroutine(function* () {
       }
     }
   }
-};
+});
 
 MetaManager.prototype.setActiveMetaData = function(metaInfo) {
   var metaData = metaDataList.get(metaInfo.key);

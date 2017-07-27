@@ -1,64 +1,65 @@
-var xml2js = require('xml2js');
+const Promise   = require('bluebird');
+const XmlParser = Promise.promisifyAll(require('xml2js').Parser());
 
-var MetaState  = require('./MetaState');
-var ClientLog = require('../../log/ClientLogManager');
-var SourceBuffer  = require('../SourceBuffer');
+var threshold, metaData, activeMeta, parserUtil, log;
 
-//var log = ClientLog.getLog();
+function MpdMeta() { }
 
-function MpdMeta(mpdXML, util) {
-  log.info('MpdMeta');
-  this.util = util;
-  this.active = new Map();
-  this.threshold = 2;
+MpdMeta.prototype.initialize = function() {
+  if(typeof MpdMeta.prototype.protoInit === 'undefined') {
+    MpdMeta.prototype.protoInit = true;
+    var logManager  = this.factory.createClientLogManager();
+    log             = logManager.getLog(logManager.LogEnum.VIDEO);
+  }
+};
 
-  var _this = this;
-  var parser = new xml2js.Parser();
+MpdMeta.prototype.setMPD = Promise.coroutine(function* (mpdXML, parserUtil) {
+  parserUtil = util;
+  threshold = 2;
 
-  parser.parseString(mpdXML, function (err, result) {
-    _this.metaJson = result.MPD;
-  });
-}
+  var parser = new XmlParser();
+  metaJson = yield parser.parseStringAsync(mpdXML);
+});
 
 MpdMeta.prototype.selectTrackQuality = function(typeId, index) {
   log.info(`MpdMeta.selectTrackQuality typeId: ${typeId}, index: ${index}`);
-  if(this.active.get(typeId) === null || this.active.get(typeId) === undefined) {
+  if(activeMeta.get(typeId)) {
     var metaState = null;
 
-    var timeStep = this.util.getTimeStep(this.metaJson, typeId, index);
+    var timeStep = parserUtil.getTimeStep(metaJson, typeId, index);
     metaState = new MetaState(timeStep * 1000);
 
     metaState.setTrackIndex(index);
-    this.active.set(typeId, metaState);
+    activeMeta.set(typeId, metaState);
   } else {
-    this.active.get(typeId).setTrackIndex(index);
+    activeMeta.get(typeId).setTrackIndex(index);
   }
 };
 
 MpdMeta.prototype.getInit = function(typeId) {
   log.debug('MpdMeta.getInit ' + typeId);
-  var activeMeta = this.active.get(typeId);
-  var range = this.util.getInit(this.metaJson, typeId, activeMeta.trackIndex).split("-");
+  var active = activeMeta.get(typeId);
+  var range = parserUtil.getInit(metaData, typeId, active.trackIndex).split("-");
   var segment = [range[0], range[1]];
-  return this._addPath(typeId, activeMeta.trackIndex, segment);
+  return this.addPath(typeId, active.trackIndex, segment);
 };
 
 MpdMeta.prototype.getSegment = function(typeId, timestamp) {
   log.debug('MpdMeta.getSegment');
-  var result = null;
-  var activeMeta = this.active.get(typeId);
-  var segments = this.util.getSegmentList(this.metaJson, typeId, activeMeta.trackIndex);
+  var result;
+  var active = activeMeta.get(typeId);
+  var segments = parserUtil.getSegmentList(metaData, typeId, active.trackIndex);
   var index = this.getSegmentIndex(typeId, timestamp);
 
   if(index !== null) {
-    if(index < this.util.getSegmentsCount(this.metaJson, typeId, activeMeta.trackIndex)) {
+    if(index < parserUtil.getSegmentsCount(metaData, typeId, active.trackIndex)) {
       var segment = segments[index][0];
-      if(segment !== null && segment !== undefined) {
+      if(segment) {
         var range = segment.split("-");
         segment = [range[0], range[1]];
 
-        activeMeta.setSegmentBuffered(index);
-        result = this._addPath(typeId, activeMeta.trackIndex, segment);
+        active.setSegmentBuffered(index);
+        result = this.addPath(typeId, active.trackIndex, segment);
       }
     }
   }
@@ -67,8 +68,8 @@ MpdMeta.prototype.getSegment = function(typeId, timestamp) {
 };
 
 MpdMeta.prototype.getSegmentIndex = function(typeId, timestamp) {
-  var activeMeta = this.active.get(typeId);
-  var segments = this.util.getSegmentList(this.metaJson, typeId, activeMeta.trackIndex);
+  var active = activeMeta.get(typeId);
+  var segments = parserUtil.getSegmentList(metaData, typeId, active.trackIndex);
   var index = null;
 
   timestamp *= 1000;
@@ -88,13 +89,13 @@ MpdMeta.prototype.getSegmentIndex = function(typeId, timestamp) {
 };
 
 MpdMeta.prototype.getSegmentTimeCode = function(typeId, index) {
-  var activeMeta = this.active.get(typeId);
-  var segments = this.util.getSegmentList(this.metaJson, typeId, activeMeta.trackIndex);
-  var timeCode = null;
+  var active = activeMeta.get(typeId);
+  var segments = parseUtil.getSegmentList(metaData, typeId, active.trackIndex);
+  var timeCode;
 
-  if(segments !== null && segments !== undefined) {
-    if(index !== null && index !== undefined) {
-      if(segments[index] !== null && segments[index] !== undefined) {
+  if(segments) {
+    if(index) {
+      if(segments[index]) {
         timeCode = segments[index][1];
       }
     }
@@ -109,27 +110,27 @@ MpdMeta.prototype.updateActiveMeta = function(typeId, segmentIndex) {
 };
 
 MpdMeta.prototype.isLastSegment = function(typeId, currentTime) {
-  var activeMeta = this.active.get(typeId);
-  return this.getSegmentIndex(typeId, currentTime) < this.util.getSegmentsCount(this.metaJson, typeId, activeMeta.trackIndex) - 1;
+  var active = activeMeta.get(typeId);
+  return this.getSegmentIndex(typeId, currentTime) < parserUtil.getSegmentsCount(metaJson, typeId, active.trackIndex) - 1;
 };
 
 MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
   var nextSegmentTime = null;
-  var activeMeta = this.active.get(typeId);
+  var active = activeMeta.get(typeId);
   var index = this.getSegmentIndex(typeId, currentTime);
 
-  while(activeMeta.isSegmentBuffered(activeMeta.bufferIndex)) {
-    if(index + this.threshold > activeMeta.bufferIndex) {
-      activeMeta.bufferIndex++;
+  while(active.isSegmentBuffered(active.bufferIndex)) {
+    if(index + this.threshold > active.bufferIndex) {
+      active.bufferIndex++;
     } else {
       break;
     }
   }
 
-  if(!activeMeta.isSegmentBuffered(activeMeta.bufferIndex)) {
-    if(parseFloat(index) + this.threshold > activeMeta.bufferIndex) {
+  if(!active.isSegmentBuffered(active.bufferIndex)) {
+    if(parseFloat(index) + threshold > active.bufferIndex) {
       var step = parseFloat(this.getSegmentTimeCode(typeId, 1)) / 2;
-      nextSegmentTime = parseFloat(this.getSegmentTimeCode(typeId, activeMeta.bufferIndex)) + parseFloat(step);
+      nextSegmentTime = parseFloat(this.getSegmentTimeCode(typeId, active.bufferIndex)) + parseFloat(step);
       nextSegmentTime = nextSegmentTime / 1000;
     }
   }
@@ -138,34 +139,34 @@ MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
 };
 
 MpdMeta.prototype.getActiveTrackInfo = function() {
-  return this.active;
+  return activeMeta;
 };
 
-MpdMeta.prototype._addPath = function(typeId, trackIndex, cluster) {
-  var index = this.util.getAdaptionSetIndex(this.metaJson, typeId);
-  return [this.util.getBaseURL(this.metaJson, index, trackIndex), cluster];
+MpdMeta.prototype.addPath = function(typeId, trackIndex, cluster) {
+  var index = parserUtil.getAdaptionSetIndex(metaJson, typeId);
+  return [parserUtil.getBaseURL(metaJson, index, trackIndex), cluster];
 };
 
 MpdMeta.prototype.getMimeType = function(typeId) {
-  return this.util.getMimeType(this.metaJson, typeId);
+  return parserUtil.getMimeType(metaJson, typeId);
 };
 
 MpdMeta.prototype.getTracks = function() {
-  return this.util.getTracks(this.metaJson);
+  return parserUtil.getTracks(metaJson);
 };
 
-MpdMeta.prototype.setThreshold = function(threshold) {
-  this.threshold = threshold;
+MpdMeta.prototype.setThreshold = function(range) {
+  threshold = range;
 };
 
 MpdMeta.prototype.setForceBuffer = function(typeId, forceBuffer) {
-  var activeMeta = this.active.get(typeId);
-  activeMeta.setForceBuffer(forceBuffer);
+  var active = activeMeta.get(typeId);
+  active.setForceBuffer(forceBuffer);
 };
 
 MpdMeta.prototype.isForceBuffer = function(typeId) {
-  var activeMeta = this.active.get(typeId);
-  return activeMeta.isForceBuffer();
+  var active = activeMeta.get(typeId);
+  return active.isForceBuffer();
 };
 
 module.exports = MpdMeta;
