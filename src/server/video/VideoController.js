@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-var cache, session, fileIO, encoderManager, fileSystemUtils, schemaFactory, sanitizer, log;
+var cache, session, fileIO, encoderManager, fileSystemUtils, schemaFactory, sanitizer, eventKeys, log;
 
 function VideoController() { }
 
@@ -10,6 +10,8 @@ VideoController.prototype.initialize = function(force) {
     fileSystemUtils = this.factory.createFileSystemUtils();
     schemaFactory   = this.factory.createSchemaFactory();
     sanitizer       = this.factory.createSanitizer();
+    eventKeys       = this.factory.createKeys();
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.VIDEO);
   }
@@ -26,8 +28,8 @@ VideoController.prototype.initialize = function(force) {
 VideoController.prototype.attachSocket = function(socket) {
   log.info("VideoController.attachSocket");
 
-  socket.on('get-meta-files', Promise.coroutine(function* (data) {
-    log.debug('get-meta-files', data);
+  socket.on(eventKeys.FILES, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.FILES, data);
     var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
@@ -44,15 +46,15 @@ VideoController.prototype.attachSocket = function(socket) {
             header.type = splitName[splitName.length - 1];
 
             let result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [request.data, header]);
-            socket.emit("file-register-response", result, function(bufferId) {
+            socket.emit(eventKeys.FILEREGISTER, result, function(bufferId) {
               var readConfig = fileIO.createStreamConfig(`${fileSystemUtils.ensureEOL(basePath)}${files[i]}`, function(bufferData) {
                 var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [bufferId, bufferData]);
-                socket.emit("file-segment", result);
+                socket.emit(eventKeys.FILESEGMENT, result);
               });
 
               readConfig.onFinish = function() {
                 var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [bufferId, null]);
-                socket.emit("file-end", result);
+                socket.emit(eventKeys.FILEEND, result);
               };
 
               fileIO.read(readConfig);
@@ -63,8 +65,8 @@ VideoController.prototype.attachSocket = function(socket) {
     }
   }));
 
-  socket.on('get-segment', Promise.coroutine(function* (data) {
-    log.debug('get-segment', data);
+  socket.on(eventKeys.SEGMENT, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.SEGMENT, data);
     var schema = schemaFactory.createDefinition(schemaFactory.Enum.VIDEO);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
@@ -73,7 +75,7 @@ VideoController.prototype.attachSocket = function(socket) {
       if(basePath) {
         var sendResponse = function(segment) {
           log.info(`Returning segment ${segment.name} of size ${segment.data ? segment.data.byteLength : null}`);
-          socket.emit("segment-chunk", segment);
+          socket.emit(eventKeys.SEGMENTCHUNK, segment);
         };
 
         cache.getSegment(request, sendResponse);

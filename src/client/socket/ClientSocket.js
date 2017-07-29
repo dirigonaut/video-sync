@@ -2,12 +2,14 @@ const Promise = require('bluebird');
 const io 			= require('socket.io-client');
 const async 	= require('async');
 
-var socket, log;
+var socket, eventKeys, log;
 
 function ClientSocket() { }
 
 ClientSocket.prototype.initialize = function() {
 	if(typeof ClientSocket.prototype.protoInit === 'undefined') {
+		eventKeys = this.factory.createKeys();
+
 		var logManager = this.factory.createClientLogManager();
 		log = logManager.getLog(logManager.LogEnum.GENERAL);
 	}
@@ -18,15 +20,15 @@ ClientSocket.prototype.connectAsync = function(serverUrl) {
 
 	socket = io.connect(serverUrl, {rejectUnauthorized: false});
 
-	socket.on('connected', function() {
+	socket.on(eventKeys.CONNECTED, function() {
 		log.info("Socket connected to server.");
 	});
 
 	return new Promise(function(resolve, reject) {
-    socket.once('authenticated', function(isAdmin, callback) {
+    socket.once(eventKeys.AUTHENTICATED, function(isAdmin, callback) {
 			resolve([callback, isAdmin]);
 		});
-		socket.once('disconnect', reject);
+		socket.once(eventKeys.DISCONNECT, reject);
   });
 };
 
@@ -35,7 +37,7 @@ ClientSocket.prototype.requestAsync = function(requestId, responseId, request) {
 
 	return new Promise(function(resolve, reject) {
     socket.once(responseId, resolve);
-		socket.once('disconnect', reject);
+		socket.once(eventKeys.DISCONNECT, reject);
   });
 };
 

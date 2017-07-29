@@ -13,7 +13,7 @@ MpdMeta.prototype.initialize = function() {
   }
 };
 
-MpdMeta.prototype.setMPD = Promise.coroutine(function* (mpdXML, parserUtil) {
+MpdMeta.prototype.setMpd = Promise.coroutine(function* (mpdXML, util) {
   parserUtil = util;
   threshold = 2;
 
@@ -24,10 +24,11 @@ MpdMeta.prototype.setMPD = Promise.coroutine(function* (mpdXML, parserUtil) {
 MpdMeta.prototype.selectTrackQuality = function(typeId, index) {
   log.info(`MpdMeta.selectTrackQuality typeId: ${typeId}, index: ${index}`);
   if(activeMeta.get(typeId)) {
-    var metaState = null;
+    var metaState;
 
     var timeStep = parserUtil.getTimeStep(metaJson, typeId, index);
-    metaState = new MetaState(timeStep * 1000);
+    metaState = this.factory.createMetaState();
+    metaState.setTimeStep(timeStep * 1000);
 
     metaState.setTrackIndex(index);
     activeMeta.set(typeId, metaState);
@@ -115,7 +116,7 @@ MpdMeta.prototype.isLastSegment = function(typeId, currentTime) {
 };
 
 MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
-  var nextSegmentTime = null;
+  var nextSegmentTime;
   var active = activeMeta.get(typeId);
   var index = this.getSegmentIndex(typeId, currentTime);
 

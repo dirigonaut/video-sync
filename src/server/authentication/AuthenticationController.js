@@ -1,7 +1,7 @@
 const Promise = require('bluebird');
 
 var publisher, redisSocket, smtp, userAdmin, schemaFactory, sanitizer, authenticator,
-      session, chatEngine, playerManager, log;
+      session, chatEngine, playerManager, eventKeys, log;
 
 function AuthenticationController() { }
 
@@ -12,6 +12,8 @@ AuthenticationController.prototype.initialize = function(force) {
     schemaFactory		= this.factory.createSchemaFactory();
     sanitizer		    = this.factory.createSanitizer();
     chatEngine      = this.factory.createChatEngine();
+    eventKeys       = this.factory.createKeys();
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);
   }
@@ -34,8 +36,8 @@ AuthenticationController.prototype.attachIO = function (io) {
 
     yield isAdministrator.call(this, socket);
 
-    socket.on('auth-get-token', Promise.coroutine(function* (data) {
-      log.debug('auth-get-token');
+    socket.on(eventKeys.GETTOKEN, Promise.coroutine(function* (data) {
+      log.debug(eventKeys.GETTOKEN);
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.LOGIN);
       var request = sanitizer.sanitize(data, schema, [schema.Enum.ADDRESS]);
 
@@ -50,14 +52,14 @@ AuthenticationController.prototype.attachIO = function (io) {
             var mailOptions = smtp.createMailOptions(activeSession.smtp, token.address, "Video-Sync Token", "Session token: " + token.pass, "");
 
             smtp.sendMail(mailOptions);
-            socket.emit('login-token-sent');
+            socket.emit(eventKeys.SENTTOKEN);
           }
         }
       }
     }));
 
-    socket.on('auth-validate-token', Promise.coroutine(function* (data) {
-      log.debug('auth-validate-token');
+    socket.on(eventKeys.AUTHTOKEN, Promise.coroutine(function* (data) {
+      log.debug(eventKeys.AUTHTOKEN);
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.LOGIN);
       var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
@@ -75,8 +77,8 @@ AuthenticationController.prototype.attachIO = function (io) {
       }
     }.bind(this)));
 
-    socket.on('disconnect', Promise.coroutine(function*() {
-      log.info('disconnect', socket.id);
+    socket.on(eventKeys.DISCONNECT, Promise.coroutine(function*() {
+      log.info(eventKeys.DISCONNECT, socket.id);
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'has left the session..']);
       yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
 
@@ -89,10 +91,6 @@ AuthenticationController.prototype.attachIO = function (io) {
       yield userAdmin.disconnectSocket(socket);
     }));
 
-    socket.on('error', function (data) {
-      log.error("error", data);
-    });
-
     setTimeout(Promise.coroutine(function* () {
       //If the socket didn't authenticate, disconnect it
       if (!socket.auth) {
@@ -102,7 +100,7 @@ AuthenticationController.prototype.attachIO = function (io) {
       }
     }.bind(this)), 300000);
 
-    socket.emit('connected');
+    socket.emit(eventKeys.CONNECTED);
   }.bind(this)));
 };
 
@@ -123,14 +121,14 @@ var userAuthorized = Promise.coroutine(function* (socket, handle, isAdmin) {
 
   var chatEngine = this.factory.createChatEngine();
 
-  socket.emit('authenticated', isAdmin, Promise.coroutine(function* () {
+  socket.emit(eventKeys.AUTHENTICATED, isAdmin, Promise.coroutine(function* () {
     var mediaPath = yield session.getMediaPath();
     if(mediaPath && mediaPath.length > 0) {
-      socket.emit('media-ready');
+      socket.emit(eventKeys.MEDIAREADY);
     }
 
     var handles = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETHANDLES, []]);
-    yield redisSocket.broadcast('chat-handles', handles);
+    yield redisSocket.broadcast(eventKeys.HANDLES, handles);
 
     var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'has joined.']);
     yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);

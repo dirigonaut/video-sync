@@ -31,8 +31,8 @@ FileBuffer.prototype.initialize = function(force) {
 
 FileBuffer.prototype.requestFilesAsync = function(requestEvent) {
   log.info('FileBuffer.registerRequest');
-  var requestInfo       = new Object();
-  requestInfo.requestId = "r" + this._genId();
+  var requestInfo       = { };
+  requestInfo.requestId = "r" + genId();
   requestInfo.buffCount = 0;
   requestInfo.files     = [];
 
@@ -62,8 +62,8 @@ function registerResponse(requestId, header, serverCallback) {
   var fileRequest = fileRequests.get(requestId);
   fileRequest.buffCount++;
 
-  var buffer = new Object();
-  buffer.id = "b" + this._genId();
+  var buffer = { };
+  buffer.id = "b" + genId();
   buffer.requestId = requestId;
   buffer.info = header;
   buffer.data = [];

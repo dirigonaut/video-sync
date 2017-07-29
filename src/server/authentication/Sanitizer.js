@@ -23,7 +23,7 @@ Sanitizer.prototype.sanitize = function(object, schema, required) {
 			}
 
 			if(object[entry[0]]) {
-				if(handleInputs(schema[entry[0]], entry[1])) {
+				if(handleInputs.call(this, schema[entry[0]], entry[1], schema)) {
 					schema[entry[0]] = entry[1];
 				} else {
 					throw new Error(`Input ${entry[0]} should be a ${schema[entry[0]]} instead of a ${entry[1]}`);
@@ -43,23 +43,23 @@ Sanitizer.prototype.sanitize = function(object, schema, required) {
 
 module.exports = Sanitizer;
 
-function handleInputs(type, input) {
+function handleInputs(type, input, schema) {
 	var clean;
 	if(Array.isArray(input)) {
 		for(var i = 0; i < input.length; ++i) {
-			clean = checkInput(type, input[i]);
+			clean = checkInput.call(this, type, input[i], schema);
 			if(!clean) {
 				break;
 			}
 		}
 	} else {
-		clean = checkInput(type, input);
+		clean = checkInput.call(this, type, input, schema);
 	}
 
 	return clean;
 }
 
-function checkInput(type, input) {
+function checkInput(type, input, schema) {
 	var clean;
 	switch (type) {
 	  case 'string':
@@ -83,6 +83,9 @@ function checkInput(type, input) {
 	  case 'email':
 			clean = validator.isEmail(input);
 	    break;
+		case 'schema':
+			clean = this.sanitize(input, schema, Object.values(schema.Enum));
+			break;
 	  default:
 			throw new Error(`${type} is not a supported input type`);
 	}

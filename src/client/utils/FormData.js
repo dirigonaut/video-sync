@@ -1,12 +1,14 @@
 const Promise  = require('bluebird');
 
-var sessionList, smtpList, socket, log;
+var sessionList, smtpList, socket, eventKeys, log;
 
 function FormData() { }
 
 FormData.prototype.initialize = function(force) {
   if(typeof FormData.prototype.protoInit === 'undefined') {
     FormData.prototype.protoInit = true;
+    eventKeys       = this.factory.createKeys();
+
     var logManager  = this.factory.createClientLogManager();
 		log             = logManager.getLog(logManager.LogEnum.GENERAL);
   }
@@ -24,8 +26,8 @@ FormData.prototype.initialize = function(force) {
 
 FormData.prototype.requestFormData = Promise.coroutine(function* () {
   log.debug("FormData.initializeData");
-  yield socket.requestAsync('db-read-smpts', 'db-smtps');
-  yield socket.requestAsync('db-read-sessions', 'db-sessions');
+  yield socket.requestAsync(eventKeys.READSMTP, eventKeys.SMTP);
+  yield socket.requestAsync(eventKeys.READSESSIONS, eventKeys.SESSION);
 });
 
 FormData.prototype.getSessionList = function() {
@@ -40,16 +42,16 @@ module.exports = FormData;
 
 function setSocketEvents() {
   log.debug("FormData.setSocketEvents");
-  socket.setEvent('db-smtps', dbSmtps);
-  socket.setEvent('db-sessions', dbSessions);
-  socket.setEvent('db-refresh', dbRefresh);
+  socket.setEvent(eventKeys.SMTP, dbSmtps);
+  socket.setEvent(eventKeys.SESSION, dbSessions);
+  socket.setEvent(eventKeys.REFRESH, dbRefresh);
 }
 
 function removeSocketEvents() {
   log.debug("FormData.removeSocketEvents");
-  socket.removeEvent('db-smtps', dbSmtps);
-  socket.removeEvent('db-sessions', dbSessions);
-  socket.removeEvent('db-refresh', dbRefresh);
+  socket.removeEvent(eventKeys.SMTP, dbSmtps);
+  socket.removeEvent(eventKeys.SESSION, dbSessions);
+  socket.removeEvent(eventKeys.REFRESH, dbRefresh);
 }
 
 function dbSmtps(response){
@@ -64,6 +66,6 @@ function dbSessions(response) {
 
 function dbRefresh() {
   log.debug("FormData.dbRefresh");
-  socket.request('db-read-smpts');
-  socket.request('db-read-sessions');
+  socket.request(eventKeys.READSMTP);
+  socket.request(eventKeys.READSESSIONS);
 }

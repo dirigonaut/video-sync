@@ -1,6 +1,4 @@
 function initGUI(client, isAdmin) {
-  console.log("Gui initialized");
-
   //Control Bar Events ----------------------------------------------------------
   function updateProgressBar(e) {
     $('#seek-bar').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
@@ -8,9 +6,9 @@ function initGUI(client, isAdmin) {
 
   $('#btnPlay').click(function() {
     if ($('#video')[0].paused) {
-      clientSocket.sendRequest("state-req-play", client.getRequestFactory().buildStateRequest("play", $("#video")[0].currentTime));
+      client.socket.request("state-req-play");
     } else {
-      clientSocket.sendRequest("state-req-pause", client.getRequestFactory().buildStateRequest("pause", $("#video")[0].currentTime));
+      client.socket.request("state-req-pause");
     }
   });
 
@@ -30,7 +28,7 @@ function initGUI(client, isAdmin) {
     var request = new Object();
     request.seekTime = Math.round(length * (percent / 100));
     request.seekTime = request.seekTime;
-    clientSocket.sendRequest('state-req-seek', request);
+    client.socket.request('state-req-seek', request);
 
     $('#seek-bar').val(request.seekTime / $("#video")[0].duration * 100);
     $("video").on("timeupdate", updateProgressBar);
@@ -77,59 +75,56 @@ function initGUI(client, isAdmin) {
     }
   });
 
-
   //Location Events --------------------------------------------------------------
   $('#btnSessionMedia').click(function() {
-    console.log("Load new video.")
+    client.log.info("Load new video.");
       var media = $('#locationBar').val();
       var request = {};
       request.data = media;
-      clientSocket.sendRequest("admin-set-media", request);
+      client.socket.request("admin-set-media", request);
   });
 
   //Session Events --------------------------------------------------------------
   $('#createSession').click(function createSession() {
-    var from    = $('#sessionAddress').val();
+    var sender  = $('#sessionAddress').val();
     var to      = $('#sessionInvitees').val();
     var subject = $('#sessionSubject').val();
     var text    = $('#sessionText').val();
-    var html    = $('#sessionHtml').val();
 
-    var mailOptions = client.getRequestFactory().buildMailOptionsRequest(from, to, subject, text, html);
+    var mailOptions = client.schema.createPopulatedSchema(client.schema.MAILOPTIONS, [sender, to, subject, text]);
 
     var id        = $('#sessionId').val();
     var title     = $('#sessionTitle').val();
     var address   = $('#sessionAddress').val();
     var invitees  = ($('#sessionInvitees').val()).split(",");
 
-    if(id == null || id == undefined || id == "") {
-      clientSocket.sendRequest("db-create-session",
-        client.getRequestFactory().buildSessionRequest(title, address, invitees, mailOptions));
+    if(!id) {
+      client.socket.request("db-create-session",
+        client.schema.createPopulatedSchema(client.schema.SESSION, [undefined, title, address, invitees, mailOptions]));
     } else {
-      clientSocket.sendRequest("db-update-session", [id,
-        client.getRequestFactory().buildSessionRequest(title, address, invitees, mailOptions)]);
+      client.socket.request("db-update-session",
+        client.schema.createPopulatedSchema(client.schema.SESSION, [id, title, address, invitees, mailOptions]));
     }
   });
 
   $('#readSessions').click(function readSessions() {
-    clientSocket.sendRequest("db-read-sessions");
+    client.socket.request("db-read-sessions");
   });
 
   $('#setSession').click(function setSession() {
     var request = {};
     request.data = $('#sessionId').val();
-    clientSocket.sendRequest("admin-load-session", request);
+    client.socket.request("admin-load-session", request);
   });
 
   $('#sendInvitation').click(function readSessions() {
-    clientSocket.sendRequest("admin-smtp-invite");
+    client.socket.request("admin-smtp-invite");
   })
 
   $('#sessionList').on("click", "tr", function(e) {
       var id = e.currentTarget.children[0].outerText;
-      var formData = client.getFormDataSingleton();
-      var sessions = formData.getSessionList();
-      var session = null;
+      var sessions = client.formData.getSessionList();
+      var session;
 
       if(id == "Session") {
         $("#sessionId").val("");
@@ -148,7 +143,7 @@ function initGUI(client, isAdmin) {
         }
       }
 
-      if(session !== null && session !== undefined) {
+      if(session) {
         $("#sessionId").val(session._id);
         $("#sessionTitle").val(session.title);
         $("#sessionAddress").val(session.smtp);
@@ -161,12 +156,11 @@ function initGUI(client, isAdmin) {
 
   $('#sessionList').on("click", "button", function(e) {
     var session = $($(e.currentTarget).parent()).parent();
-    console.log(session);
     var id = session[0].children[0].outerText;
 
     session.remove();
 
-    clientSocket.sendRequest("db-delete-session", id);
+    client.socket.request("db-delete-session", id);
   });
 
   //Smtp Events -----------------------------------------------------------------
@@ -174,7 +168,7 @@ function initGUI(client, isAdmin) {
     var handle  = $('#contactHandle').val();
     var address = $('#contactAddress').val();
 
-    clientSocket.sendRequest("db-create-contact",
+    client.socket.request("db-create-contact",
       client.getRequestFactory().buildContactRequest(handle, address));
   });
 
@@ -185,28 +179,27 @@ function initGUI(client, isAdmin) {
     var address   = $('#smtpAddress').val();
     var password  = $('#smtpPassword').val();
 
-    if(id == null || id == undefined || id == "") {
-      clientSocket.sendRequest("db-create-smtp",
-        client.getRequestFactory().buildSmtpRequest(type, host, address, password));
+    if(!id) {
+      client.socket.request("db-create-smtp",
+        client.schema.createPopulatedSchema(client.schema.SMTP, [undefined, type, host, address, password]));
     } else {
-      clientSocket.sendRequest("db-update-smtp", [id,
-        client.getRequestFactory().buildSmtpRequest(type, host, address, password)]);
+      client.socket.request("db-update-smtp",
+        client.schema.createPopulatedSchema(client.schema.SMTP, [id, type, host, address, password]));
     }
   });
 
   $('#readContacts').click(function readContacts() {
-    clientSocket.sendRequest("db-read-contacts");
+    client.socket.request("db-read-contacts");
   });
 
   $('#readSmtps').click(function readSmtps() {
-    clientSocket.sendRequest("db-read-smtps");
+    client.socket.request("db-read-smtps");
   });
 
   $('#smtpList').on("click", "tr", function(e) {
       var id = e.currentTarget.children[0].outerText;
-      var formData = client.getFormDataSingleton();
-      var smtps = formData.getSmtpList();
-      var smtp = null;
+      var smtps = client.formData.getSmtpList();
+      var smtp;
 
       if(id == "Smtp") {
         $("#smtpId").val("");
@@ -224,7 +217,7 @@ function initGUI(client, isAdmin) {
         }
       }
 
-      if(smtp !== null && smtp !== undefined) {
+      if(smtp) {
         $("#smtpId").val(smtp._id);
         $("#smtpType").val(smtp.smtpType);
         $("#smtpHost").val(smtp.smtpHost);
@@ -240,7 +233,7 @@ function initGUI(client, isAdmin) {
 
     smtp.remove();
 
-    clientSocket.sendRequest("db-delete-smtp", id);
+    client.socket.request("db-delete-smtp", id);
   });
 
   //Encode Events ---------------------------------------------------------------
@@ -250,7 +243,6 @@ function initGUI(client, isAdmin) {
     var vQuality  = $("input[name=video-quality]:checked");
     var aQuality  = $("input[name=audio-quality]:checked");
 
-    console.log(vQuality);
     var commands = [];
     var factory = client.getCommandFactory();
 
@@ -279,7 +271,7 @@ function initGUI(client, isAdmin) {
               output + client.getFileUtil().splitNameFromPath(input) + "_mp4.mpd"));
     }
 
-    clientSocket.sendRequest('video-encode', commands);
+    client.socket.request('video-encode', commands);
   });
 
   //Side Events -----------------------------------------------------------------
@@ -293,14 +285,13 @@ function initGUI(client, isAdmin) {
   });
 
   var loadSessions = function() {
-    var formData = client.getFormDataSingleton();
-    var sessions = formData.getSessionList();
+    var sessions = client.formData.getSessionList();
 
     if(sessions.length > 0) {
       if($("#sessionId").val() == '') {
         var session = sessions[0];
 
-        if(session !== null && session !== undefined) {
+        if(session) {
           $("#sessionId").val(session._id);
           $("#sessionTitle").val(session.title);
           $("#sessionAddress").val(session.smtp);
@@ -320,7 +311,7 @@ function initGUI(client, isAdmin) {
     }
   };
 
-  clientSocket.setEvent("db-sessions", loadSessions);
+  client.socket.setEvent("db-sessions", loadSessions);
 
   $('#btnSmtp').click(function() {
     loadSmtps();
@@ -332,14 +323,13 @@ function initGUI(client, isAdmin) {
   });
 
   var loadSmtps = function() {
-    var formData = client.getFormDataSingleton();
-    var smtps = formData.getSmtpList();
+    var smtps = client.formData.getSmtpList();
 
     if(smtps.length > 0) {
       if($("#smtpId").val() == '') {
         var smtp = smtps[0];
 
-        if(smtp !== null && smtp !== undefined) {
+        if(smtp) {
           $("#smtpId").val(smtp._id);
           $("#smtpType").val(smtp.type);
           $("#smtpHost").val(smtp.smtpHost);
@@ -357,7 +347,7 @@ function initGUI(client, isAdmin) {
     }
   }
 
-  clientSocket.setEvent("db-smtps", loadSmtps);
+  client.socket.setEvent("db-smtps", loadSmtps);
 
   $('#btnEncode').click(function() {
     $('#encodeModal').modal('show');
@@ -379,9 +369,7 @@ function initGUI(client, isAdmin) {
     }
   }
 
-  $('#sendChat').click(function() {
-    sendChat();
-  });
+  $('#sendChat').click(sendChat);
 
   $('#chatMessage').keydown(function(event) {
     var keyId = event.keyCode || event.which;
@@ -392,12 +380,12 @@ function initGUI(client, isAdmin) {
     }
   });
 
-  var chatScrollTimeOut = null;
+  var chatScrollTimeOut;
   $('#chatManuscript').on('scroll', function() {
     if(!chatScrollTimeOut) {
       chatScrollTimeOut = setTimeout(function(){
         clearTimeout(chatScrollTimeOut);
-        chatScrollTimeOut = null;
+        chatScrollTimeOut = undefined;
 
         var element = $('#chatManuscript');
         var totalHeight = element.scrollTop() + element.innerHeight();
@@ -410,12 +398,12 @@ function initGUI(client, isAdmin) {
     }
   });
 
-  var logScrollTimeOut = null;
+  var logScrollTimeOut;
   $('#logManuscript').on('scroll', function() {
     if(!logScrollTimeOut) {
       logScrollTimeOut = setTimeout(function(){
         clearTimeout(logScrollTimeOut);
-        logScrollTimeOut = null;
+        logScrollTimeOut = undefined;
 
         var element = $('#logManuscript');
         var totalHeight = element.scrollTop() + element.innerHeight();
@@ -434,55 +422,42 @@ function initGUI(client, isAdmin) {
     autoScroll('#chatManuscript');
   }
 
-  clientSocket.setEvent('chat-broadcast-resp', function(message) {
+  function chatMessage(message) {
     $('#chatManuscript').append(`<p><span class="chat-message" title="${message.from}" style="color:blue; font-weight: bold;">
       ${new Date().toTimeString().split(" ")[0]} ${client.chatUtil.getUserHandle(message.from)}: </span>${message.data}</p>`);
     autoScroll('#chatManuscript');
-  });
+  }
 
-  clientSocket.setEvent('chat-event-resp', function(message) {
-    systemMessage(message);
-  });
-
-  clientSocket.setEvent('chat-ping-resp', function(message) {
-    systemMessage(message);
-  });
-
-  clientSocket.setEvent('chat-log-resp', function(message) {
+  function logMessage(message) {
     $('#logManuscript').append(`<p><span class="chat-message" title="${message.label}" style="color:blue; font-weight: bold;">
       ${message.time} ${message.level}: </span>${message.text} ${message.meta !== undefined ? message.meta : ""}</p>`);
       autoScroll('#logManuscript');
-  });
+  }
+
+  client.socket.setEvent('chat-broadcast-resp', chatMessage);
+  client.socket.setEvent('chat-event-resp', systemMessage);
+  client.socket.setEvent('chat-ping-resp', systemMessage);
+  client.socket.setEvent('chat-log-resp', logMessage);
 
   //Video Events -----------------------------------------------------------------
-  clientSocket.setEvent("media-ready", function() {
-    var mediaController = client.getMediaController();
-    mediaController.initialize(new MediaSource(), window, true);
-  });
-
   $('#meta-types').on("change", function (e) {
-    console.log($(e.currentTarget.children.select).val());
-    var mediaController = client.getMediaController();
-    var trackInfo = mediaController.getTrackInfo();
+    client.log.info($(e.currentTarget.children.select).val());
+    var trackInfo = client.media.getTrackInfo();
 
-    console.log(trackInfo);
+    client.log.info(trackInfo);
     var typeId = $(e.currentTarget.children.select).val();
     var selectedTrack = trackInfo.get(typeId);
 
-    console.log(selectedTrack);
+    client.log.info(selectedTrack);
     var vQuality = selectedTrack.video[0].index;
     var aQuality = selectedTrack.audio[0].index;
 
-    var mediaController = client.getMediaController();
-    mediaController.initialize(new MediaSource(), window, false, function() {
-      mediaController.setActiveMetaData(typeId, vQuality, aQuality, null);
-    });
+    //need an emitter
   });
 
   $('#track-video').on("change", function (e) {
-    console.log($(e.currentTarget.children.select).val());
-    var mediaController = client.getMediaController();
-    var trackInfo = mediaController.getTrackInfo();
+    client.log.info($(e.currentTarget.children.select).val());
+    var trackInfo = client.media.getTrackInfo();
 
     var typeId = $($('#meta-types').children()[0]).val();
     var selectedTrack = trackInfo.get(typeId);
@@ -490,13 +465,12 @@ function initGUI(client, isAdmin) {
     var vQuality = $(e.currentTarget.children.select).val();
     var aQuality = $($('#track-audio').children()[0]).val();
 
-    mediaController.setActiveMetaData(typeId, vQuality, aQuality, null);
+    client.media.setActiveMetaData(typeId, vQuality, aQuality, null);
   });
 
   $('#track-audio').on("change", function (e) {
-    console.log($(e.currentTarget.children.select).val());
-    var mediaController = client.getMediaController();
-    var trackInfo = mediaController.getTrackInfo();
+    client.log.info($(e.currentTarget.children.select).val());
+    var trackInfo = client.media.getTrackInfo();
 
     var typeId = $($('#meta-types').children()[0]).val();
     var selectedTrack = trackInfo.get(typeId);
@@ -504,27 +478,27 @@ function initGUI(client, isAdmin) {
     var vQuality = $($('#track-video').children()[0]).val();
     var aQuality = $(e.currentTarget.children.select).val();
 
-    mediaController.setActiveMetaData(typeId, vQuality, aQuality, null);
+    client.media.setActiveMetaData(typeId, vQuality, aQuality, null);
   });
 
   $('#buffer-ahead').on("change", function (e) {
     var value = $(e.currentTarget.children[0]).val();
     var value = Math.trunc(value / 10);
     $(e.currentTarget.children[0]).val(value * 10);
-    client.getMediaController().setBufferAhead(value);
+    client.media.setBufferAhead(value);
   });
 
   $('#force-buffer').on("change", function (e) {
     var value = $(e.currentTarget.children[0]).is(':checked');
-    client.getMediaController().setForceBuffer(value);
+    client.media.setForceBuffer(value);
   });
 
   $('#synchronize').on("change", function (e) {
-    clientSocket.sendRequest('state-change-sync', $('#synchronize').find('input')[0].checked);
+    client.socket.request('state-change-sync', $('#synchronize').find('input')[0].checked);
   });
 
-  client.getMediaController().on('meta-data-loaded', function(trackInfo) {
-    console.log('meta-data-loaded');
+  client.media.on('meta-data-loaded', function(trackInfo) {
+    client.log.info('meta-data-loaded');
 
     var typeHtml = `<select name="select">`;
     var videoHtml = `<select name="select">`;
@@ -598,4 +572,6 @@ function initGUI(client, isAdmin) {
     $('.fadeout').addClass("fadein");
     $('.fadeout').removeClass("fadeout");
   }
+
+  client.log.ui("Gui initialized");
 }

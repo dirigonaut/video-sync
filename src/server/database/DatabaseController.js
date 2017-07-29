@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-var publisher, session, database, schemaFactory, sanitizer, log;
+var publisher, session, database, schemaFactory, sanitizer, eventKeys, log;
 
 function DatabaseController() { }
 
@@ -9,6 +9,8 @@ DatabaseController.prototype.initialize = function(force) {
     DatabaseController.prototype.protoInit = true;
     schemaFactory   = this.factory.createSchemaFactory();
     sanitizer       = this.factory.createSanitizer();
+    eventKeys       = this.factory.createKeys();
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.DATABASE);
   }
@@ -25,8 +27,8 @@ DatabaseController.prototype.attachSocket = function(socket) {
   log.debug("DatabaseController.attachSocket");
 
   //Create
-  socket.on('db-create-smtp', Promise.coroutine(function* (data) {
-    log.debug('db-create-smtp');
+  socket.on(eventKeys.CREATESMTP, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.CREATESMTP);
     var isAdmin = yield session.isAdmin(socket.id);
 
     if(isAdmin) {
@@ -35,13 +37,13 @@ DatabaseController.prototype.attachSocket = function(socket) {
 
       if(request) {
         yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.CREATESMTP, [request]]);
-        socket.emit("db-refresh");
+        socket.emit(eventKeys.REFRESH);
       }
     }
   }));
 
-  socket.on('db-create-session', Promise.coroutine(function* (data) {
-    log.debug('db-create-session');
+  socket.on(eventKeys.CREATESESSION, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.CREATESESSION);
     var isAdmin = yield session.isAdmin(socket.id);
 
     if(isAdmin) {
@@ -50,41 +52,41 @@ DatabaseController.prototype.attachSocket = function(socket) {
 
       if(request) {
         yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.CREATESESSION, [request]]);
-        socket.emit("db-refresh");
+        socket.emit(eventKeys.REFRESH);
       }
     }
   }));
 
   //Read
-  socket.on('db-read-smpts', Promise.coroutine(function* () {
-    log.debug('db-read-smpts');
+  socket.on(eventKeys.READSMTP, Promise.coroutine(function* () {
+    log.debug(eventKeys.READSMTP);
     var isAdmin = yield session.isAdmin(socket.id);
 
     if(isAdmin) {
       var smtp = yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.READALLSMTP, []]);
       if(smtp) {
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [smtp]);
-        socket.emit("db-smtps", response);
+        socket.emit(eventKeys.SMTP, response);
       }
     }
   }));
 
-  socket.on('db-read-sessions', Promise.coroutine(function* () {
-    log.debug('db-read-sessions');
+  socket.on(eventKeys.READSESSIONS, Promise.coroutine(function* () {
+    log.debug(eventKeys.READSESSIONS);
     var isAdmin = yield session.isAdmin(socket.id);
 
     if(isAdmin) {
       var sessions = yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.READALLSESSIONS, []]);
       if(sessions) {
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [sessions]);
-        socket.emit("db-sessions", response);
+        socket.emit(eventKeys.SESSION, response);
       }
     }
   }));
 
   //Update
-  socket.on('db-update-smtp', Promise.coroutine(function* (data) {
-    log.debug('db-update-smtp');
+  socket.on(eventKeys.UPDATESMTP, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.UPDATESMTP);
     var isAdmin = yield session.isAdmin(socket.id);
 
     if(isAdmin) {
@@ -93,13 +95,13 @@ DatabaseController.prototype.attachSocket = function(socket) {
 
       if(request) {
         yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.UPDATESMTP, [request]]);
-        socket.emit("db-refresh");
+        socket.emit(eventKeys.REFRESH);
       }
     }
   }));
 
-  socket.on('db-update-session', Promise.coroutine(function* (data) {
-    log.debug('db-update-session');
+  socket.on(eventKeys.UPDATESESSION, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.UPDATESESSION);
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.SESSION);
@@ -107,14 +109,14 @@ DatabaseController.prototype.attachSocket = function(socket) {
 
       if(request) {
         yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.UPDATESESSION, [request]]);
-        socket.emit("db-refresh");
+        socket.emit(eventKeys.REFRESH);
       }
     }
   }));
 
   //Delete
-  socket.on('db-delete-smtp', Promise.coroutine(function* (data) {
-    log.debug('db-delete-smtp');
+  socket.on(eventKeys.DELETESMTP, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.DELETESMTP);
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
@@ -123,14 +125,14 @@ DatabaseController.prototype.attachSocket = function(socket) {
       if(request) {
         var deleted = yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.DELETESMTP, [request.data]]);
         if(deleted && deleted > 0){
-          socket.emit('db-refresh');
+          socket.emit(eventKeys.REFRESH);
         }
       }
     }
   }));
 
-  socket.on('db-delete-session', Promise.coroutine(function* (data) {
-    log.debug('db-delete-session');
+  socket.on(eventKeys.DELETESESSION, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.DELETESESSION);
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
@@ -139,7 +141,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
       if(request) {
         yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.DELETESESSION, [request.data]]);
         if(deleted && deleted > 0){
-          socket.emit('db-refresh');
+          socket.emit(eventKeys.REFRESH);
         }
       }
     }

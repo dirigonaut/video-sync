@@ -1,9 +1,14 @@
-function MetaState(timeStep) {
-  this.timeStep    = timeStep;
+function MetaState() { };
+
+MetaState.prototype.initialize = function(force) {
   this.bufferIndex = 0;
   this.forceBuffer = false;
 
   this.bufferSegments = [];
+};
+
+MetaState.prototype.setTimeStep = function(timeStep) {
+  this.timeStep = timeStep;
 };
 
 MetaState.prototype.setTrackIndex = function(trackIndex) {

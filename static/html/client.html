@@ -21,22 +21,22 @@
         </div>
         <video id="video" class="video-holder"></video>
         <div id="side-container" class="side-bar fadein">
-          <div class="icon-v">
-            <a href="#" id="btnLogin"><span class="glyphicon glyphicon-thumbnail glyphicon-user"></span></a>
-          </div>
         </div>
         <div id="control-container" class="control-bar flex-h fadein">
         </div>
       </div>
       <div id="chat-container" class="chat-container">
       </div>
-      <div id="loginOverlay"></div>
+      <div id="sessionOverlay"></div>
+      <div id="smtpOverlay"></div>
+      <div id="encodeOverlay"></div>
     </div>
+    <script type="text/javascript" src="../resources/jquery-2.2.4.min.js"></script>
+    <script type="text/javascript" src="../resources/video-js/video.js"></script>
+    <script type="text/javascript" src="../resources/bootstrap/js/bootstrap.min.js"></script>
     <script>
-    var client = null;
-    var clientSocket = null;
-
-      window.onload = function() {
+      var client;
+      $(document).ready(function() {
         window.URL = window.URL || window.webkitURL;
         window.MediaSource = window.MediaSource || window.WebKitMediaSource
 
@@ -46,22 +46,62 @@
           $('#loginModal').modal('show');
         });
 
-        $.getScript("../javascript/clientLogin.js", function() {
-          initClientLogin();
-        });
-
         $.getScript("../javascript/clientLog.js", function() {
           client = Object.create(Client.prototype);
-          client.initialize(document.getElementById('video'), window.location.host, guiLog()).then(function() {
-            $.getScript("../javascript/gui.js", function() {
-              $('#loginModal').modal('hide');
-              $('#btnLogin').remove();
 
-              initGUI();
+          $.getScript("../javascript/clientLogin.js", function() {
+            var factory = client.getFactory();
+
+            var logManager = factory.createClientLogManager();
+            logManager.addUILogging(guiLog());
+            var log = logManager.getLog(logManager.LogEnum.GENERAL);
+            log.ui('Added UI logging.');
+
+            var socket = factory.createClientSocket();
+            initClientLogin(socket, factory.createSchemaFactory());
+
+            client.initialize(window.location.host).then(function(isAdmin) {
+              if(isAdmin) {
+                $("#side-container").load("menu/side.html");
+                $("#sessionOverlay").load("menu/overlays/session.html");
+                $("#smtpOverlay").load("menu/overlays/smtp.html");
+                $("#encodeOverlay").load("menu/overlays/encode.html");
+                $("#location-container").load("menu/location.html");
+              }
+
+              var setupGUI = function() {
+                var factory     = client.getFactory();
+                var logManager  = factory.createClientLogManager();
+
+                var container = {
+                  socket:   socket,
+                  chatUtil: factory.createChatUtil(),
+                  formData: factory.createFormData(),
+                  media:    factory.createMediaController(),
+                  schema:   factory.createSchemaFactory(),
+                  keys:     factory.createKeys(),
+                  log:      logManager.getLog(logManager.LogEnum.GENERAL),
+                };
+
+                //Reload media
+                socket.setEvent(container.keys.MEDIAREADY, function() {
+                  client.startMedia(new MediaSource(), window, document.getElementById('video'));
+                });
+
+                //The init function of gui.js
+                initGUI(container, isAdmin);
+              };
+
+              $.getScript("../javascript/gui.js", function() {
+                $('#loginModal').modal('hide');
+                $('#btnLogin').remove();
+
+                setupGUI();
+              });
             });
           });
         });
-      };
+      });
     </script>
   </body>
 </html>
