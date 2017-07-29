@@ -1,6 +1,4 @@
-function Mp4Parser() {
-
-};
+function Mp4Parser() { }
 
 Mp4Parser.prototype.getBaseURL = function(mpd, trackIndex) {
   return mpd.Period[0].AdaptationSet[trackIndex].Representation[0].BaseURL[0];

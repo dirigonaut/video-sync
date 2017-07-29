@@ -9,6 +9,8 @@ function MediaController() { }
 MediaController.prototype.initialize = function(force) {
   if(typeof MediaController.prototype.protoInit === 'undefined') {
     MediaController.prototype.protoInit = true;
+    Object.setPrototypeOf(MediaController.prototype, Events.prototype);
+    
     var logManager  = this.factory.createClientLogManager();
     log             = logManager.getLog(logManager.LogEnum.VIDEO);
 
@@ -43,7 +45,7 @@ MediaController.prototype.setup = Promise.coroutine(function* (mediaSource, wind
   video.emit('get-init');
 
   return onReset.call(this, resetCallbacks, mediaSource);
-};
+});
 
 MediaController.prototype.getTrackInfo = function() {
   return metaManager.getTrackInfo();

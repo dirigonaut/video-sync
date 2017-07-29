@@ -6,7 +6,7 @@ var metaDataList, activeMetaData, socket, schemaFactory, log;
 
 function MetaManager() { }
 
-MetaManager.prototype.initialize = function() {
+MetaManager.prototype.initialize = function(force) {
   if(typeof MetaManager.prototype.protoInit === 'undefined') {
     MetaManager.prototype.protoInit = true;
     var logManager  = this.factory.createClientLogManager();
@@ -18,9 +18,6 @@ MetaManager.prototype.initialize = function() {
     MetaManager.prototype.stateInit = true;
     socket        = this.factory.createClientSocket();
     metaDataList  = new Map();
-
-    removeSocketEvents();
-    setSocketEvents();
   }
 };
 
@@ -35,12 +32,14 @@ MetaManager.prototype.requestMetaData = Promise.coroutine(function* () {
       var util;
 
       if(type === 'webm') {
-        util = new WebmParser();
+        util = this.factory.createWebmParser();
       } else if(type === 'mp4') {
-        util = new Mp4Parser();
+        util = this.factory.createMp4Parser();
       }
 
-      metaDataList.set(type, new MpdMeta(binaryFile.toString(), util));
+      var mpdMeta = this.factory.createMpdMeta();
+      mpdMeta.setMpd(binaryFile.toString(), util);
+      metaDataList.set(type, mpdMeta);
 
       if(!activeMetaData && type === 'webm') {
         var trackInfo = this.getTrackInfo().get(type);
@@ -65,7 +64,7 @@ MetaManager.prototype.setActiveMetaData = function(metaInfo) {
     metaData.selectTrackQuality(SourceBuffer.Enum.AUDIO, metaInfo.audio);
   }
 
-  if(_activeMetaData !== metaData) {
+  if(activeMetaData !== metaData) {
     activeMetaData = metaData;
     this.emit('meta-data-activated');
   }

@@ -30,30 +30,36 @@ var generateFunctionHeaders = function() {
         log.silly(`Creating ${[i]}`);
       }
 
+      var object;
       var ObjectImport = imports[i];
-      var object = Object.create(ObjectImport.prototype);
 
-      if(!ObjectImport.prototype[FACTORY]) {
-        Object.defineProperty(ObjectImport.prototype, FACTORY, {
-          enumerable: false,
-          writeable: false,
-          value: this
-        });
-      }
+      if(ObjectImport.prototype) {
+        var object = Object.create(ObjectImport.prototype);
 
-      if(!ObjectImport.prototype[FUNCTIONS]) {
-        Object.defineProperty(ObjectImport.prototype, FUNCTIONS, {
-          enumerable: false,
-          writeable: false,
-          value: generateObjectFunctionEnum(object)
-        });
-      }
-
-      if(typeof object.initialize !== 'undefined') {
-        var result = object.initialize(init);
-        if(result instanceof Promise) {
-          object = result;
+        if(!ObjectImport.prototype[FACTORY]) {
+          Object.defineProperty(ObjectImport.prototype, FACTORY, {
+            enumerable: false,
+            writeable: false,
+            value: this
+          });
         }
+
+        if(!ObjectImport.prototype[FUNCTIONS]) {
+          Object.defineProperty(ObjectImport.prototype, FUNCTIONS, {
+            enumerable: false,
+            writeable: false,
+            value: generateObjectFunctionEnum(object)
+          });
+        }
+
+        if(typeof object.initialize !== 'undefined') {
+          var result = object.initialize(init);
+          if(result instanceof Promise) {
+            object = result;
+          }
+        }
+      } else {
+        object = ObjectImport;
       }
 
       return object;

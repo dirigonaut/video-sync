@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-var commandEngine, chatEngine, redisSocket, publisher, playerManager, schemaFactory, sanitizer, log;
+var commandEngine, chatEngine, redisSocket, publisher, playerManager, session, schemaFactory, sanitizer, eventKeys, log;
 
 function ChatController() { }
 
@@ -11,6 +11,8 @@ ChatController.prototype.initialize = function(force) {
     chatEngine      = this.factory.createChatEngine();
     schemaFactory   = this.factory.createSchemaFactory();
     sanitizer       = this.factory.createSanitizer();
+    eventKeys       = this.factory.createKeys();
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.CHAT);
   }
@@ -20,14 +22,15 @@ ChatController.prototype.initialize = function(force) {
     redisSocket     = this.factory.createRedisSocket();
     publisher       = this.factory.createRedisPublisher();
     playerManager   = this.factory.createPlayerManager(false);
+    session         = this.factory.createSession();
   }
 };
 
-ChatController.prototype.attachSocket = function(socket) {
+ChatController.prototype.attachSocket = Promise.coroutine(function* (socket) {
   log.debug("Attaching ChatController");
 
-  socket.on('chat-broadcast', Promise.coroutine(function* (data) {
-    log.debug('chat-broadcast');
+  socket.on(eventKeys.BROADCAST, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.BROADCAST);
     var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
@@ -37,8 +40,17 @@ ChatController.prototype.attachSocket = function(socket) {
     }
   }.bind(this)));
 
-  socket.on('chat-command', Promise.coroutine(function* (data) {
-    log.debug('chat-command', data);
+  var processCommand;
+
+  var isAdmin = yield session.isAdmin(socket.id);
+  if(isAdmin) {
+    processcommand = commandEngine.processAdminCommand;
+  } else {
+    processcommand = commandEngine.processCommand;
+  }
+
+  socket.on(eventKeys.COMMAND, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.COMMAND, data);
     var schema = schemaFactory.createDefinition(schemaFactory.Enum.COMMAND);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
@@ -46,13 +58,12 @@ ChatController.prototype.attachSocket = function(socket) {
       var player = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETPLAYER, [socket.id]]);
 
       if(player) {
-        var command = commandEngine.processCommand(player, request);
+        var command = processcommand(player, request);
 
         if(command && command.length > 0) {
           if(command[0] === CommandEngine.RespEnum.COMMAND) {
             let params = command[1];
 
-            log.debug(`chat-command emitting event`);
             var commands = yield publisher.publishAsync.apply(null, params[0]);
             if(commands) {
               for(var i in commands) {
@@ -66,10 +77,8 @@ ChatController.prototype.attachSocket = function(socket) {
             var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, params[1]]);
 
             if(params[0] === chatEngine.Enum.PING) {
-              log.silly('chat-command-response', request);
               yield chatEngine.ping(params[0], response);
             } else {
-              log.silly('chat-command-response', request);
               yield chatEngine.broadcast(params[0], response);
             }
           }
@@ -77,6 +86,6 @@ ChatController.prototype.attachSocket = function(socket) {
       }
     }
   }.bind(this)));
-};
+});
 
 module.exports = ChatController;

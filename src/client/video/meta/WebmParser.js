@@ -1,6 +1,4 @@
-function WebmParser() {
-
-};
+function WebmParser() { }
 
 WebmParser.prototype.getBaseURL = function(mpd, adaptIndex, repId) {
   var rep = getRepresentationSet(mpd, adaptIndex, repId);

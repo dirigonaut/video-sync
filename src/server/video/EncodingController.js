@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-var encoderManager, session, fileIO, schemaFactory, sanitizer, log;
+var encoderManager, session, fileIO, schemaFactory, sanitizer, eventKeys, log;
 
 function EncodingController() { }
 
@@ -9,6 +9,8 @@ EncodingController.prototype.initialize = function(force) {
     EncodingController.prototype.protoInit = true;
     schemaFactory   = this.factory.createSchemaFactory();
     sanitizer       = this.factory.createSanitizer();
+    eventKeys       = this.factory.createKeys();
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.VIDEO);
   }
@@ -23,11 +25,11 @@ EncodingController.prototype.initialize = function(force) {
 
 EncodingController.prototype.attachSocket = function(socket) {
   log.info("VideoController.attachSocket");
-  socket.on('video-encode', Promise.coroutine(function* (data) {
+  socket.on(eventKeys.ENCODE, Promise.coroutine(function* (data) {
     var isAdmin = yield session.isAdmin(socket.id);
 
     if(isAdmin) {
-      log.debug('video-encode', data);
+      log.debug(eventKeys.ENCODE, data);
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.ENCODE);
       var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
@@ -36,17 +38,17 @@ EncodingController.prototype.attachSocket = function(socket) {
 
         var processes = encoderManager.buildProcess(request);
         yield encoderManager.encode(processes).then(function() {
-          socket.emit('video-encoded');
+          socket.emit(eventKeys.ENCODED);
         });
       }
     }
   }));
 
-  socket.on('get-meta-info', Promise.coroutine(function* (data) {
+  socket.on(eventKeys.GETMETA, Promise.coroutine(function* (data) {
     var isAdmin = yield session.isAdmin(socket.id);
 
     if(isAdmin) {
-      log.debug('get-meta-info', data);
+      log.debug(eventKeys.GETMETA, data);
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.ENCODE);
       var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
@@ -57,7 +59,7 @@ EncodingController.prototype.attachSocket = function(socket) {
 
         var metaData = yield ffprobe.execute();
         var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [metaData]);
-        socket.emit("meta-info", result);
+        socket.emit(eventKeys.META, result);
       }
     }
   }));

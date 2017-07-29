@@ -29,7 +29,7 @@ Video.prototype.setup = function(videoElement,window, mediaSource) {
       if(videoElement.play) {
         videoPing();
       }
-    }, 1000));
+    }, 1000);
 
     var metaManager = this.factory.createMetaManager();
     metaData = metaManager.getActiveMetaData();
@@ -76,7 +76,7 @@ function setSocketEvents() {
     play();
 
     var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
-      [videoElement.currentTime, videoElement.play, videoElement.canPlay]));
+      [videoElement.currentTime, videoElement.play, videoElement.canPlay]);
 
     socket.sendRequest('state-update-state', request, true);
   });
@@ -86,7 +86,7 @@ function setSocketEvents() {
     pause();
 
     var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
-      [videoElement.currentTime, videoElement.play, videoElement.canPlay]));
+      [videoElement.currentTime, videoElement.play, videoElement.canPlay]);
 
     clientSocket.sendRequest('state-update-state', request, true);
 
@@ -105,7 +105,7 @@ function setSocketEvents() {
     }
 
     var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
-      [videoElement.currentTime, videoElement.play, videoElement.canPlay]));
+      [videoElement.currentTime, videoElement.play, videoElement.canPlay]);
 
     if(command.sync){
       socket.request('state-update-sync', request, true);
@@ -181,6 +181,6 @@ function onSeek(typeId) {
 }
 
 function videoPing() {
-  socket.request('video-ping', schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
+  socket.request('state-ping', schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
     [videoElement.currentTime, videoElement.play, videoElement.canPlay]));
 }

@@ -29,7 +29,7 @@ SourceBuffer.prototype.setup = Promise.coroutine(function* (enumType, mediaSourc
     this.index = 0;
 
     var events = {
-      init:       getInit.call(this)),
+      init:       getInit.call(this),
       getSegment: getSegment.call(this),
       onSegment:  onSegment.call(this, bufferSegment.call(this)),
       ready:      onReady.call(this),
@@ -106,7 +106,7 @@ function onSegment(bufferSegment) {
     if(this.type === segment.typeId) {
       bufferSegment(segment.name, segment.index, segment.data);
     }
-  }.bind(this));
+  }.bind(this);
 }
 
 function bufferSegment() {
@@ -215,7 +215,7 @@ function onReset(video, mediaSource, events) {
 }
 
 var requestVideoData = function(requestDetails) {
-  socket.request('get-segment', schemaFactory.createPopulatedSchema(schemaFactory.Enum.VIDEO, [this.typeId, requestDetails[0], requestDetails[1]]);
+  socket.request('get-segment', schemaFactory.createPopulatedSchema(schemaFactory.Enum.VIDEO, [this.typeId, requestDetails[0], requestDetails[1]]));
 };
 
 var isTimeRangeBuffered = function(timestamp) {

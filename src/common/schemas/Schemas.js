@@ -24,9 +24,13 @@ var Schemas = {
     definition: { _id: 'string', smtpType: 'string', smtpHost: 'string', smtpAddress: 'email', smtpPassword: 'string',
     Enum: { ID: '_id', SMTPTYPE: 'smtpType', SMTPHOST: 'smtpHost', SMTPADDRESS: 'smtpAddress', SMTPPASSWORD: 'smtpPassword' } } },
 
+  mailOptions: { schema: { sender: undefined, to: undefined, subject: undefined, text: undefined },
+    definition: { sender: 'email', to: 'email', subject: 'string', text: 'string',
+    Enum: { SENDER: 'sender', TO: 'to', SUBJECT: 'subject', TEXT: 'text' } } },
+
   session: { schema: { _id: undefined, title: undefined, smtp: undefined, invitees: undefined, mailOptions: undefined },
-    definition: { _id: 'string', title: 'string', smtp: 'email', invitees: 'email', mailOptions: 'string',
-    Enum: { ID: '_id', TITLE: 'title', SMTP: 'smtp', INVITEES: 'invitees', MAILOPTIONS: 'mailOptions' } } },
+    definition: { _id: 'string', title: 'string', smtp: 'email', invitees: 'email', mailOptions: 'mailOptions',
+    Enum: { ID: '_id', TITLE: 'title', SMTP: 'smtp', INVITEES: 'invitees', MAILOPTIONS: 'schema' } } },
 
   state: { schema: { timestamp: undefined, state: undefined, buffering: undefined },
     definition: { timestamp: 'number', state: 'string', buffering: 'string',

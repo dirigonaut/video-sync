@@ -1,7 +1,7 @@
 const Promise               = require('bluebird');
 const ClientFactoryManager  = require('./factory/ClientFactoryManager');
 
-var factory, log;
+var resetMedia, factory;
 
 function Client() { }
 
@@ -11,7 +11,7 @@ Client.prototype.initialize = Promise.coroutine(function* (serverUrl) {
     this.getFactory();
 
     var logManager = factory.createClientLogManager();
-    log = logManager.getLog(logManager.LogEnum.GENERAL);
+    var log = logManager.getLog(logManager.LogEnum.GENERAL);
 
     clientSocket = factory.createClientSocket();
     var response = yield clientSocket.connectAsync(serverUrl);
@@ -31,13 +31,13 @@ Client.prototype.initialize = Promise.coroutine(function* (serverUrl) {
   }
 });
 
-Client.prototype.initMedia = Promise.coroutine(function* (videoElement, mediaSource) {
-  var mediaController = factory.createMediaController(true);
-  if(mediaController instanceof Promise) {
-    yield mediaController;
+Client.prototype.startMedia = Promise.coroutine(function* (mediaSource, window, videoElement) {
+  if(resetMedia) {
+    resetMedia();
   }
 
-  return new Promise.resolve(mediaController);
+  var mediaController = factory.createMediaController();
+  resetMedia = yield mediaController.setup(mediaSource, window, videoElement);
 });
 
 Client.prototype.getFactory = function() {
