@@ -17,8 +17,7 @@ MpdMeta.prototype.setMpd = Promise.coroutine(function* (mpdXML, util) {
   parserUtil = util;
   threshold = 2;
 
-  var parser = new XmlParser();
-  metaJson = yield parser.parseStringAsync(mpdXML);
+  metaData = yield XmlParser.parseStringAsync(mpdXML);
 });
 
 MpdMeta.prototype.selectTrackQuality = function(typeId, index) {
@@ -26,7 +25,7 @@ MpdMeta.prototype.selectTrackQuality = function(typeId, index) {
   if(activeMeta.get(typeId)) {
     var metaState;
 
-    var timeStep = parserUtil.getTimeStep(metaJson, typeId, index);
+    var timeStep = parserUtil.getTimeStep(metaData, typeId, index);
     metaState = this.factory.createMetaState();
     metaState.setTimeStep(timeStep * 1000);
 
@@ -112,7 +111,7 @@ MpdMeta.prototype.updateActiveMeta = function(typeId, segmentIndex) {
 
 MpdMeta.prototype.isLastSegment = function(typeId, currentTime) {
   var active = activeMeta.get(typeId);
-  return this.getSegmentIndex(typeId, currentTime) < parserUtil.getSegmentsCount(metaJson, typeId, active.trackIndex) - 1;
+  return this.getSegmentIndex(typeId, currentTime) < parserUtil.getSegmentsCount(metaData, typeId, active.trackIndex) - 1;
 };
 
 MpdMeta.prototype.isReadyForNextSegment = function(typeId, currentTime) {
@@ -144,16 +143,16 @@ MpdMeta.prototype.getActiveTrackInfo = function() {
 };
 
 MpdMeta.prototype.addPath = function(typeId, trackIndex, cluster) {
-  var index = parserUtil.getAdaptionSetIndex(metaJson, typeId);
-  return [parserUtil.getBaseURL(metaJson, index, trackIndex), cluster];
+  var index = parserUtil.getAdaptionSetIndex(metaData, typeId);
+  return [parserUtil.getBaseURL(metaData, index, trackIndex), cluster];
 };
 
 MpdMeta.prototype.getMimeType = function(typeId) {
-  return parserUtil.getMimeType(metaJson, typeId);
+  return parserUtil.getMimeType(metaData, typeId);
 };
 
 MpdMeta.prototype.getTracks = function() {
-  return parserUtil.getTracks(metaJson);
+  return parserUtil.getTracks(metaData);
 };
 
 MpdMeta.prototype.setThreshold = function(range) {

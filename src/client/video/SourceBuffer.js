@@ -69,7 +69,7 @@ SourceBuffer.prototype.setForceStop = function() {
   this.forceStop = true;
 };
 
-SourceBuffer.Enum = { "VIDEO" : 0, "AUDIO" : 1 };
+SourceBuffer.prototype.Enum = { "VIDEO" : 0, "AUDIO" : 1 };
 
 module.exports = SourceBuffer;
 
