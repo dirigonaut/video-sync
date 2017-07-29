@@ -26,8 +26,8 @@ MetaManager.prototype.requestMetaData = Promise.coroutine(function* () {
   var files = yield fileBuffer.requestFilesAsync();
 
   if(files) {
-    for(var i = 0; i < files.length(); ++i) {
-      var type = files[i][0];
+    for(var i = 0; i < files.length; ++i) {
+      var type = files[i][0].type;
       var binary = files[i][1];
       var util;
 
@@ -38,7 +38,7 @@ MetaManager.prototype.requestMetaData = Promise.coroutine(function* () {
       }
 
       var mpdMeta = this.factory.createMpdMeta();
-      mpdMeta.setMpd(binaryFile.toString(), util);
+      mpdMeta.setMpd(binary.toString(), util);
       metaDataList.set(type, mpdMeta);
 
       if(!activeMetaData && type === 'webm') {
@@ -66,7 +66,6 @@ MetaManager.prototype.setActiveMetaData = function(metaInfo) {
 
   if(activeMetaData !== metaData) {
     activeMetaData = metaData;
-    this.emit('meta-data-activated');
   }
 };
 

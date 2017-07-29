@@ -3,7 +3,7 @@ const Events    = require('events');
 
 const TIMEOUT  = 6000;
 
-var fileRequests, buffers, trigger, socket, schemaFactory, log;
+var fileRequests, buffers, trigger, socket, schemaFactory, eventKeys, log;
 
 function FileBuffer() { }
 
@@ -12,6 +12,8 @@ FileBuffer.prototype.initialize = function(force) {
     FileBuffer.prototype.protoInit = true;
     var logManager  = this.factory.createClientLogManager();
 		log             = logManager.getLog(logManager.LogEnum.GENERAL);
+
+    eventKeys       = this.factory.createKeys();
     schemaFactory   = this.factory.createSchemaFactory();
   }
 
@@ -29,7 +31,7 @@ FileBuffer.prototype.initialize = function(force) {
   }
 };
 
-FileBuffer.prototype.requestFilesAsync = function(requestEvent) {
+FileBuffer.prototype.requestFilesAsync = function() {
   log.info('FileBuffer.registerRequest');
   var requestInfo       = { };
   requestInfo.requestId = "r" + genId();
@@ -39,7 +41,7 @@ FileBuffer.prototype.requestFilesAsync = function(requestEvent) {
   fileRequests.set(requestInfo.requestId, requestInfo);
 
   var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STRING, [requestInfo.requestId]);
-  socket.request(requestEvent, request);
+  socket.request(eventKeys.FILES, request);
 
   return new Promise(function(resolve, reject) {
     trigger.once(`${requestInfo.requestId}`, resolve);
@@ -99,33 +101,33 @@ function onFinish(bufferId) {
 
     if(fileRequest.buffCount <= 0) {
       log.info("Deleting request: " + fileRequest.requestId + " from map.");
-      fileRequests.delete(fileRequest.requestId);
+      delete fileRequests[fileRequest.requestId];
       trigger.emit(fileRequest.requestId, fileRequest.files);
     }
   }
 }
 
 function setSocketEvents() {
-  socket.setEvent('file-register-response', function(response, callback){
-    log.debug('file-register-response');
+  socket.setEvent(eventKeys.FILEREGISTER, function(response, callback){
+    log.debug(eventKeys.FILEREGISTER);
     registerResponse(response.id, response.data, callback);
   });
 
-  socket.setEvent('file-segment', function(response){
-    log.debug('file-segment');
+  socket.setEvent(eventKeys.FILESEGMENT, function(response){
+    log.debug(eventKeys.FILESEGMENT);
     onData(response.id, response.data);
   });
 
-  socket.setEvent('file-end', function(response){
-    log.debug('file-end');
+  socket.setEvent(eventKeys.FILEEND, function(response){
+    log.debug(eventKeys.FILEEND);
     onFinish(response.id);
   });
 }
 
 function removeSocketEvents() {
-  socket.removeEvent('file-register-response');
-  socket.removeEvent('file-segment');
-  socket.removeEvent('file-end');
+  socket.removeEvent(eventKeys.FILEREGISTER);
+  socket.removeEvent(eventKeys.FILESEGMENT);
+  socket.removeEvent(eventKeys.FILEEND);
 }
 
 function removeTriggerEvents() {
