@@ -44,12 +44,17 @@ FileBuffer.prototype.requestFilesAsync = function() {
   socket.request(eventKeys.FILES, request);
 
   return new Promise(function(resolve, reject) {
-    trigger.once(`${requestInfo.requestId}`, resolve);
-    setTimeout(function(err) {
-      fileRequests.delete(requestInfo.requestId);
+    var rejectId = setTimeout(function(err) {
+      log.debug(`FileBuffer rejecting download ${requestInfo.requestId}`);
+      delete fileRequests[fileRequest.requestId];
       trigger.removeListener(requestInfo.requestId, resolve);
       reject(err);
-    },TIMEOUT, `Request for Key: ${requestInfo.requestId}, timed out.`);
+    }, TIMEOUT, `Request for Key: ${requestInfo.requestId}, timed out.`);
+    trigger.once(`${requestInfo.requestId}`, function(data) {
+      log.debug(`FileBuffer finished downloading ${requestInfo.requestId}`);
+      clearTimeout(rejectId);
+      resolve(data);
+    });
   });
 };
 

@@ -14,7 +14,7 @@ Sanitizer.prototype.initialize = function(force) {
 Sanitizer.prototype.sanitize = function(object, schema, required) {
 	var entries = Object.entries(object);
 	for(var entry of entries) {
-		if(schema[entry[0]]) {
+		if(schema[entry[0]] !== undefined) {
 			if(required && required.length > 0) {
 				var indexOf = required.indexOf(entry[0]);
 				if(indexOf > -1) {
@@ -22,11 +22,11 @@ Sanitizer.prototype.sanitize = function(object, schema, required) {
 				}
 			}
 
-			if(object[entry[0]]) {
+			if(object[entry[0]] !== undefined) {
 				if(handleInputs.call(this, schema[entry[0]], entry[1], schema)) {
 					schema[entry[0]] = entry[1];
 				} else {
-					throw new Error(`Input ${entry[0]} should be a ${schema[entry[0]]} instead of a ${entry[1]}`);
+					throw new Error(`Input ${entry[0]} should be a(n) ${schema[entry[0]]} instead of a ${entry[1]}`);
 				}
 			}
 		} else {
@@ -63,25 +63,28 @@ function checkInput(type, input, schema) {
 	var clean;
 	switch (type) {
 	  case 'string':
-			clean = validator.isAlphanumeric(input);
+			clean = validator.isAlphanumeric(input  + '');
 	    break;
+		case 'bool':
+			clean = validator.isBoolean(input + '');
+			break;
 	  case 'number':
-			clean = validator.isNumeric(input);
+			clean = validator.isNumeric(input + '');
 	    break;
-		case 'range':
-			if(input.contains('-')) {
-				var values = input.split('-');
-				if(values.length === 2) {
-					clean = validator.isNumeric(values[0]);
-					clean &= validator.isNumeric(values[1]);
-				}
+		case 'ascii':
+			clean = validator.isAscii(input + '');
+			break;
+		case 'array':
+			clean = true;
+			for(let i = 0; i < input.length; ++i) {
+				clean &= validator.isAlphanumeric(input[i]  + '');
 			}
 			break;
 		case 'path':
 			clean = fileSystemUtils.isPath(input);
 			break;
 	  case 'email':
-			clean = validator.isEmail(input);
+			clean = validator.isEmail(input + '');
 	    break;
 		case 'schema':
 			clean = this.sanitize(input, schema, Object.values(schema.Enum));

@@ -32,7 +32,7 @@ StateController.prototype.attachSocket = function(socket) {
     log.debug(eventKeys.REQINIT);
     var command = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.INITPLAYER, [socket.id]]);
     if(command) {
-      socket.emit(command[0]);
+      socket.emit(command[1]);
     }
   }));
 

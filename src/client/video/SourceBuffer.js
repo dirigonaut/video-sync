@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-var metaManager, socket, schemaFactory, log;
+var metaManager, socket, schemaFactory, eventKeys, log;
 
 function SourceBuffer() { }
 
@@ -13,15 +13,15 @@ SourceBuffer.prototype.initialize = function(force) {
     schemaFactory   = this.factory.createSchemaFactory();
     socket          = this.factory.createClientSocket();
     metaManager     = this.factory.createMetaManager();
+    eventKeys       = this.factory.createKeys();
   }
 };
 
-SourceBuffer.prototype.setup = Promise.coroutine(function* (enumType, mediaSource) {
+SourceBuffer.prototype.setup = Promise.coroutine(function* (enumType, mediaSource, video) {
   log.info(`SourceBuffer.initialize type: ${enumType}`);
-  if(enumType && mediaSource) {
+  if(enumType !== 'undefined' && mediaSource) {
     this.type = enumType;
     this.sourceBuffer;
-    this.hasInitSeg = false;
     this.forceStop = false;
 
     this.segmentsToBuffer = new Map();
@@ -29,39 +29,54 @@ SourceBuffer.prototype.setup = Promise.coroutine(function* (enumType, mediaSourc
     this.index = 0;
 
     var events = {
-      init:       getInit.call(this),
-      getSegment: getSegment.call(this),
-      onSegment:  onSegment.call(this, bufferSegment.call(this)),
+      init:       onInit.call(this),
+      getSegment: onGetSegment.call(this),
+      onSegment:  onSegment.call(this),
       ready:      onReady.call(this),
-      seek:       seekSegment.call(this)
+      seek:       onSeek.call(this)
     };
 
     var metaData = metaManager.getActiveMetaData();
-    var spec     = metaData.getMimeType(this.typeId);
+    var spec     = metaData.getMimeType(this.type);
 
     var sourceOpened = new Promise(function(resolve, reject) {
-      mediaSource.once('sourceopen', function() {
-        log.info("SourceBuffer attached to MediaSource.")
-        this.sourceBuffer = mediaSource.addSourceBuffer(spec);
-        this.sourceBuffer.addEventListener('error',  log.error);
-        this.sourceBuffer.addEventListener('abort',  log.error);
-        this.sourceBuffer.addEventListener('update', events.ready);
-      });
-      mediaSource.once('error', reject);
+      var onSourceOpen = function() {
+        log.info("SourceBuffer attached to MediaSource.");
+        try {
+          this.sourceBuffer = mediaSource.addSourceBuffer(spec);
+          this.sourceBuffer.addEventListener('error',  log.error);
+          this.sourceBuffer.addEventListener('abort',  log.error);
+          this.sourceBuffer.addEventListener('update', events.ready);
+          resolve();
+        } catch(err) {
+          throw new Error('SourceBuffer.onSourceOpen spec mimeType is not defined.', err);
+        }
+
+        mediaSource.removeEventListener('sourceopen', onSourceOpen);
+        mediaSource.removeEventListener('error', onReject);
+      }.bind(this);
+
+      var onReject = function(err) {
+        mediaSource.removeEventListener('sourceopen', onSourceOpen);
+        mediaSource.removeEventListener('error', onReject);
+        reject(err);
+      };
+
+      mediaSource.addEventListener('sourceopen', onSourceOpen);
+      mediaSource.addEventListener('error', onReject);
     }.bind(this));
 
-    yield sourceOpened();
+    yield sourceOpened;
 
-    var video = this.factory.createVideo();
-    video.on('get-init', events.init);
+    video.on('get-init',events.init);
     video.on('get-segment', events.getSegment);
     video.on('seek-segment', events.seek);
 
-    socket.setEvent('segment-chunk', events.onSegment);
+    socket.setEvent(eventKeys.SEGMENTCHUNK, events.onSegment);
 
     return new Promise.resolve(onReset.call(this, video, mediaSource, events));
   } else {
-    throw new Error('typeEnum and/or mediaSource is not defined.');
+    throw new Error('enumType and/or mediaSource is not defined.');
   }
 });
 
@@ -69,27 +84,27 @@ SourceBuffer.prototype.setForceStop = function() {
   this.forceStop = true;
 };
 
-SourceBuffer.prototype.Enum = { "VIDEO" : 0, "AUDIO" : 1 };
-
 module.exports = SourceBuffer;
 
 function onInit() {
-  return getInit = function() {
+  var getInit = function() {
+    log.debug(`SourceBuffer of type ${this.type} getInit.`);
     var initInfo = metaManager.getActiveMetaData().getInit(this.type);
     var key = `${initInfo[0]}-${initInfo[1][0]}-${initInfo[1][1]}-${this.type}`;
     this.segmentsToBuffer.set(key, new Map());
     this.loadingSegment = key;
     requestVideoData.call(this, initInfo);
   }.bind(this);
+  return getInit;
 }
 
 function onGetSegment() {
-  return getSegment = function(typeId, timestamp) {
+  var getSegment = function(typeId, timestamp) {
     if(typeId == this.type) {
       if(!isTimeRangeBuffered.call(this, timestamp)) {
-        log.info("get-segment", [typeId, timestamp]);
+        log.info('segment', [typeId, timestamp]);
         var segmentInfo = metaManager.getActiveMetaData().getSegment(this.type, timestamp);
-        if(segmentInfo !== null) {
+        if(segmentInfo) {
           var key = `${segmentInfo[0]}-${segmentInfo[1][0]}-${segmentInfo[1][1]}-${this.type}`;
           this.segmentsToBuffer.set(key, new Map());
           requestVideoData.call(this, segmentInfo);
@@ -98,19 +113,22 @@ function onGetSegment() {
       }
     }
   }.bind(this);
+  return getSegment;
 }
 
-function onSegment(bufferSegment) {
-  return segment = function(segment) {
-    log.debug(`segment-chunk`);
+function onSegment() {
+  var buffer = bufferSegment.call(this);
+  var segment = function(segment) {
     if(this.type === segment.typeId) {
-      bufferSegment(segment.name, segment.index, segment.data);
+      buffer(segment.name, segment.index, segment.data);
     }
   }.bind(this);
+  return segment;
 }
 
 function bufferSegment() {
-  return buffer = function(key, index, data) {
+  var isReadyForNextSegment = onReady.call(this);
+  var buffer = function(key, index, data) {
     var mapQueue = this.segmentsToBuffer.get(key);
     var chunk = data !== null ? data : null;
 
@@ -129,13 +147,14 @@ function bufferSegment() {
       var segmentInfo = metaManager.getActiveMetaData().getSegment(this.type, 0);
       var key = `${segmentInfo[0]}-${segmentInfo[1][0]}-${segmentInfo[1][1]}-${this.type}`;
       this.segmentsToBuffer.set(key, new Map());
-      requestVideoData(segmentInfo);
+      requestVideoData.call(this, segmentInfo);
     }
   }.bind(this);
+  return buffer;
 }
 
 function onReady() {
-  return isReadyForNextSegment = function() {
+  var isReadyForNextSegment = function() {
     log.debug(`SourceBuffer isReadyForNextSegment ${this.type}`);
     if(this.sourceBuffer && !this.sourceBuffer.updating) {
       var bufferUpdated = false;
@@ -143,7 +162,7 @@ function onReady() {
       do {
         var mapQueue = this.segmentsToBuffer.get(this.loadingSegment);
 
-        if(mapQueue) {
+        if(!mapQueue) {
           if(this.forceStop) {
             break;
           } else if(this.segmentsToBuffer.size > 0) {
@@ -182,10 +201,11 @@ function onReady() {
       } while(!bufferUpdated);
     }
   }.bind(this);
+  return isReadyForNextSegment;
 }
 
 function onSeek() {
-  return seekSegment = function(typeId, timestamp) {
+  var seekSegment = function(typeId, timestamp) {
     var seekKey = getSegment(typeId, timestamp);
 
     if(seekKey) {
@@ -196,10 +216,11 @@ function onSeek() {
       });
     }
   }.bind(this);
+  return seekSegment;
 }
 
 function onReset(video, mediaSource, events) {
-  return reset = function() {
+  var reset = function() {
     log.info(`SourceBuffer.reset: ${this.type}`);
     video.removeListener('get-init', events.init);
     video.removeListener('get-segment', events.getSegment);
@@ -209,13 +230,14 @@ function onReset(video, mediaSource, events) {
     this.sourceBuffer.removeEventListener('abort',  log.error);
     this.sourceBuffer.removeEventListener('update', events.ready);
 
-    socket.removeEvent('segment-chunk', events.onSegment);
+    socket.removeEvent(eventKeys.SEGMENTCHUNK, events.onSegment);
     mediaSource.removeSourceBuffer(this.sourceBuffer);
   }.bind(this);
+  return reset;
 }
 
 var requestVideoData = function(requestDetails) {
-  socket.request('get-segment', schemaFactory.createPopulatedSchema(schemaFactory.Enum.VIDEO, [this.typeId, requestDetails[0], requestDetails[1]]));
+  socket.request(eventKeys.SEGMENT, schemaFactory.createPopulatedSchema(schemaFactory.Enum.VIDEO, [this.type, requestDetails[0], requestDetails[1]]));
 };
 
 var isTimeRangeBuffered = function(timestamp) {

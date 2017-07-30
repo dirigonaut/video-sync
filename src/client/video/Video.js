@@ -1,7 +1,7 @@
 const Promise = require('bluebird');
 const Events  = require('events');
 
-var videoElement, sourceEvents, metaData, socket, schemaFactory, log;
+var videoElement, sourceEvents, metaData, socket, schemaFactory, eventKeys, log;
 
 function Video() { }
 
@@ -13,13 +13,16 @@ Video.prototype.initialize = function(force) {
     var logManager = this.factory.createClientLogManager();
     log = logManager.getLog(logManager.LogEnum.VIDEO);
 
+    eventKeys       = this.factory.createKeys();
     schemaFactory   = this.factory.createSchemaFactory();
     socket          = this.factory.createClientSocket();
   }
 };
 
-Video.prototype.setup = function(videoElement,window, mediaSource) {
-  if(videoElement) {
+Video.prototype.setup = function(element, window, mediaSource) {
+  log.debug('Video.setup');
+  if(element) {
+    videoElement = element;
     videoElement.src = window.URL.createObjectURL(mediaSource);
     videoElement.load();
     videoElement.currentTime = 0;
@@ -33,19 +36,25 @@ Video.prototype.setup = function(videoElement,window, mediaSource) {
 
     var metaManager = this.factory.createMetaManager();
     metaData = metaManager.getActiveMetaData();
-
     sourceEvents = [];
-    if(metaData.active.get(SourceBuffer.Enum.VIDEO)) {
-      sourceEvents[SourceBuffer.Enum.VIDEO] = setVideoSourceEvents.call(this, SourceBuffer.Enum.VIDEO);
+
+    if(metaData && metaData.activeMeta) {
+      if(metaData.activeMeta.get(metaManager.Enum.VIDEO)) {
+        sourceEvents[metaManager.Enum.VIDEO] = setVideoSourceEvents.call(this, metaManager.Enum.VIDEO);
+      }
+
+      if(metaData.activeMeta.get(metaManager.Enum.AUDIO)) {
+        sourceEvents[metaManager.Enum.AUDIO] = setVideoSourceEvents.call(this, metaManager.Enum.AUDIO);
+      }
+    } else {
+      throw new Error('Video.setup: metaData.activeMeta is not defined.');
     }
 
-    if(metaData.active.get(SourceBuffer.Enum.AUDIO)) {
-      sourceEvents[SourceBuffer.Enum.AUDIO] = setVideoSourceEvents.call(this, SourceBuffer.Enum.AUDIO);
-    }
+    setSocketEvents();
 
-    return new Promise.resolve(onReset(eventId));
+    return new Promise.resolve(onReset(eventId, metaManager));
   } else {
-    throw new Error('Video.setup: videoElement is not defind.')
+    throw new Error('Video.setup: element is not defined.');
   }
 };
 
@@ -56,6 +65,7 @@ Video.prototype.getVideoElement = function() {
 module.exports = Video;
 
 function play() {
+  log.debug('Video.play');
   if(videoElement.readyState === 4) {
     log.debug("Set video to play");
     videoElement.play();
@@ -66,37 +76,40 @@ function play() {
 }
 
 function pause() {
+  log.debug('Video.pause');
   videoElement.removeEventListener('canplay', videoElement.play, {"once": true});
   videoElement.pause();
 }
 
 function setSocketEvents() {
-  socket.setEvent('state-play', function() {
-    log.debug("state-play");
+  log.debug('Video.setSocketEvents');
+
+  socket.setEvent(eventKeys.PLAY, function() {
+    log.debug(eventKeys.PLAY);
     play();
 
     var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
       [videoElement.currentTime, videoElement.play, videoElement.canPlay]);
 
-    socket.sendRequest('state-update-state', request, true);
+    socket.request(eventKeys.UPDATESTATE, request, true);
   });
 
-  socket.setEvent('state-pause', function(command) {
-    log.debug(`state-pause sync: ${isSynced}`);
+  socket.setEvent(eventKeys.PAUSE, function(command) {
+    log.debug(eventKeys.PAUSE);
     pause();
 
     var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
       [videoElement.currentTime, videoElement.play, videoElement.canPlay]);
 
-    clientSocket.sendRequest('state-update-state', request, true);
+    socket.request(eventKeys.UPDATESTATE, request, true);
 
     if(command.sync) {
-      clientSocket.sendRequest('state-sync');
+      socket.request(eventKeys.SYNC);
     }
   });
 
-  socket.setEvent('state-seek', function(command) {
-    log.debug("state-seek", data);
+  socket.setEvent(eventKeys.SEEK, function(command) {
+    log.debug(eventKeys.SEEK, data);
     pause();
     videoElement.currentTime = command.time;
 
@@ -107,18 +120,15 @@ function setSocketEvents() {
     var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
       [videoElement.currentTime, videoElement.play, videoElement.canPlay]);
 
-    if(command.sync){
-      socket.request('state-update-sync', request, true);
-    } else {
-      socket.request('state-update-state', request, true);
-    }
+    socket.request(eventKeys.UPDATESTATE, request, true);
   });
 }
 
 function removeSocketEvents() {
-  socket.removeEvent('state-play');
-  socket.removeEvent('state-pause');
-  socket.removeEvent('state-seek');
+  log.debug('Video.removeSocketEvents');
+  socket.removeEvent(eventKeys.PLAY);
+  socket.removeEvent(eventKeys.PAUSE);
+  socket.removeEvent(eventKeys.SEEK);
 }
 
 function setVideoSourceEvents(typeEnum) {
@@ -142,24 +152,27 @@ function removeVideoSourceEvents(typeEnum) {
   videoElement.removeEventListener('seeking', sourceEvents[typeEnum][1], false);
 }
 
-function onReset(eventId) {
+function onReset(eventId, metaManager) {
   return reset = function() {
     log.info(`Video reset.`);
     videoElement.removeEventListener('timeupdate', videoPing, false);
     clearInterval(eventId);
 
-    if(sourceEvents[SourceBuffer.Enum.VIDEO].length > 0) {
-      removeVideoSourceEvents(SourceBuffer.Enum.VIDEO);
+    if(sourceEvents[metaManager.Enum.VIDEO].length > 0) {
+      removeVideoSourceEvents(metaManager.Enum.VIDEO);
     }
 
-    if(sourceEvents[SourceBuffer.Enum.AUDIO].length > 0) {
-      removeVideoSourceEvents(SourceBuffer.Enum.AUDIO);
+    if(sourceEvents[metaManager.Enum.AUDIO].length > 0) {
+      removeVideoSourceEvents(metaManager.Enum.AUDIO);
     }
+
+    removeSocketEvents();
   };
 }
 
 function onProgress(typeId) {
   return progress = function() {
+    log.silly('Video.progress');
     if(metaData.isLastSegment(typeId, videoElement.currentTime)){
       var timeToRequest = metaData.isReadyForNextSegment(typeId, videoElement.currentTime);
       if(timeToRequest && timeToRequest === timeToRequest){
@@ -175,12 +188,14 @@ function onProgress(typeId) {
 
 function onSeek(typeId) {
   return seek = function() {
+    log.silly('Video.progress');
     metaData.updateActiveMeta(typeId, metaData.getSegmentIndex(typeId, videoElement.currentTime));
     this.emit("seek-segment", typeId, videoElement.currentTime);
   }.bind(this);
 }
 
 function videoPing() {
-  socket.request('state-ping', schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
-    [videoElement.currentTime, videoElement.play, videoElement.canPlay]));
+  var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
+    [videoElement.currentTime, !videoElement.paused, videoElement.readyState !== 4]);
+  socket.request(eventKeys.PING, request);
 }

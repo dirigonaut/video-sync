@@ -33,11 +33,11 @@ var Schemas = {
     Enum: { ID: '_id', TITLE: 'title', SMTP: 'smtp', INVITEES: 'invitees', MAILOPTIONS: 'schema' } } },
 
   state: { schema: { timestamp: undefined, state: undefined, buffering: undefined },
-    definition: { timestamp: 'number', state: 'string', buffering: 'string',
+    definition: { timestamp: 'number', state: 'bool', buffering: 'bool',
     Enum: { TIMESTAMP: 'timestamp', STATE: 'state', BUFFERING: 'buffering' } } },
 
   video: { schema: { typeId: undefined, path: undefined, segment: undefined },
-    definition: { typeId: 'number', path: 'string', segment: 'range',
+    definition: { typeId: 'number', path: 'ascii', segment: 'array',
     Enum: { TYPEID: 'typeId', PATH: 'path', SEGMENT: 'segment' } } },
 
   encode: { schema: { timestamp: undefined, state: undefined, buffering: undefined },

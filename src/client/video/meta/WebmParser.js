@@ -2,9 +2,9 @@ function WebmParser() { }
 
 WebmParser.prototype.getBaseURL = function(mpd, adaptIndex, repId) {
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
-  var baseUrl = null;
+  var baseUrl;
 
-  if(rep !== null) {
+  if(rep) {
     baseUrl = rep.BaseURL[0];
   }
 
@@ -15,9 +15,9 @@ WebmParser.prototype.getTimeStep = function(mpd, adaptId, repId) {
   var adaptIndex = getAdaptionSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
 
-  var timeStep = null;
-  if(rep !== null && rep !== undefined) {
-    if(rep.SegmentList !== undefined && rep.SegmentList !== null) {
+  var timeStep;
+  if(rep) {
+    if(rep.SegmentList) {
       var $ = rep.SegmentList[0].$;
       timeStep = $.duration / $.timescale;
     }
@@ -31,8 +31,8 @@ WebmParser.prototype.getSegmentList = function(mpd, adaptId, repId) {
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
 
   var segments = [];
-  if(rep !== null && rep !== undefined) {
-    if(rep.SegmentList !== undefined && rep.SegmentList !== null) {
+  if(rep) {
+    if(rep.SegmentList) {
       var segmentURLs = rep.SegmentList[0].SegmentURL;
 
       for(var i in segmentURLs) {
@@ -48,9 +48,9 @@ WebmParser.prototype.getSegmentsCount = function(mpd, adaptId, repId) {
   var adaptIndex = getAdaptionSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
 
-  var length = null;
-  if(rep !== null && rep !== undefined) {
-    if(rep.SegmentList !== undefined && rep.SegmentList !== null) {
+  var length;
+  if(rep) {
+    if(rep.SegmentList) {
       length = rep.SegmentList[0].SegmentURL.length;
     }
   }
@@ -62,9 +62,9 @@ WebmParser.prototype.getInit = function(mpd, adaptId, repId) {
   var adaptIndex = getAdaptionSetIndex(mpd, adaptId);
   var rep = getRepresentationSet(mpd, adaptIndex, repId);
 
-  var init = null;
-  if(rep !== null && rep !== undefined) {
-    if(rep.SegmentList !== undefined && rep.SegmentList !== null) {
+  var init;
+  if(rep) {
+    if(rep.SegmentList) {
       init = rep.SegmentList[0].Initialization[0].$.range;
     }
   }
@@ -74,10 +74,10 @@ WebmParser.prototype.getInit = function(mpd, adaptId, repId) {
 
 WebmParser.prototype.getMimeType = function(mpd, adaptId) {
   var adaptIndex = getAdaptionSetIndex(mpd, adaptId);
-  var mimeType = null;
+  var mimeType;
 
   var adaptSets = getAdaptionSets(mpd);
-  if(adaptSets !== null && adaptSets[adaptIndex] !== null && adaptSets[adaptIndex] !== undefined) {
+  if(adaptSets && adaptSets[adaptIndex]) {
     var type = adaptSets[adaptIndex].$.mimeType;
     var codec = adaptSets[adaptIndex].$.codecs;
 
@@ -92,7 +92,7 @@ WebmParser.prototype.getTracks = function(mpd) {
 
   var adaptSets = getAdaptionSets(mpd);
   for(var i in adaptSets) {
-    if(adaptSets[i].Representation !== null && adaptSets[i].Representation !== undefined) {
+    if(adaptSets[i].Representation) {
       var repSets = adaptSets[i].Representation;
 
       for(var j in repSets) {
@@ -134,22 +134,21 @@ module.exports = WebmParser;
 var getAdaptionSetIndex = function(mpd, adaptId) {
   var adaptSets = getAdaptionSets(mpd);
 
-  for(var i in adaptSets) {
+  for(var i = 0; i < adaptSets.length; ++i) {
     if(adaptSets[i].$.id == adaptId) {
       return i;
     }
   }
-  return null;
 };
 
 var getAdaptionSets = function(mpd) {
-  var adaptionSets = null;
+  var adaptionSets;
 
-  if(mpd !== null && mpd !== undefined) {
+  if(mpd) {
     var period = mpd.Period;
-    if(period !== null && period !== undefined && period.length > 0) {
+    if(period && period.length > 0) {
       var adaptionSet = period[0].AdaptationSet;
-      if(adaptionSet !== null && adaptionSet !== undefined) {
+      if(adaptionSet) {
         adaptionSets = adaptionSet;
       }
     }
@@ -161,7 +160,7 @@ var getAdaptionSets = function(mpd) {
 var getRepresentationSet = function(mpd, adaptIndex, repId) {
   var adaptSets = getAdaptionSets(mpd);
 
-  if(adaptSets !== null && adaptSets[adaptIndex] !== null && adaptSets[adaptIndex] !== undefined) {
+  if(adaptSets && adaptSets[adaptIndex]) {
     var reps = adaptSets[adaptIndex].Representation;
     for(var i in reps) {
       if(reps[i].$.id === repId) {
@@ -169,5 +168,4 @@ var getRepresentationSet = function(mpd, adaptIndex, repId) {
       }
     }
   }
-  return null;
 };

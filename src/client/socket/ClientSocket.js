@@ -26,6 +26,7 @@ ClientSocket.prototype.connectAsync = function(serverUrl) {
 
 	return new Promise(function(resolve, reject) {
     socket.once(eventKeys.AUTHENTICATED, function(isAdmin, callback) {
+			socket.off(eventKeys.DISCONNECT, reject);
 			resolve([callback, isAdmin]);
 		});
 		socket.once(eventKeys.DISCONNECT, reject);
@@ -36,7 +37,10 @@ ClientSocket.prototype.requestAsync = function(requestId, responseId, request) {
 	socket.emit(requestId, request);
 
 	return new Promise(function(resolve, reject) {
-    socket.once(responseId, resolve);
+    socket.once(responseId, function(response) {
+			socket.off(eventKeys.DISCONNECT, reject);
+			resolve(response);
+		});
 		socket.once(eventKeys.DISCONNECT, reject);
   });
 };

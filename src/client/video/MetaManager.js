@@ -22,6 +22,7 @@ MetaManager.prototype.initialize = function(force) {
 };
 
 MetaManager.prototype.requestMetaData = Promise.coroutine(function* () {
+  log.debug('MetaManager.requestMetaData');
   var fileBuffer = this.factory.createFileBuffer();
   var files = yield fileBuffer.requestFilesAsync();
 
@@ -38,13 +39,14 @@ MetaManager.prototype.requestMetaData = Promise.coroutine(function* () {
       }
 
       var mpdMeta = this.factory.createMpdMeta();
-      mpdMeta.setMpd(binary.toString(), util);
+      mpdMeta.setParser(util);
+      yield mpdMeta.setMpd(binary.toString());
       metaDataList.set(type, mpdMeta);
 
       if(!activeMetaData && type === 'webm') {
         var trackInfo = this.getTrackInfo().get(type);
-        var videoIndex = trackInfo.video && trackInfo.video.length > 0 ? trackInfo.video[0].index : null;
-        var audioIndex = trackInfo.audio && trackInfo.audio.length > 0 ? trackInfo.audio[0].index : null;
+        var videoIndex = trackInfo.video && trackInfo.video.length > 0 ? trackInfo.video[0].index : undefined;
+        var audioIndex = trackInfo.audio && trackInfo.audio.length > 0 ? trackInfo.audio[0].index : undefined;
 
         var metaInfo = this.buildMetaInfo(type, videoIndex, audioIndex, trackInfo.subtitle);
         this.setActiveMetaData(metaInfo);
@@ -54,14 +56,15 @@ MetaManager.prototype.requestMetaData = Promise.coroutine(function* () {
 });
 
 MetaManager.prototype.setActiveMetaData = function(metaInfo) {
+  log.debug('MetaManager.setActiveMetaData');
   var metaData = metaDataList.get(metaInfo.key);
 
   if(metaInfo.video) {
-    metaData.selectTrackQuality(SourceBuffer.Enum.VIDEO, metaInfo.video);
+    metaData.setTrackQuality(this.Enum.VIDEO, metaInfo.video);
   }
 
   if(metaInfo.audio) {
-    metaData.selectTrackQuality(SourceBuffer.Enum.AUDIO, metaInfo.audio);
+    metaData.setTrackQuality(this.Enum.AUDIO, metaInfo.audio);
   }
 
   if(activeMetaData !== metaData) {
@@ -70,6 +73,7 @@ MetaManager.prototype.setActiveMetaData = function(metaInfo) {
 };
 
 MetaManager.prototype.setBufferThreshold = function(threshold) {
+  log.debug('MetaManager.setBufferThreshold');
   for(var meta of metaDataList) {
     meta[1].setThreshold(threshold);
   }
@@ -80,8 +84,9 @@ MetaManager.prototype.getActiveMetaData = function() {
 };
 
 MetaManager.prototype.getTrackInfo = function() {
+  log.debug('MetaManager.getTrackInfo');
   var tracks = new Map();
-  var activeKeys = null;
+  var activeKeys;
 
   for(var meta of metaDataList) {
     var videoTracks = [];
@@ -104,9 +109,9 @@ MetaManager.prototype.getTrackInfo = function() {
       var trackInfo = meta[1].getActiveTrackInfo();
       activeKeys = {};
       activeKeys.type = meta[0];
-      activeKeys.video = trackInfo.get(SourceBuffer.Enum.VIDEO) !== undefined ? trackInfo.get(SourceBuffer.Enum.VIDEO).getTrackIndex() : null;
-      activeKeys.audio = trackInfo.get(SourceBuffer.Enum.AUDIO) !== undefined ? trackInfo.get(SourceBuffer.Enum.AUDIO).getTrackIndex() : null;
-      activeKeys.subtitle = null;
+      activeKeys.video = trackInfo && trackInfo.get(this.Enum.VIDEO) ? trackInfo.get(this.Enum.VIDEO).getTrackIndex() : undefined;
+      activeKeys.audio = trackInfo && trackInfo.get(this.Enum.AUDIO) ? trackInfo.get(this.Enum.AUDIO).getTrackIndex() : undefined;
+      activeKeys.subtitle = undefined;
     }
 
     var trackSet = {'video' : videoTracks, 'audio': audioTracks};
@@ -125,5 +130,7 @@ MetaManager.prototype.buildMetaInfo = function(key, video, audio, subtitle) {
     subtitle: subtitle,
   };
 };
+
+MetaManager.prototype.Enum = { "VIDEO" : 0, "AUDIO" : 1 };
 
 module.exports = MetaManager;
