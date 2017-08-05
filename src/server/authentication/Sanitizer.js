@@ -69,7 +69,7 @@ function checkInput(type, input, schema) {
 			clean = validator.isBoolean(input + '');
 			break;
 	  case 'number':
-			clean = validator.isNumeric(input + '');
+			clean = validator.isFloat(input + '');
 	    break;
 		case 'ascii':
 			clean = validator.isAscii(input + '');

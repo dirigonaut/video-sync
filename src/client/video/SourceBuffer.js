@@ -205,6 +205,7 @@ function onReady() {
 }
 
 function onSeek() {
+  var getSegment = onGetSegment.call(this);
   var seekSegment = function(typeId, timestamp) {
     var seekKey = getSegment(typeId, timestamp);
 

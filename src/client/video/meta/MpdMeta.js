@@ -96,7 +96,7 @@ MpdMeta.prototype.getSegmentIndex = function(typeId, timestamp) {
 
 MpdMeta.prototype.getSegmentTimeCode = function(typeId, index) {
   var active = this.activeMeta.get(typeId);
-  var segments = parseUtil.getSegmentList(this.metaData, typeId, active.trackIndex);
+  var segments = this.parserUtil.getSegmentList(this.metaData, typeId, active.trackIndex);
   var timeCode;
 
   if(segments) {
@@ -111,8 +111,8 @@ MpdMeta.prototype.getSegmentTimeCode = function(typeId, index) {
 };
 
 MpdMeta.prototype.updateActiveMeta = function(typeId, segmentIndex) {
-  log.info('MpdMeta.updateActiveMeta');
-  this.active.get(typeId).bufferIndex = segmentIndex;
+  log.info('MpdMeta.updateActiveMeta', typeId);
+  this.activeMeta.get(typeId).bufferIndex = segmentIndex;
 };
 
 MpdMeta.prototype.isLastSegment = function(typeId, currentTime) {

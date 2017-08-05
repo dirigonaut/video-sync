@@ -70,7 +70,7 @@ VideoController.prototype.attachSocket = function(socket) {
     var schema = schemaFactory.createDefinition(schemaFactory.Enum.VIDEO);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
-    if(request) {  
+    if(request) {
       var basePath = yield session.getMediaPath();
       if(basePath) {
         var sendResponse = function(segment) {

@@ -26,8 +26,7 @@ function initGUI(client, isAdmin) {
     var percent = parseInt($('#seek-bar').val());
     var length  = $('#video')[0].duration;
     var request = new Object();
-    request.seekTime = Math.round(length * (percent / 100));
-    request.seekTime = request.seekTime;
+    request.timestamp = Math.round(length * (percent / 100));
     client.socket.request('state-req-seek', request);
 
     $('#seek-bar').val(request.seekTime / $("#video")[0].duration * 100);

@@ -26,7 +26,6 @@ MediaController.prototype.setup = Promise.coroutine(function* (mediaSource, wind
   yield metaManager.requestMetaData();
   this.emit('meta-data-loaded', metaManager.getTrackInfo());
 
-  yield socket.requestAsync(eventKeys.REQINIT, eventKeys.INIT);
   video = this.factory.createVideo();
 
   var active = metaManager.getActiveMetaData();
@@ -98,7 +97,8 @@ function onReset(resets, mediaSource) {
 
       if(!isUpdating) {
         if(mediaSource.readyState === 'open') {
-          for(let i = 0; i < resets.length(); ++i) {
+          for(let i = 0; i < resets.length; ++i) {
+            console.log(`reset[${i}]`)
             resets[i]();
           }
 
@@ -108,7 +108,7 @@ function onReset(resets, mediaSource) {
       } else {
         setTimeout(canEndStream, 250);
       }
-    };
+    }.bind(this);
 
     setTimeout(canEndStream, 250);
 

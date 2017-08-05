@@ -51,7 +51,6 @@ module.exports = {
   PING:           'state-ping',
   CHANGESYNC:     'state-change-sync',
   UPDATEINIT:     'state-update-init',
-  UPDATESTATE:    'state-update-state',
   //Client
   INIT:           'state-init',
   PLAY:           'state-play',

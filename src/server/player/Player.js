@@ -13,7 +13,6 @@ Player.prototype.initialize = function(force) {
 Player.prototype.assign = function(id, handle){
     this.id	  	      = id;
 
-    this.initialized  = false;
     this.state 	  	  = null;
     this.sync         = Player.Sync.SYNCING;
     this.timestamp 	  = 0;
@@ -25,16 +24,11 @@ Player.prototype.assign = function(id, handle){
 };
 
 Player.prototype.reset = function() {
-  this.initialized = false;
   this.state 	  	 = null;
   this.sync        = Player.Sync.SYNCING;
   this.timestamp 	 = 0;
   this.buffer      = false;
   this.desynced    = false;
-};
-
-Player.prototype.isInit = function() {
-  return this.initialized;
 };
 
 Player.prototype.setHandle = function(handle) {

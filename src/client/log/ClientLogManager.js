@@ -1,3 +1,5 @@
+const Util = require('util');
+
 var logs;
 
 function ClientLogManager() {
@@ -56,7 +58,7 @@ function log(level, message, meta) {
     text: message ? message : ''
   };
 
-  if(meta && Object.keys(meta).length) {
+  if(meta) {
     logMessage.meta = Util.inspect(meta, { showHidden: false, depth: 1 });
   }
 
