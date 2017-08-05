@@ -84,24 +84,24 @@ function pause() {
 function setSocketEvents() {
   log.debug('Video.setSocketEvents');
 
-  socket.setEvent(eventKeys.PLAY, function() {
-    log.debug(eventKeys.PLAY);
+  socket.setEvent(eventKeys.PLAY, function(command) {
+    log.debug(eventKeys.PLAY, command);
     play();
 
     var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
       [videoElement.currentTime, videoElement.play, videoElement.canPlay]);
 
-    socket.request(eventKeys.UPDATESTATE, request, true);
+    socket.request(eventKeys.PING, request, true);
   });
 
   socket.setEvent(eventKeys.PAUSE, function(command) {
-    log.debug(eventKeys.PAUSE);
+    log.debug(eventKeys.PAUSE, command);
     pause();
 
     var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
       [videoElement.currentTime, videoElement.play, videoElement.canPlay]);
 
-    socket.request(eventKeys.UPDATESTATE, request, true);
+    socket.request(eventKeys.PING, request, true);
 
     if(command.sync) {
       socket.request(eventKeys.SYNC);
@@ -109,7 +109,7 @@ function setSocketEvents() {
   });
 
   socket.setEvent(eventKeys.SEEK, function(command) {
-    log.debug(eventKeys.SEEK, data);
+    log.debug(eventKeys.SEEK, command);
     pause();
     videoElement.currentTime = command.time;
 
@@ -120,7 +120,7 @@ function setSocketEvents() {
     var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
       [videoElement.currentTime, videoElement.play, videoElement.canPlay]);
 
-    socket.request(eventKeys.UPDATESTATE, request, true);
+    socket.request(eventKeys.PING, request, true);
   });
 }
 
@@ -131,15 +131,15 @@ function removeSocketEvents() {
   socket.removeEvent(eventKeys.SEEK);
 }
 
-function setVideoSourceEvents(typeEnum) {
-  log.info(`Creating video events for buffer of type: ${typeEnum}.`);
+function setVideoSourceEvents(bufferType) {
+  log.info(`Creating video events for buffer of type: ${bufferType}.`);
   var bufferEvents = [];
 
-  var bufferUpdate = onProgress.call(this, typeEnum);
+  var bufferUpdate = onProgress.call(this, bufferType);
   videoElement.addEventListener('timeupdate', bufferUpdate, false);
   bufferEvents.push(bufferUpdate);
 
-  var bufferSeek = onSeek.call(this, typeEnum);
+  var bufferSeek = onSeek.call(this, bufferType);
   videoElement.addEventListener('seeking', bufferSeek, false);
   bufferEvents.push(bufferSeek);
 
@@ -153,7 +153,7 @@ function removeVideoSourceEvents(typeEnum) {
 }
 
 function onReset(eventId, metaManager) {
-  return reset = function() {
+  var reset = function() {
     log.info(`Video reset.`);
     videoElement.removeEventListener('timeupdate', videoPing, false);
     clearInterval(eventId);
@@ -168,10 +168,11 @@ function onReset(eventId, metaManager) {
 
     removeSocketEvents();
   };
+  return reset;
 }
 
 function onProgress(typeId) {
-  return progress = function() {
+  var progress = function() {
     log.silly('Video.progress');
     if(metaData.isLastSegment(typeId, videoElement.currentTime)){
       var timeToRequest = metaData.isReadyForNextSegment(typeId, videoElement.currentTime);
@@ -184,14 +185,16 @@ function onProgress(typeId) {
       videoElement.removeEventListener('timeupdate', progress, false);
     }
   }.bind(this);
+  return progress;
 }
 
 function onSeek(typeId) {
-  return seek = function() {
+  var seek = function() {
     log.silly('Video.progress');
     metaData.updateActiveMeta(typeId, metaData.getSegmentIndex(typeId, videoElement.currentTime));
     this.emit("seek-segment", typeId, videoElement.currentTime);
   }.bind(this);
+  return seek;
 }
 
 function videoPing() {

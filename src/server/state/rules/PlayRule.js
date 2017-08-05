@@ -20,7 +20,7 @@ PlayRule.prototype.evaluate = function(issuer, players, mediaStarted, fuzzyRange
     return [issuer];
   } else {
     for(let player of players.values()) {
-      if(player.sync === player.Sync.SYNCED || (mediaStarted === false && player.isInit())) {
+      if(player.sync === player.Sync.SYNCED || (mediaStarted === false)) {
         if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(player.timestamp)) < fuzzyRange) {
           issuees.push(player);
         }

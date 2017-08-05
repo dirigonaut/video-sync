@@ -33,7 +33,7 @@ Client.prototype.initialize = Promise.coroutine(function* (serverUrl) {
 
 Client.prototype.startMedia = Promise.coroutine(function* (mediaSource, window, videoElement) {
   if(resetMedia) {
-    resetMedia();
+    yield resetMedia();
   }
 
   var mediaController = factory.createMediaController();

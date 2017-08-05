@@ -130,7 +130,8 @@ PlayerManager.prototype.setPlayerHandle = function(id, handle) {
 PlayerManager.prototype.initPlayers = function() {
   log.debug('PlayerManager.initPlayers');
   for(var p of players.keys()) {
-    players.get(p).reset();
+    var player = players.get(p);
+    player.reset();
   }
 };
 
