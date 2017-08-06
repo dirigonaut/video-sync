@@ -110,7 +110,8 @@ function createFormatter(label) {
 
       session.getAdmin().then(function(ids) {
         if(ids) {
-          var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, ['System', logMessage]);
+          var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.LOGRESPONSE,
+            [logMessage.time, 'server', logMessage.label, logMessage.text, logMessage.meta]);
           redisSocket.ping(ids, 'chat-log-resp', response);
         }
       });

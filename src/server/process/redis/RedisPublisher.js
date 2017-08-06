@@ -6,7 +6,7 @@ const Redis       = require('redis');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-const TIMEOUT   = 3000;
+const TIMEOUT   = 6000;
 
 var publisher, subscriber, redisSocket, requestMap, asyncEmitter, log;
 
@@ -39,7 +39,10 @@ RedisPublisher.prototype.publishAsync = Promise.coroutine(function* (channel, ar
   requestMap.set(key, process.pid);
 
   var promise = new Promise(function(resolve, reject) {
-    asyncEmitter.once(key, resolve);
+    asyncEmitter.once(key, function(data) {
+      requestMap.delete(key);
+      resolve(data);
+    });
     setTimeout(function(err) {
       requestMap.delete(key);
       asyncEmitter.removeListener(key, resolve);
@@ -51,6 +54,12 @@ RedisPublisher.prototype.publishAsync = Promise.coroutine(function* (channel, ar
 
   return promise;
 });
+
+RedisPublisher.prototype.publish = function(channel, args) {
+  var key = createKey(channel);
+  args.push(key);
+  return publisher.publishAsync(channel, JSON.stringify(args));
+};
 
 RedisPublisher.Enum = { DATABASE: 'database', STATE: 'state', PLAYER: 'player', SESSION: 'session'};
 RedisPublisher.RespEnum = { RESPONSE: 'stateRedisResponse', COMMAND: 'stateRedisCommand'};
@@ -77,7 +86,6 @@ var attachEvents = function() {
     if(channel === RedisPublisher.RespEnum.RESPONSE) {
       if(message) {
         if(requestMap.get(message)) {
-          requestMap.delete(message);
           let data = yield getRedisData.call(this, message);
 
           if(data) {
@@ -126,7 +134,7 @@ var createKey = function(seed) {
   return `${seed}-${Crypto.randomBytes(24).toString('hex')}`;
 };
 
-var getRedisData = function(key, callback) {
+var getRedisData = function(key) {
   return publisher.getAsync(key)
   .then(Promise.coroutine(function* (data) {
     yield publisher.delAsync(key).catch(log.error);

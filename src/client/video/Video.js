@@ -102,20 +102,13 @@ function setSocketEvents() {
       [videoElement.currentTime, videoElement.play, videoElement.canPlay]);
 
     socket.request(eventKeys.PING, request, true);
-
-    if(command.sync) {
-      socket.request(eventKeys.SYNC);
-    }
+    socket.request(eventKeys.SYNC);
   });
 
   socket.setEvent(eventKeys.SEEK, function(command) {
     log.debug(eventKeys.SEEK, command);
     pause();
     videoElement.currentTime = command.time;
-
-    if(command.play) {
-      play();
-    }
 
     var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
       [videoElement.currentTime, videoElement.play, videoElement.canPlay]);
@@ -190,7 +183,7 @@ function onProgress(typeId) {
 
 function onSeek(typeId) {
   var seek = function() {
-    log.silly('Video.progress');
+    log.debug(`Video.seek ${typeId}`);
     metaData.updateActiveMeta(typeId, metaData.getSegmentIndex(typeId, videoElement.currentTime));
     this.emit("seek-segment", typeId, videoElement.currentTime);
   }.bind(this);

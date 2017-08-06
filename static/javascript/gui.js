@@ -29,7 +29,7 @@ function initGUI(client, isAdmin) {
     request.timestamp = Math.round(length * (percent / 100));
     client.socket.request('state-req-seek', request);
 
-    $('#seek-bar').val(request.seekTime / $("#video")[0].duration * 100);
+    $('#seek-bar').val(request.timestamp / $("#video")[0].duration * 100);
     $("video").on("timeupdate", updateProgressBar);
   });
 
@@ -493,7 +493,8 @@ function initGUI(client, isAdmin) {
   });
 
   $('#synchronize').on("change", function (e) {
-    client.socket.request('state-change-sync', $('#synchronize').find('input')[0].checked);
+    var request = client.schema.createPopulatedSchema(client.schema.Enum.STRING, [$('#synchronize').find('input')[0].checked]);
+    client.socket.request(client.keys.CHANGESYNC, request);
   });
 
   client.media.on('meta-data-loaded', function(trackInfo) {

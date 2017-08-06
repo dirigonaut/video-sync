@@ -25,9 +25,8 @@ Client.prototype.initialize = Promise.coroutine(function* (serverUrl) {
 
     var isAdmin = response[1] ? response[1] : false;
     yield initComponents.call(this, isAdmin);
-    acknowledge();
 
-    return new Promise.resolve(isAdmin);
+    return new Promise.resolve({acknowledge: acknowledge, isAdmin: isAdmin});
   }
 });
 

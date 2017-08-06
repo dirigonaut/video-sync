@@ -37,8 +37,7 @@ AuthenticationController.prototype.attachIO = function (io) {
     yield isAdministrator.call(this, socket);
 
     socket.on(eventKeys.GETTOKEN, Promise.coroutine(function* (data) {
-      log.debug(eventKeys.GETTOKEN);
-      console.log(data)
+      log.debug(eventKeys.GETTOKEN, socket.id);
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.LOGIN);
       var request = sanitizer.sanitize(data, schema, [schema.Enum.ADDRESS]);
 
@@ -60,7 +59,7 @@ AuthenticationController.prototype.attachIO = function (io) {
     }));
 
     socket.on(eventKeys.AUTHTOKEN, Promise.coroutine(function* (data) {
-      log.debug(eventKeys.AUTHTOKEN);
+      log.debug(eventKeys.AUTHTOKEN, socket.id);
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.LOGIN);
       var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
@@ -80,15 +79,19 @@ AuthenticationController.prototype.attachIO = function (io) {
 
     socket.on(eventKeys.DISCONNECT, Promise.coroutine(function*() {
       log.info(eventKeys.DISCONNECT, socket.id);
-      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'has left the session..']);
-      yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
+      
+      if(socket.id){
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'has left the session.']);
+        yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
 
-      var isAdmin = yield session.isAdmin(socket.id);
-      if(isAdmin) {
-        session.removeAdmin(socket.id);
+        var isAdmin = yield session.isAdmin(socket.id);
+        if(isAdmin) {
+          session.removeAdmin(socket.id);
+        }
+
+        yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.REMOVEPLAYER, [socket.id]]);
       }
 
-      yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.REMOVEPLAYER, [socket.id]]);
       yield userAdmin.disconnectSocket(socket);
     }));
 
