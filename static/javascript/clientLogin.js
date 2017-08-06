@@ -3,9 +3,9 @@ function initClientLogin(socket, schemaFactory) {
     var handle	= $('#loginHandle').val();
     var address	= $('#loginUser').val();
     var token	  = $('#loginToken').val();
-    var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.LOGIN, [handle, address, token]);
+    var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.LOGIN, [handle, address, token ? token : undefined]);
 
-    if(request.token.length > 0) {
+    if(typeof request.token !== 'undefined' && request.token.length > 0) {
       socket.request('auth-validate-token', request, true);
     } else {
       socket.request('auth-get-token', request, true);

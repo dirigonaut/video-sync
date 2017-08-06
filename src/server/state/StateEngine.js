@@ -285,7 +285,7 @@ var resumeLogic = Promise.coroutine(function* (players) {
         waitingPlayer.sync = player.Sync.SYNCED;
       }
     } else if(waitingPlayer.sync === player.Sync.BUFFWAIT) {
-      canPlay = canplay ? canplay & waitingPlayer.buffer : waitingPlayer.buffer;
+      canPlay = canPlay ? canPlay & waitingPlayer.buffer : waitingPlayer.buffer;
       canPlayList.push(waitingPlayer);
     }
   }

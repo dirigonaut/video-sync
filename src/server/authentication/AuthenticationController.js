@@ -38,6 +38,7 @@ AuthenticationController.prototype.attachIO = function (io) {
 
     socket.on(eventKeys.GETTOKEN, Promise.coroutine(function* (data) {
       log.debug(eventKeys.GETTOKEN);
+      console.log(data)
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.LOGIN);
       var request = sanitizer.sanitize(data, schema, [schema.Enum.ADDRESS]);
 

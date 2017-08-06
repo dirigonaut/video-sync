@@ -146,10 +146,10 @@ function setVideoSourceEvents(bufferType) {
   return bufferEvents;
 }
 
-function removeVideoSourceEvents(typeEnum) {
-  log.info(`Removing video events for buffer of type: ${typeEnum}.`);
-  videoElement.removeEventListener('timeupdate', sourceEvents[typeEnum][0], false);
-  videoElement.removeEventListener('seeking', sourceEvents[typeEnum][1], false);
+function removeVideoSourceEvents(bufferType) {
+  log.info(`Removing video events for buffer of type: ${bufferType}.`);
+  videoElement.removeEventListener('timeupdate', sourceEvents[bufferType][0], false);
+  videoElement.removeEventListener('seeking', sourceEvents[bufferType][1], false);
 }
 
 function onReset(eventId, metaManager) {

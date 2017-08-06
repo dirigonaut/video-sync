@@ -17,10 +17,10 @@ SourceBuffer.prototype.initialize = function(force) {
   }
 };
 
-SourceBuffer.prototype.setup = Promise.coroutine(function* (enumType, mediaSource, video) {
-  log.info(`SourceBuffer.initialize type: ${enumType}`);
-  if(enumType !== 'undefined' && mediaSource) {
-    this.type = enumType;
+SourceBuffer.prototype.setup = Promise.coroutine(function* (bufferType, mediaSource, video) {
+  log.info(`SourceBuffer.initialize type: ${bufferType}`);
+  if(bufferType !== 'undefined' && mediaSource) {
+    this.type = bufferType;
     this.sourceBuffer;
     this.forceStop = false;
 
@@ -38,6 +38,12 @@ SourceBuffer.prototype.setup = Promise.coroutine(function* (enumType, mediaSourc
 
     var metaData = metaManager.getActiveMetaData();
     var spec     = metaData.getMimeType(this.type);
+
+    video.on('get-init',events.init);
+    video.on('get-segment', events.getSegment);
+    video.on('seek-segment', events.seek);
+
+    socket.setEvent(eventKeys.SEGMENTCHUNK, events.onSegment);
 
     var sourceOpened = new Promise(function(resolve, reject) {
       var onSourceOpen = function() {
@@ -66,13 +72,7 @@ SourceBuffer.prototype.setup = Promise.coroutine(function* (enumType, mediaSourc
       mediaSource.addEventListener('error', onReject);
     }.bind(this));
 
-    yield sourceOpened;
-
-    video.on('get-init',events.init);
-    video.on('get-segment', events.getSegment);
-    video.on('seek-segment', events.seek);
-
-    socket.setEvent(eventKeys.SEGMENTCHUNK, events.onSegment);
+    yield sourceOpened
 
     return new Promise.resolve(onReset.call(this, video, mediaSource, events));
   } else {

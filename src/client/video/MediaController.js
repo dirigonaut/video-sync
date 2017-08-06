@@ -42,8 +42,9 @@ MediaController.prototype.setup = Promise.coroutine(function* (mediaSource, wind
     mediaPromises.push(buffers[metaManager.Enum.AUDIO].setup(metaManager.Enum.AUDIO, mediaSource, video));
   }
 
-  var resetCallbacks = yield Promise.all(mediaPromises);
   video.emit('get-init');
+  var resetCallbacks = yield Promise.all(mediaPromises);
+
 
   return onReset.call(this, resetCallbacks, mediaSource);
 });
@@ -53,7 +54,7 @@ MediaController.prototype.getTrackInfo = function() {
 };
 
 MediaController.prototype.setBufferAhead = function(bufferThreshold) {
-  this.metaManager.setBufferThreshold(bufferThreshold);
+  metaManager.setBufferThreshold(bufferThreshold);
 };
 
 MediaController.prototype.setForceBuffer = function(forceBuffer) {
@@ -70,8 +71,8 @@ MediaController.prototype.setForceBuffer = function(forceBuffer) {
 };
 
 MediaController.prototype.setActiveMetaData = function(key, videoIndex, audioIndex, subtitleIndex) {
-  var metaInfo = this.metaManager.buildMetaInfo(key, videoIndex, audioIndex, subtitleIndex);
-  this.metaManager.setActiveMetaData(metaInfo);
+  var metaInfo = metaManager.buildMetaInfo(key, videoIndex, audioIndex, subtitleIndex);
+  metaManager.setActiveMetaData(metaInfo);
 };
 
 module.exports = MediaController;
@@ -98,7 +99,6 @@ function onReset(resets, mediaSource) {
       if(!isUpdating) {
         if(mediaSource.readyState === 'open') {
           for(let i = 0; i < resets.length; ++i) {
-            console.log(`reset[${i}]`)
             resets[i]();
           }
 

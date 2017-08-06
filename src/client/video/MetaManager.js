@@ -17,7 +17,6 @@ MetaManager.prototype.initialize = function(force) {
   if(force === undefined ? typeof MetaManager.prototype.stateInit === 'undefined' : force) {
     MetaManager.prototype.stateInit = true;
     socket        = this.factory.createClientSocket();
-    metaDataList  = new Map();
   }
 };
 
@@ -25,6 +24,8 @@ MetaManager.prototype.requestMetaData = Promise.coroutine(function* () {
   log.debug('MetaManager.requestMetaData');
   var fileBuffer = this.factory.createFileBuffer();
   var files = yield fileBuffer.requestFilesAsync();
+  activeMetaData = undefined;
+  metaDataList  = new Map();
 
   if(files) {
     for(var i = 0; i < files.length; ++i) {
