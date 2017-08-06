@@ -21,6 +21,9 @@
         </div>
         <video id="video" class="video-holder"></video>
         <div id="side-container" class="side-bar fadein">
+          <div class="icon-v">
+            <a href="#" id="btnLogin"><span class="glyphicon glyphicon-thumbnail glyphicon-user"></span></a>
+          </div>
         </div>
         <div id="control-container" class="control-bar flex-h fadein">
         </div>
@@ -61,7 +64,7 @@
             var socket = factory.createClientSocket();
             initClientLogin(socket, factory.createSchemaFactory());
 
-            client.initialize(window.location.host).then(function(isAdmin) {
+            client.initialize(window.location.host).then(function(results) {
               var setupGUI = function() {
                 var factory     = client.getFactory();
                 var logManager  = factory.createClientLogManager();
@@ -81,8 +84,10 @@
                   client.startMedia(container.media, new MediaSource(), window, document.getElementById('video'));
                 });
 
+                results.acknowledge();
+
                 //The init function of gui.js
-                initGUI(container, isAdmin);
+                initGUI(container, results.isAdmin);
               };
 
 
@@ -93,7 +98,7 @@
                 setupGUI();
               };
 
-              if(isAdmin) {
+              if(results.isAdmin) {
                 var count = 0;
                 var counter = function() {
                   count += 1;

@@ -69,7 +69,7 @@ StateController.prototype.attachSocket = function(socket) {
           yield redisSocket.ping.apply(null, commands[i]);
         }
 
-        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, `issued seek to ${request.data}.`]);
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, `issued seek to ${request.timestamp}.`]);
         yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
       }
     }
@@ -78,7 +78,7 @@ StateController.prototype.attachSocket = function(socket) {
   socket.on(eventKeys.SYNC, Promise.coroutine(function* () {
     log.debug(eventKeys.SYNC);
 
-    var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.PAUSESYNC, [socket.id]]);
+    var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SYNC, [socket.id]]);
 
     if(commands) {
       log.debug(`state-sync onSync ${commands}`);
@@ -91,16 +91,16 @@ StateController.prototype.attachSocket = function(socket) {
     }
   }));
 
-  socket.on(eventKeys.CHANGESYNCSTATE, Promise.coroutine(function* (data) {
-    log.debug(eventKeys.CHANGESYNCSTATE, data);
+  socket.on(eventKeys.CHANGESYNC, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.CHANGESYNC, data);
 
     var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
     if(request) {
       var value = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.CHANGESYNCSTATE, [socket.id, request]]);
-      if(value) {
-        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, `is now in a sync state ${value}.`]);
+      if(typeof value === 'boolean') {
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, ` desync value is ${value}.`]);
         yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
 
         socket.emit('state-sync-state', schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [value]));

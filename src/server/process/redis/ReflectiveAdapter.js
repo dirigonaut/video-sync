@@ -37,7 +37,7 @@ ReflectiveAdapter.prototype.callFunction = Promise.coroutine(function* (object, 
           response = yield response;
         }
 
-        if(response) {
+        if(response !== undefined) {
           yield client.setAsync(key, JSON.stringify(response));
         }
 

@@ -51,6 +51,8 @@ var Schemas = {
 
   chatResponse: { schema: { from: undefined, data: undefined } },
 
+  logResponse: { schema: { time: undefined, level: undefined, label: undefined, text: undefined, meta: undefined } },
+
   videoResponse: { schema: { typeId: undefined, name: undefined, data: undefined, index: undefined } },
 
   stateResponse: { schema: { play: undefined, time: undefined, sync: undefined, buffered: undefined } }

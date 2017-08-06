@@ -58,7 +58,7 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
         var players = playRule.evaluate(player, playerManager.getPlayers(), mediaStarted, accuracy);
         commands = [];
 
-        for(var i in players) {
+        for(var i = 0; i < players.length; ++i) {
           if(!players[i].desynced) {
             log.info(`StateEngine issuing play ${players[i].id}`);
             commands.push([players[i].id, eventKeys.PLAY]);
@@ -91,15 +91,14 @@ StateEngine.prototype.pause = Promise.coroutine(function* (id) {
       if(issuer.desynced) {
         log.silly('StateEngine issuing pause', issuer);
         commands = [];
-        var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, false]);
+        var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, undefined]);
         commands.push([issuer.id, eventKeys.PAUSE, schema]);
       } else {
         commands = [];
         var players = playerManager.getPlayers();
         for(let player of players.values()) {
           if(!player.desynced) {
-            var syncPause = player.sync === player.Sync.SYNCED || player.sync === player.Sync.SYNCWAIT ? true : false;
-            var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, syncPause]);
+            var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, undefined]);
             commands.push([player.id, eventKeys.PAUSE, schema]);
             player.sync = player.Sync.SYNCED;
           }
@@ -149,23 +148,25 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
   return commands;
 });
 
-StateEngine.prototype.pauseSync = Promise.coroutine(function* (id) {
+StateEngine.prototype.sync = Promise.coroutine(function* (id) {
   log.debug(`StateEngine.pauseSync ${id}`);
   var command;
   var basePath = yield session.getMediaPath();
 
   if(basePath && basePath.length > 0) {
-    var player = playerManager.getPlayer(id);
+    var issuer = playerManager.getPlayer(id);
 
-    if(player) {
-      if(!player.desynced) {
+    if(issuer) {
+      if(!issuer.desynced) {
         var players = playerManager.getPlayers();
         if(players.size > 1) {
           var syncTime;
 
           for(let player of players.values()) {
-            if(!syncTime || (player.sync === player.Sync.SYNCED && syncTime > player.timestamp)) {
-              syncTime = player.timestamp;
+            if(!player.desynced) {
+              if(!syncTime || (player.sync === player.Sync.SYNCED && syncTime > player.timestamp)) {
+                syncTime = player.timestamp;
+              }
             }
           }
 
@@ -180,14 +181,14 @@ StateEngine.prototype.pauseSync = Promise.coroutine(function* (id) {
 });
 
 StateEngine.prototype.changeSyncState = Promise.coroutine(function* (id, syncState) {
-  log.debug(`StateEngine.changeSyncState for ${id}, to ${syncState}`);
+  log.debug(`StateEngine.changeSyncState for ${id}, to ${syncState.data}`);
   var basePath = yield session.getMediaPath();
 
   if(basePath && basePath.length > 0) {
     var player = playerManager.getPlayer(id);
 
     if(player) {
-      if(syncState) {
+      if(syncState.data == true) {
         player.desynced = false;
       } else {
         player.desynced = true;
@@ -220,26 +221,15 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
         }
       }
 
-      if(players.size > 1) {
+      if(false) {
         var isMediaStarted = yield session.getMediaStarted();
 
         if(player.sync === player.Sync.SYNCING && isMediaStarted) {
           var leader = syncingRule.evaluate(player, playerManager.getOtherPlayers(player.id));
 
           if(leader) {
-
-            var object = {};
-            object.seekTime = leader.timestamp + 1;
-            object.syncWait = true;
-
-            if(playerManager.getSyncedPlayersState() === player.State.PLAY) {
-              object.play = true;
-            } else {
-              object.play = false;
-            }
-
             commands = [];
-            var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [object.play, object.seekTime, object.syncWait]);
+            var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [object.play, leader.timestamp + 1, undefined]);
             commands.push([player.id, eventKeys.SEEK, object]);
           }
         } else if(player.sync === player.Sync.SYNCED) {
@@ -248,7 +238,7 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
           if(triggered) {
             player.sync = player.Sync.SYNCWAIT;
             commands = [];
-            var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, false]);
+            var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, undefined]);
             commands.push([player.id, eventKeys.PAUSE, false]);
           }
         }
@@ -274,12 +264,12 @@ var resumeLogic = Promise.coroutine(function* (players) {
         if(playerManager.getSyncedPlayersState() === player.State.PLAY) {
           var commands = [];
           commands.push([waitingPlayer.id, eventKeys.PLAY]);
-          yield publisher.publishAsync(publisher.RespEnum.COMMAND, commands);
+          //yield publisher.publish(publisher.RespEnum.COMMAND, commands);
         } else {
           var commands = [];
-          var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, false]);
+          var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, undefined]);
           commands.push([waitingPlayer.id, eventKeys.PAUSE, schema]);
-          yield publisher.publishAsync(publisher.RespEnum.COMMAND, commands);
+          //yield publisher.publish(publisher.RespEnum.COMMAND, commands);
         }
 
         waitingPlayer.sync = player.Sync.SYNCED;
@@ -301,6 +291,6 @@ var resumeLogic = Promise.coroutine(function* (players) {
       }
     }
 
-    yield publisher.publishAsync(publisher.RespEnum.COMMAND, commands);
+    //yield publisher.publish(publisher.RespEnum.COMMAND, commands);
   }
 });
