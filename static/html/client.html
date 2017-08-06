@@ -27,6 +27,7 @@
       </div>
       <div id="chat-container" class="chat-container">
       </div>
+      <div id="loginOverlay"></div>
       <div id="sessionOverlay"></div>
       <div id="smtpOverlay"></div>
       <div id="encodeOverlay"></div>
@@ -61,14 +62,6 @@
             initClientLogin(socket, factory.createSchemaFactory());
 
             client.initialize(window.location.host).then(function(isAdmin) {
-              if(isAdmin) {
-                $("#side-container").load("menu/side.html");
-                $("#sessionOverlay").load("menu/overlays/session.html");
-                $("#smtpOverlay").load("menu/overlays/smtp.html");
-                $("#encodeOverlay").load("menu/overlays/encode.html");
-                $("#location-container").load("menu/location.html");
-              }
-
               var setupGUI = function() {
                 var factory     = client.getFactory();
                 var logManager  = factory.createClientLogManager();
@@ -85,19 +78,38 @@
 
                 //Reload media
                 socket.setEvent(container.keys.MEDIAREADY, function() {
-                  client.startMedia(new MediaSource(), window, document.getElementById('video'));
+                  client.startMedia(container.media, new MediaSource(), window, document.getElementById('video'));
                 });
 
                 //The init function of gui.js
                 initGUI(container, isAdmin);
               };
 
-              $.getScript("../javascript/gui.js", function() {
+
+              var loadUI = function() {
                 $('#loginModal').modal('hide');
                 $('#btnLogin').remove();
 
                 setupGUI();
-              });
+              };
+
+              if(isAdmin) {
+                var count = 0;
+                var counter = function() {
+                  count += 1;
+                  if(count >= 5) {
+                    $.getScript("../javascript/gui.js", loadUI);
+                  }
+                }
+
+                $("#side-container").load("menu/side.html", counter);
+                $("#sessionOverlay").load("menu/overlays/session.html", counter);
+                $("#smtpOverlay").load("menu/overlays/smtp.html", counter);
+                $("#encodeOverlay").load("menu/overlays/encode.html", counter);
+                $("#location-container").load("menu/location.html", counter);
+              } else {
+                $.getScript("../javascript/gui.js", loadUI);
+              }
             })
           });
         });
