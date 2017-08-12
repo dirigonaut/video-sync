@@ -33,11 +33,11 @@ DatabaseController.prototype.attachSocket = function(socket) {
 
     if(isAdmin) {
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.SMTP);
-      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+      var request = sanitizer.sanitize(data, schema, [schema.Enum.SMTPTYPE, schema.Enum.SMTPHOST, schema.Enum.SMTPADDRESS, schema.Enum.SMTPPASSWORD]);
 
       if(request) {
         yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.CREATESMTP, [request]]);
-        socket.emit(eventKeys.REFRESH);
+        socket.emit(eventKeys.DBREFRESH);
       }
     }
   }));
@@ -48,11 +48,11 @@ DatabaseController.prototype.attachSocket = function(socket) {
 
     if(isAdmin) {
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.SESSION);
-      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+      var request = sanitizer.sanitize(data, schema, [schema.Enum.TITLE, schema.Enum.SMTP, schema.Enum.INVITEES, schema.Enum.MAILOPTIONS]);
 
       if(request) {
         yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.CREATESESSION, [request]]);
-        socket.emit(eventKeys.REFRESH);
+        socket.emit(eventKeys.DBREFRESH);
       }
     }
   }));
@@ -95,7 +95,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
 
       if(request) {
         yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.UPDATESMTP, [request]]);
-        socket.emit(eventKeys.REFRESH);
+        socket.emit(eventKeys.DBREFRESH);
       }
     }
   }));
@@ -109,7 +109,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
 
       if(request) {
         yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.UPDATESESSION, [request]]);
-        socket.emit(eventKeys.REFRESH);
+        socket.emit(eventKeys.DBREFRESH);
       }
     }
   }));
@@ -125,7 +125,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
       if(request) {
         var deleted = yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.DELETESMTP, [request.data]]);
         if(deleted && deleted > 0){
-          socket.emit(eventKeys.REFRESH);
+          socket.emit(eventKeys.DBREFRESH);
         }
       }
     }
@@ -139,9 +139,9 @@ DatabaseController.prototype.attachSocket = function(socket) {
       var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
       if(request) {
-        yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.DELETESESSION, [request.data]]);
+        var deleted = yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.DELETESESSION, [request.data]]);
         if(deleted && deleted > 0){
-          socket.emit(eventKeys.REFRESH);
+          socket.emit(eventKeys.DBREFRESH);
         }
       }
     }

@@ -6,9 +6,9 @@ function initGUI(client, isAdmin) {
 
   $('#btnPlay').click(function() {
     if ($('#video')[0].paused) {
-      client.socket.request("state-req-play");
+      client.socket.request(client.keys.REQPLAY);
     } else {
-      client.socket.request("state-req-pause");
+      client.socket.request(client.keys.REQPAUSE);
     }
   });
 
@@ -25,11 +25,12 @@ function initGUI(client, isAdmin) {
   $('#seek-bar').on('mouseup', function() {
     var percent = parseInt($('#seek-bar').val());
     var length  = $('#video')[0].duration;
-    var request = new Object();
-    request.timestamp = Math.round(length * (percent / 100));
-    client.socket.request('state-req-seek', request);
+    var time = Math.round(length * (percent / 100));
 
-    $('#seek-bar').val(request.timestamp / $("#video")[0].duration * 100);
+    client.socket.request(client.keys.REQSEEK,
+      client.schema.createPopulatedSchema(client.schema.Enum.STATE, [time]));
+
+    $('#seek-bar').val(time / $("#video")[0].duration * 100);
     $("video").on("timeupdate", updateProgressBar);
   });
 
@@ -78,9 +79,8 @@ function initGUI(client, isAdmin) {
   $('#btnSessionMedia').click(function() {
     client.log.info("Load new video.");
       var media = $('#locationBar').val();
-      var request = {};
-      request.data = media;
-      client.socket.request("admin-set-media", request);
+      client.socket.request(client.keys.SETMEDIA,
+        client.schema.createPopulatedSchema(client.schema.Enum.PATH, [media]));
   });
 
   //Session Events --------------------------------------------------------------
@@ -90,7 +90,7 @@ function initGUI(client, isAdmin) {
     var subject = $('#sessionSubject').val();
     var text    = $('#sessionText').val();
 
-    var mailOptions = client.schema.createPopulatedSchema(client.schema.MAILOPTIONS, [sender, to, subject, text]);
+    var mailOptions = client.schema.createPopulatedSchema(client.schema.Enum.MAILOPTIONS, [sender, to, subject, text]);
 
     var id        = $('#sessionId').val();
     var title     = $('#sessionTitle').val();
@@ -98,26 +98,26 @@ function initGUI(client, isAdmin) {
     var invitees  = ($('#sessionInvitees').val()).split(",");
 
     if(!id) {
-      client.socket.request("db-create-session",
-        client.schema.createPopulatedSchema(client.schema.SESSION, [undefined, title, address, invitees, mailOptions]));
+      client.socket.request(client.keys.CREATESESSION,
+        client.schema.createPopulatedSchema(client.schema.Enum.SESSION, [undefined, title, address, invitees, mailOptions]));
     } else {
-      client.socket.request("db-update-session",
-        client.schema.createPopulatedSchema(client.schema.SESSION, [id, title, address, invitees, mailOptions]));
+      client.socket.request(client.keys.UPDATESESSION,
+        client.schema.createPopulatedSchema(client.schema.Enum.SESSION, [id, title, address, invitees, mailOptions]));
     }
   });
 
   $('#readSessions').click(function readSessions() {
-    client.socket.request("db-read-sessions");
+    client.socket.request(client.keys.READSESSIONS);
   });
 
   $('#setSession').click(function setSession() {
-    var request = {};
-    request.data = $('#sessionId').val();
-    client.socket.request("admin-load-session", request);
+    var id = $('#sessionId').val();
+    client.socket.request(client.keys.LOADSESSION,
+      client.schema.createPopulatedSchema(client.schema.Enum.STRING, [id]));
   });
 
   $('#sendInvitation').click(function readSessions() {
-    client.socket.request("admin-smtp-invite");
+    client.socket.request(client.keys.INVITE);
   })
 
   $('#sessionList').on("click", "tr", function(e) {
@@ -159,18 +159,11 @@ function initGUI(client, isAdmin) {
 
     session.remove();
 
-    client.socket.request("db-delete-session", id);
+    client.socket.request(client.keys.DELETESESSION,
+      client.schema.createPopulatedSchema(client.schema.Enum.STRING, [id]));
   });
 
   //Smtp Events -----------------------------------------------------------------
-  $('#createContact').click(function createContact() {
-    var handle  = $('#contactHandle').val();
-    var address = $('#contactAddress').val();
-
-    client.socket.request("db-create-contact",
-      client.getRequestFactory().buildContactRequest(handle, address));
-  });
-
   $('#createSmtp').click(function createSmtp() {
     var id        = $('#smtpId').val();
     var type      = $('#smtpType').val();
@@ -179,16 +172,12 @@ function initGUI(client, isAdmin) {
     var password  = $('#smtpPassword').val();
 
     if(!id) {
-      client.socket.request("db-create-smtp",
-        client.schema.createPopulatedSchema(client.schema.SMTP, [undefined, type, host, address, password]));
+      client.socket.request(client.keys.CREATESMTP,
+        client.schema.createPopulatedSchema(client.schema.Enum.SMTP, [undefined, type, host, address, password]));
     } else {
-      client.socket.request("db-update-smtp",
-        client.schema.createPopulatedSchema(client.schema.SMTP, [id, type, host, address, password]));
+      client.socket.request(client.keys.UPDATESMTP,
+        client.schema.createPopulatedSchema(client.schema.Enum.SMTP, [id, type, host, address, password]));
     }
-  });
-
-  $('#readContacts').click(function readContacts() {
-    client.socket.request("db-read-contacts");
   });
 
   $('#readSmtps').click(function readSmtps() {
@@ -232,7 +221,8 @@ function initGUI(client, isAdmin) {
 
     smtp.remove();
 
-    client.socket.request("db-delete-smtp", id);
+    client.socket.request(client.keys.DELETESMTP,
+      client.schema.createPopulatedSchema(client.schema.Enum.STRING, [id]));
   });
 
   //Encode Events ---------------------------------------------------------------
@@ -310,7 +300,7 @@ function initGUI(client, isAdmin) {
     }
   };
 
-  client.socket.setEvent("db-sessions", loadSessions);
+  client.socket.setEvent(client.keys.SESSION, loadSessions);
 
   $('#btnSmtp').click(function() {
     loadSmtps();
@@ -346,7 +336,7 @@ function initGUI(client, isAdmin) {
     }
   }
 
-  client.socket.setEvent("db-smtps", loadSmtps);
+  client.socket.setEvent(client.keys.SMTP, loadSmtps);
 
   $('#btnEncode').click(function() {
     $('#encodeModal').modal('show');
@@ -433,10 +423,10 @@ function initGUI(client, isAdmin) {
       autoScroll('#logManuscript');
   }
 
-  client.socket.setEvent('chat-broadcast-resp', chatMessage);
-  client.socket.setEvent('chat-event-resp', systemMessage);
-  client.socket.setEvent('chat-ping-resp', systemMessage);
-  client.socket.setEvent('chat-log-resp', logMessage);
+  client.socket.setEvent(client.keys.BROADCASTRESP, chatMessage);
+  client.socket.setEvent(client.keys.EVENTRESP, systemMessage);
+  client.socket.setEvent(client.keys.PINGRESP, systemMessage);
+  client.socket.setEvent(client.keys.LOGRESP, logMessage);
 
   //Video Events -----------------------------------------------------------------
   $('#meta-types').on("change", function (e) {

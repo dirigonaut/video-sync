@@ -59,13 +59,10 @@ AdminController.prototype.attachSocket = function(socket) {
           yield session.setMediaPath(request.data);
           yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.INITPLAYERS, []]);
 
-          var playerIds = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETPLAYERIDS, []]);
-          if(playerIds) {
-            log.debug(eventKeys.MEDIAREADY);
-            var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'Video has been initialized.']);
-            yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
-            yield redisSocket.broadcast(eventKeys.MEDIAREADY);
-          };
+          log.debug(eventKeys.MEDIAREADY);
+          var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'Video has been initialized.']);
+          yield chatEngine.broadcast(eventKeys.EVENT, response);
+          yield redisSocket.broadcast(eventKeys.MEDIAREADY);
         }
       }
     }

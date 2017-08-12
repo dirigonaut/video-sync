@@ -39,7 +39,12 @@ RedisSocket.prototype.ping = Promise.coroutine(function* (id, key, message) {
   yield publisher.publishAsync(RedisSocket.MessageEnum.PING, JSON.stringify([id, key, message]));
 });
 
-RedisSocket.MessageEnum = { BROADCAST: 'redisSocketBroadcast', PING: 'redisSocketPing' };
+RedisSocket.prototype.disconnect = Promise.coroutine(function* (id) {
+  log.debug(`RedisSocket.disconnect ${id}`);
+  yield publisher.publishAsync(RedisSocket.MessageEnum.DISCONNECT, id);
+});
+
+RedisSocket.MessageEnum = { BROADCAST: 'redisSocketBroadcast', PING: 'redisSocketPing', DISCONNECT: 'redisDisconnect' };
 
 module.exports = RedisSocket;
 
@@ -71,6 +76,17 @@ var attachEvents = function() {
 
         io.sockets.to(payload[0]).emit(payload[1], result);
       }
+    } else if(channel === RedisSocket.MessageEnum.DISCONNECT) {
+      if(io && payload) {
+        try{
+          var socket = io.sockets.connected[payload];
+          if(socket) {
+            socket.disconnect();
+          }
+        } catch(err) {
+          log.error(err);
+        }
+      }
     }
   }.bind(this));
 
@@ -92,4 +108,5 @@ var attachEvents = function() {
 
   subscriber.subscribe(RedisSocket.MessageEnum.BROADCAST);
   subscriber.subscribe(RedisSocket.MessageEnum.PING);
+  subscriber.subscribe(RedisSocket.MessageEnum.DISCONNECT);
 };

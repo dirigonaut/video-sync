@@ -1,11 +1,15 @@
-var players, player, log;
+var players, player, redisSocket, eventKeys, log;
 
 function PlayerManager () { };
 
 PlayerManager.prototype.initialize = function(force) {
   if(typeof PlayerManager.prototype.protoInit === 'undefined') {
     PlayerManager.prototype.protoInit = true;
+    redisSocket     = this.factory.createRedisSocket();
     player          = this.factory.createPlayer();
+
+    eventKeys       = this.factory.createKeys();
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.STATE);
   }
@@ -16,9 +20,9 @@ PlayerManager.prototype.initialize = function(force) {
   }
 };
 
-PlayerManager.prototype.createPlayer = function(id, handle) {
+PlayerManager.prototype.createPlayer = function(id, handle, authId) {
   var newPlayer = this.factory.createPlayer();
-  newPlayer.assign(id, handle);
+  newPlayer.assign(id, handle, authId);
 
   players.set(id, newPlayer);
   log.info(`PlayerManager.createPlayer ${id}, total players now: ${players.size}`);
@@ -35,11 +39,11 @@ PlayerManager.prototype.getPlayer = function(id) {
   return player;
 };
 
-PlayerManager.prototype.getPlayerIds = function() {
+PlayerManager.prototype.getPlayersAttribute = function(attr) {
   log.silly('PlayerManager.getPlayerIds');
   var temp = [];
   for(var p of players.keys()) {
-    temp.push(players.get(p).id);
+    temp.push(players.get(p)[attr]);
   }
 
   return temp;
@@ -86,18 +90,6 @@ PlayerManager.prototype.getSyncedPlayersState = function() {
   return state;
 };
 
-PlayerManager.prototype.removePlayersWithId = function(playerArray, id) {
-  log.silly(`PlayerManager.removePlayersWithId ${id}`);
-  var temp = [];
-  for(var p in playerArray) {
-    if(playerArray[p].id != id) {
-      temp.push(playerArray[p]);
-    }
-  }
-
-  return temp;
-};
-
 PlayerManager.prototype.getHandles = function() {
   log.debug('PlayerManager.getHandles');
   var temp = [];
@@ -110,21 +102,20 @@ PlayerManager.prototype.getHandles = function() {
 
 PlayerManager.prototype.setPlayerHandle = function(id, handle) {
   log.silly('PlayerManager.setPlayerHandle', id);
-  var handles = [];
 
   for(var p of players.keys()) {
     if(p === id) {
       players.get(p).setHandle(handle);
 
+      var handles = [];
       for(var p of players.keys()) {
         handles.push([players.get(p).id, players.get(p).handle]);
       }
 
+      redisSocket.broadcast(eventKeys.HANDLES, handles);
       break;
     }
   }
-
-  return handles;
 };
 
 PlayerManager.prototype.initPlayers = function() {
@@ -132,6 +123,16 @@ PlayerManager.prototype.initPlayers = function() {
   for(var p of players.keys()) {
     var player = players.get(p);
     player.reset();
+  }
+};
+
+PlayerManager.prototype.setAuth = function(id, level) {
+  log.debug('PlayerManager.setAuth');
+  for(var p of players.keys()) {
+    if(p === id) {
+      var player = players.get(p);
+      player.setAuth(level);
+    }
   }
 };
 

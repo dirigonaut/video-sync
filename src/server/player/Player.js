@@ -10,17 +10,18 @@ Player.prototype.initialize = function(force) {
   }
 };
 
-Player.prototype.assign = function(id, handle){
-    this.id	  	      = id;
+Player.prototype.assign = function(id, handle, authId){
+  this.id	  	      = id;
 
-    this.state 	  	  = null;
-    this.sync         = Player.Sync.SYNCING;
-    this.timestamp 	  = 0;
-    this.buffer       = false;
-    this.desynced     = false;
+  this.state 	  	  = null;
+  this.sync         = Player.Sync.SYNCING;
+  this.timestamp 	  = 0;
+  this.buffer       = false;
+  this.desynced     = false;
 
-    this.handle       = handle;
-    this.auth         = Player.Auth.DEFAULT;
+  this.handle       = handle;
+  this.authId       = authId
+  this.auth         = Player.Auth.DEFAULT;
 };
 
 Player.prototype.reset = function() {

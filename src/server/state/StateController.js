@@ -38,7 +38,7 @@ StateController.prototype.attachSocket = function(socket) {
       }
 
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'issued play.']);
-      yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
+      yield chatEngine.broadcast(eventKeys.EVENT, response);
     }
   }));
 
@@ -52,7 +52,7 @@ StateController.prototype.attachSocket = function(socket) {
       }
 
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'issued pause.']);
-      yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
+      yield chatEngine.broadcast(eventKeys.EVENT, response);
     }
   }));
 
@@ -70,7 +70,7 @@ StateController.prototype.attachSocket = function(socket) {
         }
 
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, `issued seek to ${request.timestamp}.`]);
-        yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
+        yield chatEngine.broadcast(eventKeys.EVENT, response);
       }
     }
   }));
@@ -87,7 +87,7 @@ StateController.prototype.attachSocket = function(socket) {
       }
 
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'issued sync.']);
-      yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
+      yield chatEngine.broadcast(eventKeys.EVENT, response);
     }
   }));
 
@@ -101,7 +101,7 @@ StateController.prototype.attachSocket = function(socket) {
       var value = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.CHANGESYNCSTATE, [socket.id, request]]);
       if(typeof value === 'boolean') {
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, ` desync value is ${value}.`]);
-        yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
+        yield chatEngine.broadcast(eventKeys.EVENT, response);
 
         socket.emit('state-sync-state', schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [value]));
       }

@@ -166,13 +166,11 @@ MpdMeta.prototype.setThreshold = function(range) {
 };
 
 MpdMeta.prototype.setForceBuffer = function(typeId, forceBuffer) {
-  var active = this.activeMeta.get(typeId);
-  active.setForceBuffer(forceBuffer);
+  this.activeMeta.get(typeId).setForceBuffer(forceBuffer);
 };
 
 MpdMeta.prototype.isForceBuffer = function(typeId) {
-  var active = this.activeMeta.get(typeId);
-  return active.isForceBuffer();
+  return this.activeMeta.get(typeId).isForceBuffer();
 };
 
 module.exports = MpdMeta;

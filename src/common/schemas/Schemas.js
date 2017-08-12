@@ -8,6 +8,10 @@ var Schemas = {
     definition: { data: 'string',
     Enum: { DATA: 'data' } } },
 
+  ascii: { schema: { data: undefined},
+    definition: { data: 'ascii',
+    Enum: { DATA: 'data' } } },
+
   number: { schema: { data: undefined},
     definition: { data: 'number',
     Enum: { DATA: 'data' } } },
@@ -17,7 +21,7 @@ var Schemas = {
     Enum: { HANDLE: 'handle', ADDRESS: 'address', TOKEN: 'token' } } },
 
   command: { schema: { command: undefined, param: undefined },
-    definition: { command: 'string', param: 'string',
+    definition: { command: 'command', param: 'ascii',
     Enum: { COMMAND: 'command', PARAM: 'param' } } },
 
   smtp: { schema: { _id: undefined, smtpType: undefined, smtpHost: undefined, smtpAddress: undefined, smtpPassword: undefined },
@@ -29,8 +33,8 @@ var Schemas = {
     Enum: { SENDER: 'sender', TO: 'to', SUBJECT: 'subject', TEXT: 'text' } } },
 
   session: { schema: { _id: undefined, title: undefined, smtp: undefined, invitees: undefined, mailOptions: undefined },
-    definition: { _id: 'string', title: 'string', smtp: 'email', invitees: 'email', mailOptions: 'mailOptions',
-    Enum: { ID: '_id', TITLE: 'title', SMTP: 'smtp', INVITEES: 'invitees', MAILOPTIONS: 'schema' } } },
+    definition: { _id: 'string', title: 'string', smtp: 'email', invitees: 'email', mailOptions: 'schema',
+    Enum: { ID: '_id', TITLE: 'title', SMTP: 'smtp', INVITEES: 'invitees', MAILOPTIONS: 'mailOptions' } } },
 
   state: { schema: { timestamp: undefined, state: undefined, buffering: undefined },
     definition: { timestamp: 'number', state: 'bool', buffering: 'bool',

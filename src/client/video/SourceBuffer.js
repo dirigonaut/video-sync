@@ -245,16 +245,14 @@ var isTimeRangeBuffered = function(timestamp) {
   var buffered = false;
   var timeRanges = this.sourceBuffer.buffered;
 
-  if(!metaManager.getActiveMetaData().isForceBuffer(this.type)) {
-    for(var i = 0; i < timeRanges.length; ++i) {
-      if(timeRanges.start(i) > timestamp) {
-        break;
-      } else if (timeRanges.end(i) > timestamp) {
-        buffered = true;
-        break;
-      }
+  for(var i = 0; i < timeRanges.length; ++i) {
+    if(timeRanges.start(i) > timestamp) {
+      break;
+    } else if (timeRanges.end(i) > timestamp) {
+      buffered = true;
+      break;
     }
   }
-
-  return buffered;
+  
+  return metaManager.getActiveMetaData().isForceBuffer(this.type) ? false : buffered;
 };

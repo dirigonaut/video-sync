@@ -1,13 +1,13 @@
 const Promise = require('bluebird');
 
-var publisher, smtp, session, config, playerManager, log;
+var publisher, redisSocket, smtp, session, config, playerManager, player, log;
 
 function UserAdministration() { }
 
 UserAdministration.prototype.initialize = function (force) {
   if(typeof UserAdministration.prototype.protoInit === 'undefined') {
     UserAdministration.prototype.protoInit = true;
-
+    player          = this.factory.createPlayer();
     config          = this.factory.createConfig();
     session         = this.factory.createSession();
     var logManager  = this.factory.createLogManager();
@@ -19,32 +19,29 @@ UserAdministration.prototype.initialize = function (force) {
     publisher       = this.factory.createRedisPublisher();
     smtp            = this.factory.createSmtp();
     playerManager   = this.factory.createPlayerManager(false);
+    redisSocket     = this.factory.createRedisSocket();
   }
 };
 
 UserAdministration.prototype.downgradeUser = Promise.coroutine(function* (user) {
-  log.debug("UserAdministration.downgradeUser");
-  yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.SETAUTH, [user, Player.Auth.RESTRICTED]]);
+  log.debug("UserAdministration.downgradeUser", user);
+  yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.SETAUTH, [user, player.Auth.RESTRICTED]]);
 });
 
 UserAdministration.prototype.upgradeUser = Promise.coroutine(function*(user) {
-  log.debug("UserAdministration.upgradeUser");
-  yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.SETAUTH, [user, Player.Auth.DEFAULT]]);
+  log.debug("UserAdministration.upgradeUser", user);
+  yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.SETAUTH, [user, player.Auth.DEFAULT]]);
 });
 
-UserAdministration.prototype.kickUser = Promise.coroutine(function* (user, callback) {
-  log.debug("UserAdministration.kickUser");
+UserAdministration.prototype.kickUser = Promise.coroutine(function* (user) {
+  log.debug("UserAdministration.kickUser", user);
   var isAdmin = yield session.isAdmin(user);
   if(!isAdmin) {
-    yield session.removeInvitee(user);
     var player = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETPLAYER, [user]]);
 
     if(player) {
-      var socket = player.socket;
-
-      if(socket) {
-        this.disconnectSocket(socket);
-      }
+      yield session.removeInvitee(id).catch(log.error);
+      yield redisSocket.disconnect(id);
     } else {
       log.warn("There is no player with the id: ", user);
     }
@@ -53,18 +50,12 @@ UserAdministration.prototype.kickUser = Promise.coroutine(function* (user, callb
   return new Promise.reject(new Error(`Cannot kick admin.`));
 });
 
-UserAdministration.prototype.disconnectSocket = Promise.coroutine(function* (socket) {
-  log.info("Disconnecting socket ", socket.id);
-  yield session.removeInvitee(socket.id);
-  socket.disconnect('unauthorized');
-});
-
 UserAdministration.prototype.inviteUser = Promise.coroutine(function* (emailAddress) {
   log.debug("UserAdministration.inviteUser");
   var activeSession = yield session.getSession();
 
-  if(session) {
-    activeSession.addInvitee(emailAddress);
+  if(activeSession) {
+    session.addInvitee(emailAddress);
 
     yield smtp.initializeTransport(activeSession.smtp);
     var mailOptions = activeSession.mailOptions;

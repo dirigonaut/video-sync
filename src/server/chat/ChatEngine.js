@@ -35,7 +35,3 @@ ChatEngine.prototype.ping = Promise.coroutine(function* (eventName, message) {
 });
 
 module.exports = ChatEngine;
-
-ChatEngine.Enum = { BROADCAST : "chat-broadcast-resp", PING : "chat-ping-resp", LOG : "chat-log-resp", EVENT : "chat-event-resp" };
-
-ChatEngine.prototype.Enum = ChatEngine.Enum;

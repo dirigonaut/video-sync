@@ -44,13 +44,13 @@ function setSocketEvents() {
   log.debug("FormData.setSocketEvents");
   socket.setEvent(eventKeys.SMTP, dbSmtps);
   socket.setEvent(eventKeys.SESSION, dbSessions);
-  socket.setEvent(eventKeys.REFRESH, dbRefresh);
+  socket.setEvent(eventKeys.DBREFRESH, dbRefresh);
 }
 
 function removeSocketEvents() {
   socket.removeEvent(eventKeys.SMTP, dbSmtps);
   socket.removeEvent(eventKeys.SESSION, dbSessions);
-  socket.removeEvent(eventKeys.REFRESH, dbRefresh);
+  socket.removeEvent(eventKeys.DBREFRESH, dbRefresh);
 }
 
 function dbSmtps(response){

@@ -25,6 +25,10 @@ module.exports = {
   COMMAND:        'chat-command',
   //Client
   HANDLES:        'chat-handles',
+  BROADCASTRESP:  'chat-broadcast-resp',
+  EVENTRESP:      'chat-event-resp',
+  PINGRESP:       'chat-ping-resp',
+  LOGRESP:        'chat-log-resp',
 
   //DatabaseController
   //Server
@@ -39,7 +43,7 @@ module.exports = {
   //Client
   SMTP:           'db-smtp',
   SESSION:        'db-sessions',
-  REFRESH:        'db-refresh',
+  DBREFRESH:      'db-refresh',
 
   //StateController
   //Server
