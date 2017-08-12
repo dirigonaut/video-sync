@@ -173,9 +173,6 @@ function onProgress(typeId) {
         log.debug(`Video.onProgress - time: ${timeToRequest} current: ${videoElement.currentTime}`);
         this.emit("get-segment", typeId, timeToRequest);
       }
-    } else {
-      log.debug("Video.onProgress - end of segments");
-      videoElement.removeEventListener('timeupdate', progress, false);
     }
   }.bind(this);
   return progress;

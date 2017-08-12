@@ -47,30 +47,32 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
 
   if(basePath && basePath.length > 0) {
     var mediaStarted = yield session.getMediaStarted();
-    var player = playerManager.getPlayer(id);
+    var issuer = playerManager.getPlayer(id);
 
-    if(player) {
+    if(issuer) {
       if(player.desynced) {
-        log.silly('StateEngine issuing play', player);
+        log.silly('StateEngine issuing play', issuer);
         commands = [];
-        commands.push([player.id, eventKeys.PLAY]);
+        commands.push([issuer.id, eventKeys.PLAY]);
       } else {
-        var players = playRule.evaluate(player, playerManager.getPlayers(), mediaStarted, accuracy);
-        commands = [];
+        if(issuer.getAuth() === player.Auth.DEFAULT) {
+          var players = playRule.evaluate(issuer, playerManager.getPlayers(), mediaStarted, accuracy);
+          commands = [];
 
-        for(var i = 0; i < players.length; ++i) {
-          if(!players[i].desynced) {
-            log.info(`StateEngine issuing play ${players[i].id}`);
-            commands.push([players[i].id, eventKeys.PLAY]);
+          for(var i = 0; i < players.length; ++i) {
+            if(!players[i].desynced) {
+              log.info(`StateEngine issuing play ${players[i].id}`);
+              commands.push([players[i].id, eventKeys.PLAY]);
 
-            if(mediaStarted === false) {
-              players[i].sync = player.Sync.SYNCED;
+              if(mediaStarted === false) {
+                players[i].sync = player.Sync.SYNCED;
+              }
             }
           }
-        }
 
-        if(!mediaStarted) {
-          yield session.setMediaStarted(!mediaStarted);
+          if(!mediaStarted) {
+            yield session.setMediaStarted(!mediaStarted);
+          }
         }
       }
     }
@@ -94,13 +96,15 @@ StateEngine.prototype.pause = Promise.coroutine(function* (id) {
         var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, undefined]);
         commands.push([issuer.id, eventKeys.PAUSE, schema]);
       } else {
-        commands = [];
-        var players = playerManager.getPlayers();
-        for(let player of players.values()) {
-          if(!player.desynced) {
-            var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, undefined]);
-            commands.push([player.id, eventKeys.PAUSE, schema]);
-            player.sync = player.Sync.SYNCED;
+        if(issuer.getAuth() === player.Auth.DEFAULT) {
+          commands = [];
+          var players = playerManager.getPlayers();
+          for(let player of players.values()) {
+            if(!player.desynced) {
+              var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, undefined]);
+              commands.push([player.id, eventKeys.PAUSE, schema]);
+              player.sync = player.Sync.SYNCED;
+            }
           }
         }
       }
@@ -127,17 +131,19 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
         commands.push([issuer.id, eventKeys.SEEK, schema]);
         issuer.timestamp = data.timestamp;
       } else {
-        commands = [];
-        var players = playerManager.getPlayers();
-        for(let player of players.values()) {
-          if(!player.desynced) {
-            var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, data.timestamp, undefined]);
-            commands.push([player.id, eventKeys.SEEK, schema]);
+        if(issuer.getAuth() === player.Auth.DEFAULT) {
+          commands = [];
+          var players = playerManager.getPlayers();
+          for(let player of players.values()) {
+            if(!player.desynced) {
+              var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, data.timestamp, undefined]);
+              commands.push([player.id, eventKeys.SEEK, schema]);
 
-            if(mediaStarted === false) {
-              player.sync       = player.Sync.BUFFWAIT;
-              player.timestamp  = data.timestamp;
-              player.buffered   = false;
+              if(mediaStarted === false) {
+                player.sync       = player.Sync.BUFFWAIT;
+                player.timestamp  = data.timestamp;
+                player.buffered   = false;
+              }
             }
           }
         }
@@ -157,7 +163,7 @@ StateEngine.prototype.sync = Promise.coroutine(function* (id) {
     var issuer = playerManager.getPlayer(id);
 
     if(issuer) {
-      if(!issuer.desynced) {
+      if(!issuer.desynced && player.getAuth() === player.Auth.DEFAULT) {
         var players = playerManager.getPlayers();
         if(players.size > 1) {
           var syncTime;
@@ -264,6 +270,7 @@ var resumeLogic = Promise.coroutine(function* (players) {
         if(playerManager.getSyncedPlayersState() === player.State.PLAY) {
           var commands = [];
           commands.push([waitingPlayer.id, eventKeys.PLAY]);
+          //yield redisSocket.ping.apply(null, message[i]);
           //yield publisher.publish(publisher.RespEnum.COMMAND, commands);
         } else {
           var commands = [];

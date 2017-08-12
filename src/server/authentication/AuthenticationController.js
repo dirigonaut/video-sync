@@ -66,12 +66,12 @@ AuthenticationController.prototype.attachIO = function (io) {
       if(request) {
         var authorized = yield authenticator.validateToken(socket.id, request);
         if(authorized) {
-          yield userAuthorized.call(this, socket, request.handle);
+          yield userAuthorized.call(this, socket, request.handle, request.address);
         } else {
           socket.logonAttempts += 1;
 
           if(socket.logonAttempts > 4) {
-            yield userAdmin.disconnectSocket(socket);
+            socket.disconnect(socket.id);
           }
         }
       }
@@ -79,10 +79,10 @@ AuthenticationController.prototype.attachIO = function (io) {
 
     socket.on(eventKeys.DISCONNECT, Promise.coroutine(function*() {
       log.info(eventKeys.DISCONNECT, socket.id);
-      
-      if(socket.id){
+
+      if(socket.id) {
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'has left the session.']);
-        yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
+        yield chatEngine.broadcast(eventKeys.EVENT, response);
 
         var isAdmin = yield session.isAdmin(socket.id);
         if(isAdmin) {
@@ -92,7 +92,7 @@ AuthenticationController.prototype.attachIO = function (io) {
         yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.REMOVEPLAYER, [socket.id]]);
       }
 
-      yield userAdmin.disconnectSocket(socket);
+      socket.disconnect(socket.id);
     }));
 
     setTimeout(Promise.coroutine(function* () {
@@ -100,7 +100,7 @@ AuthenticationController.prototype.attachIO = function (io) {
       if (!socket.auth) {
         log.debug(socket.auth);
         log.info("timing out socket", socket.id);
-        yield userAdmin.disconnectSocket(socket);
+        socket.disconnect(socket.id);
       }
     }.bind(this)), 300000);
 
@@ -110,10 +110,10 @@ AuthenticationController.prototype.attachIO = function (io) {
 
 module.exports = AuthenticationController;
 
-var userAuthorized = Promise.coroutine(function* (socket, handle, isAdmin) {
+var userAuthorized = Promise.coroutine(function* (socket, handle, authId, isAdmin) {
   socket.auth = true;
 
-  yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.CREATEPLAYER, [socket.id, handle]]);
+  yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.CREATEPLAYER, [socket.id, handle, authId]]);
 
   var videoController = this.factory.createVideoController();
   var stateController = this.factory.createStateController();
@@ -135,7 +135,7 @@ var userAuthorized = Promise.coroutine(function* (socket, handle, isAdmin) {
     yield redisSocket.broadcast(eventKeys.HANDLES, handles);
 
     var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'has joined.']);
-    yield chatEngine.broadcast(chatEngine.Enum.EVENT, response);
+    yield chatEngine.broadcast(eventKeys.EVENT, response);
   }));
 
   log.info("socket has been authenticated.", socket.id);
@@ -156,6 +156,6 @@ var isAdministrator = Promise.coroutine(function* (socket) {
     encodingContoller.attachSocket(socket);
 
     yield session.addAdmin(socket.id);
-    userAuthorized.call(this, socket, 'admin', true);
+    userAuthorized.call(this, socket, 'admin', 'admin', true);
   }
 });

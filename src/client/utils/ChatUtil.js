@@ -9,7 +9,7 @@ ChatUtil.prototype.initialize = function(force) {
     ChatUtil.prototype.protoInit = true;
     schemaFactory   = this.factory.createSchemaFactory();
     eventKeys       = this.factory.createKeys();
-    
+
     var logManager  = this.factory.createClientLogManager();
 		log             = logManager.getLog(logManager.LogEnum.GENERAL);
   }
@@ -27,10 +27,10 @@ ChatUtil.prototype.send = function(input) {
   if(input && input.trim().length > 0) {
     if(input.match(/^\//)) {
       var parsedInput = input.split(" ");
-      var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.COMMAND, [parsedInput.shift(), parsedInput]);
+      var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.COMMAND, [parsedInput.shift(), parsedInput.length > 0 ? parsedInput : undefined]);
       socket.request(eventKeys.COMMAND, request);
     } else {
-      var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STRING, [input]);
+      var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.ASCII, [input]);
       socket.request(eventKeys.BROADCAST, request);
     }
   }

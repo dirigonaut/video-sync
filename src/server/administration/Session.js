@@ -41,6 +41,7 @@ Session.prototype.setSession = Promise.coroutine(function* (id) {
   }
 
   yield this.setInvitees(invitees);
+  log.socket(`${session.title} has been loaded.`);
 });
 
 Session.prototype.getSession = function() {
@@ -90,7 +91,7 @@ Session.prototype.removeInvitee = Promise.coroutine(function* (id) {
 
   if(typeof invitees !== 'undefined' && invitees) {
     for(let i = 0; i < invitees.length; ++i) {
-      if(invitees[i].email === id) {
+      if(invitees[i].id === id) {
         invitees.splice(i, 1);
         return this.setInvitees(invitees);
       }

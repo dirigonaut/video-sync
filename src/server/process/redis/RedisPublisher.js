@@ -62,7 +62,7 @@ RedisPublisher.prototype.publish = function(channel, args) {
 };
 
 RedisPublisher.Enum = { DATABASE: 'database', STATE: 'state', PLAYER: 'player', SESSION: 'session'};
-RedisPublisher.RespEnum = { RESPONSE: 'stateRedisResponse', COMMAND: 'stateRedisCommand'};
+RedisPublisher.RespEnum = { RESPONSE: 'stateRedisResponse'};
 
 RedisPublisher.prototype.Enum = RedisPublisher.Enum;
 RedisPublisher.prototype.RespEnum = RedisPublisher.RespEnum;
@@ -94,17 +94,6 @@ var attachEvents = function() {
           }
 
           asyncEmitter.emit(message, data);
-        }
-      }
-    } else if(channel === RedisPublisher.RespEnum.COMMAND) {
-      message = JSON.parse(message);
-      if(message) {
-        for(var i = 0; i < message.length; ++i) {
-          log.silly(Util.inspect(message[i], { showHidden: false, depth: 1}));
-
-          if(Array.isArray(message[i])) {
-            yield redisSocket.ping.apply(null, message[i]);
-          }
         }
       }
     }

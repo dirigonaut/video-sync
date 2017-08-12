@@ -59,14 +59,14 @@ MediaController.prototype.setBufferAhead = function(bufferThreshold) {
 
 MediaController.prototype.setForceBuffer = function(forceBuffer) {
   log.debug('MediaController.setForceBuffer')
-  var activeMeta = metaManager.getActiveMetaData();
+  var meta = metaManager.getActiveMetaData();
 
-  if(activeMeta.active.get(metaManager.Enum.VIDEO)){
-    activeMeta.setForceBuffer(metaManager.Enum.VIDEO, forceBuffer);
+  if(meta.activeMeta.get(metaManager.Enum.VIDEO)) {
+    meta.setForceBuffer(metaManager.Enum.VIDEO, forceBuffer);
   }
 
-  if(activeMeta.active.get(metaManager.Enum.AUDIO)){
-    activeMeta.setForceBuffer(metaManager.Enum.AUDIO, forceBuffer);
+  if(meta.activeMeta.get(metaManager.Enum.AUDIO)) {
+    meta.setForceBuffer(metaManager.Enum.AUDIO, forceBuffer);
   }
 };
 
