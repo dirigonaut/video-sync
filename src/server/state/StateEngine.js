@@ -1,7 +1,8 @@
 const Promise = require('bluebird');
+const Events  = require('events');
 
-var player, playRule, syncRule, syncingRule, resumeRule, schemaFactory,
-    playerManager, accuracy, interval, session, publisher, eventKeys, log;
+var player, publisher, playRule, syncingRule, schemaFactory,
+    playerManager, trigger, accuracy, session, publisher, eventKeys, log;
 
 function StateEngine() { };
 
@@ -9,13 +10,10 @@ StateEngine.prototype.initialize = function(force) {
   if(typeof StateEngine.prototype.protoInit === 'undefined') {
     StateEngine.prototype.protoInit = true;
     schemaFactory   = this.factory.createSchemaFactory();
-
     player          = this.factory.createPlayer();
 
     playRule        = this.factory.createPlayRule();
-    syncRule        = this.factory.createSyncRule();
     syncingRule     = this.factory.createSyncingRule();
-    resumeRule      = this.factory.createResumeRule();
 
     eventKeys       = this.factory.createKeys();
 
@@ -28,15 +26,9 @@ StateEngine.prototype.initialize = function(force) {
     playerManager   = this.factory.createPlayerManager();
     session         = this.factory.createSession();
     publisher       = this.factory.createRedisPublisher();
+    trigger         = new Events();
 
     accuracy = 2;
-
-    var resumeInterval = Promise.coroutine(function* () {
-      resumeLogic(playerManager.getPlayers());
-    }.bind(this));
-
-    clearInterval(resumeInterval);
-    interval = setInterval(resumeInterval, 500);
   }
 };
 
@@ -57,21 +49,24 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
       } else {
         if(issuer.getAuth() === player.Auth.DEFAULT) {
           var players = playRule.evaluate(issuer, playerManager.getPlayers(), mediaStarted, accuracy);
-          commands = [];
+          if(players) {
+            var buffering = [];
 
-          for(var i = 0; i < players.length; ++i) {
-            if(!players[i].desynced) {
-              log.info(`StateEngine issuing play ${players[i].id}`);
-              commands.push([players[i].id, eventKeys.PLAY]);
+            for(var i = 0; i < players.length; ++i) {
+              if(!players[i].desynced) {
+                log.info(`StateEngine issuing play ${players[i].id}`);
+                buffering.push(players[i]);
 
-              if(mediaStarted === false) {
-                players[i].sync = player.Sync.SYNCED;
+                if(mediaStarted === false) {
+                  players[i].sync = player.Sync.SYNCED;
+                }
               }
             }
-          }
+            canPlay(buffering);
 
-          if(!mediaStarted) {
-            yield session.setMediaStarted(!mediaStarted);
+            if(!mediaStarted) {
+              yield session.setMediaStarted(!mediaStarted);
+            }
           }
         }
       }
@@ -93,16 +88,14 @@ StateEngine.prototype.pause = Promise.coroutine(function* (id) {
       if(issuer.desynced) {
         log.silly('StateEngine issuing pause', issuer);
         commands = [];
-        var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, undefined]);
-        commands.push([issuer.id, eventKeys.PAUSE, schema]);
+        commands.push([issuer.id, eventKeys.PAUSE]);
       } else {
         if(issuer.getAuth() === player.Auth.DEFAULT) {
           commands = [];
           var players = playerManager.getPlayers();
           for(let player of players.values()) {
             if(!player.desynced) {
-              var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, undefined]);
-              commands.push([player.id, eventKeys.PAUSE, schema]);
+              commands.push([player.id, eventKeys.PAUSE]);
               player.sync = player.Sync.SYNCED;
             }
           }
@@ -127,16 +120,19 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
       if(issuer.desynced) {
         log.silly('StateEngine issuing pause', issuer);
         commands = [];
-        var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, data.timestamp, undefined]);
+        var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [true, data.timestamp]);
         commands.push([issuer.id, eventKeys.SEEK, schema]);
         issuer.timestamp = data.timestamp;
       } else {
         if(issuer.getAuth() === player.Auth.DEFAULT) {
           commands = [];
+          var buffering = [];
           var players = playerManager.getPlayers();
+
           for(let player of players.values()) {
             if(!player.desynced) {
-              var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, data.timestamp, undefined]);
+              buffering.push(player);
+              var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [false, data.timestamp]);
               commands.push([player.id, eventKeys.SEEK, schema]);
 
               if(mediaStarted === false) {
@@ -146,6 +142,8 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
               }
             }
           }
+
+          canPlay(buffering);
         }
       }
     }
@@ -177,7 +175,7 @@ StateEngine.prototype.sync = Promise.coroutine(function* (id) {
           }
 
           var command = [];
-          var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, syncTime, undefined]);
+          var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [false, syncTime]);
           command.push([id, eventKeys.SEEK, schema]);
         }
       }
@@ -206,15 +204,15 @@ StateEngine.prototype.changeSyncState = Promise.coroutine(function* (id, syncSta
 });
 
 StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
-  log.debug(`StateEngine.syncingPing ${id}, ${data}`);
+  log.debug(`StateEngine.syncingPing ${id}, ${JSON.stringify(data)}`);
   var commands;
   var basePath = yield session.getMediaPath();
+  var mediaStarted = yield session.getMediaStarted();
 
-  if(basePath && basePath.length > 0) {
-    var players = playerManager.getPlayers();
+  if(basePath && basePath.length > 0 && mediaStarted) {
     var player = playerManager.getPlayer(id);
 
-    if(player && players) {
+    if(player) {
       if(data) {
         if(typeof data.state !== 'undefined') {
           player.state = data.state ? player.State.PAUSE : player.State.PLAY;
@@ -223,30 +221,22 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
           player.timestamp = data.timestamp;
         }
         if(typeof data.buffered !== 'undefined') {
-          player.buffered  = data.buffered;
+          player.buffered = data.buffered;
+
+          if(trigger && data.buffered) {
+            trigger.emit('canPlay', id);
+          }
         }
       }
 
-      if(false) {
-        var isMediaStarted = yield session.getMediaStarted();
+      if(player.sync === player.Sync.SYNCING) {
+        var leader = syncingRule.evaluate(player, playerManager.getOtherPlayers(player.id));
 
-        if(player.sync === player.Sync.SYNCING && isMediaStarted) {
-          var leader = syncingRule.evaluate(player, playerManager.getOtherPlayers(player.id));
-
-          if(leader) {
-            commands = [];
-            var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [object.play, leader.timestamp + 1, undefined]);
-            commands.push([player.id, eventKeys.SEEK, object]);
-          }
-        } else if(player.sync === player.Sync.SYNCED) {
-          var triggered = syncRule.evaluate(player, playerManager.getPlayers(), accuracy);
-
-          if(triggered) {
-            player.sync = player.Sync.SYNCWAIT;
-            commands = [];
-            var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, undefined]);
-            commands.push([player.id, eventKeys.PAUSE, false]);
-          }
+        if(leader) {
+          commands = [];
+          var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [leader.state, leader.timestamp + 1]);
+          commands.push([player.id, eventKeys.SEEK, schema]);
+          player.sync = player.Sync.SYNCED;
         }
       }
     }
@@ -257,47 +247,29 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
 
 module.exports = StateEngine;
 
-var resumeLogic = Promise.coroutine(function* (players) {
-  var canPlay;
-  var canPlayList = [];
-  for(let waitingPlayer of players.values()) {
-    if(waitingPlayer.desynced) {
-      continue;
-    } else if(waitingPlayer.sync === player.Sync.SYNCWAIT) {
-      var triggered = resumeRule.evaluate(waitingPlayer, playerManager.getOtherPlayers(waitingPlayer.id), accuracy/4);
+var canPlay = function(players) {
+  var buffering = {};
 
-      if(triggered) {
-        if(playerManager.getSyncedPlayersState() === player.State.PLAY) {
-          var commands = [];
-          commands.push([waitingPlayer.id, eventKeys.PLAY]);
-          //yield redisSocket.ping.apply(null, message[i]);
-          //yield publisher.publish(publisher.RespEnum.COMMAND, commands);
-        } else {
-          var commands = [];
-          var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [undefined, undefined, undefined]);
-          commands.push([waitingPlayer.id, eventKeys.PAUSE, schema]);
-          //yield publisher.publish(publisher.RespEnum.COMMAND, commands);
-        }
-
-        waitingPlayer.sync = player.Sync.SYNCED;
-      }
-    } else if(waitingPlayer.sync === player.Sync.BUFFWAIT) {
-      canPlay = canPlay ? canPlay & waitingPlayer.buffer : waitingPlayer.buffer;
-      canPlayList.push(waitingPlayer);
-    }
+  for(let i = 0; i < players.length; ++i) {
+    players[i].state = player.State.BUFFWAIT;
+    buffering[players[i].id] = players[i].id;
   }
 
-  if(canPlay && canPlayList.length > 0) {
-    commands = [];
+  var canPlayLogic = function(id) {
+    delete buffering[id];
 
-    for(var i in canPlayList) {
-      if(!canPlayList[i].desynced) {
-        log.info(`StateEngine issuing play ${canPlayList[i].id}`);
-        commands.push([canPlayList[i].id, eventKeys.PLAY]);
-        canPlayList[i].sync = player.Sync.SYNCED;
+    if(Object.entries(buffering).length === 0) {
+      trigger.removeAllListeners('canPlay');
+
+      for(let i = 0; i < players.length; ++i) {
+        players[i].state = player.State.SYNCED;
+        publisher.publish(publisher.RespEnum.COMMAND, [players[i].id, eventKeys.PLAY]);
       }
     }
+  };
 
-    //yield publisher.publish(publisher.RespEnum.COMMAND, commands);
+  if(Object.entries(buffering).length > 0) {
+    trigger.removeAllListeners('canPlay');
+    trigger.on('canPlay', canPlayLogic);
   }
-});
+};

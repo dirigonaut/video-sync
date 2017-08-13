@@ -62,7 +62,7 @@
             log.ui('Added UI logging.');
 
             var socket = factory.createClientSocket();
-            initClientLogin(socket, factory.createSchemaFactory());
+            initClientLogin(socket, factory.createSchemaFactory(), factory.createKeys());
 
             client.initialize(window.location.host).then(function(results) {
               var setupGUI = function() {

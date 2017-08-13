@@ -77,8 +77,8 @@ function play() {
 
 function pause() {
   log.debug('Video.pause');
-  videoElement.removeEventListener('canplay', videoElement.play, {"once": true});
   videoElement.pause();
+  videoElement.removeEventListener('canplay', videoElement.play, {"once": true});
 }
 
 function setSocketEvents() {
@@ -87,33 +87,24 @@ function setSocketEvents() {
   socket.setEvent(eventKeys.PLAY, function(command) {
     log.debug(eventKeys.PLAY, command);
     play();
-
-    var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
-      [videoElement.currentTime, videoElement.play, videoElement.canPlay]);
-
-    socket.request(eventKeys.PING, request, true);
+    videoPing();
   });
 
   socket.setEvent(eventKeys.PAUSE, function(command) {
     log.debug(eventKeys.PAUSE, command);
     pause();
-
-    var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
-      [videoElement.currentTime, videoElement.play, videoElement.canPlay]);
-
-    socket.request(eventKeys.PING, request, true);
+    videoPing();
     socket.request(eventKeys.SYNC);
   });
 
   socket.setEvent(eventKeys.SEEK, function(command) {
     log.debug(eventKeys.SEEK, command);
-    pause();
+    if(!command.play) {
+      pause();
+    }
+    
     videoElement.currentTime = command.time;
-
-    var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
-      [videoElement.currentTime, videoElement.play, videoElement.canPlay]);
-
-    socket.request(eventKeys.PING, request, true);
+    videoPing();
   });
 }
 
@@ -189,6 +180,6 @@ function onSeek(typeId) {
 
 function videoPing() {
   var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
-    [videoElement.currentTime, !videoElement.paused, videoElement.readyState !== 4]);
+    [videoElement.currentTime, !videoElement.paused, videoElement.readyState === 4]);
   socket.request(eventKeys.PING, request);
 }

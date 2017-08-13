@@ -67,8 +67,6 @@ var LevelEnum       = { GENERAL: 'debug', ADMINISTRATION: 'debug', AUTHENTICATIO
 var buildFileTransport = function(path, label, level, handleExceptions) {
   var fileTransport = new (Winston.transports.File) ({
     filename: path,
-    maxsize: 100000,
-    maxFiles: 3,
     level: level,
     lable: label,
     handleExceptions: handleExceptions,

@@ -1,14 +1,14 @@
-function initClientLogin(socket, schemaFactory) {
+function initClientLogin(socket, schemaFactory, keys) {
   $('#submitCreds').click(function() {
     var handle	= $('#loginHandle').val();
     var address	= $('#loginUser').val();
     var token	  = $('#loginToken').val();
     var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.LOGIN, [handle, address, token ? token : undefined]);
 
-    if(typeof request.token !== 'undefined' && request.token.length > 0) {
-      socket.request('auth-validate-token', request, true);
+    if(typeof request.token !== 'undefined' && request.token.trim().length > 0) {
+      socket.request(keys.AUTHTOKEN, request, true);
     } else {
-      socket.request('auth-get-token', request, true);
+      socket.request(keys.GETTOKEN, request, true);
     }
   });
 
