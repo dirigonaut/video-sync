@@ -127,12 +127,12 @@ Session.prototype.setMediaPath = Promise.coroutine(function* (path) {
 });
 
 Session.prototype.getMediaPath = function() {
-  log.debug("Session.getMediaPath");
+  log.silly("Session.getMediaPath");
   return getSessionData.call(this, Session.Enum.MEDIA);
 };
 
 Session.prototype.isAdmin = Promise.coroutine(function* (id) {
-  log.debug("Session.isAdmin");
+  log.silly("Session.isAdmin");
   var adminList = yield getSessionData.call(this, Session.Enum.ADMIN);
 
   if(typeof adminList !== 'undefined' && adminList) {

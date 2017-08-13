@@ -43,7 +43,11 @@ PlayerManager.prototype.getPlayersAttribute = function(attr) {
   log.silly('PlayerManager.getPlayerIds');
   var temp = [];
   for(var p of players.keys()) {
-    temp.push(players.get(p)[attr]);
+    try {
+      temp.push(players.get(p)[attr]);
+    } catch (err) {
+      throw new Error(`Attribute ${attr} does not exist in Player.`);
+    }
   }
 
   return temp;
@@ -120,9 +124,8 @@ PlayerManager.prototype.setPlayerHandle = function(id, handle) {
 
 PlayerManager.prototype.initPlayers = function() {
   log.debug('PlayerManager.initPlayers');
-  for(var p of players.keys()) {
-    var player = players.get(p);
-    player.reset();
+  for(var p of players.values()) {
+    p.reset();
   }
 };
 
@@ -130,8 +133,7 @@ PlayerManager.prototype.setAuth = function(id, level) {
   log.debug('PlayerManager.setAuth');
   for(var p of players.keys()) {
     if(p === id) {
-      var player = players.get(p);
-      player.setAuth(level);
+      players.get(p).setAuth(level);
     }
   }
 };

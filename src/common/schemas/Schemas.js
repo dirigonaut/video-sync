@@ -36,9 +36,9 @@ var Schemas = {
     definition: { _id: 'string', title: 'string', smtp: 'email', invitees: 'email', mailOptions: 'schema',
     Enum: { ID: '_id', TITLE: 'title', SMTP: 'smtp', INVITEES: 'invitees', MAILOPTIONS: 'mailOptions' } } },
 
-  state: { schema: { timestamp: undefined, state: undefined, buffering: undefined },
-    definition: { timestamp: 'number', state: 'bool', buffering: 'bool',
-    Enum: { TIMESTAMP: 'timestamp', STATE: 'state', BUFFERING: 'buffering' } } },
+  state: { schema: { timestamp: undefined, state: undefined, buffered: undefined },
+    definition: { timestamp: 'number', state: 'bool', buffered: 'bool',
+    Enum: { TIMESTAMP: 'timestamp', STATE: 'state', BUFFERED: 'buffered' } } },
 
   video: { schema: { typeId: undefined, path: undefined, segment: undefined },
     definition: { typeId: 'number', path: 'ascii', segment: 'array',
@@ -59,7 +59,7 @@ var Schemas = {
 
   videoResponse: { schema: { typeId: undefined, name: undefined, data: undefined, index: undefined } },
 
-  stateResponse: { schema: { play: undefined, time: undefined, sync: undefined, buffered: undefined } }
+  stateResponse: { schema: { play: undefined, time: undefined } }
 };
 
 module.exports = Schemas;

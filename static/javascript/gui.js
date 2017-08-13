@@ -78,9 +78,10 @@ function initGUI(client, isAdmin) {
   //Location Events --------------------------------------------------------------
   $('#btnSessionMedia').click(function() {
     client.log.info("Load new video.");
-      var media = $('#locationBar').val();
-      client.socket.request(client.keys.SETMEDIA,
-        client.schema.createPopulatedSchema(client.schema.Enum.PATH, [media]));
+    var media = $('#locationBar').val();
+    client.socket.request(client.keys.SETMEDIA,
+      client.schema.createPopulatedSchema(client.schema.Enum.PATH, [media]));
+    $('#seek-bar').val(0);
   });
 
   //Session Events --------------------------------------------------------------

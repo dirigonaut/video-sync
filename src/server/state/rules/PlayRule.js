@@ -19,11 +19,14 @@ PlayRule.prototype.evaluate = function(issuer, players, mediaStarted, fuzzyRange
     log.silly("PlayRule triggered", [issuer]);
     return [issuer];
   } else {
+    log.debug(players);
     for(let player of players.values()) {
       if(player.sync === player.Sync.SYNCED || (mediaStarted === false)) {
         if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(player.timestamp)) < fuzzyRange) {
           issuees.push(player);
         }
+      } else {
+        log.debug(JSON.stringify(player));
       }
   	}
   }
