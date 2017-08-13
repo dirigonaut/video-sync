@@ -33,7 +33,7 @@ StateController.prototype.attachSocket = function(socket) {
 
     var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.PLAY, [socket.id]]);
     if(commands && commands.length > 0) {
-      for(var i in commands) {
+      for(var i = 0; i < commands.length; ++i) {
         yield redisSocket.ping.apply(null, commands[i]);
       }
 
@@ -47,7 +47,7 @@ StateController.prototype.attachSocket = function(socket) {
 
     var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.PAUSE, [socket.id]]);
     if(commands) {
-      for(var i in commands) {
+      for(var i = 0; i < commands.length; ++i) {
         yield redisSocket.ping.apply(null, commands[i]);
       }
 
@@ -63,9 +63,10 @@ StateController.prototype.attachSocket = function(socket) {
     var request = sanitizer.sanitize(data, schema, [schema.Enum.TIMESTAMP]);
 
     if(request) {
-    var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SEEK, [socket.id, request]]);
+      var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SEEK, [socket.id, request]]);
+      
       if(commands) {
-        for(var i in commands) {
+        for(var i = 0; i < commands.length; ++i) {
           yield redisSocket.ping.apply(null, commands[i]);
         }
 
@@ -77,12 +78,11 @@ StateController.prototype.attachSocket = function(socket) {
 
   socket.on(eventKeys.SYNC, Promise.coroutine(function* () {
     log.debug(eventKeys.SYNC);
-
     var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SYNC, [socket.id]]);
 
     if(commands) {
-      log.debug(`state-sync onSync ${commands}`);
-      for(var i in commands) {
+      for(var i = 0; i < commands.length; ++i) {
+        log.debug(`state-sync sync`, commands[i]);
         yield redisSocket.ping.apply(null, commands[i]);
       }
 
@@ -120,8 +120,10 @@ StateController.prototype.attachSocket = function(socket) {
 
     if(request) {
       var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SYNCINGPING, [socket.id, request]]);
+
       if(commands) {
-        for(var i in commands) {
+        for(var i = 0; i < commands.length; ++i) {
+          log.debug('Ping command', commands[i]);
           yield redisSocket.ping.apply(null, commands[i]);
         }
       }

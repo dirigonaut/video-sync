@@ -93,7 +93,7 @@ function createFormatter(label) {
     };
 
     if(options.meta && Object.keys(options.meta).length) {
-      logMessage.meta = Util.inspect(options.meta, { showHidden: false, depth: 1 });
+      logMessage.meta = Util.inspect(options.meta, { showHidden: false, depth: 2 });
     }
 
     var json = JSON.stringify(logMessage);

@@ -16,7 +16,7 @@ SyncingRule.prototype.evaluate = function(issuer, others) {
   if(issuer.sync === player.Sync.SYNCING) {
     var leader;
 
-    for(var i in others){
+    for(var i = 0; i < others.length; ++i) {
       if(others[i].sync === player.Sync.SYNCED) {
         if(!leader || others[i].timestamp > leader.timestamp) {
           leader = others[i];

@@ -42,7 +42,7 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
     var issuer = playerManager.getPlayer(id);
 
     if(issuer) {
-      if(player.desynced) {
+      if(issuer.isDesynced()) {
         log.silly('StateEngine issuing play', issuer);
         commands = [];
         commands.push([issuer.id, eventKeys.PLAY]);
@@ -53,7 +53,7 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
             var buffering = [];
 
             for(var i = 0; i < players.length; ++i) {
-              if(!players[i].desynced) {
+              if(!players[i].isDesynced()) {
                 log.info(`StateEngine issuing play ${players[i].id}`);
                 buffering.push(players[i]);
 
@@ -62,7 +62,7 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
                 }
               }
             }
-            canPlay(buffering);
+            canPlay(buffering, player.State.PLAY);
 
             if(!mediaStarted) {
               yield session.setMediaStarted(!mediaStarted);
@@ -85,7 +85,7 @@ StateEngine.prototype.pause = Promise.coroutine(function* (id) {
     var issuer = playerManager.getPlayer(id);
 
     if(issuer) {
-      if(issuer.desynced) {
+      if(issuer.isDesynced()) {
         log.silly('StateEngine issuing pause', issuer);
         commands = [];
         commands.push([issuer.id, eventKeys.PAUSE]);
@@ -94,7 +94,7 @@ StateEngine.prototype.pause = Promise.coroutine(function* (id) {
           commands = [];
           var players = playerManager.getPlayers();
           for(let player of players.values()) {
-            if(!player.desynced) {
+            if(!player.isDesynced()) {
               commands.push([player.id, eventKeys.PAUSE]);
               player.sync = player.Sync.SYNCED;
             }
@@ -117,10 +117,10 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
     var issuer = playerManager.getPlayer(id);
 
     if(issuer) {
-      if(issuer.desynced) {
+      if(issuer.isDesynced()) {
         log.silly('StateEngine issuing pause', issuer);
         commands = [];
-        var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [true, data.timestamp]);
+        var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [issuer.state, data.timestamp]);
         commands.push([issuer.id, eventKeys.SEEK, schema]);
         issuer.timestamp = data.timestamp;
       } else {
@@ -130,7 +130,7 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
           var players = playerManager.getPlayers();
 
           for(let player of players.values()) {
-            if(!player.desynced) {
+            if(!player.isDesynced()) {
               buffering.push(player);
               var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [false, data.timestamp]);
               commands.push([player.id, eventKeys.SEEK, schema]);
@@ -143,7 +143,7 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
             }
           }
 
-          canPlay(buffering);
+          canPlay(buffering, issuer.state);
         }
       }
     }
@@ -161,13 +161,13 @@ StateEngine.prototype.sync = Promise.coroutine(function* (id) {
     var issuer = playerManager.getPlayer(id);
 
     if(issuer) {
-      if(!issuer.desynced && player.getAuth() === player.Auth.DEFAULT) {
+      if(!issuer.isDesynced()) {
         var players = playerManager.getPlayers();
         if(players.size > 1) {
           var syncTime;
 
           for(let player of players.values()) {
-            if(!player.desynced) {
+            if(!player.isDesynced()) {
               if(!syncTime || (player.sync === player.Sync.SYNCED && syncTime > player.timestamp)) {
                 syncTime = player.timestamp;
               }
@@ -181,6 +181,7 @@ StateEngine.prototype.sync = Promise.coroutine(function* (id) {
       }
     }
   }
+  log.debug(command)
   return command;
 });
 
@@ -193,18 +194,18 @@ StateEngine.prototype.changeSyncState = Promise.coroutine(function* (id, syncSta
 
     if(player) {
       if(syncState.data == true) {
-        player.desynced = false;
+        player.sync = player.Sync.SYNCING;
       } else {
-        player.desynced = true;
+        player.sync = player.Sync.DESYNCED;
       }
 
-      return player.desynced;
+      return syncState.data;
     }
   }
 });
 
 StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
-  log.debug(`StateEngine.syncingPing ${id}, ${JSON.stringify(data)}`);
+  log.debug(`StateEngine.syncingPing ${id}`, data);
   var commands;
   var basePath = yield session.getMediaPath();
   var mediaStarted = yield session.getMediaStarted();
@@ -215,7 +216,7 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
     if(player) {
       if(data) {
         if(typeof data.state !== 'undefined') {
-          player.state = data.state ? player.State.PAUSE : player.State.PLAY;
+          player.state = data.state ? player.State.PLAY : player.State.PAUSE;
         }
         if(typeof data.timestamp !== 'undefined') {
           player.timestamp = data.timestamp;
@@ -234,7 +235,8 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
 
         if(leader) {
           commands = [];
-          var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [leader.state, leader.timestamp + 1]);
+          var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE,
+            leader.state === player.State.PLAY ? [true, leader.timestamp + 1] : [false, leader.timestamp]);
           commands.push([player.id, eventKeys.SEEK, schema]);
           player.sync = player.Sync.SYNCED;
         }
@@ -247,7 +249,7 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
 
 module.exports = StateEngine;
 
-var canPlay = function(players) {
+var canPlay = function(players, state) {
   var buffering = {};
 
   for(let i = 0; i < players.length; ++i) {
@@ -263,7 +265,7 @@ var canPlay = function(players) {
 
       for(let i = 0; i < players.length; ++i) {
         players[i].state = player.State.SYNCED;
-        publisher.publish(publisher.RespEnum.COMMAND, [players[i].id, eventKeys.PLAY]);
+        publisher.publish(publisher.RespEnum.COMMAND, [players[i].id, state === player.State.PLAY ? eventKeys.PLAY : eventKeys.PAUSE]);
       }
     }
   };
