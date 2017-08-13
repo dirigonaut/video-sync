@@ -17,7 +17,6 @@ Player.prototype.assign = function(id, handle, authId){
   this.sync         = Player.Sync.SYNCING;
   this.timestamp 	  = 0;
   this.buffer       = false;
-  this.desynced     = false;
 
   this.handle       = handle;
   this.authId       = authId
@@ -29,7 +28,6 @@ Player.prototype.reset = function() {
   this.sync        = Player.Sync.SYNCING;
   this.timestamp 	 = 0;
   this.buffer      = false;
-  this.desynced    = false;
 };
 
 Player.prototype.setHandle = function(handle) {
@@ -44,8 +42,12 @@ Player.prototype.getAuth = function() {
   return this.auth;
 };
 
-Player.State = {"PLAY" : 0, "PAUSE" : 1};
-Player.Sync  = {"SYNCING" : 0, "SYNCED" : 1, "SYNCWAIT": 2, "BUFFWAIT" : 3};
+Player.prototype.isDesynced = function() {
+  return this.sync === Player.Sync.DESYNCED;
+};
+
+Player.State = {"PAUSE" : 0, "PLAY" : 1};
+Player.Sync  = {"DESYNCED": 0, "SYNCING" : 1, "SYNCED" : 2, "BUFFWAIT" : 3};
 Player.Auth  = {"DEFAULT" : 0, "RESTRICTED" : 1};
 
 module.exports = Player;

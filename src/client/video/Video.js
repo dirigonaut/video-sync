@@ -101,8 +101,10 @@ function setSocketEvents() {
     log.debug(eventKeys.SEEK, command);
     if(!command.play) {
       pause();
+    } else {
+      play();
     }
-    
+
     videoElement.currentTime = command.time;
     videoPing();
   });
