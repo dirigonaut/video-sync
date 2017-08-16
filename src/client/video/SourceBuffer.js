@@ -243,16 +243,18 @@ var requestVideoData = function(requestDetails) {
 
 var isTimeRangeBuffered = function(timestamp) {
   var buffered = false;
-  var timeRanges = this.sourceBuffer.buffered;
+  if(typeof this.sourceBuffer !== 'undefined') {
+    var timeRanges = this.sourceBuffer.buffered;
 
-  for(var i = 0; i < timeRanges.length; ++i) {
-    if(timeRanges.start(i) > timestamp) {
-      break;
-    } else if (timeRanges.end(i) > timestamp) {
-      buffered = true;
-      break;
+    for(var i = 0; i < timeRanges.length; ++i) {
+      if(timeRanges.start(i) > timestamp) {
+        break;
+      } else if (timeRanges.end(i) > timestamp) {
+        buffered = true;
+        break;
+      }
     }
   }
-  
+
   return metaManager.getActiveMetaData().isForceBuffer(this.type) ? false : buffered;
 };

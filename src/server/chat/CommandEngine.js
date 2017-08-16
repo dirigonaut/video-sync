@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-var userAdmin, chatEngine, publisher, stateEngine, playerManager, schemaFactory, log;
+var userAdmin, eventKeys, publisher, stateEngine, playerManager, schemaFactory, log;
 
 function CommandEngine() { }
 
@@ -12,8 +12,8 @@ CommandEngine.prototype.initialize = function(force) {
     CommandEngine.prototype.RespEnum = CommandEngine.RespEnum;
 
     userAdmin       = this.factory.createUserAdministration();
-    chatEngine      = this.factory.createChatEngine();
     schemaFactory   = this.factory.createSchemaFactory();
+    eventKeys       = this.factory.createKeys();
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.CHAT);
@@ -34,26 +34,26 @@ CommandEngine.prototype.processAdminCommand = Promise.coroutine(function* (admin
   switch(command.command) {
     case CommandEngine.AdminEnum.INVITE:
       userAdmin.inviteUser(command.param[0]);
-      action = [CommandEngine.RespEnum.CHAT, [eventKeys.PING, `User ${command.param[0]} has been invited.`]];
+      action = [CommandEngine.RespEnum.CHAT, [eventKeys.PINGRESP, `User ${command.param[0]} has been invited.`]];
       break;
 
     case CommandEngine.AdminEnum.KICK:
       userAdmin.kickUser(command.param[0]).catch(log.error);
-      action = [CommandEngine.RespEnum.CHAT, [eventKeys.PING, `User ${command.param[0]} has been kicked.`]];
+      action = [CommandEngine.RespEnum.CHAT, [eventKeys.PINGRESP, `User ${command.param[0]} has been kicked.`]];
       break;
 
     case CommandEngine.AdminEnum.DOWNGRADE:
       userAdmin.downgradeUser(command.param[0]);
-      action = [CommandEngine.RespEnum.CHAT, [eventKeys.PING, `User ${command.param[0]} has been downgraded.`]];
+      action = [CommandEngine.RespEnum.CHAT, [eventKeys.PINGRESP, `User ${command.param[0]} has been downgraded.`]];
       break;
 
     case CommandEngine.AdminEnum.UPGRADE:
       userAdmin.upgradeUser(command.param[0]);
-      action = [CommandEngine.RespEnum.CHAT, [eventKeys.PING, `User ${command.param[0]} has been upgraded.`]];
+      action = [CommandEngine.RespEnum.CHAT, [eventKeys.PINGRESP, `User ${command.param[0]} has been upgraded.`]];
       break;
 
     case CommandEngine.ClientEnum.HELP:
-      action = [CommandEngine.RespEnum.CHAT, [eventKeys.PING, "admin help response"]];
+      action = [CommandEngine.RespEnum.CHAT, [eventKeys.PINGRESP, "admin help response"]];
       break;
 
     default:
@@ -71,13 +71,13 @@ CommandEngine.prototype.processCommand = Promise.coroutine(function* (issuer, co
   switch(command.command) {
     case CommandEngine.ClientEnum.PLAY:
       var engineCommand = [publisher.Enum.STATE, [stateEngine.functions.PLAY, [issuer.id]]];
-      var chat = [eventKeys.EVENT, "issued play"];
+      var chat = [eventKeys.EVENTRESP, "issued play"];
       action = [CommandEngine.RespEnum.COMMAND, [engineCommand, chat]];
       break;
 
     case CommandEngine.ClientEnum.PAUSE:
       var engineCommand = [publisher.Enum.STATE, [stateEngine.functions.PAUSE, [issuer.id]]];
-      var chat = [eventKeys.EVENT, "issued pause"];
+      var chat = [eventKeys.EVENTRESP, "issued pause"];
       action = [CommandEngine.RespEnum.COMMAND, [engineCommand, chat]];
       break;
 
@@ -85,24 +85,24 @@ CommandEngine.prototype.processCommand = Promise.coroutine(function* (issuer, co
       if(typeof command.param !== 'undefined' && command.param.length >= 1) {
         var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE, [timestampToSeconds(command.param[0])]);
         var engineCommand = [publisher.Enum.STATE, [stateEngine.functions.SEEK, [issuer.id, schema]]];
-        var chat = [eventKeys.EVENT, `issued seek to ${timestampToSeconds(command.param[0])}`];
+        var chat = [eventKeys.EVENTRESP, `issued seek to ${timestampToSeconds(command.param[0])}`];
         action = [CommandEngine.RespEnum.COMMAND, [engineCommand, chat]];
       } else {
-        action = [CommandEngine.RespEnum.CHAT, [eventKeys.PING, 'Missing time attribute formate 00:00:00.']];
+        action = [CommandEngine.RespEnum.CHAT, [eventKeys.PINGRESP, 'Missing time attribute formate 00:00:00.']];
       }
       break;
 
     case CommandEngine.ClientEnum.HANDLE:
       yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.SETPLAYERHANDLE, [issuer.id, command.param[0]]]);
-      action = [CommandEngine.RespEnum.CHAT, [eventKeys.EVENT, `ID: ${issuer.id} changed their handle to ${command.param[0]}`]];
+      action = [CommandEngine.RespEnum.CHAT, [eventKeys.EVENTRESP, `ID: ${issuer.id} changed their handle to ${command.param[0]}`]];
       break;
 
     case CommandEngine.ClientEnum.HELP:
-      action = [CommandEngine.RespEnum.CHAT, [eventKeys.PING, "help response"]];
+      action = [CommandEngine.RespEnum.CHAT, [eventKeys.PINGRESP, "help response"]];
       break;
 
     default:
-      action = [CommandEngine.RespEnum.CHAT, [eventKeys.PING, `${command.command} is not a recognized command, type /help for a list of commands.`]];
+      action = [CommandEngine.RespEnum.CHAT, [eventKeys.PINGRESP, `${command.command} is not a recognized command, type /help for a list of commands.`]];
       break;
   }
 

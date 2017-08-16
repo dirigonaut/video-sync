@@ -18,7 +18,7 @@ ClientSocket.prototype.initialize = function() {
 ClientSocket.prototype.connectAsync = function(serverUrl) {
 	log.info("Socket connecting to: " + serverUrl);
 
-	socket = io.connect(serverUrl, {rejectUnauthorized: false});
+	socket = io.connect(serverUrl, {rejectUnauthorized: true});
 
 	socket.on(eventKeys.CONNECTED, function() {
 		log.info("Socket connected to server.");

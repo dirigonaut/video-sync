@@ -44,7 +44,7 @@ ChatController.prototype.attachSocket = Promise.coroutine(function* (socket) {
 
     if(request) {
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, request.data]);
-      yield chatEngine.broadcast(eventKeys.BROADCAST, response);
+      yield chatEngine.broadcast(eventKeys.BROADCASTRESP, response);
     }
   }.bind(this)));
 
@@ -55,7 +55,7 @@ ChatController.prototype.attachSocket = Promise.coroutine(function* (socket) {
 
     if(request) {
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, request.data]);
-      yield chatEngine.broadcast(eventKeys.BROADCAST, response);
+      yield chatEngine.broadcast(eventKeys.BROADCASTRESP, response);
     }
   }.bind(this)));
 

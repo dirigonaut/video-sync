@@ -82,7 +82,7 @@ AuthenticationController.prototype.attachIO = function (io) {
 
       if(socket.id) {
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'has left the session.']);
-        yield chatEngine.broadcast(eventKeys.EVENT, response);
+        yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
 
         var isAdmin = yield session.isAdmin(socket.id);
         if(isAdmin) {
@@ -135,7 +135,7 @@ var userAuthorized = Promise.coroutine(function* (socket, handle, authId, isAdmi
     yield redisSocket.broadcast(eventKeys.HANDLES, handles);
 
     var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'has joined.']);
-    yield chatEngine.broadcast(eventKeys.EVENT, response);
+    yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
   }));
 
   log.info("socket has been authenticated.", socket.id);

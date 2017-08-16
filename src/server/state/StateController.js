@@ -32,13 +32,13 @@ StateController.prototype.attachSocket = function(socket) {
     log.info(eventKeys.REQPLAY);
 
     var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.PLAY, [socket.id]]);
-    if(commands && commands.length > 0) {
+    if(commands) {
       for(var i = 0; i < commands.length; ++i) {
         yield redisSocket.ping.apply(null, commands[i]);
       }
 
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'issued play.']);
-      yield chatEngine.broadcast(eventKeys.EVENT, response);
+      yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
     }
   }));
 
@@ -52,7 +52,7 @@ StateController.prototype.attachSocket = function(socket) {
       }
 
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'issued pause.']);
-      yield chatEngine.broadcast(eventKeys.EVENT, response);
+      yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
     }
   }));
 
@@ -64,14 +64,14 @@ StateController.prototype.attachSocket = function(socket) {
 
     if(request) {
       var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SEEK, [socket.id, request]]);
-      
+
       if(commands) {
         for(var i = 0; i < commands.length; ++i) {
           yield redisSocket.ping.apply(null, commands[i]);
         }
 
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, `issued seek to ${request.timestamp}.`]);
-        yield chatEngine.broadcast(eventKeys.EVENT, response);
+        yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
       }
     }
   }));
@@ -87,7 +87,7 @@ StateController.prototype.attachSocket = function(socket) {
       }
 
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'issued sync.']);
-      yield chatEngine.broadcast(eventKeys.EVENT, response);
+      yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
     }
   }));
 
@@ -101,7 +101,7 @@ StateController.prototype.attachSocket = function(socket) {
       var value = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.CHANGESYNCSTATE, [socket.id, request]]);
       if(typeof value === 'boolean') {
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, ` desync value is ${value}.`]);
-        yield chatEngine.broadcast(eventKeys.EVENT, response);
+        yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
 
         socket.emit('state-sync-state', schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [value]));
       }
