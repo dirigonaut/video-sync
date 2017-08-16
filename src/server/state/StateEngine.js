@@ -50,6 +50,7 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
         if(issuer.getAuth() === player.Auth.DEFAULT) {
           var players = playRule.evaluate(issuer, playerManager.getPlayers(), mediaStarted, accuracy);
           if(players) {
+            commands = [];
             var buffering = [];
 
             for(var i = 0; i < players.length; ++i) {

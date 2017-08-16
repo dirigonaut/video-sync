@@ -61,7 +61,7 @@ AdminController.prototype.attachSocket = function(socket) {
 
           log.debug(eventKeys.MEDIAREADY);
           var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'Video has been initialized.']);
-          yield chatEngine.broadcast(eventKeys.EVENT, response);
+          yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
           yield redisSocket.broadcast(eventKeys.MEDIAREADY);
         }
       }

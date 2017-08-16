@@ -45,7 +45,7 @@ MediaController.prototype.setup = Promise.coroutine(function* (mediaSource, wind
   video.emit('get-init');
   var resetCallbacks = yield Promise.all(mediaPromises);
 
-
+  mediaSource.addEventListener('error', log.error);
   return onReset.call(this, resetCallbacks, mediaSource);
 });
 
@@ -103,6 +103,7 @@ function onReset(resets, mediaSource) {
           }
 
           mediaSource.endOfStream();
+          mediaSource.removeEventListener('error',  log.error);
           this.emit('media-reset');
         }
       } else {
