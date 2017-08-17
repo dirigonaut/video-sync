@@ -424,7 +424,6 @@ function initGUI(client, isAdmin) {
       autoScroll('#logManuscript');
   }
 
-  console.log(client.keys.BROADCASTRESP)
   client.socket.setEvent(client.keys.BROADCASTRESP, chatMessage);
   client.socket.setEvent(client.keys.EVENTRESP, systemMessage);
   client.socket.setEvent(client.keys.PINGRESP, systemMessage);
