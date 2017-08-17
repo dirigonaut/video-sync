@@ -27,6 +27,7 @@ Video.prototype.setup = function(element, window, mediaSource) {
     videoElement.load();
     videoElement.currentTime = 0;
     videoElement.addEventListener('timeupdate', videoPing, false);
+    videoElement.onerror = function() { console.log(videoElement.error) };
 
     var eventId = setInterval(function() {
       if(videoElement.play) {
@@ -136,6 +137,7 @@ function removeVideoSourceEvents(bufferType) {
   log.info(`Removing video events for buffer of type: ${bufferType}.`);
   videoElement.removeEventListener('timeupdate', sourceEvents[bufferType][0], false);
   videoElement.removeEventListener('seeking', sourceEvents[bufferType][1], false);
+  videoElement.onerror = undefined;
 }
 
 function onReset(eventId, metaManager) {

@@ -62,7 +62,7 @@
             log.ui('Added UI logging.');
 
             var socket = factory.createClientSocket();
-            initClientLogin(socket, factory.createSchemaFactory(), factory.createKeys());
+            var autoLogin = initClientLogin(socket, factory.createSchemaFactory(), factory.createKeys());
 
             client.initialize(window.location.host).then(function(results) {
               var setupGUI = function() {
@@ -115,7 +115,9 @@
               } else {
                 $.getScript("../javascript/gui.js", loadUI);
               }
-            })
+            });
+            
+            autoLogin();
           });
         });
       });
