@@ -20,6 +20,7 @@ SourceBuffer.prototype.initialize = function(force) {
 SourceBuffer.prototype.setup = Promise.coroutine(function* (bufferType, mediaSource, video) {
   log.info(`SourceBuffer.initialize type: ${bufferType}`);
   if(bufferType !== 'undefined' && mediaSource) {
+    this.bufferLog = [];
     this.type = bufferType;
     this.sourceBuffer;
     this.forceStop = false;
@@ -50,8 +51,8 @@ SourceBuffer.prototype.setup = Promise.coroutine(function* (bufferType, mediaSou
         log.info("SourceBuffer attached to MediaSource.");
         try {
           this.sourceBuffer = mediaSource.addSourceBuffer(spec);
-          this.sourceBuffer.addEventListener('error',  log.error);
-          this.sourceBuffer.addEventListener('abort',  log.error);
+          this.sourceBuffer.addEventListener('error', logBufferEntries.call(this));
+          this.sourceBuffer.addEventListener('abort', log.error);
           this.sourceBuffer.addEventListener('update', events.ready);
           resolve();
         } catch(err) {
@@ -141,7 +142,7 @@ function bufferSegment() {
 
     isReadyForNextSegment();
 
-    if(!this.hasInitSeg) {
+    if(typeof this.hasInitSeg === 'undefined') {
       log.info(`Init segment has been received: ${this.type}`);
       this.hasInitSeg = true;
       var segmentInfo = metaManager.getActiveMetaData().getSegment(this.type, 0);
@@ -162,27 +163,25 @@ function onReady() {
       do {
         var mapQueue = this.segmentsToBuffer.get(this.loadingSegment);
 
-        if(!mapQueue) {
+        if(typeof this.loadingSegment === 'undefined') {
           if(this.forceStop) {
             break;
           } else if(this.segmentsToBuffer.size > 0) {
             this.loadingSegment = this.segmentsToBuffer.keys().next().value;
             log.debug(`Set loadingSegment to ${this.loadingSegment} and continuing`);
+            this.bufferLog.push(`Set loadingSegment to ${this.loadingSegment} and continuing`);
             continue;
-          } else {
-            this.loadingSegment = null;
-            log.debug(`Set loadingSegment to ${this.loadingSegment} and breaking`);
-            break;
           }
         }
 
-        log.debug(`${mapQueue.size} > ${this.index} for type: ${this.type}`);
-        if(mapQueue.size > this.index) {
+        log.debug(`${mapQueue ? mapQueue.size : 'undefined'} > ${this.index} for type: ${this.type}`);
+        if(mapQueue && mapQueue.size > this.index) {
           var segment = mapQueue.get(this.index);
 
           if(segment !== null) {
             if(segment) {
               log.debug(`Appending from ${this.loadingSegment} mapQueue at index ${this.index} for buffer ${this.type}`);
+              this.bufferLog.push(`Appending from ${this.loadingSegment} mapQueue at index ${this.index} for buffer ${this.type}`);
               this.sourceBuffer.appendBuffer(segment);
               bufferUpdated = true;
               this.index++;
@@ -191,8 +190,11 @@ function onReady() {
             }
           } else {
             log.debug(`Removing entry ${this.loadingSegment} and resetting index`);
+            this.bufferLog.push(`Removing entry ${this.loadingSegment} and resetting index`);
+            this.bufferLog.push(`Deleting segments ${Array.from(this.segmentsToBuffer.get(this.loadingSegment).keys())}`)
             this.segmentsToBuffer.delete(this.loadingSegment);
             this.index = 0;
+            this.loadingSegment = undefined;
           }
         } else {
           log.debug(`mapQueue.size !> self.index breaking`);
@@ -227,8 +229,8 @@ function onReset(video, mediaSource, events) {
     video.removeListener('get-segment', events.getSegment);
     video.removeListener('seek-segment', events.seek);
 
-    this.sourceBuffer.removeEventListener('error',  log.error);
-    this.sourceBuffer.removeEventListener('abort',  log.error);
+    this.sourceBuffer.removeEventListener('error', logBufferEntries.call(this));
+    this.sourceBuffer.removeEventListener('abort', log.error);
     this.sourceBuffer.removeEventListener('update', events.ready);
 
     socket.removeEvent(eventKeys.SEGMENTCHUNK, events.onSegment);
@@ -257,4 +259,13 @@ var isTimeRangeBuffered = function(timestamp) {
   }
 
   return metaManager.getActiveMetaData().isForceBuffer(this.type) ? false : buffered;
+};
+
+var logBufferEntries = function() {
+  var logging = function(err) {
+    log.error(err);
+    log.error("Buffer threw and error", this.bufferLog);
+  }.bind(this);
+
+  return logging;
 };
