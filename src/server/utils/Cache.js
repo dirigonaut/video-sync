@@ -39,7 +39,7 @@ Cache.prototype.initialize = function(force) {
         readFile(key, message);
         client.unsubscribe(channel);
       } else {
-        this.emit(channel, `${channel}:${message}`);
+        this.emit(channel, message);
       }
     }.bind(this));
   }
@@ -48,50 +48,66 @@ Cache.prototype.initialize = function(force) {
 Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback) {
   var key = `${requestData.path}-${requestData.segment[0]}-${requestData.segment[1]}-${requestData.typeId}`;
   log.debug(`Cache.getSegment ${key}`);
-  var lastIndex = 0;
+  var lastIndex;
+  var triggerCheck;
+  var timeout;
   var indexes = [];
-  var segment = yield getCacheData(`${key}:${0}`);
 
-  var subscribeToSegment = Promise.coroutine(function* (segmentKey) {
-    if(segmentKey) {
-      segment = yield getCacheData(segmentKey);
-    }
+  var segmentHandler = Promise.coroutine(function* (index) {
+    log.debug(`Cache.segmentHandler ${key}:${index}`, indexes);
+    if(index !== undefined) {
+      var segment;
 
-    if(segment) {
-      if(typeof segment.name !== 'undefined' && segment.name) {
-        while(segment) {
-          if(segment.data === null) {
-            lastIndex = segment.index;
-          }
+      do {
+        if(!indexes.includes(index)) {
+          segment = yield getCacheData(`${key}:${index}`);
+          ++index;
+        } else if (index > lastIndex) {
+          segment = undefined;
+        } else {
+          ++index;
+          continue;
+        }
 
-          if(typeof segment.data !== 'undefined' && segment.data) {
-            segment.data = new Buffer(new Uint8Array(segment.data.data));
-          }
+        if(segment && !indexes.includes(segment.index)) {
+          if(typeof segment.name !== 'undefined' && segment.name) {
+            if(segment.data === null) {
+              lastIndex = segment.index;
+            }
 
-          if(!indexes.includes(segment.index)) {
+            if(typeof segment.data !== 'undefined' && segment.data) {
+              segment.data = new Buffer(new Uint8Array(segment.data.data));
+            }
+
             callback(segment);
             indexes.push(segment.index);
-          }
 
-          segment = yield getCacheData(`${key}:${segment.index + 1}`);
-
-          if(lastIndex && lastIndex === indexes.length - 1) {
-            log.debug(`Unsubscribing key: ${key} lastIndex: ${lastIndex}, indexes: ${indexes.length}`);
-            client.unsubscribe(key);
+            if(lastIndex) {
+              if(lastIndex === indexes.length - 1) {
+                log.debug(`Unsubscribing key: ${key} lastIndex: ${lastIndex}, indexes: ${indexes.length}`);
+                if(!timeout) {
+                  timeout = setTimeout(function() {
+                    client.unsubscribe(key);
+                  }, EXPIRES/4);
+                }
+                break;
+              } else if(!triggerCheck) {
+                triggerCheck = true;
+                segmentHandler(0);
+              }
+            }
           }
         }
-      }
+      } while(segment);
     }
   });
 
-  this.on(key, subscribeToSegment);
+  this.on(key, segmentHandler);
   yield client.subscribeAsync(key);
   yield client.subscribeAsync(`${key}${READID}`);
   yield publisher.publishAsync(`${key}${READID}`, JSON.stringify(requestData));
 
-  if(segment) {
-    subscribeToSegment();
-  }
+  segmentHandler(0);
 });
 
 module.exports = Cache;
@@ -128,14 +144,14 @@ var readFile = Promise.coroutine(function* (key, requestData) {
 });
 
 var setCacheData = Promise.coroutine(function* (key, index, data) {
-  log.debug(`setCacheData for key: ${key}`);
+  log.debug(`setCacheData for key: ${key}:${index}`);
   var json = JSON.stringify(data);
   yield publisher.setAsync(`${key}:${index}`, json, 'EX', EXPIRES);
   yield publisher.publishAsync(key, index);
 });
 
 var getCacheData = Promise.coroutine(function* (key) {
-  log.debug('getCacheData for key: ', key);
+  log.debug(`getCacheData for key: ${key}`);
   var data = yield publisher.getAsync(key);
 
   if(data) {
