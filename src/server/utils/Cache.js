@@ -1,11 +1,13 @@
 const Promise     = require('bluebird');
 const Redis       = require('redis');
+const Events      = require('events');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
 const EXPIRES     = 30000;
+const READID      = '-readRequest';
 
-var subCallbacks, session, publisher, client, fileIO, schemaFactory, log;
+var session, publisher, client, fileIO, schemaFactory, log;
 
 function Cache() { }
 
@@ -14,14 +16,15 @@ Cache.prototype.initialize = function(force) {
     Cache.prototype.protoInit = true;
     fileIO          = this.factory.createFileIO();
     schemaFactory   = this.factory.createSchemaFactory();
-    var config      = this.factory.createConfig();
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.VIDEO);
   }
 
   if(force === undefined ? typeof Cache.prototype.stateInit === 'undefined' : force) {
     Cache.prototype.stateInit = true;
-    subCallbacks    = new Map();
+    Object.setPrototypeOf(Cache.prototype, Events.prototype);
+    var config      = this.factory.createConfig();
 
     session         = this.factory.createSession();
     publisher       = Redis.createClient(config.getConfig().redis);
@@ -29,46 +32,65 @@ Cache.prototype.initialize = function(force) {
 
     client.on("message", function(channel, message) {
       log.debug('Subscribers onMessage ', channel);
-      message = JSON.parse(message);
+      message = typeof message === 'string' ? JSON.parse(message) : message;
 
-      var callbacks = subCallbacks.get(channel);
-      if(callbacks) {
-        log.debug(`Subscribers returning data for key ${channel} and index ${message.index}`);
-        if(typeof message.data !== 'undefined' && message.data) {
-          message.data = new Buffer(new Uint8Array(message.data.data));
-        }
-
-        for(var i in callbacks) {
-          callbacks[i](message);
-        }
+      if(channel.substring(channel.length - READID.length) === READID) {
+        var key = channel.substring(0, channel.length - READID.length);
+        readFile(key, message);
+        client.unsubscribe(channel);
+      } else {
+        this.emit(channel, `${channel}:${message}`);
       }
-    });
+    }.bind(this));
   }
 };
 
 Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback) {
   var key = `${requestData.path}-${requestData.segment[0]}-${requestData.segment[1]}-${requestData.typeId}`;
   log.debug(`Cache.getSegment ${key}`);
-  var segment = yield getCacheData(`${key}:0`);
+  var lastIndex = 0;
+  var indexes = [];
+  var segment = yield getCacheData(`${key}:${0}`);
+
+  var subscribeToSegment = Promise.coroutine(function* (segmentKey) {
+    if(segmentKey) {
+      segment = yield getCacheData(segmentKey);
+    }
+
+    if(segment) {
+      if(typeof segment.name !== 'undefined' && segment.name) {
+        while(segment) {
+          if(segment.data === null) {
+            lastIndex = segment.index;
+          }
+
+          if(typeof segment.data !== 'undefined' && segment.data) {
+            segment.data = new Buffer(new Uint8Array(segment.data.data));
+          }
+
+          if(!indexes.includes(segment.index)) {
+            callback(segment);
+            indexes.push(segment.index);
+          }
+
+          segment = yield getCacheData(`${key}:${segment.index + 1}`);
+
+          if(lastIndex && lastIndex === indexes.length - 1) {
+            log.debug(`Unsubscribing key: ${key} lastIndex: ${lastIndex}, indexes: ${indexes.length}`);
+            client.unsubscribe(key);
+          }
+        }
+      }
+    }
+  });
+
+  this.on(key, subscribeToSegment);
+  yield client.subscribeAsync(key);
+  yield client.subscribeAsync(`${key}${READID}`);
+  yield publisher.publishAsync(`${key}${READID}`, JSON.stringify(requestData));
 
   if(segment) {
-    log.info(`Cache has data ${key}`);
-    if(typeof segment.name !== 'undefined' && segment.name) {
-      while(segment) {
-        if(typeof segment.data !== 'undefined' && segment.data) {
-          segment.data = new Buffer(new Uint8Array(segment.data.data));
-        }
-
-        callback(segment);
-        segment = yield getCacheData(`${key}:${segment.index + 1}`);
-      }
-
-      subscribeToRead(key, callback);
-    }
-  } else {
-    log.info('Cache has no data', key);
-    subscribeToRead(key, callback);
-    readFile(key, requestData);
+    subscribeToSegment();
   }
 });
 
@@ -109,7 +131,7 @@ var setCacheData = Promise.coroutine(function* (key, index, data) {
   log.debug(`setCacheData for key: ${key}`);
   var json = JSON.stringify(data);
   yield publisher.setAsync(`${key}:${index}`, json, 'EX', EXPIRES);
-  yield publisher.publishAsync(key, json);
+  yield publisher.publishAsync(key, index);
 });
 
 var getCacheData = Promise.coroutine(function* (key) {
@@ -127,40 +149,3 @@ var registerFileRead = Promise.coroutine(function* (key) {
   var result = yield publisher.setAsync(`${key}`, 'registered', 'NX', 'EX', EXPIRES);
   return result === 'OK' ? true : false;
 });
-
-var subscribeToRead = function(key, callback) {
-  log.debug('subscribeToRead for key: ', key);
-  var callbacks = subCallbacks.get(key);
-
-  if(callbacks) {
-    callbacks.splice(callbacks.length - 1, 0, callback);
-  } else {
-    callbacks = [callback, createUnsubscribeListener(key)];
-    client.subscribe(key);
-  }
-
-  subCallbacks.set(key, callbacks);
-};
-
-var createUnsubscribeListener = function(key) {
-  var lastIndex;
-  var countIndex = 0;
-
-  var unsubscribe = function(message) {
-    if(message) {
-      if(!message.data) {
-        lastIndex = message.index;
-      }
-
-      if(lastIndex && lastIndex === countIndex) {
-        log.debug(`Unsubscribing key: ${key} lastIndex: ${lastIndex}, countIndex: ${countIndex}`);
-        subCallbacks.delete(key);
-        client.unsubscribe(key);
-      }
-
-      ++countIndex;
-    }
-  };
-
-  return unsubscribe;
-};
