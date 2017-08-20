@@ -3,6 +3,8 @@ const Redis       = require('redis');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
+const EXPIRES     = 30000;
+
 var subCallbacks, session, publisher, client, fileIO, schemaFactory, log;
 
 function Cache() { }
@@ -61,9 +63,7 @@ Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback)
         segment = yield getCacheData(`${key}:${segment.index + 1}`);
       }
 
-      if(subCallbacks.get(key)) {
-        subscribeToRead(key, callback);
-      }
+      subscribeToRead(key, callback);
     }
   } else {
     log.info('Cache has no data', key);
@@ -76,36 +76,39 @@ module.exports = Cache;
 
 var readFile = Promise.coroutine(function* (key, requestData) {
   log.debug(`Cache.readFile ${key}`);
-  var basePath = yield session.getMediaPath();
+  var result = yield registerFileRead(key);
+  if(result) {
+    var basePath = yield session.getMediaPath();
 
-  if(basePath && basePath.length > 0) {
-    var readConfig = fileIO.createStreamConfig(basePath + requestData.path, Promise.coroutine(function* (data, index) {
-      log.debug(`Cache on data for key: ${key} of size: ${data ? data.length : null}`);
-      var args = [requestData.typeId, key, data, index];
-      var segment = schemaFactory.createPopulatedSchema(schemaFactory.Enum.VIDEORESPONSE, args);
+    if(basePath && basePath.length > 0) {
+      var readConfig = fileIO.createStreamConfig(basePath + requestData.path, Promise.coroutine(function* (data, index) {
+        log.debug(`Cache on data for key: ${key} of size: ${data ? data.length : null}`);
+        var args = [requestData.typeId, key, data, index];
+        var segment = schemaFactory.createPopulatedSchema(schemaFactory.Enum.VIDEORESPONSE, args);
 
-      yield setCacheData(segment.name, segment.index, segment);
-    }));
+        yield setCacheData(segment.name, segment.index, segment);
+      }));
 
-    var options = {"start": parseInt(requestData.segment[0]), "end": parseInt(requestData.segment[1])};
-    readConfig.options = options;
+      var options = {"start": parseInt(requestData.segment[0]), "end": parseInt(requestData.segment[1])};
+      readConfig.options = options;
 
-    readConfig.onFinish = Promise.coroutine(function* (index) {
-      log.debug('Cache finished read: ', key);
-      var args = [requestData.typeId, key, null, index];
-      var segment = schemaFactory.createPopulatedSchema(schemaFactory.Enum.VIDEORESPONSE, args);
+      readConfig.onFinish = Promise.coroutine(function* (index) {
+        log.debug('Cache finished read: ', key);
+        var args = [requestData.typeId, key, null, index];
+        var segment = schemaFactory.createPopulatedSchema(schemaFactory.Enum.VIDEORESPONSE, args);
 
-      yield setCacheData(segment.name, segment.index, segment);
-    });
+        yield setCacheData(segment.name, segment.index, segment);
+      });
 
-    fileIO.read(readConfig);
+      fileIO.read(readConfig);
+    }
   }
 });
 
 var setCacheData = Promise.coroutine(function* (key, index, data) {
   log.debug(`setCacheData for key: ${key}`);
   var json = JSON.stringify(data);
-  yield publisher.setAsync(`${key}:${index}`, json, 'EX', 30);
+  yield publisher.setAsync(`${key}:${index}`, json, 'EX', EXPIRES);
   yield publisher.publishAsync(key, json);
 });
 
@@ -118,6 +121,11 @@ var getCacheData = Promise.coroutine(function* (key) {
   }
 
   return data;
+});
+
+var registerFileRead = Promise.coroutine(function* (key) {
+  var result = yield publisher.setAsync(`${key}`, 'registered', 'NX', 'EX', EXPIRES);
+  return result === 'OK' ? true : false;
 });
 
 var subscribeToRead = function(key, callback) {

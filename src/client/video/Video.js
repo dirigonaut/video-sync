@@ -27,10 +27,10 @@ Video.prototype.setup = function(element, window, mediaSource) {
     videoElement.load();
     videoElement.currentTime = 0;
     videoElement.addEventListener('timeupdate', videoPing, false);
-    videoElement.onerror = function() { console.log(videoElement.error) };
+    videoElement.addEventListener('error', logVideoElementErrors.call(this));
 
     var eventId = setInterval(function() {
-      if(videoElement.play) {
+      if(videoElement.pause) {
         videoPing();
       }
     }, 1000);
@@ -61,6 +61,10 @@ Video.prototype.setup = function(element, window, mediaSource) {
 
 Video.prototype.getVideoElement = function() {
   return videoElement;
+};
+
+Video.prototype.resetVideoElementErrorState = function() {
+  videoElement.error = undefined;
 };
 
 module.exports = Video;
@@ -137,7 +141,7 @@ function removeVideoSourceEvents(bufferType) {
   log.info(`Removing video events for buffer of type: ${bufferType}.`);
   videoElement.removeEventListener('timeupdate', sourceEvents[bufferType][0], false);
   videoElement.removeEventListener('seeking', sourceEvents[bufferType][1], false);
-  videoElement.onerror = undefined;
+  videoElement.removeEventListener('error', logVideoElementErrors.call(this));
 }
 
 function onReset(eventId, metaManager) {
@@ -177,7 +181,7 @@ function onSeek(typeId) {
   var seek = function() {
     log.debug(`Video.seek ${typeId}`);
     metaData.updateActiveMeta(typeId, metaData.getSegmentIndex(typeId, videoElement.currentTime));
-    this.emit("seek-segment", typeId, videoElement.currentTime);
+    this.emit("get-segment", typeId, videoElement.currentTime);
   }.bind(this);
   return seek;
 }
@@ -186,4 +190,12 @@ function videoPing() {
   var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
     [videoElement.currentTime, !videoElement.paused, videoElement.readyState === 4]);
   socket.request(eventKeys.PING, request);
+}
+
+function logVideoElementErrors() {
+  var handleErrors = function() {
+    log.error(videoElement.error.message, { errorCode: videoElement.error.code});
+    this.emit('media-error', videoElement.error.code);
+  }.bind(this);
+  return handleErrors;
 }

@@ -259,6 +259,7 @@ var canPlay = function(players, state) {
   }
 
   var canPlayLogic = function(id) {
+    log.debug(`StateEngine player: ${id} canPlay.`);
     delete buffering[id];
 
     if(Object.entries(buffering).length === 0) {
@@ -272,6 +273,7 @@ var canPlay = function(players, state) {
   };
 
   if(Object.entries(buffering).length > 0) {
+    log.debug(`StateEngine all players canPlay.`);
     trigger.removeAllListeners('canPlay');
     trigger.on('canPlay', canPlayLogic);
   }
