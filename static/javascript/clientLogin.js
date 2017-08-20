@@ -24,7 +24,6 @@ function initClientLogin(socket, schemaFactory, keys) {
     var expire = new Date();
     expire.setHours(expire.getHours() + 24);
     document.cookie = `${key}=${value}; expires=${expire}`;
-    console.log(document.cookie)
   }
 
   function getCookie(name) {

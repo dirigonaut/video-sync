@@ -35,11 +35,21 @@ MediaController.prototype.setup = Promise.coroutine(function* (mediaSource, wind
   if(active.activeMeta.get(metaManager.Enum.VIDEO)) {
     buffers[metaManager.Enum.VIDEO] = this.factory.createSourceBuffer();
     mediaPromises.push(buffers[metaManager.Enum.VIDEO].setup(metaManager.Enum.VIDEO, mediaSource, video));
+
+    buffers[metaManager.Enum.VIDEO].once('init', function() { video.emit('get-segment', metaManager.Enum.VIDEO,
+      video.getVideoElement().currentTime ? video.getVideoElement().currentTime : 0) });
+
+    buffers[metaManager.Enum.VIDEO].on('error', video.resetVideoElementErrorState);
   }
 
   if(active.activeMeta.get(metaManager.Enum.AUDIO)) {
     buffers[metaManager.Enum.AUDIO] = this.factory.createSourceBuffer();
     mediaPromises.push(buffers[metaManager.Enum.AUDIO].setup(metaManager.Enum.AUDIO, mediaSource, video));
+
+    buffers[metaManager.Enum.AUDIO].once('init', function() { video.emit('get-segment', metaManager.Enum.AUDIO,
+      video.getVideoElement().currentTime ? video.getVideoElement().currentTime : 0) });
+
+    buffers[metaManager.Enum.AUDIO].on('error', video.resetVideoElementErrorState);
   }
 
   video.emit('get-init');
@@ -98,6 +108,16 @@ function onReset(resets, mediaSource) {
 
       if(!isUpdating) {
         if(mediaSource.readyState === 'open') {
+          var active = metaManager.getActiveMetaData();
+
+          if(active.activeMeta.get(metaManager.Enum.VIDEO)) {
+            buffers[metaManager.Enum.VIDEO].removeListener('error', video.resetVideoElementErrorState);
+          }
+
+          if(active.activeMeta.get(metaManager.Enum.AUDIO)) {
+            buffers[metaManager.Enum.AUDIO].removeListener('error', video.resetVideoElementErrorState);
+          }
+
           for(let i = 0; i < resets.length; ++i) {
             resets[i]();
           }
