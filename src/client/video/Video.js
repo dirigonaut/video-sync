@@ -102,6 +102,7 @@ function setSocketEvents() {
     socket.request(eventKeys.SYNC);
   });
 
+  var timeout;
   socket.setEvent(eventKeys.SEEK, function(command) {
     log.debug(eventKeys.SEEK, command);
     if(!command.play) {
@@ -112,6 +113,16 @@ function setSocketEvents() {
 
     videoElement.currentTime = command.time;
     videoPing();
+
+    if(timeout) {
+      clearTimeout(timeout);
+    }
+    
+    timeout = setTimeout(function() {
+      if(videoElement.paused) {
+        socket.request(eventKeys.SYNC);
+      }
+    }, 2500);
   });
 }
 
@@ -139,8 +150,8 @@ function setVideoSourceEvents(bufferType) {
 
 function removeVideoSourceEvents(bufferType) {
   log.info(`Removing video events for buffer of type: ${bufferType}.`);
-  videoElement.removeEventListener('timeupdate', sourceEvents[bufferType][0], false);
-  videoElement.removeEventListener('seeking', sourceEvents[bufferType][1], false);
+  videoElement.removeEventListener('timeupdate', sourceEvents[bufferType][0]);
+  videoElement.removeEventListener('seeking', sourceEvents[bufferType][1]);
   videoElement.removeEventListener('error', logVideoElementErrors.call(this));
 }
 
@@ -166,9 +177,9 @@ function onReset(eventId, metaManager) {
 function onProgress(typeId) {
   var progress = function() {
     log.silly('Video.progress');
-    if(metaData.isLastSegment(typeId, videoElement.currentTime)){
+    if(metaData.isLastSegment(typeId, videoElement.currentTime)) {
       var timeToRequest = metaData.isReadyForNextSegment(typeId, videoElement.currentTime);
-      if(timeToRequest && timeToRequest === timeToRequest){
+      if(timeToRequest !== undefined && timeToRequest === timeToRequest){
         log.debug(`Video.onProgress - time: ${timeToRequest} current: ${videoElement.currentTime}`);
         this.emit("get-segment", typeId, timeToRequest);
       }
@@ -188,7 +199,7 @@ function onSeek(typeId) {
 
 function videoPing() {
   var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
-    [videoElement.currentTime, !videoElement.paused, videoElement.readyState === 4]);
+    [videoElement.currentTime, !videoElement.paused, videoElement.readyState >= 2]);
   socket.request(eventKeys.PING, request);
 }
 
