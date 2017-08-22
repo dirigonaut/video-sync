@@ -4,7 +4,7 @@ const Events      = require('events');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-const EXPIRES     = 30000;
+const EXPIRES     = 15000;
 const READID      = '-readRequest';
 
 var session, publisher, client, fileIO, schemaFactory, log;
