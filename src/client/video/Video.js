@@ -26,8 +26,15 @@ Video.prototype.setup = function(element, window, mediaSource) {
     videoElement.src = window.URL.createObjectURL(mediaSource);
     videoElement.load();
     videoElement.currentTime = 0;
-    videoElement.addEventListener('timeupdate', videoPing, false);
+
+    videoElement.addEventListener('timeupdate', videoPing);
     videoElement.addEventListener('error', logVideoElementErrors.call(this));
+
+    setTimeout(function() {
+      if(videoElement.readyState < 2) {
+        videoElement.currentTime = 0;
+      }
+    }, 2500);
 
     var eventId = setInterval(function() {
       if(videoElement.pause) {
@@ -117,10 +124,10 @@ function setSocketEvents() {
     if(timeout) {
       clearTimeout(timeout);
     }
-    
+
     timeout = setTimeout(function() {
-      if(videoElement.paused) {
-        socket.request(eventKeys.SYNC);
+      if(videoElement.readyState < 2) {
+        videoElement.currentTime = command.time;
       }
     }, 2500);
   });
