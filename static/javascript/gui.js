@@ -30,7 +30,6 @@ function initGUI(client, isAdmin) {
     client.socket.request(client.keys.REQSEEK,
       client.schema.createPopulatedSchema(client.schema.Enum.STATE, [time]));
 
-    $('#seek-bar').val(time / $("#video")[0].duration * 100);
     $("video").on("timeupdate", updateProgressBar);
   });
 
