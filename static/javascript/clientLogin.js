@@ -7,7 +7,7 @@ function initClientLogin(socket, schemaFactory, keys) {
 
     if(typeof request.token !== 'undefined' && request.token.trim().length > 0) {
       socket.request(keys.AUTHTOKEN, request, true);
-      populateCookie('creds', JSON.stringify(request));
+      cookie.setCookie('creds', JSON.stringify(request), cookie.getExpiration(cookie.ExpireEnum.DAY));
     } else {
       socket.request(keys.GETTOKEN, request, true);
     }
@@ -20,21 +20,10 @@ function initClientLogin(socket, schemaFactory, keys) {
     });
   });
 
-  function populateCookie(key, value) {
-    var expire = new Date();
-    expire.setHours(expire.getHours() + 24);
-    document.cookie = `${key}=${value}; expires=${expire}`;
-  }
-
-  function getCookie(name) {
-    var match = document.cookie.match(RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
-    return match ? match[1] : undefined;
-  }
-
   return function() {
-    var creds = getCookie('creds');
+    var creds = cookie.getCookie('creds');
     if(creds) {
-      creds = JSON.parse(creds);
+      creds = JSON.parse(creds[1]);
       $('#loginHandle').val(creds.handle);
       $('#loginUser').val(creds.address);
       $('#loginToken').val(creds.token);
