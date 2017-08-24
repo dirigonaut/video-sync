@@ -11,6 +11,7 @@
 
     <script type="text/javascript" src="../resources/jquery-2.2.4.min.js"></script>
     <script type="text/javascript" src="../resources/video-js/video.js"></script>
+    <script type="text/javascript" src="../javascript/cookies.js"></script>
     <script type="text/javascript" src="../resources/bundle.js"></script>
     <script type="text/javascript" src="../resources/bootstrap/js/bootstrap.min.js"></script>
   </head>
@@ -40,6 +41,8 @@
     <script type="text/javascript" src="../resources/bootstrap/js/bootstrap.min.js"></script>
     <script>
       var client;
+      var cookie = Object.create(Cookie.prototype);
+
       $(document).ready(function() {
         window.URL = window.URL || window.webkitURL;
         window.MediaSource = window.MediaSource || window.WebKitMediaSource
@@ -116,7 +119,7 @@
                 $.getScript("../javascript/gui.js", loadUI);
               }
             });
-            
+
             autoLogin();
           });
         });
