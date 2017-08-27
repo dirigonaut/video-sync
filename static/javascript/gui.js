@@ -251,7 +251,7 @@ function initGUI(client, isAdmin) {
     template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.CodecEnum.WEBM}`, template);
 
     if(template) {
-      $('#encode-list tr:last').after(`<tr><td>video</td><td contenteditable="true">${template}</td><td>
+      $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.VIDEO}</td><td contenteditable="true">${template}</td><td>
       <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
     }
   });
@@ -267,7 +267,7 @@ function initGUI(client, isAdmin) {
     template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.CodecEnum.WEBM}`, template);
 
     if(template) {
-      $('#encode-list tr:last').after(`<tr><td>audio</td><td contenteditable="true">${template}</td><td>
+      $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.AUDIO}</td><td contenteditable="true">${template}</td><td>
       <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
     }
   });
@@ -280,7 +280,7 @@ function initGUI(client, isAdmin) {
     var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.SUBTITLE);
 
     if(template) {
-      $('#encode-list tr:last').after(`<tr><td>subtitle</td><td contenteditable="true">${template}</td><td>
+      $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.SUBTITLE}</td><td contenteditable="true">${template}</td><td>
       <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
     }
   });
@@ -299,18 +299,22 @@ function initGUI(client, isAdmin) {
       var command = {};
       $('td', tr).each(function(i, td) {
         var cell = $(td).text();
-        if(i === 0) {
+        if(i === 0 && cell) {
           command.type = cell;
-        } else if(i === 1) {
+        } else if(i === 1 && cell) {
           command.input = cell;
         }
       });
-      list.push(comamnd);
+
+      if(typeof command.input !== 'undefined') {
+        list.push(command);
+      }
     });
 
-    var request = client.encode.createEncodings(input, output, list, client.encode.CodecEnum.WEBM, client.encode.EncoderEnum.FFMPEG);
-    console.log(request);
-    //client.socket.request('video-encode', request);
+    var request = {};
+    request.encodings = client.encode.createEncodings(input, output, list, client.encode.CodecEnum.WEBM, client.encode.EncoderEnum.FFMPEG);
+    request.directory = output;
+    client.socket.request('video-encode', request);
   });
 
   //Side Events -----------------------------------------------------------------

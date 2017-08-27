@@ -31,9 +31,9 @@ EncodingController.prototype.attachSocket = function(socket) {
 
     if(isAdmin) {
       log.debug(eventKeys.ENCODE, data);
-      yield fileIO.ensureDirExistsAsync(request[0].outputDir, 484);
+      yield fileIO.ensureDirExistsAsync(data.directory, 484);
 
-      var processes = encoderManager.buildProcess(request);
+      var processes = encoderManager.buildProcess(data.encodings);
       yield encoderManager.encode(processes).then(function() {
         socket.emit(eventKeys.ENCODED);
       });
