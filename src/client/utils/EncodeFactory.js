@@ -3,6 +3,7 @@ const TEMPLATES = {
   WEBM_AUDIO_TEMPLATE:    `-y -i "arg" -vn -c:a libopus -b:a arg -f webm -dash 1 "arg"`,
   WEBM_SUBTITLE_TEMPLATE: ``,
   WEBM_MANIFEST_TEMPLATE: `-y arg -c copy -f webm_dash_manifest -adaptation_sets "id=0,streams=arg id=1,streams=arg" "arg"`,
+
   MP4_VIDEO_TEMPLATE:     `-y -i "arg" -f 24 -an -c:v libx264 -profile:v main -preset slow -x264opts keyint=24:min-keyint=24:no-scenecut -vf scale=-1:arg -f mp4 -movflags frag_keyframe+empty_moov "arg"`,
   MP4_AUDIO_TEMPLATE:     `-y -i "arg" -vn -c:a libmp3lame -b:a arg "arg"`,
   MP4_SUBTITLE_TEMPLATE:  ``,
@@ -33,7 +34,7 @@ EncodeFactory.prototype.setOutput = function(path, str) {
     lastValue = itter[0];
   }
 
-  return str.substring(0, lastIndex) + ` "${path}"`;
+  return str.substring(0, lastIndex) + ` ${path}`;
 };
 
 EncodeFactory.prototype.getOutput = function(str) {

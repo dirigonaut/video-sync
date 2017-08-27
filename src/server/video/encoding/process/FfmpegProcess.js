@@ -28,62 +28,37 @@ FfmpegProcess.prototype.setCommand = function(command) {
 
 FfmpegProcess.prototype.execute = function() {
   var ffmpeg = Spawn("ffmpeg", this.command);
-  log.info(`Spawned child pid: ${ffmpeg.pid}`);
+  log.info(`Spawned child pid: ${ffmpeg.pid}`, this.command);
 
-  var defaultEvents = ['message', 'error', 'exit', 'close', 'disconnect'];
+  var processEvents = ['beforeExit', 'disconnect', 'exit', 'message'];
+  var streamEvents = ['close', 'data', 'end', 'error', 'readable'];
 
-  defaultEvents.forEach(function(event) {
-    ffmpeg.on(event, function(data) {
-      this.emit(event, data);
-    }.bind(this));
+  ffmpeg.on('exit', function(data) {
+    this.emit('exit', data);
+    console.log('ffmpeg.on(exit): ' + data.toString('utf8'));
   }.bind(this));
 
-  var handleInfo = function(line) {
-    var line = line.trim();
-    if (line.substring(0, 5) === 'frame') {
-      this.emit('data', parseProgress(line));
-    }
-  }.bind(this);
-
-  ffmpeg.stderr.pipe(Split(/[\r\n]+/)).on('data', handleInfo);
+  ffmpeg.stderr.on('data', function(data) {
+    this.emit('error', data.toString('utf8'))
+    console.log('ffmpeg.stderr.on(data): ' + data.toString('utf8'));
+  });
 
   ffmpeg.stdout.on('data', function(data) {
-    this.emit('data', data);
-  }.bind(this));
+    this.emit('data', data.toString('utf8'));
+    console.log('ffmpeg.stdout.on(data): ' + data.toString('utf8'));
+  });
 
   this.emit('start');
 
   return new Promise(function(resolve, reject) {
-    this.once('close', resolve);
-    this.once('error', reject);
+    this.once('exit', function(code) {
+      if(code === 0) {
+        resolve(code);
+      } else {
+        reject(code);
+      }
+    });
   }.bind(this));
 };
 
 module.exports = FfmpegProcess;
-
-var parseProgress = function(line) {
-    var progressValues = line.match(/[\d.:]+/g)
-
-    var progress = {
-        frame:      progressValues[0],
-        fps:        progressValues[1],
-        targetSize: progressValues[3],
-        timeMark:   progressValues[4],
-        kbps:       progressValues[5] || 0,
-    };
-
-    return progress;
-};
-
-var parseInputProperties = function(line) {
-    var values = line.match(/[\d.:]+/g).filter(function(val) {
-        return val !== ':';
-    });
-
-    var properties = {
-        duration:      values[0],
-        bitrate_kbps:  values[2]
-    }
-
-    return properties;
-};

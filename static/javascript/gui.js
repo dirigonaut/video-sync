@@ -246,7 +246,7 @@ function initGUI(client, isAdmin) {
     var output = $('#encode-output').val();
 
     var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.VIDEO);
-    template = client.encode.setKeyValue('i', `"${input}"`, template);
+    template = client.encode.setKeyValue('i', `${input}`, template);
     template = client.encode.setKeyValue('s', quality, template);
     template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.CodecEnum.WEBM}`, template);
 
@@ -262,7 +262,7 @@ function initGUI(client, isAdmin) {
     var output = $('#encode-output').val();
 
     var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.AUDIO);
-    template = client.encode.setKeyValue('i', `"${input}"`, template);
+    template = client.encode.setKeyValue('i', `${input}`, template);
     template = client.encode.setKeyValue('b:a', quality, template);
     template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.CodecEnum.WEBM}`, template);
 
