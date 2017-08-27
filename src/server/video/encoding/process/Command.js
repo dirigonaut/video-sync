@@ -42,7 +42,7 @@ function getKeyValuePair(pair) {
   var value = "";
 
   if(key !== null && key.trim() !== ""){
-    key = "-" + key;
+    key = key.charAt(0) === "-" ? key : `-${key}`;
     keyValuePair.push(key);
 
     command.forEach(function(item){

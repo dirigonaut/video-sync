@@ -89,7 +89,7 @@ function itterator() {
 		if(processes.length > 0) {
 			var process = processes.shift();
 			attachEvents.call(this, process);
-			yield process.execute();
+			yield process.execute().catch(log.error);
 		} else {
 			this.emit('finished', 'All files encoded.');
 			encoding = false;
@@ -106,13 +106,20 @@ function attachEvents(process) {
 		log.debug('Server: Start encoding: ' + new Date().getTime());
 	}).on('data', function(percent) {
 		log.socket('data', percent);
-	}).on('close', function(exitCode) {
-		log.info('Server: file has been converted succesfully: ' + new Date().getTime());
-		log.socket('Server: file has been converted succesfully: ' + new Date().getTime());
+	}).on('exit', function(exitCode) {
+		if(!exitCode) {
+			log.info('Server: file has been converted succesfully: ' + new Date().getTime());
+			log.socket('Server: file has been converted succesfully: ' + new Date().getTime());
+		} else {
+			log.info(`Server: failed with error code: ${exitCode}, ` + new Date().getTime());
+			log.socket(`Server: failed with error code: ${exitCode}, ` + new Date().getTime());
+		}
+
 		removeEvents(process);
 		this.emit('processed', process);
 	}.bind(this)).on('error', function(err) {
 		log.error('There was an error encoding: ', err);
+		log.socket('There was an error encoding: ', err);
 		removeEvents(process);
 		this.emit('error');
 	}.bind(this));
