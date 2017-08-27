@@ -11,7 +11,7 @@ const REGEX_REMOVE_HEADERS = '\\[\\/*[A-Z]*\\]';
 
 var log;
 
-function FfprobeProcess { }
+function FfprobeProcess() { }
 
 FfprobeProcess.prototype.initialize = function(force) {
   if(typeof FfprobeProcess.prototype.protoInit === 'undefined') {
@@ -52,11 +52,11 @@ FfprobeProcess.prototype.execute = function() {
   }.bind(this));
 
   return new Promise(function(resolve, reject) {
-    this.once('close', function() {
+    this.once('exit', function() {
       if(output) {
         resolve(format(output, REGEXP_SPLIT));
       } else {
-        reject(new Error('FFprobe: No output'));
+        reject(new Error('Ffprobe: No output'));
       }
     });
     this.once('error', reject);

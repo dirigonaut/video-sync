@@ -1,12 +1,13 @@
 const Promise = require('bluebird');
 
-var encoderManager, session, fileIO, schemaFactory, sanitizer, eventKeys, log;
+var encoderManager, session, fileIO, fileSystemUtils, schemaFactory, sanitizer, eventKeys, log;
 
 function EncodingController() { }
 
 EncodingController.prototype.initialize = function(force) {
   if(typeof EncodingController.prototype.protoInit === 'undefined') {
     EncodingController.prototype.protoInit = true;
+    fileSystemUtils = this.factory.createFileSystemUtils();
     schemaFactory   = this.factory.createSchemaFactory();
     sanitizer       = this.factory.createSanitizer();
     eventKeys       = this.factory.createKeys();
@@ -49,20 +50,24 @@ EncodingController.prototype.attachSocket = function(socket) {
 
     if(isAdmin) {
       log.debug(eventKeys.GETMETA, data);
-      var schema = schemaFactory.createDefinition(schemaFactory.Enum.ENCODE);
+      var schema = schemaFactory.createDefinition(schemaFactory.Enum.ASCII);
       var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
       if(request) {
         var command = this.factory.createCommand();
         var ffprobe = this.factory.createFfprobeProcess();
-        ffprobe.setCommand(command.parse(request[i].input));
+        ffprobe.setCommand(command.parse(request.data));
 
-        var metaData = yield ffprobe.execute();
+        var metaData = yield ffprobe.execute().catch(function(err) {
+          log.error(err);
+          socket.emit(eventKeys.META);
+        });
+
         var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [metaData]);
         socket.emit(eventKeys.META, result);
       }
     }
-  }));
+  }.bind(this)));
 };
 
 module.exports = EncodingController;

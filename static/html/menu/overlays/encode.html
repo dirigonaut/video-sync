@@ -8,46 +8,62 @@
       <div class="modal-body">
         <form>
           <fieldset>
-            <label for="encodeInput">Input</label>
-            <input type="text" name="title" class="form-control" id="encodeInput" placeholder="/path/to/file.ext" value="/home/sabo-kun/repo/media/bunny.mov"/>
-            <label for="encodeOutput">Output</label>
-            <input type="text" name="title" class="form-control" id="encodeOutput" placeholder="/dir/to/save/encoded/video/to/" value="/home/sabo-kun/repo/media/bunny_test/"/>
-            <label for="encodeCodec">Codec</label>
-            <fieldset>
-              <div>
-                <input type="checkbox" name="codec-type" value="webm" id="codec-webm" checked="checked"/>
-                <label for="codec-webm">webm</label>
-                <input type="checkbox" name="codec-type" value="mp4" id="codec-mp4"/>
-                <label for="codec-mp4">mp4</label>
+            <div>
+              <label for="encode-input">File to Encode</label>
+              <input type="text" name="title" class="form-control" id="encode-input" placeholder="/path/to/file.ext"/>
+            </div>
+            <hr>
+            <div>
+              <label for="file-info">Metadata</label>
+              <textArea type="text" class="form-control" rows=8 id="fileInfo" placeholder="fileInfo"></textarea>
+            </div>
+            <hr>
+            <div>
+              <label for="encode-output">Output Directory</label>
+              <input type="text" name="title" class="form-control" id="encode-output" placeholder="/dir/to/save/encoded/video/to/"/>
+            </div>
+            <hr>
+            <div>
+              <label>Encoding Options</label>
+              <div class="flex-h">
+                <div>
+                  <input type="text" id="video-quality" list="video-quality-list" value="1280x720">
+                  <datalist id="video-quality-list">
+                    <option value="854x480">
+                    <option value="1280x720">
+                    <option value="1920x1080">
+                  </datalist>
+                  <label for="encodeVideoQuality"><button type="button" class="btn btn-default" aria-label="Video" id="createVideo">Video</button></label>
+                </div>
+                <div>
+                  <input type="text" id="audio-quality" list="audio-quality-list" value="256k">
+                  <datalist id="audio-quality-list">
+                    <option value="128k">
+                    <option value="256k">
+                    <option value="512k">
+                  </datalist>
+                  <label for="encodeAudioQuality"><button type="button" class="btn btn-default" aria-label="Audio" id="createAudio">Audio</button></label>
+                </div>
+                <div>
+                  <input type="text" id="subtitle-track" list="subtitle-track-list">
+                  <datalist id="subtitle-track-list">
+                  </datalist>
+                  <label for="encodeSubtitleTrack"><button type="button" class="btn btn-default" aria-label="Subtitle" id="createSubtitle">Subtitle</button></label>
+                </div>
               </div>
-            </fieldset>
-            <label for="encodeVideoQuality">Video Quality</label>
-            <fieldset>
+              <hr>
               <div>
-                <input type="checkbox" name="video-quality" value="854x480" id="v_480k" checked="checked"/>
-                <label for="v_480k">854x480</label>
-                <input type="checkbox" name="video-quality" value="1280x720" id="v_720k" checked="checked"/>
-                <label for="v_720k">1280x720</label>
-                <input type="checkbox" name="video-quality" value="1920x1080" id="v_1080k"/>
-                <label for="v_1080k">1920x1080</label>
+                <label>Encoding Commands</label>
+                <table border='1' id="encode-list">
+                  <tr></tr>
+                </table>
               </div>
-            </fieldset>
-            <label for="encodeAudioQuality">Audio Quality</label>
-            <fieldset>
-              <div>
-                <input type="checkbox" name="audio-quality" value="128k" id="a_128k" checked="checked"/>
-                <label for="a_128k">128k</label>
-                <input type="checkbox" name="audio-quality" value="256k" id="a_256k" checked="checked"/>
-                <label for="a_256k">256k</label>
-                <input type="checkbox" name="audio-quality" value="512k" id="a_512k"/>
-                <label for="a_512k">512k</label>
-              </div>
-            </fieldset>
+            </div>
           </fieldset>
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal" id="createEncoding">Encode</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal" id="submitEncoding">Encode</button>
       </div>
     </div>
   </div>

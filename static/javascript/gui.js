@@ -226,39 +226,73 @@ function initGUI(client, isAdmin) {
   });
 
   //Encode Events ---------------------------------------------------------------
-  $('#createEncoding').click(function createEncoding() {
-    var input     = $('#encodeInput').val();
-    var output    = $('#encodeOutput').val();
-    var vQuality  = $("input[name=video-quality]:checked");
-    var aQuality  = $("input[name=audio-quality]:checked");
+  $('#encode-input').on("focusout", function requestFileInfo() {
+    var input = $('#encode-input').val();
+    var inspect = ` -show_streams ${input}`;
+    client.socket.request(client.keys.GETMETA, client.schema.createPopulatedSchema(client.schema.Enum.ASCII, [inspect]));
+  });
 
-    var commands = [];
-    var factory = client.getCommandFactory();
+  var loadFileInfo = function(metaData) {
+    try {
+      $('#fileInfo').val(typeof metaData.data !== 'undefined' ? JSON.stringify(metaData.data) : "No meta data found make sure you have a valid file.");
+    } catch(err) { };
+  };
 
-    if($("#codec-webm:checked").val()) {
-      for(var i = 0; i < vQuality.length; ++i) {
-        commands.push(factory.buildFfmpegRequest("webm", "1", input, output, $(vQuality[i]).val()));
-      }
+  client.socket.setEvent(client.keys.META, loadFileInfo);
 
-      for(var i = 0; i < aQuality.length; ++i) {
-        commands.push(factory.buildFfmpegRequest("webm", "2", input, output, $(aQuality[i]).val()));
-      }
+  $('#createVideo').click(function createVideo() {
+    var quality = $('#video-quality').val();
+    var input = $('#encode-input').val();
+    var ouput = $('#encode-output').val();
 
-      commands.push(factory.getWebmManifestCommand(commands,
-              output + client.getFileUtil().splitNameFromPath(input) + "_webm.mpd"));
+    var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.VIDEO);
+    template = client.encode.setKeyValue('i', `"${input}"`, template);
+    template = client.encode.setKeyValue('s', quality, template);
+    template = client.encode.setOutput(ouput, template);
+
+    if(template) {
+      $('#encode-list tr:last').after(`<tr><td>video</td><td contenteditable="true">${template}</td><td>
+      <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
     }
+  });
 
-    if($("#codec-mp4:checked").val()) {
-      for(var i = 0; i < vQuality.length; ++i) {
-        commands.push(factory.buildFfmpegRequest("mp4", "1", input, output, $(vQuality[i]).val()));
-      }
-      for(var i = 0; i < aQuality.length; ++i) {
-        commands.push(factory.buildFfmpegRequest("mp4", "2", input, output, $(aQuality[i]).val()));
-      }
+  $('#createAudio').click(function createAudio() {
+    var quality = $('#audio-quality').val();
+    var input = $('#encode-input').val();
+    var ouput = $('#encode-output').val();
 
-      commands.push(factory.getMp4ManifestCommand(commands,
-              output + client.getFileUtil().splitNameFromPath(input) + "_mp4.mpd"));
+    var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.AUDIO);
+    template = client.encode.setKeyValue('i', `"${input}"`, template);
+    template = client.encode.setKeyValue('b:a', quality, template);
+    template = client.encode.setOutput(ouput, template);
+
+    if(template) {
+      $('#encode-list tr:last').after(`<tr><td>audio</td><td contenteditable="true">${template}</td><td>
+      <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
     }
+  });
+
+  $('#createSubtitle').click(function createSubtitle() {
+    var quality = $('#subtitle-track').val();
+    var input = $('#encode-input').val();
+    var ouput = $('#encode-output').val();
+
+    var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.SUBTITLE);
+
+    if(template) {
+      $('#encode-list tr:last').after(`<tr><td>subtitle</td><td contenteditable="true">${template}</td><td>
+      <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
+    }
+  });
+
+  $('#encode-list').on("click", "button", function(e) {
+    var command = $($(e.currentTarget).parent()).parent();
+    command.remove();
+  });
+
+  $('#submitEncoding').click(function submitEncoding() {
+    var input     = $('#encode-input').val();
+    var output    = $('#encode-output').val();
 
     client.socket.request('video-encode', commands);
   });
