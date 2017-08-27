@@ -18,7 +18,7 @@ Command.prototype.parse = function(input) {
   var lastIndex = options.length-1;
 
   var keyless = getTailKeylessPathValues(options[lastIndex]);
-  options[lastIndex] = options[lastIndex].substr(0, options[lastIndex].length - keyless.length-1);
+  options[lastIndex] = options[lastIndex].substr(0, options[lastIndex].length - keyless.length);
 
   for(var i = 0; i < options.length; ++i) {
     args = args.concat(getKeyValuePair(options[i]));

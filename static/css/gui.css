@@ -196,6 +196,19 @@
   align-items: center;
 }
 
+.flex-v-left {
+  flex-direction: column;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: left | space-between | space-around;
+
+  -ms-flex-align: left;
+	-webkit-align-items: left;
+	-webkit-box-align: left;
+
+  align-items: left;
+}
+
 /* Overlays CSS */
 .overlay-body {
   width: 49%;
