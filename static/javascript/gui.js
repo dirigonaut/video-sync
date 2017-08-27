@@ -243,12 +243,12 @@ function initGUI(client, isAdmin) {
   $('#createVideo').click(function createVideo() {
     var quality = $('#video-quality').val();
     var input = $('#encode-input').val();
-    var ouput = $('#encode-output').val();
+    var output = $('#encode-output').val();
 
     var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.VIDEO);
     template = client.encode.setKeyValue('i', `"${input}"`, template);
     template = client.encode.setKeyValue('s', quality, template);
-    template = client.encode.setOutput(ouput, template);
+    template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.CodecEnum.WEBM}`, template);
 
     if(template) {
       $('#encode-list tr:last').after(`<tr><td>video</td><td contenteditable="true">${template}</td><td>
@@ -259,12 +259,12 @@ function initGUI(client, isAdmin) {
   $('#createAudio').click(function createAudio() {
     var quality = $('#audio-quality').val();
     var input = $('#encode-input').val();
-    var ouput = $('#encode-output').val();
+    var output = $('#encode-output').val();
 
     var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.AUDIO);
     template = client.encode.setKeyValue('i', `"${input}"`, template);
     template = client.encode.setKeyValue('b:a', quality, template);
-    template = client.encode.setOutput(ouput, template);
+    template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.CodecEnum.WEBM}`, template);
 
     if(template) {
       $('#encode-list tr:last').after(`<tr><td>audio</td><td contenteditable="true">${template}</td><td>
@@ -275,7 +275,7 @@ function initGUI(client, isAdmin) {
   $('#createSubtitle').click(function createSubtitle() {
     var quality = $('#subtitle-track').val();
     var input = $('#encode-input').val();
-    var ouput = $('#encode-output').val();
+    var output = $('#encode-output').val();
 
     var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.SUBTITLE);
 
@@ -291,10 +291,26 @@ function initGUI(client, isAdmin) {
   });
 
   $('#submitEncoding').click(function submitEncoding() {
-    var input     = $('#encode-input').val();
-    var output    = $('#encode-output').val();
+    var input  = $('#encode-input').val();
+    var output = $('#encode-output').val();
+    var list = [];
 
-    client.socket.request('video-encode', commands);
+    $('#encode-list tr').each(function(i, tr) {
+      var command = {};
+      $('td', tr).each(function(i, td) {
+        var cell = $(td).text();
+        if(i === 0) {
+          command.type = cell;
+        } else if(i === 1) {
+          command.input = cell;
+        }
+      });
+      list.push(comamnd);
+    });
+
+    var request = client.encode.createEncodings(input, output, list, client.encode.CodecEnum.WEBM, client.encode.EncoderEnum.FFMPEG);
+    console.log(request);
+    //client.socket.request('video-encode', request);
   });
 
   //Side Events -----------------------------------------------------------------
