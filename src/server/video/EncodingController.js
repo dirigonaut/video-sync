@@ -31,17 +31,12 @@ EncodingController.prototype.attachSocket = function(socket) {
 
     if(isAdmin) {
       log.debug(eventKeys.ENCODE, data);
-      var schema = schemaFactory.createDefinition(schemaFactory.Enum.ENCODE);
-      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+      yield fileIO.ensureDirExistsAsync(request[0].outputDir, 484);
 
-      if(request) {
-        yield fileIO.ensureDirExistsAsync(request[0].outputDir, 484);
-
-        var processes = encoderManager.buildProcess(request);
-        yield encoderManager.encode(processes).then(function() {
-          socket.emit(eventKeys.ENCODED);
-        });
-      }
+      var processes = encoderManager.buildProcess(request);
+      yield encoderManager.encode(processes).then(function() {
+        socket.emit(eventKeys.ENCODED);
+      });
     }
   }));
 

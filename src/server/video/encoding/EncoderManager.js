@@ -28,7 +28,7 @@ EncoderManager.prototype.initialize = function(force) {
 EncoderManager.prototype.buildProcess = function(data) {
 	var processes = [];
 	for(var i = 0; i < data.length; ++i) {
-		switch (data[i].codec) {
+		switch (data[i].encoder) {
 			case "ffmpeg" :
 				log.silly("Found ffmpeg encoding", data[i]);
 				var ffmpeg = this.factory.createFfmpegProcess();
