@@ -7,7 +7,6 @@ Command.prototype.parse = function(str) {
   var args = [];
   var lastIndex;
 
-  console.log(str)
   for(var itter = regex.exec(str); itter; itter = regex.exec(str)) {
     lastIndex = regex.lastIndex;
     args.push(itter[0]);
@@ -18,7 +17,6 @@ Command.prototype.parse = function(str) {
     args.push(output);
   }
 
-  console.log(args);
   return args;
 };
 

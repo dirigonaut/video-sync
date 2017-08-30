@@ -120,8 +120,6 @@ function attachEvents(process) {
 	}.bind(this)).on('error', function(err) {
 		log.error('There was an error encoding: ', err);
 		log.socket('There was an error encoding: ', err);
-		removeEvents(process);
-		this.emit('error');
 	}.bind(this));
 }
 

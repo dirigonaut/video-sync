@@ -254,6 +254,8 @@ function initGUI(client, isAdmin) {
       $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.VIDEO}</td><td contenteditable="true">${template}</td><td>
       <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
     }
+
+    generateManifest();
   });
 
   $('#createAudio').click(function createAudio() {
@@ -270,6 +272,8 @@ function initGUI(client, isAdmin) {
       $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.AUDIO}</td><td contenteditable="true">${template}</td><td>
       <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
     }
+
+    generateManifest();
   });
 
   $('#createSubtitle').click(function createSubtitle() {
@@ -283,18 +287,17 @@ function initGUI(client, isAdmin) {
       $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.SUBTITLE}</td><td contenteditable="true">${template}</td><td>
       <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
     }
+
+    generateManifest();
   });
 
   $('#encode-list').on("click", "button", function(e) {
     var command = $($(e.currentTarget).parent()).parent();
     command.remove();
+    generateManifest();
   });
 
-  $('#encode-list').on("onchange", function(e) {
-    console.log(e);
-  });
-
-  $('#submitEncoding').click(function submitEncoding() {
+  var generateManifest = function() {
     var input  = $('#encode-input').val();
     var output = $('#encode-output').val();
     var list = [];
@@ -303,22 +306,49 @@ function initGUI(client, isAdmin) {
       var command = {};
       $('td', tr).each(function(i, td) {
         var cell = $(td).text();
-        if(i === 0 && cell) {
+        if(i === 0 && cell === client.encode.TypeEnum.MANIFEST) {
+          command.type = cell;
+          tr.remove();
+        } else if(i === 0 && cell) {
           command.type = cell;
         } else if(i === 1 && cell) {
           command.input = cell;
         }
       });
 
-      if(typeof command.input !== 'undefined') {
+      if(typeof command.input !== 'undefined' && command.type !== client.encode.TypeEnum.MANIFEST) {
         list.push(command);
       }
     });
 
+    if(list.length > 0) {
+      var template = client.encode.createManifest(input, output, list, client.encode.CodecEnum.WEBM);
+
+      if(template) {
+        $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.MANIFEST}</td><td contenteditable="true">${template}</td><td></td></tr>`);
+      }
+    }
+  }
+
+  $('#submitEncoding').click(function submitEncoding() {
+    var output = $('#encode-output').val();
+    var commands = [];
+
+    $('#encode-list tr').each(function(i, tr) {
+      $('td', tr).each(function(i, td) {
+        var cell = $(td).text();
+        if(i === 0 && cell === client.encode.TypeEnum.MANIFEST) {
+          tr.remove();
+        } else if(i === 1 && cell) {
+          commands.push({input: cell, encoder: client.encode.EncoderEnum.FFMPEG});
+        }
+      });
+    });
+
     var request = {};
-    request.encodings = client.encode.createEncodings(input, output, list, client.encode.CodecEnum.WEBM, client.encode.EncoderEnum.FFMPEG);
+    request.encodings = commands;
     request.directory = output;
-    console.log(request);
+
     client.socket.request('video-encode', request);
   });
 

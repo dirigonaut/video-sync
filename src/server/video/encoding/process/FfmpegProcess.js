@@ -34,17 +34,14 @@ FfmpegProcess.prototype.execute = function() {
 
   ffmpeg.on('exit', function(data) {
     this.emit('exit', data);
-    console.log('ffmpeg.on(exit): ' + data.toString('utf8'));
   }.bind(this));
 
   ffmpeg.stderr.on('data', function(data) {
     this.emit('error', data.toString('utf8'))
-    console.log('ffmpeg.stderr.on(data): ' + data.toString('utf8'));
   }.bind(this));
 
   ffmpeg.stdout.on('data', function(data) {
     this.emit('data', data.toString('utf8'));
-    console.log('ffmpeg.stdout.on(data): ' + data.toString('utf8'));
   }.bind(this));
 
   this.emit('start');
