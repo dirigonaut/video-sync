@@ -290,6 +290,10 @@ function initGUI(client, isAdmin) {
     command.remove();
   });
 
+  $('#encode-list').on("onchange", function(e) {
+    console.log(e);
+  });
+
   $('#submitEncoding').click(function submitEncoding() {
     var input  = $('#encode-input').val();
     var output = $('#encode-output').val();
@@ -314,6 +318,7 @@ function initGUI(client, isAdmin) {
     var request = {};
     request.encodings = client.encode.createEncodings(input, output, list, client.encode.CodecEnum.WEBM, client.encode.EncoderEnum.FFMPEG);
     request.directory = output;
+    console.log(request);
     client.socket.request('video-encode', request);
   });
 

@@ -36,7 +36,7 @@ FfprobeProcess.prototype.execute = function() {
   }
 
   var ffprobe = Spawn('ffprobe', this.command);
-  log.info(`Spawned child pid: ${ffprobe.pid}`);
+  log.info(`Spawned child pid: ${ffprobe.pid}`, this.command);
 
   var defaultEvents = ['message', 'error', 'exit', 'close', 'disconnect'];
 

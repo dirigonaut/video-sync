@@ -1,4 +1,4 @@
-const REGEX = /-[A-Za-z:_-]*\s"[A-Za-z0-9=,\s]*"|-[A-Za-z:_-]*\s[^-][0-9A-Za-z-_"/\\.]*|-[A-Za-z:_-]*/g;
+const REGEX = /"[\w,.-=:\s]*"|[^-\s][\S]*|-[\w:-]*/g;
 
 function Command() { };
 
@@ -7,12 +7,19 @@ Command.prototype.parse = function(str) {
   var args = [];
   var lastIndex;
 
+  console.log(str)
   for(var itter = regex.exec(str); itter; itter = regex.exec(str)) {
     lastIndex = regex.lastIndex;
     args.push(itter[0]);
   }
 
-  return args.push(str.substring(lastIndex, str.length));
+  var output = str.substring(lastIndex, str.length).trim();
+  if(output.length > 0) {
+    args.push(output);
+  }
+
+  console.log(args);
+  return args;
 };
 
 module.exports = Command;
