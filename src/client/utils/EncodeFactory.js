@@ -45,30 +45,24 @@ EncodeFactory.prototype.getNameFromPath = function(path) {
   return splitType[0];
 };
 
-EncodeFactory.prototype.createEncodings = function(input, output, commands, codec, encoder) {
+EncodeFactory.prototype.createManifest = function(input, output, commands, codec) {
   var maps = "copy ";
   var aSet = "";
   var vSet = "";
   var inputs = "";
-  var results = [];
   var index = 0;
 
   for(let i = 0; i < commands.length; ++i) {
-    let object = {};
-    object.input = commands[i].input;
-    object.encoder = encoder;
-    results.push(object);
-
     if(commands[i].type === this.TypeEnum.VIDEO) {
       vSet = `${vSet.length > 0 ? vSet : Snippets.SETSVIDEO}${vSet.length > 0 ? "," + index : index}`;
-      inputs = `${inputs} ${Snippets.MANIFEST.trim()} -i ${this.getOutput(object.input).trim()}`
-      maps = `${maps.trim()} ${Snippets.MAP.trim()} ${i}`
+      inputs = `${inputs} ${Snippets.MANIFEST.trim()} -i ${this.getOutput(commands[i].input).trim()}`
+      maps = `${maps.trim()} ${Snippets.MAP.trim()} ${index}`
 
       ++index;
     } else if(commands[i].type === this.TypeEnum.AUDIO) {
       aSet = `${aSet.length > 0 ? aSet : Snippets.SETSAUDIO}${aSet.length > 0 ? "," + index : index}`;
-      inputs = `${inputs} ${Snippets.MANIFEST.trim()} -i ${this.getOutput(object.input).trim()}`
-      maps = `${maps.trim()} ${Snippets.MAP.trim()} ${i}`
+      inputs = `${inputs} ${Snippets.MANIFEST.trim()} -i ${this.getOutput(commands[i].input).trim()}`
+      maps = `${maps.trim()} ${Snippets.MAP.trim()} ${index}`
 
       ++index;
     }
@@ -80,12 +74,7 @@ EncodeFactory.prototype.createEncodings = function(input, output, commands, code
   template = this.setKeyValue('adaptation_sets', `"${vSet} ${aSet}"`, template);
   template = this.setOutput(`${output}${this.getNameFromPath(input)}.mpd`, template);
 
-  var object = {};
-  object.input = template;
-  object.encoder = encoder;
-  results.push(object);
-
-  return results;
+  return template;
 };
 
 EncodeFactory.prototype.TypeEnum  = { VIDEO : 'VIDEO', AUDIO : 'AUDIO', MANIFEST: 'MANIFEST' };
