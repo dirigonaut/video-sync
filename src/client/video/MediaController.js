@@ -2,7 +2,7 @@ const Promise = require('bluebird');
 const Util    = require('util');
 const Events  = require('events');
 
-var video, buffers, metaManager, schemaFactory, socket, eventKeys, log;
+var video, buffers, metaManager, subtitles, schemaFactory, socket, eventKeys, log;
 
 function MediaController() { }
 
@@ -21,7 +21,7 @@ MediaController.prototype.initialize = function(force) {
   }
 };
 
-MediaController.prototype.setup = Promise.coroutine(function* (mediaSource, window, videoElement) {
+MediaController.prototype.setup = Promise.coroutine(function* (domElements) {
   log.debug("MediaController.setup");
   yield metaManager.requestMetaData();
   this.emit('meta-data-loaded', metaManager.getTrackInfo());
@@ -29,12 +29,12 @@ MediaController.prototype.setup = Promise.coroutine(function* (mediaSource, wind
   video = this.factory.createVideo();
 
   var active = metaManager.getActiveMetaData();
-  var mediaPromises = [video.setup(videoElement, window, mediaSource)];
+  var mediaPromises = [video.setup(domElements.videoElement, domElements.window, domElements.mediaSource)];
   buffers = [];
 
   if(active.activeMeta.get(metaManager.Enum.VIDEO)) {
     buffers[metaManager.Enum.VIDEO] = this.factory.createSourceBuffer();
-    mediaPromises.push(buffers[metaManager.Enum.VIDEO].setup(metaManager.Enum.VIDEO, mediaSource, video));
+    mediaPromises.push(buffers[metaManager.Enum.VIDEO].setup(metaManager.Enum.VIDEO, domElements.mediaSource, video));
 
     buffers[metaManager.Enum.VIDEO].once('init', function() { video.emit('get-segment', metaManager.Enum.VIDEO,
       video.getVideoElement().currentTime ? video.getVideoElement().currentTime : 0) });
@@ -44,7 +44,7 @@ MediaController.prototype.setup = Promise.coroutine(function* (mediaSource, wind
 
   if(active.activeMeta.get(metaManager.Enum.AUDIO)) {
     buffers[metaManager.Enum.AUDIO] = this.factory.createSourceBuffer();
-    mediaPromises.push(buffers[metaManager.Enum.AUDIO].setup(metaManager.Enum.AUDIO, mediaSource, video));
+    mediaPromises.push(buffers[metaManager.Enum.AUDIO].setup(metaManager.Enum.AUDIO, domElements.mediaSource, video));
 
     buffers[metaManager.Enum.AUDIO].once('init', function() { video.emit('get-segment', metaManager.Enum.AUDIO,
       video.getVideoElement().currentTime ? video.getVideoElement().currentTime : 0) });
@@ -52,11 +52,14 @@ MediaController.prototype.setup = Promise.coroutine(function* (mediaSource, wind
     buffers[metaManager.Enum.AUDIO].on('error', video.resetVideoElementErrorState);
   }
 
+  subtitles = this.factory.createSubtitles();
+  mediaPromises.push(subtitles.setup(domElements.videoElement, domElements.document, domElements.vttTrack));
+
   video.emit('get-init');
   var resetCallbacks = yield Promise.all(mediaPromises);
 
-  mediaSource.addEventListener('error', log.error);
-  return onReset.call(this, resetCallbacks, mediaSource);
+  domElements.mediaSource.addEventListener('error', log.error);
+  return onReset.call(this, resetCallbacks, domElements.mediaSource);
 });
 
 MediaController.prototype.getTrackInfo = function() {

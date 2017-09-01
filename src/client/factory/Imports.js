@@ -13,6 +13,7 @@ const MediaController   = require('../video/MediaController');
 const MetaManager       = require('../video/MetaManager');
 const SchemaFactory     = require('../../common/schemas/SchemaFactory');
 const SourceBuffer      = require('../video/SourceBuffer');
+const Subtitles         = require('../video/Subtitles');
 const Video             = require('../video/Video');
 
 
@@ -32,5 +33,6 @@ module.exports = {
   MetaManager:      MetaManager,
   SchemaFactory:    SchemaFactory,
   SourceBuffer:     SourceBuffer,
+  Subtitles:        Subtitles,
   Video:            Video,
 };

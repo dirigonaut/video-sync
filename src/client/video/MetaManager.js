@@ -2,7 +2,7 @@ const Promise = require('bluebird');
 const Util    = require('util');
 const Events  = require('events');
 
-var metaDataList, activeMetaData, socket, schemaFactory, log;
+var metaDataList, activeMetaData, socket, eventKeys, schemaFactory, log;
 
 function MetaManager() { }
 
@@ -12,6 +12,7 @@ MetaManager.prototype.initialize = function(force) {
     var logManager  = this.factory.createClientLogManager();
     log             = logManager.getLog(logManager.LogEnum.VIDEO);
     schemaFactory   = this.factory.createSchemaFactory();
+    eventKeys       = this.factory.createKeys();
   }
 
   if(force === undefined ? typeof MetaManager.prototype.stateInit === 'undefined' : force) {
@@ -23,7 +24,7 @@ MetaManager.prototype.initialize = function(force) {
 MetaManager.prototype.requestMetaData = Promise.coroutine(function* () {
   log.debug('MetaManager.requestMetaData');
   var fileBuffer = this.factory.createFileBuffer();
-  var files = yield fileBuffer.requestFilesAsync();
+  var files = yield fileBuffer.requestFilesAsync(eventKeys.FILES);
   activeMetaData = undefined;
   metaDataList  = new Map();
 

@@ -283,7 +283,7 @@ function initGUI(client, isAdmin) {
 
     var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.SUBTITLE);
     template = client.encode.setKeyValue('i', `${input}`, template);
-    template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}.srt`, template);
+    template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}.vtt`, template);
 
     if(template) {
       $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.SUBTITLE}</td><td contenteditable="true">${template}</td><td>

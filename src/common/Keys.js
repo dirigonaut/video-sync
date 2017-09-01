@@ -72,6 +72,7 @@ module.exports = {
   //VideoController
   //Server
   FILES:          'video-files',
+  SUBTITLES:      'video-subtitles',
   SEGMENT:        'video-segment',
   //Client
   SEGMENTCHUNK:   'segemnt-chunk',
