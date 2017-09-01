@@ -31,7 +31,7 @@ FileBuffer.prototype.initialize = function(force) {
   }
 };
 
-FileBuffer.prototype.requestFilesAsync = function() {
+FileBuffer.prototype.requestFilesAsync = function(key) {
   log.info('FileBuffer.registerRequest');
   var requestInfo       = { };
   requestInfo.requestId = "r" + genId();
@@ -41,7 +41,7 @@ FileBuffer.prototype.requestFilesAsync = function() {
   fileRequests.set(requestInfo.requestId, requestInfo);
 
   var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STRING, [requestInfo.requestId]);
-  socket.request(eventKeys.FILES, request);
+  socket.request(key, request);
 
   return new Promise(function(resolve, reject) {
     var rejectId = setTimeout(function(err) {

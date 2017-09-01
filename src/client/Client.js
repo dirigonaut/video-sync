@@ -30,12 +30,12 @@ Client.prototype.initialize = Promise.coroutine(function* (serverUrl) {
   }
 });
 
-Client.prototype.startMedia = Promise.coroutine(function* (mediaController, mediaSource, window, videoElement) {
+Client.prototype.startMedia = Promise.coroutine(function* (mediaController, domElements) {
   if(resetMedia) {
     yield resetMedia();
   }
 
-  resetMedia = yield mediaController.setup(mediaSource, window, videoElement);
+  resetMedia = yield mediaController.setup(domElements);
 });
 
 Client.prototype.getFactory = function() {

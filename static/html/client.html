@@ -85,7 +85,15 @@
 
                 //Reload media
                 socket.setEvent(container.keys.MEDIAREADY, function() {
-                  client.startMedia(container.media, new MediaSource(), window, document.getElementById('video'));
+                  var domElements = {
+                    mediaSource: new MediaSource(),
+                    window: window,
+                    document: document,
+                    videoElement: document.getElementById('video'),
+                    vttTrack: VTTCue,
+                  };
+
+                  client.startMedia(container.media, domElements);
                 });
 
                 results.acknowledge();

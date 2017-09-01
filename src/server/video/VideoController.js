@@ -34,34 +34,17 @@ VideoController.prototype.attachSocket = function(socket) {
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
     if(request) {
-      var basePath = yield session.getMediaPath();
+      yield getFiles(socket, request, "mpd");
+    }
+  }));
 
-      if(basePath) {
-        var files = yield fileIO.readDirAsync(basePath, "mpd");
+  socket.on(eventKeys.SUBTITLES, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.SUBTITLES, data);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
-        if(files) {
-          for(let i = 0; i < files.length; ++i) {
-            var header = { };
-            var splitName = files[i].split(".")[0].split("_");
-            header.type = splitName[splitName.length - 1];
-
-            let result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [request.data, header]);
-            socket.emit(eventKeys.FILEREGISTER, result, function(bufferId) {
-              var readConfig = fileIO.createStreamConfig(`${fileSystemUtils.ensureEOL(basePath)}${files[i]}`, function(bufferData) {
-                var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [bufferId, bufferData]);
-                socket.emit(eventKeys.FILESEGMENT, result);
-              });
-
-              readConfig.onFinish = function() {
-                var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [bufferId, null]);
-                socket.emit(eventKeys.FILEEND, result);
-              };
-
-              fileIO.read(readConfig);
-            });
-          }
-        }
-      }
+    if(request) {
+      yield getFiles(socket, request, "vtt");
     }
   }));
 
@@ -85,3 +68,34 @@ VideoController.prototype.attachSocket = function(socket) {
 };
 
 module.exports = VideoController;
+
+var getFiles = Promise.coroutine(function* (socket, request, fileType) {
+  var basePath = yield session.getMediaPath();
+
+  if(basePath) {
+    var files = yield fileIO.readDirAsync(basePath, fileType);
+
+    if(files) {
+      for(let i = 0; i < files.length; ++i) {
+        var header = { };
+        var splitName = files[i].split(".")[0].split("_");
+        header.type = splitName[splitName.length - 1];
+
+        let result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [request.data, header]);
+        socket.emit(eventKeys.FILEREGISTER, result, function(bufferId) {
+          var readConfig = fileIO.createStreamConfig(`${fileSystemUtils.ensureEOL(basePath)}${files[i]}`, function(bufferData) {
+            var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [bufferId, bufferData]);
+            socket.emit(eventKeys.FILESEGMENT, result);
+          });
+
+          readConfig.onFinish = function() {
+            var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [bufferId, null]);
+            socket.emit(eventKeys.FILEEND, result);
+          };
+
+          fileIO.read(readConfig);
+        });
+      }
+    }
+  }
+});
