@@ -337,9 +337,7 @@ function initGUI(client, isAdmin) {
     $('#encode-list tr').each(function(i, tr) {
       $('td', tr).each(function(i, td) {
         var cell = $(td).text();
-        if(i === 0 && cell === client.encode.TypeEnum.MANIFEST) {
-          tr.remove();
-        } else if(i === 1 && cell) {
+        if(i === 1 && cell) {
           commands.push({input: cell, encoder: client.encode.EncoderEnum.FFMPEG});
         }
       });
@@ -507,6 +505,7 @@ function initGUI(client, isAdmin) {
   }
 
   function logMessage(message) {
+    client.log.info(message.text);
     $('#logManuscript').append(`<p><span class="chat-message" title="${message.label}" style="color:blue; font-weight: bold;">
       ${message.time} ${message.level}: </span>${message.text} ${message.meta !== undefined ? message.meta : ""}</p>`);
       autoScroll('#logManuscript');

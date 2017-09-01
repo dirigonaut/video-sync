@@ -104,6 +104,7 @@ function itterator() {
 function attachEvents(process) {
 	process.on('start', function() {
 		log.debug('Server: Start encoding: ' + new Date().getTime());
+		log.socket('Server: Start encoding at : ' + new Date().getTime());
 	}).on('data', function(percent) {
 		log.socket('data', percent);
 	}).on('exit', function(exitCode) {
@@ -125,7 +126,7 @@ function attachEvents(process) {
 
 function removeEvents(process) {
 	process.removeAllListeners("start");
-	process.removeAllListeners("progress");
-	process.removeAllListeners("close");
+	process.removeAllListeners("data");
+	process.removeAllListeners("exit");
 	process.removeAllListeners("error");
 }

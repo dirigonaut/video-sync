@@ -9,12 +9,12 @@ Command.prototype.parse = function(str) {
 
   for(var itter = regex.exec(str); itter; itter = regex.exec(str)) {
     lastIndex = regex.lastIndex;
-    args.push(itter[0]);
+    args.push(itter[0].replace(/\"/g, ''));
   }
 
   var output = str.substring(lastIndex, str.length).trim();
   if(output.length > 0) {
-    args.push(output);
+    args.push(output.replace(/\"/g, ''));
   }
 
   return args;
