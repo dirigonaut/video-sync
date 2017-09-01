@@ -34,7 +34,7 @@ FfmpegProcess.prototype.execute = function() {
   }.bind(this));
 
   ffmpeg.stderr.on('data', function(data) {
-    this.emit('data', parse(data));
+    this.emit('data', data.toString('utf8'));
   }.bind(this));
 
   this.emit('start');
@@ -47,15 +47,3 @@ FfmpegProcess.prototype.execute = function() {
 };
 
 module.exports = FfmpegProcess;
-
-function parse(data) {
-  var input = data.toString('utf8');
-  var matched = input.match(/[\S]+/g);
-  var results = input;
-
-  if(matched.length > 0 && matched[0] === 'frame=') {
-    results = matched;
-  }
-
-  return input;
-}

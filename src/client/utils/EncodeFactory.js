@@ -1,7 +1,7 @@
 const TEMPLATES = {
-  WEBM_VIDEO_TEMPLATE:    `-y -i "arg" -c:v libvpx-vp9 -s arg -keyint_min 150 -g 150 -b:v 0 -crf 42 -threads 8 -speed 2 -tile-columns 6 -frame-parallel 1 -an -f webm -dash 1`,
-  WEBM_AUDIO_TEMPLATE:    `-y -i "arg" -vn -c:a libvorbis -b:a arg -f webm -dash 1`,
-  WEBM_SUBTITLE_TEMPLATE: ``,
+  WEBM_VIDEO_TEMPLATE:    `-y -i arg -c:v libvpx-vp9 -s arg -keyint_min 150 -g 150 -b:v 0 -crf 42 -threads 8 -speed 2 -tile-columns 6 -frame-parallel 1 -an -sn -f webm -dash 1`,
+  WEBM_AUDIO_TEMPLATE:    `-y -i arg -vn -sn -c:a libopus -b:a arg -f webm -dash 1`,
+  WEBM_SUBTITLE_TEMPLATE: `-y -txt_format text -i arg`,
   WEBM_MANIFEST_TEMPLATE: `-y arg -c copy -f webm_dash_manifest -adaptation_sets "id=0,streams=arg id=1,streams=arg"`,
 
   MP4_VIDEO_TEMPLATE:     `-y -i "arg" -f 24 -an -c:v libx264 -profile:v main -preset slow -x264opts keyint=24:min-keyint=24:no-scenecut -vf scale=-1:arg -f mp4 -movflags frag_keyframe+empty_moov`,
@@ -77,7 +77,7 @@ EncodeFactory.prototype.createManifest = function(input, output, commands, codec
   return template;
 };
 
-EncodeFactory.prototype.TypeEnum  = { VIDEO : 'VIDEO', AUDIO : 'AUDIO', MANIFEST: 'MANIFEST' };
+EncodeFactory.prototype.TypeEnum  = { VIDEO : 'VIDEO', AUDIO : 'AUDIO', SUBTITLE: 'SUBTITLE', MANIFEST: 'MANIFEST' };
 EncodeFactory.prototype.CodecEnum = { WEBM : 'webm', MP4 : 'mp4' };
 EncodeFactory.prototype.EncoderEnum = { FFMPEG : 'ffmpeg', MP4BOX : 'mp4box' };
 
