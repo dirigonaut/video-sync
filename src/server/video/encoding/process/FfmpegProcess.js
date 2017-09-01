@@ -29,32 +29,33 @@ FfmpegProcess.prototype.execute = function() {
   var ffmpeg = Spawn("ffmpeg", this.command);
   log.info(`Spawned child pid: ${ffmpeg.pid}`, this.command);
 
-  //var processEvents = ['beforeExit', 'disconnect', 'exit', 'message'];
-  //var streamEvents = ['close', 'data', 'end', 'error', 'readable'];
-
   ffmpeg.on('exit', function(data) {
     this.emit('exit', data);
   }.bind(this));
 
   ffmpeg.stderr.on('data', function(data) {
-    this.emit('error', data.toString('utf8'))
-  }.bind(this));
-
-  ffmpeg.stdout.on('data', function(data) {
-    this.emit('data', data.toString('utf8'));
+    this.emit('data', parse(data));
   }.bind(this));
 
   this.emit('start');
 
   return new Promise(function(resolve, reject) {
     this.once('exit', function(code) {
-      if(code === 0) {
-        resolve(code);
-      } else {
-        reject(code);
-      }
+      resolve(code);
     });
   }.bind(this));
 };
 
 module.exports = FfmpegProcess;
+
+function parse(data) {
+  var input = data.toString('utf8');
+  var matched = input.match(/[\S]+/g);
+  var results = input;
+
+  if(matched.length > 0 && matched[0] === 'frame=') {
+    results = matched;
+  }
+
+  return input;
+}

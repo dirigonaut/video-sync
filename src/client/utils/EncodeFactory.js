@@ -1,6 +1,6 @@
 const TEMPLATES = {
   WEBM_VIDEO_TEMPLATE:    `-y -i "arg" -c:v libvpx-vp9 -s arg -keyint_min 150 -g 150 -b:v 0 -crf 42 -threads 8 -speed 2 -tile-columns 6 -frame-parallel 1 -an -f webm -dash 1`,
-  WEBM_AUDIO_TEMPLATE:    `-y -i "arg" -vn -c:a libopus -b:a arg -f webm -dash 1`,
+  WEBM_AUDIO_TEMPLATE:    `-y -i "arg" -vn -c:a libvorbis -b:a arg -f webm -dash 1`,
   WEBM_SUBTITLE_TEMPLATE: ``,
   WEBM_MANIFEST_TEMPLATE: `-y arg -c copy -f webm_dash_manifest -adaptation_sets "id=0,streams=arg id=1,streams=arg"`,
 
@@ -72,7 +72,7 @@ EncodeFactory.prototype.createManifest = function(input, output, commands, codec
   template = this.setKeyValue('y', `${inputs.trim()}`, template);
   template = this.setKeyValue('c', maps, template);
   template = this.setKeyValue('adaptation_sets', `"${vSet} ${aSet}"`, template);
-  template = this.setOutput(`${output}${this.getNameFromPath(input)}.mpd`, template);
+  template = this.setOutput(`${output}${this.getNameFromPath(input)}_${codec}.mpd`, template);
 
   return template;
 };
