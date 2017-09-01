@@ -282,6 +282,8 @@ function initGUI(client, isAdmin) {
     var output = $('#encode-output').val();
 
     var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.SUBTITLE);
+    template = client.encode.setKeyValue('i', `${input}`, template);
+    template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}.srt`, template);
 
     if(template) {
       $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.SUBTITLE}</td><td contenteditable="true">${template}</td><td>
@@ -302,30 +304,33 @@ function initGUI(client, isAdmin) {
     var output = $('#encode-output').val();
     var list = [];
 
-    $('#encode-list tr').each(function(i, tr) {
-      var command = {};
-      $('td', tr).each(function(i, td) {
-        var cell = $(td).text();
-        if(i === 0 && cell === client.encode.TypeEnum.MANIFEST) {
-          command.type = cell;
-          tr.remove();
-        } else if(i === 0 && cell) {
-          command.type = cell;
-        } else if(i === 1 && cell) {
-          command.input = cell;
+    if(!$('#row_locked').is(":checked")) {
+      $('#encode-list tr').each(function(i, tr) {
+        var command = {};
+        $('td', tr).each(function(i, td) {
+          var cell = $(td).text();
+          if(i === 0 && cell === client.encode.TypeEnum.MANIFEST) {
+            command.type = cell;
+            tr.remove();
+          } else if(i === 0 && cell) {
+            command.type = cell;
+          } else if(i === 1 && cell) {
+            command.input = cell;
+          }
+        });
+
+        if(typeof command.input !== 'undefined' && command.type !== client.encode.TypeEnum.MANIFEST) {
+          list.push(command);
         }
       });
 
-      if(typeof command.input !== 'undefined' && command.type !== client.encode.TypeEnum.MANIFEST) {
-        list.push(command);
-      }
-    });
+      if(list.length > 0) {
+        var template = client.encode.createManifest(input, output, list, client.encode.CodecEnum.WEBM);
 
-    if(list.length > 0) {
-      var template = client.encode.createManifest(input, output, list, client.encode.CodecEnum.WEBM);
-
-      if(template) {
-        $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.MANIFEST}</td><td contenteditable="true">${template}</td><td></td></tr>`);
+        if(template) {
+          $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.MANIFEST}</td><td contenteditable="true">${template}</td><td>
+          <input type="checkbox" id="row_locked" name="locked"></td></tr>`);
+        }
       }
     }
   }

@@ -73,7 +73,9 @@ function format(input, regex) {
   while((parsed = regExp.exec(input.toString()))) {
     var json = toJSON(parsed.toString());
     if(json) {
-      jsonResults[json.key.substring(1, json.key.length - 1).toLowerCase()].push(json.value);
+      if(jsonResults[json.key.substring(1, json.key.length - 1).toLowerCase()]) {
+        jsonResults[json.key.substring(1, json.key.length - 1).toLowerCase()].push(json.value);
+      }
     }
   }
 
