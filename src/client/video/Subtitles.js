@@ -40,7 +40,7 @@ var onReady = Promise.coroutine(function* (videoElement, document) {
 
   if(files) {
     for(var i = 0; i < files.length; ++i) {
-      initTrack(i, videoElement, document, files[i]);
+      initTrack(i, videoElement, document, files[i][1]);
     }
   }
 });
@@ -49,7 +49,7 @@ var initTrack = function(index, videoElement, document, file) {
  var track = videoElement.addTextTrack('subtitles', 'English', 'en');
  track.mode = "showing";
 
- addCues(track, file[1].toString());
+ addCues(track, file.toString());
 };
 
 var addCues = function(track, file) {
