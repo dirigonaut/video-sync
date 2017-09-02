@@ -74,6 +74,7 @@ module.exports = {
   FILES:          'video-files',
   SUBTITLES:      'video-subtitles',
   SEGMENT:        'video-segment',
+  NOFILES:        'video-no-files',
   //Client
   SEGMENTCHUNK:   'segemnt-chunk',
 

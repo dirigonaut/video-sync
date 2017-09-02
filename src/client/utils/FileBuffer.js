@@ -46,7 +46,7 @@ FileBuffer.prototype.requestFilesAsync = function(key) {
   return new Promise(function(resolve, reject) {
     var rejectId = setTimeout(function(err) {
       log.debug(`FileBuffer rejecting download ${requestInfo.requestId}`);
-      delete fileRequests[fileRequest.requestId];
+      delete fileRequests[requestInfo.requestId];
       trigger.removeListener(requestInfo.requestId, resolve);
       reject(err);
     }, TIMEOUT, `Request for Key: ${requestInfo.requestId}, timed out.`);
@@ -65,7 +65,7 @@ function genId() {
 }
 
 function registerResponse(requestId, header, serverCallback) {
-  log.info('FileBuffer.registerResponse');
+  log.info('FileBuffer._registerResponse');
   var fileRequest = fileRequests.get(requestId);
   fileRequest.buffCount++;
 
@@ -81,7 +81,7 @@ function registerResponse(requestId, header, serverCallback) {
 }
 
 function onData(bufferId, data) {
-  log.info('FileBuffer.onData');
+  log.info('FileBuffer._onData');
   var buffer = buffers.get(bufferId);
 
   if(buffer && data) {
@@ -95,7 +95,7 @@ function onData(bufferId, data) {
 }
 
 function onFinish(bufferId) {
-  log.info('FileBuffer.onFinish');
+  log.info('FileBuffer._onFinish');
   var buffer = buffers.get(bufferId);
   var fileRequest = fileRequests.get(buffer.requestId);
 
@@ -114,25 +114,31 @@ function onFinish(bufferId) {
 
 function setSocketEvents() {
   socket.setEvent(eventKeys.FILEREGISTER, function(response, callback){
-    log.debug(eventKeys.FILEREGISTER);
+    log.debug(eventKeys.FILEREGISTER, response.id);
     registerResponse(response.id, response.data, callback);
   });
 
   socket.setEvent(eventKeys.FILESEGMENT, function(response){
-    log.debug(eventKeys.FILESEGMENT);
+    log.debug(eventKeys.FILESEGMENT, response.id);
     onData(response.id, response.data);
   });
 
   socket.setEvent(eventKeys.FILEEND, function(response){
-    log.debug(eventKeys.FILEEND);
+    log.debug(eventKeys.FILEEND, response.id);
     onFinish(response.id);
   });
+
+  socket.setEvent(eventKeys.NOFILES, function(response){
+    log.debug(eventKeys.NOFILES, response.id);
+    trigger.emit(response.id);
+  }.bind(this));
 }
 
 function removeSocketEvents() {
   socket.removeEvent(eventKeys.FILEREGISTER);
   socket.removeEvent(eventKeys.FILESEGMENT);
   socket.removeEvent(eventKeys.FILEEND);
+  socket.removeEvent(eventKeys.NOFILES);
 }
 
 function removeTriggerEvents() {

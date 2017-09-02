@@ -53,7 +53,8 @@ MediaController.prototype.setup = Promise.coroutine(function* (domElements) {
   }
 
   subtitles = this.factory.createSubtitles();
-  mediaPromises.push(subtitles.setup(domElements.videoElement, domElements.document, domElements.vttTrack));
+  subtitles.once('subtitle-loaded', function() { this.emit('subtitle-loaded'); }.bind(this));
+  mediaPromises.push(subtitles.setup(domElements.videoElement, domElements.document));
 
   video.emit('get-init');
   var resetCallbacks = yield Promise.all(mediaPromises);
