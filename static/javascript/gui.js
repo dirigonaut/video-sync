@@ -533,8 +533,6 @@ function initGUI(client, isAdmin) {
     client.log.info(selectedTrack);
     var vQuality = selectedTrack.video[0].index;
     var aQuality = selectedTrack.audio[0].index;
-
-    //need an emitter
   });
 
   $('#track-video').on("change", function (e) {
@@ -561,6 +559,20 @@ function initGUI(client, isAdmin) {
     var aQuality = $(e.currentTarget.children.select).val();
 
     client.media.setActiveMetaData(typeId, vQuality, aQuality, null);
+  });
+
+  $('#track-subtitle').on("change", function (e) {
+    client.log.info($(e.currentTarget.children.select).val());
+    var selected = $(e.currentTarget.children.select).val();
+
+    var videoElement = $('video')[0];
+    for(var i = 0; i < videoElement.textTracks.length; ++i) {
+      if(videoElement.textTracks[i].label === selected) {
+        videoElement.textTracks[i].mode = 'showing';
+      } else if(videoElement.textTracks[i].mode !== "disabled") {
+        videoElement.textTracks[i].mode = 'hidden';
+      }
+    }
   });
 
   $('#buffer-ahead').on("change", function (e) {
@@ -617,6 +629,8 @@ function initGUI(client, isAdmin) {
       audioHtml += buildTrackHtml(track[1].audio, type, active.audio);
     }
 
+    subtitleHtml += `<option value="None" selected>None</option>`;
+
     typeHtml += `</select">`;
     videoHtml += `</select>`;
     audioHtml += `</select>`;
@@ -626,6 +640,20 @@ function initGUI(client, isAdmin) {
     $('#track-video').html(videoHtml);
     $('#track-audio').html(audioHtml);
     $('#track-subs').html(subtitleHtml);
+  });
+
+  client.media.on('subtitle-loaded', function() {
+    var subtitleHtml = `<select name="select"> <option value="None" selected>None</option>`;
+
+    var videoElement = $('video')[0];
+    for(var i = 0; i < videoElement.textTracks.length; ++i) {
+      if(videoElement.textTracks[i].mode !== "disabled") {
+        subtitleHtml += `<option value="${videoElement.textTracks[i].label}">${videoElement.textTracks[i].label}</option>`;
+      }
+    }
+
+    subtitleHtml += `</select>`;
+    $('#track-subtitle').html(subtitleHtml);
   });
 
   //CSS Animation ----------------------------------------------------------------

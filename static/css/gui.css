@@ -257,16 +257,20 @@
 }
 
 .glyphicon-thumbnail {
-    font-size: 32px;
-    color:white;
+  font-size: 32px;
+  color:white;
 }
 
 a {
-   color: white;
+  color: white;
 }
 
 textarea {
-    resize: none;
+  resize: none;
+}
+
+::cue {
+  background: transparent;
 }
 
 /* Old CSS */

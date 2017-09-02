@@ -75,7 +75,7 @@ var getFiles = Promise.coroutine(function* (socket, request, fileType) {
   if(basePath) {
     var files = yield fileIO.readDirAsync(basePath, fileType);
 
-    if(files) {
+    if(files && files.length > 0) {
       for(let i = 0; i < files.length; ++i) {
         var header = { };
         var splitName = files[i].split(".")[0].split("_");
@@ -96,6 +96,9 @@ var getFiles = Promise.coroutine(function* (socket, request, fileType) {
           fileIO.read(readConfig);
         });
       }
+    } else {
+      var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [request.data, '']);
+      socket.emit(eventKeys.NOFILES, result);
     }
   }
 });
