@@ -39,7 +39,7 @@ ChatController.prototype.attachSocket = Promise.coroutine(function* (socket) {
 
   socket.on(eventKeys.HANDLES, Promise.coroutine(function* () {
     log.debug(eventKeys.HANDLES);
-    var schema = schemaFactory.createDefinition(schemaFactory.Enum.ASCII);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enum.SPECIAL);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
     if(request) {
@@ -50,7 +50,7 @@ ChatController.prototype.attachSocket = Promise.coroutine(function* (socket) {
 
   socket.on(eventKeys.BROADCAST, Promise.coroutine(function* (data) {
     log.debug(eventKeys.BROADCAST);
-    var schema = schemaFactory.createDefinition(schemaFactory.Enum.ASCII);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enum.SPECIAL);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
     if(request) {

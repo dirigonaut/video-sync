@@ -30,7 +30,7 @@ ChatUtil.prototype.send = function(input) {
       var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.COMMAND, [parsedInput.shift(), parsedInput.length > 0 ? parsedInput : undefined]);
       socket.request(eventKeys.COMMAND, request);
     } else {
-      var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.ASCII, [input]);
+      var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.SPECIAL, [input]);
       socket.request(eventKeys.BROADCAST, request);
     }
   }

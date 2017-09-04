@@ -3,7 +3,6 @@ const Util    = require('util');
 const Promise = require('bluebird');
 
 const Spawn   = require('child_process').spawn;
-const Split   = require('split');
 
 const REGEXP_SPLIT = '[\\/[A-Z]*]([a-z\\s\\S]*?)[\\/[A-Z]*]';
 const REGEX_FIND_HEADERS = '[[A-Z]*]';

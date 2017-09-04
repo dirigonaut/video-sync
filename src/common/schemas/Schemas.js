@@ -8,8 +8,8 @@ var Schemas = {
     definition: { data: 'string',
     Enum: { DATA: 'data' } } },
 
-  ascii: { schema: { data: undefined},
-    definition: { data: 'ascii',
+  special: { schema: { data: undefined},
+    definition: { data: 'special',
     Enum: { DATA: 'data' } } },
 
   number: { schema: { data: undefined},
@@ -21,7 +21,7 @@ var Schemas = {
     Enum: { HANDLE: 'handle', ADDRESS: 'address', TOKEN: 'token' } } },
 
   command: { schema: { command: undefined, param: undefined },
-    definition: { command: 'command', param: 'ascii',
+    definition: { command: 'command', param: 'string',
     Enum: { COMMAND: 'command', PARAM: 'param' } } },
 
   smtp: { schema: { _id: undefined, smtpType: undefined, smtpHost: undefined, smtpAddress: undefined, smtpPassword: undefined },
@@ -29,7 +29,7 @@ var Schemas = {
     Enum: { ID: '_id', SMTPTYPE: 'smtpType', SMTPHOST: 'smtpHost', SMTPADDRESS: 'smtpAddress', SMTPPASSWORD: 'smtpPassword' } } },
 
   mailOptions: { schema: { sender: undefined, to: undefined, subject: undefined, text: undefined },
-    definition: { sender: 'email', to: 'email', subject: 'string', text: 'string',
+    definition: { sender: 'email', to: 'special', subject: 'string', text: 'string',
     Enum: { SENDER: 'sender', TO: 'to', SUBJECT: 'subject', TEXT: 'text' } } },
 
   session: { schema: { _id: undefined, title: undefined, smtp: undefined, invitees: undefined, mailOptions: undefined },
@@ -41,12 +41,8 @@ var Schemas = {
     Enum: { TIMESTAMP: 'timestamp', STATE: 'state', BUFFERED: 'buffered' } } },
 
   video: { schema: { typeId: undefined, path: undefined, segment: undefined },
-    definition: { typeId: 'number', path: 'ascii', segment: 'array',
+    definition: { typeId: 'number', path: 'special', segment: 'string',
     Enum: { TYPEID: 'typeId', PATH: 'path', SEGMENT: 'segment' } } },
-
-  encode: { schema: { timestamp: undefined, state: undefined, buffering: undefined },
-    definition: { timestamp: 'number', state: 'string', buffering: 'string',
-    Enum: { TIMESTAMP: 'timestamp', STATE: 'state', BUFFERING: 'buffering' } } },
 
   //Response
   response: { schema: { data: undefined } },
