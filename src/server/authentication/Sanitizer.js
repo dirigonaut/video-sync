@@ -1,4 +1,7 @@
-const validator	= require('validator');
+const NUMBER = '^((?=.)((\\d*)(\\.(\\d+))?))$';
+const ALPHANUMERIC = '([^\\u0000-\\u007F]|\\w|\\s)+';
+const SPECIAL	= '([^\\u0000-\\u007F]|[:;\'\"@.,\\/-\\s\\w])+';
+const EMAIL = '[\\w._-]+@[\\w]+\\.com';
 
 var fileSystemUtils, schemaFactory;
 
@@ -23,14 +26,12 @@ Sanitizer.prototype.sanitize = function(object, schema, required) {
 				}
 			}
 
-			if(object[entry[0]] !== undefined) {
-				var result = handleInputs.call(this, entry[0], entry[1], schema);
-				if(result) {
-					if(typeof result === 'object') {
-						schema[entry[0]] = result;
-					} else {
-						schema[entry[0]] = entry[1];
-					}
+			var result = handleInputs.call(this, entry[0], entry[1], schema);
+			if(result) {
+				if(typeof result === 'object') {
+					schema[entry[0]] = result;
+				} else {
+					schema[entry[0]] = entry[1];
 				}
 			}
 		} else {
@@ -73,33 +74,27 @@ function checkInput(key, input, schema) {
 	var type = schema[key];
 	switch (type) {
 	  case 'string':
-			clean = validator.isAlphanumeric(input  + '') || validator.isEmpty(input  + '');
+			clean = validate(input, new RegExp(ALPHANUMERIC), true);
+	    break;
+	  case 'number':
+			clean = validate(input, new RegExp(NUMBER), true);
 	    break;
 		case 'bool':
-			clean = validator.isBoolean(input + '');
-			break;
-	  case 'number':
-			clean = validator.isFloat(input + '') || validator.isEmpty(input  + '');
-	    break;
-		case 'ascii':
-			clean = validator.isAscii(input + '');
-			break;
-		case 'array':
-			clean = true;
-			for(let i = 0; i < input.length; ++i) {
-				clean &= validator.isAlphanumeric(input[i]  + '') || validator.isEmpty(input  + '');
-			}
+			clean = typeof input === 'boolean';
 			break;
 		case 'path':
 			clean = fileSystemUtils.isPath(input);
 			break;
+		case 'special':
+			clean = validate(input, new RegExp(SPECIAL), true);
+			break;
 	  case 'email':
-			clean = validator.isEmail(input + '');
+			clean = validate(input, new RegExp(EMAIL), true);
 	    break;
 		case 'command':
 			var command = input.substring(1, input.length);
 			clean = input[0] === "/";
-			clean &= validator.isAlphanumeric(command + '');
+			clean &= validate(command, new RegExp(ALPHANUMERIC), false);
 			break;
 		case 'schema':
 			var nestedSchema = schemaFactory.createDefinition(schemaFactory.Enum[key.toUpperCase()]);
@@ -110,4 +105,14 @@ function checkInput(key, input, schema) {
 	}
 
 	return clean;
+}
+
+function validate(input, regex, allowEmpty) {
+	var matches = regex.exec(input);
+
+	if(allowEmpty) {
+		return typeof input === 'null' || typeof input === 'undefined' || (Array.isArray(matches) && matches[0] == input);
+	} else {
+		return Array.isArray(matches) && matches[0] == input;
+	}
 }

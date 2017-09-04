@@ -45,7 +45,7 @@ EncodingController.prototype.attachSocket = function(socket) {
 
     if(isAdmin) {
       log.debug(eventKeys.GETMETA, data);
-      var schema = schemaFactory.createDefinition(schemaFactory.Enum.ASCII);
+      var schema = schemaFactory.createDefinition(schemaFactory.Enum.SPECIAL);
       var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
 
       if(request) {

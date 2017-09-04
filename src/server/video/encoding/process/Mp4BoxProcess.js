@@ -2,7 +2,6 @@ const EventEmitter  = require('events');
 const Util = require('util');
 
 var Spawn = require('child_process').spawn;
-var Split = require('split');
 
 function Mp4BoxProcess(command) {
   this.command = command;

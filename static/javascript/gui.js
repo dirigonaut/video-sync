@@ -97,6 +97,10 @@ function initGUI(client, isAdmin) {
     var address   = $('#sessionAddress').val();
     var invitees  = ($('#sessionInvitees').val()).split(",");
 
+    for(var i = 0; i < invitees.length; ++i) {
+      invitees[i] = invitees[i].trim();
+    }
+
     if(!id) {
       client.socket.request(client.keys.CREATESESSION,
         client.schema.createPopulatedSchema(client.schema.Enum.SESSION, [undefined, title, address, invitees, mailOptions]));
@@ -229,7 +233,7 @@ function initGUI(client, isAdmin) {
   $('#encode-input').on("focusout", function requestFileInfo() {
     var input = $('#encode-input').val();
     var inspect = ` -show_streams ${input}`;
-    client.socket.request(client.keys.GETMETA, client.schema.createPopulatedSchema(client.schema.Enum.ASCII, [inspect]));
+    client.socket.request(client.keys.GETMETA, client.schema.createPopulatedSchema(client.schema.Enum.SPECIAL, [inspect]));
   });
 
   var loadFileInfo = function(metaData) {
