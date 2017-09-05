@@ -33,6 +33,7 @@ ServerProcess.prototype.start = Promise.coroutine(function* () {
   var options = {
     key: pem.privateKey,
     cert: pem.certificate,
+    rejectUnauthorized: false,
     requestCert: true,
   };
 
