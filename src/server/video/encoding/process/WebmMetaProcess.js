@@ -37,7 +37,7 @@ WebmMetaProcess.prototype.execute = Promise.coroutine(function* () {
   var xmlMeta = xmlUtil.webmMetaToXml(meta);
   yield mpdUtil.addSegmentsToMpd(this.command, xmlMeta).then(function() {
     this.emit('exit', 0);
-  }).catch(function(err) {
+  }.bind(this)).catch(function(err) {
     this.emit('exit', 1);
   }.bind(this));
 });

@@ -19,7 +19,7 @@ EncodeFactory.prototype.getTemplate = function(codec, type) {
 };
 
 EncodeFactory.prototype.setKeyValue = function(key, newValue, str) {
-  var regex = new RegExp(`-${key}\\s"[\\w,.-=:\\s]*"|-${key}\\s[^-][\\S]*|-${key}`, 'g');
+  var regex = new RegExp(`-${key}\\s"[\\w,.-=:\\s]*"|-${key}\\s[^-][\\S]*|-${key}(?=\\s)`, 'g');
   var result = regex.exec(str);
   return str.substring(0, result.index)  + `-${key} ${newValue}` + str.substring(regex.lastIndex, str.length);
 };
