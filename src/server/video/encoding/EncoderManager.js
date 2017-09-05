@@ -57,7 +57,7 @@ EncoderManager.prototype.buildProcess = function(data) {
 };
 
 EncoderManager.prototype.encode = function(operations) {
-	log.debug("EncodingManager.encode");
+	log.debug("EncodingManager.encode", encoding);
 	var promise;
 
 	if(Array.isArray(operations)) {
