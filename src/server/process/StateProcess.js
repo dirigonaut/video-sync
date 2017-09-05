@@ -1,6 +1,6 @@
 const Promise   = require('bluebird');
 
-var database, stateRedis, log;
+var database, stateSubscriber, log;
 
 function StateProcess() { }
 
@@ -17,8 +17,8 @@ StateProcess.prototype.start = function() {
   database = this.factory.createNeDatabase();
   database.initialize();
 
-  stateRedis = this.factory.createStateRedis();
-  stateRedis.initialize();
+  stateSubscriber = this.factory.createStateSubscriber();
+  stateSubscriber.initialize();
 };
 
 module.exports = StateProcess;

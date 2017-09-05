@@ -3,19 +3,39 @@ const ALPHANUMERIC = '([^\\u0000-\\u007F]|\\w|\\s)+';
 const SPECIAL	= '([^\\u0000-\\u007F]|[:;@.,/\\-\\\'\\\"\\s\\w\\\\])+';
 const EMAIL = '[\\w._-]+@[\\w]+\\.com';
 
-var fileSystemUtils, schemaFactory;
+var fileSystemUtils, schemaFactory, eventKeys, log;
 
 function Sanitizer() { }
 
 Sanitizer.prototype.initialize = function(force) {
 	if(typeof Sanitizer.prototype.protoInit === 'undefined') {
     Sanitizer.prototype.protoInit = true;
+		eventKeys       = this.factory.createKeys();
+
+		var logManager  = this.factory.createLogManager();
+		log             = logManager.getLog(logManager.LogEnum.GENERAL);
+
 		fileSystemUtils = this.factory.createFileSystemUtils();
 		schemaFactory = this.factory.createSchemaFactory();
   }
 };
 
-Sanitizer.prototype.sanitize = function(object, schema, required) {
+Sanitizer.prototype.sanitize = function(data, schema, required, socket) {
+	var request;
+
+	try{
+		request = sanitizeSchema.call(this, data, schema, required);
+	} catch(err) {
+		log.error(err);
+		socket.emit(eventKeys.INPUTERROR, [data, err.toString()]);
+	}
+
+	return request;
+};
+
+module.exports = Sanitizer;
+
+function sanitizeSchema(object, schema, required) {
 	var entries = Object.entries(object);
 	for(var entry of entries) {
 		if(schema[entry[0]] !== undefined) {
@@ -45,8 +65,6 @@ Sanitizer.prototype.sanitize = function(object, schema, required) {
 
 	return schema;
 };
-
-module.exports = Sanitizer;
 
 function handleInputs(key, input, schema) {
 	var clean;

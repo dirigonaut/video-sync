@@ -6,27 +6,27 @@ Promise.promisifyAll(Redis.RedisClient.prototype);
 
 var adapter, subscriber, log;
 
-function ServerRedis() { }
+function ServerSubscriber() { }
 
-ServerRedis.prototype.initialize = Promise.coroutine(function* (force) {
-  if(typeof ServerRedis.prototype.protoInit === 'undefined') {
-    ServerRedis.prototype.protoInit = true;
+ServerSubscriber.prototype.initialize = Promise.coroutine(function* (force) {
+  if(typeof ServerSubscriber.prototype.protoInit === 'undefined') {
+    ServerSubscriber.prototype.protoInit = true;
     var config      = this.factory.createConfig();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
   }
 
-  if(force === undefined ? typeof ServerRedis.prototype.stateInit === 'undefined' : force) {
-    ServerRedis.prototype.stateInit = true;
-    adapter    = this.factory.createReflectiveAdapter();
+  if(force === undefined ? typeof ServerSubscriber.prototype.stateInit === 'undefined' : force) {
+    ServerSubscriber.prototype.stateInit = true;
+    adapter    = this.factory.createRedisAdapter();
     subscriber = Redis.createClient(config.getConfig().redis);
 
     attachEvents();
   }
 });
 
-ServerRedis.prototype.cleanUp = Promise.coroutine(function* () {
-  log.debug("ServerRedis.cleanUp");
+ServerSubscriber.prototype.cleanUp = Promise.coroutine(function* () {
+  log.debug("ServerSubscriber.cleanUp");
   if(typeof subscriber !== 'undefined' && subscriber) {
     log.info('sub unscribe');
     yield subscriber.unsubscribeAsync("session");
@@ -43,7 +43,7 @@ ServerRedis.prototype.cleanUp = Promise.coroutine(function* () {
   }
 });
 
-module.exports = ServerRedis;
+module.exports = ServerSubscriber;
 
 function attachEvents() {
   subscriber.on("message", Promise.coroutine(function* (channel, message) {
@@ -57,11 +57,11 @@ function attachEvents() {
   });
 
   subscriber.on("connect", function(err) {
-    log.info("ServerRedis is connected to redis server");
+    log.info("ServerSubscriber is connected to redis server");
   });
 
   subscriber.on("reconnecting", function(err) {
-    log.info("ServerRedis is connected to redis server");
+    log.info("ServerSubscriber is connected to redis server");
   });
 
   subscriber.on("error", function(err) {

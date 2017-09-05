@@ -33,7 +33,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
 
     if(isAdmin) {
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.SMTP);
-      var request = sanitizer.sanitize(data, schema, [schema.Enum.SMTPTYPE, schema.Enum.SMTPHOST, schema.Enum.SMTPADDRESS, schema.Enum.SMTPPASSWORD]);
+      var request = sanitizer.sanitize(data, schema, [schema.Enum.SMTPTYPE, schema.Enum.SMTPHOST, schema.Enum.SMTPADDRESS, schema.Enum.SMTPPASSWORD], socket);
 
       if(request) {
         yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.CREATESMTP, [request]]);
@@ -48,7 +48,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
 
     if(isAdmin) {
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.SESSION);
-      var request = sanitizer.sanitize(data, schema, [schema.Enum.TITLE, schema.Enum.SMTP, schema.Enum.INVITEES, schema.Enum.MAILOPTIONS]);
+      var request = sanitizer.sanitize(data, schema, [schema.Enum.TITLE, schema.Enum.SMTP, schema.Enum.INVITEES, schema.Enum.MAILOPTIONS], socket);
 
       if(request) {
         yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.CREATESESSION, [request]]);
@@ -64,6 +64,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
 
     if(isAdmin) {
       var smtp = yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.READALLSMTP, []]);
+
       if(smtp) {
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [smtp]);
         socket.emit(eventKeys.SMTP, response);
@@ -91,7 +92,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
 
     if(isAdmin) {
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.SMTP);
-      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
       if(request) {
         yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.UPDATESMTP, [request]]);
@@ -105,7 +106,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.SESSION);
-      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
       if(request) {
         yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.UPDATESESSION, [request]]);
@@ -120,7 +121,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
-      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
       if(request) {
         var deleted = yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.DELETESMTP, [request.data]]);
@@ -136,7 +137,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
     var isAdmin = yield session.isAdmin(socket.id);
     if(isAdmin) {
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
-      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
       if(request) {
         var deleted = yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.DELETESESSION, [request.data]]);

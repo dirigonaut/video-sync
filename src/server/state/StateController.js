@@ -60,7 +60,7 @@ StateController.prototype.attachSocket = function(socket) {
     log.debug(eventKeys.REQSEEK, data);
 
     var schema = schemaFactory.createDefinition(schemaFactory.Enum.STATE);
-    var request = sanitizer.sanitize(data, schema, [schema.Enum.TIMESTAMP]);
+    var request = sanitizer.sanitize(data, schema, [schema.Enum.TIMESTAMP], socket);
 
     if(request) {
       var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SEEK, [socket.id, request]]);
@@ -95,7 +95,7 @@ StateController.prototype.attachSocket = function(socket) {
     log.debug(eventKeys.CHANGESYNC, data);
 
     var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
-    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
       var value = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.CHANGESYNCSTATE, [socket.id, request]]);
@@ -116,7 +116,7 @@ StateController.prototype.attachSocket = function(socket) {
     }
 
     var schema = schemaFactory.createDefinition(schemaFactory.Enum.STATE);
-    var request = sanitizer.sanitize(data, schema, [schema.Enum.TIMESTAMP]);
+    var request = sanitizer.sanitize(data, schema, [schema.Enum.TIMESTAMP], socket);
 
     if(request) {
       var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SYNCINGPING, [socket.id, request]]);

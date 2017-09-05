@@ -30,11 +30,16 @@ WebmMetaProcess.prototype.execute = Promise.coroutine(function* () {
   var meta = yield webmMetaData.generateWebmMeta(this.command);
 
   if(!meta) {
+    this.emit('exit', 1);
     throw new Error('meta data is not defined.');
   }
 
   var xmlMeta = xmlUtil.webmMetaToXml(meta);
-  yield mpdUtil.addSegmentsToMpd(this.command, xmlMeta);
+  yield mpdUtil.addSegmentsToMpd(this.command, xmlMeta).then(function() {
+    this.emit('exit', 0);
+  }).catch(function(err) {
+    this.emit('exit', 1);
+  }.bind(this));
 });
 
 module.exports = WebmMetaProcess;

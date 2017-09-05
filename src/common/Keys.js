@@ -82,4 +82,7 @@ module.exports = {
   FILEREGISTER:   'file-register',
   FILESEGMENT:    'file-segment',
   FILEEND:        'file-end',
+
+  //Errors
+  INPUTERROR:     'error-input',
 };

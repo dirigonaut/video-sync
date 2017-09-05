@@ -5,7 +5,7 @@ const Https       = require('https');
 const Express     = require('express');
 const SocketIO    = require('socket.io');
 
-var app, io, server, serverRedis, logManager, log;
+var app, io, server, serverSubscriber, logManager, log;
 
 function ServerProcess() { }
 
@@ -21,7 +21,7 @@ ServerProcess.prototype.start = Promise.coroutine(function* () {
   var config = this.factory.createConfig();
 
   log.info(`Trying to start ServerProcess on port ${config.getConfig().port} with process ${process.pid}`);
-  serverRedis   = this.factory.createServerRedis();
+  serverSubscriber   = this.factory.createServerSubscriber();
 
   var publisher = this.factory.createRedisPublisher();
   publisher.initialize();

@@ -31,7 +31,7 @@ VideoController.prototype.attachSocket = function(socket) {
   socket.on(eventKeys.FILES, Promise.coroutine(function* (data) {
     log.debug(eventKeys.FILES, data);
     var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
-    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
       yield getFiles(socket, request, "mpd");
@@ -41,7 +41,7 @@ VideoController.prototype.attachSocket = function(socket) {
   socket.on(eventKeys.SUBTITLES, Promise.coroutine(function* (data) {
     log.debug(eventKeys.SUBTITLES, data);
     var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
-    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
       yield getFiles(socket, request, "vtt");
@@ -51,7 +51,7 @@ VideoController.prototype.attachSocket = function(socket) {
   socket.on(eventKeys.SEGMENT, Promise.coroutine(function* (data) {
     log.debug(eventKeys.SEGMENT, data);
     var schema = schemaFactory.createDefinition(schemaFactory.Enum.VIDEO);
-    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
       var basePath = yield session.getMediaPath();

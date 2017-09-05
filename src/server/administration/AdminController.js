@@ -48,7 +48,7 @@ AdminController.prototype.attachSocket = function(socket) {
     if(isAdmin) {
       log.debug(eventKeys.SETMEDIA);
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.PATH);
-      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
       if(request) {
         var exists = fileIO.dirExists(request.data);
@@ -74,7 +74,7 @@ AdminController.prototype.attachSocket = function(socket) {
       log.debug(eventKeys.LOADSESSION);
 
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
-      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
       if(request) {
         session.setSession(request.data);
