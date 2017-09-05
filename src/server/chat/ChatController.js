@@ -40,7 +40,7 @@ ChatController.prototype.attachSocket = Promise.coroutine(function* (socket) {
   socket.on(eventKeys.HANDLES, Promise.coroutine(function* () {
     log.debug(eventKeys.HANDLES);
     var schema = schemaFactory.createDefinition(schemaFactory.Enum.SPECIAL);
-    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, request.data]);
@@ -51,7 +51,7 @@ ChatController.prototype.attachSocket = Promise.coroutine(function* (socket) {
   socket.on(eventKeys.BROADCAST, Promise.coroutine(function* (data) {
     log.debug(eventKeys.BROADCAST);
     var schema = schemaFactory.createDefinition(schemaFactory.Enum.SPECIAL);
-    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, request.data]);
@@ -62,7 +62,7 @@ ChatController.prototype.attachSocket = Promise.coroutine(function* (socket) {
   socket.on(eventKeys.COMMAND, Promise.coroutine(function* (data) {
     log.debug(eventKeys.COMMAND, data);
     var schema = schemaFactory.createDefinition(schemaFactory.Enum.COMMAND);
-    var request = sanitizer.sanitize(data, schema, [schema.Enum.COMMAND]);
+    var request = sanitizer.sanitize(data, schema, [schema.Enum.COMMAND], socket);
 
     if(request) {
       var player = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETPLAYER, [socket.id]]);

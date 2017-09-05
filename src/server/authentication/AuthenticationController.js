@@ -39,7 +39,7 @@ AuthenticationController.prototype.attachIO = function (io) {
     socket.on(eventKeys.GETTOKEN, Promise.coroutine(function* (data) {
       log.debug(eventKeys.GETTOKEN, socket.id);
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.LOGIN);
-      var request = sanitizer.sanitize(data, schema, [schema.Enum.ADDRESS]);
+      var request = sanitizer.sanitize(data, schema, [schema.Enum.ADDRESS], socket);
 
       if(request) {
         var activeSession = yield session.getSession();
@@ -61,7 +61,7 @@ AuthenticationController.prototype.attachIO = function (io) {
     socket.on(eventKeys.AUTHTOKEN, Promise.coroutine(function* (data) {
       log.debug(eventKeys.AUTHTOKEN, socket.id);
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.LOGIN);
-      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
       if(request) {
         var authorized = yield authenticator.validateToken(socket.id, request);

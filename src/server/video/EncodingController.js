@@ -32,11 +32,20 @@ EncodingController.prototype.attachSocket = function(socket) {
     if(isAdmin) {
       log.debug(eventKeys.ENCODE, data);
       yield fileIO.ensureDirExistsAsync(data.directory, 484);
+      var processes;
 
-      var processes = encoderManager.buildProcess(data.encodings);
-      yield encoderManager.encode(processes).then(function() {
-        socket.emit(eventKeys.ENCODED);
-      });
+      try {
+        processes = encoderManager.buildProcess(data.encodings);
+      } catch(err) {
+        log.error(err)
+        socket.emit(eventKeys.INPUTERROR, err);
+      }
+
+      if(processes) {
+        yield encoderManager.encode(processes).then(function() {
+          socket.emit(eventKeys.ENCODED);
+        });
+      }
     }
   }));
 
@@ -46,7 +55,7 @@ EncodingController.prototype.attachSocket = function(socket) {
     if(isAdmin) {
       log.debug(eventKeys.GETMETA, data);
       var schema = schemaFactory.createDefinition(schemaFactory.Enum.SPECIAL);
-      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum));
+      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
       if(request) {
         var command = this.factory.createCommand();

@@ -48,7 +48,7 @@ EncoderManager.prototype.buildProcess = function(data) {
 				processes.push(mp4Box);
 			break;
 			default:
-				log.info("EncoderManager: " + command.codec + " is not supported process.");
+				throw new Error(`EncoderManager: ${command.codec} is not supported process.`);
 			break;
 		}
 	}

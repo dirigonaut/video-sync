@@ -3,20 +3,20 @@ const Redis   = require('redis');
 
 var adapter, database, playerManager, subscriber, stateEngine, log;
 
-function StateRedis() { };
+function StateSubscriber() { };
 
-StateRedis.prototype.initialize = function(force) {
-  if(typeof StateRedis.prototype.protoInit === 'undefined') {
-    StateRedis.prototype.protoInit = true;
+StateSubscriber.prototype.initialize = function(force) {
+  if(typeof StateSubscriber.prototype.protoInit === 'undefined') {
+    StateSubscriber.prototype.protoInit = true;
     var config      = this.factory.createConfig();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.LogEnum.GENERAL);
   }
 
-  if(force === undefined ? typeof StateRedis.prototype.stateInit === 'undefined' : force) {
-    StateRedis.prototype.stateInit = true;
+  if(force === undefined ? typeof StateSubscriber.prototype.stateInit === 'undefined' : force) {
+    StateSubscriber.prototype.stateInit = true;
     playerManager   = this.factory.createPlayerManager();
-    adapter         = this.factory.createReflectiveAdapter();
+    adapter         = this.factory.createRedisAdapter();
     subscriber      = Redis.createClient(config.getConfig().redis);
     stateEngine     = this.factory.createStateEngine();
     database        = this.factory.createNeDatabase();
@@ -26,8 +26,8 @@ StateRedis.prototype.initialize = function(force) {
   }
 };
 
-StateRedis.prototype.cleanUp = Promise.coroutine(function* () {
-  log.debug("ServerRedis.cleanUp");
+StateSubscriber.prototype.cleanUp = Promise.coroutine(function* () {
+  log.debug("StateSubscriber.cleanUp");
   if(typeof subscriber !== 'undefined' && subscriber) {
     log.info('sub unscribe');
     yield subscriber.unsubscribeAsync("database");
@@ -47,7 +47,7 @@ StateRedis.prototype.cleanUp = Promise.coroutine(function* () {
   }
 });
 
-module.exports = StateRedis;
+module.exports = StateSubscriber;
 
 function attachEvents() {
   subscriber.on("message", Promise.coroutine(function* (channel, message) {
@@ -67,11 +67,11 @@ function attachEvents() {
   });
 
   subscriber.on("connect", function(err) {
-    log.info("StateRedis is connected to redis server");
+    log.info("StateSubscriber is connected to redis server");
   });
 
   subscriber.on("reconnecting", function(err) {
-    log.info("StateRedis is connected to redis server");
+    log.info("StateSubscriber is connected to redis server");
   });
 
   subscriber.on("error", function(err) {
