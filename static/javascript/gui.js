@@ -237,9 +237,23 @@ function initGUI(client, isAdmin) {
   });
 
   var loadFileInfo = function(metaData) {
-    try {
-      $('#fileInfo').val(typeof metaData.data !== 'undefined' ? JSON.stringify(metaData.data) : "No meta data found make sure you have a valid file.");
-    } catch(err) { };
+    $('#toggles').append(toggle).empty();
+    $('#file-info-panels').children('div').each(function(i, element) {
+      if(element.id) {
+        $(element).remove();
+      }
+    });
+
+    if(metaData && typeof metaData.data !== 'undefined') {
+      for(var i = 0; i < metaData.data.stream.length; ++i) {
+        var toggle  = `<li role="presentation" ${i === 0 ? 'class="active"' : ''}><a href="#stream-${i}" aria-controls="stream-${i}" role="pill" data-toggle="pill">Stream-${i}</a></li>`
+        var panel   = `<div role="tabpanel" class="tab-pane ${i === 0 ? 'active' : ''}" id="stream-${i}">
+                        <textArea type="text" class="form-control" rows=8 placeholder="fileInfo">${metaData.data.stream[i]}</textarea></div>`;
+
+        $('#file-info-panels').append(panel);
+        $('#toggles').append(toggle);
+      }
+    }
   };
 
   client.socket.setEvent(client.keys.META, loadFileInfo);
@@ -281,12 +295,14 @@ function initGUI(client, isAdmin) {
   });
 
   $('#createSubtitle').click(function createSubtitle() {
-    var quality = $('#subtitle-track').val();
+    var streamId = $('#subtitle-track').val();
     var input = $('#encode-input').val();
     var output = $('#encode-output').val();
+    var isNum = /^\d+$/.test(streamId);
 
     var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.SUBTITLE);
     template = client.encode.setKeyValue('i', `${input}`, template);
+    template = client.encode.setKeyValue('y', `${isNum ? '-map 0:' + streamId : ''}`, template);
     template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}.vtt`, template);
 
     if(template) {
@@ -323,7 +339,8 @@ function initGUI(client, isAdmin) {
           }
         });
 
-        if(typeof command.input !== 'undefined' && command.type !== client.encode.TypeEnum.MANIFEST) {
+        if(typeof command.input !== 'undefined' && command.type !== client.encode.TypeEnum.MANIFEST &&
+          command.type !== client.encode.TypeEnum.SUBTITLE) {
           list.push(command);
         }
       });
