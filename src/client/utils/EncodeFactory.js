@@ -50,21 +50,17 @@ EncodeFactory.prototype.createManifest = function(input, output, commands, codec
   var aSet = "";
   var vSet = "";
   var inputs = "";
-  var index = 0;
 
   for(let i = 0; i < commands.length; ++i) {
     if(commands[i].type === this.TypeEnum.VIDEO) {
-      vSet = `${vSet.length > 0 ? vSet : Snippets.SETSVIDEO}${vSet.length > 0 ? "," + index : index}`;
+      vSet = `${vSet.length > 0 ? vSet : Snippets.SETSVIDEO}${vSet.length > 0 ? "," + i : i}`;
       inputs = `${inputs} ${Snippets.MANIFEST.trim()} -i ${this.getOutput(commands[i].input).trim()}`
-      maps = `${maps.trim()} ${Snippets.MAP.trim()} ${index}`
+      maps = `${maps.trim()} ${Snippets.MAP.trim()} ${i}`
 
-      ++index;
     } else if(commands[i].type === this.TypeEnum.AUDIO) {
-      aSet = `${aSet.length > 0 ? aSet : Snippets.SETSAUDIO}${aSet.length > 0 ? "," + index : index}`;
+      aSet = `${aSet.length > 0 ? aSet : Snippets.SETSAUDIO}${aSet.length > 0 ? "," + i : i}`;
       inputs = `${inputs} ${Snippets.MANIFEST.trim()} -i ${this.getOutput(commands[i].input).trim()}`
-      maps = `${maps.trim()} ${Snippets.MAP.trim()} ${index}`
-
-      ++index;
+      maps = `${maps.trim()} ${Snippets.MAP.trim()} ${i}`
     }
   }
 
