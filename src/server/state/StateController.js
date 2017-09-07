@@ -94,7 +94,7 @@ StateController.prototype.attachSocket = function(socket) {
   socket.on(eventKeys.CHANGESYNC, Promise.coroutine(function* (data) {
     log.debug(eventKeys.CHANGESYNC, data);
 
-    var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enum.BOOL);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
