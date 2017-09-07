@@ -40,14 +40,14 @@ UserAdministration.prototype.kickUser = Promise.coroutine(function* (user) {
     var player = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETPLAYER, [user]]);
 
     if(player) {
-      yield session.removeInvitee(id).catch(log.error);
-      yield redisSocket.disconnect(id);
+      yield session.removeInvitee(user).catch(log.error);
+      yield redisSocket.disconnect(user);
     } else {
       log.warn("There is no player with the id: ", user);
     }
+  } else {
+    new Error(`Cannot kick admin.`);
   }
-
-  return new Promise.reject(new Error(`Cannot kick admin.`));
 });
 
 UserAdministration.prototype.inviteUser = Promise.coroutine(function* (emailAddress) {
@@ -61,8 +61,8 @@ UserAdministration.prototype.inviteUser = Promise.coroutine(function* (emailAddr
     var mailOptions = activeSession.mailOptions;
     mailOptions.invitees = [emailAddress];
 
+    log.debug(mailOptions)
     smtp.sendMail(addP2PLink(mailOptions));
-
   } else {
     log.warn("There is no active session to load smtp info from.");
   }
