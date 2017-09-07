@@ -32,9 +32,7 @@ SchemaFactory.prototype.createPopulatedSchema = function (id, args) {
   if(object && Array.isArray(args)) {
     var keys = Object.keys(object);
     for(var i = 0; i < keys.length; ++i) {
-      if(typeof args[i] !== 'undefined') {
-        object[keys[i]] = args[i];
-      }
+      object[keys[i]] = args[i];
     }
   }
 

@@ -36,6 +36,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
       var request = sanitizer.sanitize(data, schema, [schema.Enum.SMTPTYPE, schema.Enum.SMTPHOST, schema.Enum.SMTPADDRESS, schema.Enum.SMTPPASSWORD], socket);
 
       if(request) {
+        delete request._id;
         yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.CREATESMTP, [request]]);
         socket.emit(eventKeys.DBREFRESH);
       }
@@ -51,6 +52,7 @@ DatabaseController.prototype.attachSocket = function(socket) {
       var request = sanitizer.sanitize(data, schema, [schema.Enum.TITLE, schema.Enum.SMTP, schema.Enum.INVITEES, schema.Enum.MAILOPTIONS], socket);
 
       if(request) {
+        delete request._id;
         yield publisher.publishAsync(publisher.Enum.DATABASE, [database.functions.CREATESESSION, [request]]);
         socket.emit(eventKeys.DBREFRESH);
       }

@@ -1,6 +1,6 @@
 const NUMBER = '^((?=.)((\\d*)(\\.(\\d+))?))$';
 const ALPHANUMERIC = '([^\\u0000-\\u007F]|\\w|\\s)+';
-const SPECIAL	= '([^\\u0000-\\u007F]|[:;@.,/\\-\\\'\\\"\\s\\w\\\\])+';
+const SPECIAL	= '([^\\u0000-\\u007F]|[?!&:;@.,/\\-\\\'\\\"\\s\\w\\\\])+';
 const EMAIL = '[\\w._-]+@[\\w]+\\.com';
 
 var fileSystemUtils, schemaFactory, eventKeys, log;
@@ -38,31 +38,22 @@ module.exports = Sanitizer;
 function sanitizeSchema(object, schema, required) {
 	var entries = Object.entries(object);
 	for(var entry of entries) {
-		if(schema[entry[0]] !== undefined) {
-			if(required && required.length > 0) {
-				var indexOf = required.indexOf(entry[0]);
-				if(indexOf > -1) {
-					required.splice(indexOf, 1);
-				}
+		if(required && required.length > 0) {
+			var indexOf = required.indexOf(entry[0]);
+			if(indexOf > -1) {
+				required.splice(indexOf, 1);
 			}
-
-			var result = handleInputs.call(this, entry[0], entry[1], schema);
-			if(result) {
-				if(typeof result === 'object') {
-					schema[entry[0]] = result;
-				} else {
-					schema[entry[0]] = entry[1];
-				}
-			}
-		} else {
-			throw new Error(`Entry ${entry[0]} does not exist in ${JSON.stringify(object)}`);
 		}
+
+		var result = handleInputs.call(this, entry[0], entry[1], schema);
+		schema[entry[0]] = entry[1];
 	}
 
 	if(required && required.length > 0) {
 		throw new Error(`Missing ${required} entries.`);
 	}
 
+	delete schema.Enum;
 	return schema;
 };
 
@@ -129,7 +120,7 @@ function validate(input, regex, allowEmpty) {
 	var matches = regex.exec(input);
 
 	if(allowEmpty) {
-		return typeof input === 'null' || typeof input === 'undefined' || (Array.isArray(matches) && matches[0] == input);
+		return input === '' || typeof input === 'null' || typeof input === 'undefined' || (Array.isArray(matches) && matches[0] == input);
 	} else {
 		return Array.isArray(matches) && matches[0] == input;
 	}
