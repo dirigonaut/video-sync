@@ -25,7 +25,7 @@ var Schemas = {
     Enum: { HANDLE: 'handle', ADDRESS: 'address', TOKEN: 'token' } } },
 
   command: { schema: { command: undefined, param: undefined },
-    definition: { command: 'command', param: 'string',
+    definition: { command: 'command', param: 'special',
     Enum: { COMMAND: 'command', PARAM: 'param' } } },
 
   smtp: { schema: { _id: undefined, smtpType: undefined, smtpHost: undefined, smtpAddress: undefined, smtpPassword: undefined },
