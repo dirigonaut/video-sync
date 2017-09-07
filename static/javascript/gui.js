@@ -610,7 +610,7 @@ function initGUI(client, isAdmin) {
   });
 
   $('#synchronize').on("change", function (e) {
-    var request = client.schema.createPopulatedSchema(client.schema.Enum.STRING, [$('#synchronize').find('input')[0].checked]);
+    var request = client.schema.createPopulatedSchema(client.schema.Enum.BOOL, [$('#synchronize').find('input')[0].checked]);
     client.socket.request(client.keys.CHANGESYNC, request);
   });
 
