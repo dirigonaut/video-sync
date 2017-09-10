@@ -20,21 +20,23 @@
 
 ### What am I
 ---
-Video-Sync, until I can come up with a swankier name, is an application for hosting/watching media content online with your friends, family, strangers, or by yourself pretending you have friends. While many platforms exist already to host or watch media online very few exist that keep all players synchronized so they are watching/listening to the same part of the media. The idea behind this is an application with minimal setup for the administrator and zero setup for any other party so that anyone can enjoy their favorite media with the people they want to share it with online but with the same epxerience as you are all watching tv together.
+Video-Sync, until I can come up with a swankier name, is an application for hosting/watching media content online with your friends, family, strangers, or by yourself pretending you have friends. While many platforms exist already to host or watch media online very few exist that keep all players synchronized so they are watching/listening to the same part of the media at the same time. The idea behind this is an application with minimal setup for the administrator and zero setup for any other party so that anyone can enjoy their favorite media with the people they want to share it with online but with the same experience as you are all watching tv together.
 
 ### Setup
 ---
 **Requirements**:
 1. Node version >= 8.4.0
-2. Ffmpeg version >=
-3. Redis version >=
-4. Git version >=
+2. Ffmpeg version >= 2.7.6
+3. Redis version >= 3.0.3
+4. Git version
 
 Download and install git if you do not already have it. Then clone this repository to the files system of the computer you wish to run it on.
 
 Install nodejs and run the following commands from within the directory where you downloaded the code repository.
 ```npm install npm@latest -g``` *Updates npm: may require elevated access to run*
 ```npm install``` *Installs the necessary dependencies*
+
+Install Ffmpeg and Redis and add them both to your path
 
 ### Watch a Video
 ---
