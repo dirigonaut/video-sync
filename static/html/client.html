@@ -25,6 +25,9 @@
           <div class="icon-v">
             <a href="#" id="btnLogin"><span class="glyphicon glyphicon-thumbnail glyphicon-user"></span></a>
           </div>
+          <div class="icon-v">
+            <a href="#" id="btnHelp"><span class="glyphicon glyphicon-thumbnail glyphicon-question-sign"></span></a>
+          </div>
         </div>
         <div id="control-container" class="control-bar flex-h fadein">
         </div>
@@ -35,6 +38,7 @@
       <div id="sessionOverlay"></div>
       <div id="smtpOverlay"></div>
       <div id="encodeOverlay"></div>
+      <div id="helpOverlay"></div>
     </div>
     <script type="text/javascript" src="../resources/jquery-2.2.4.min.js"></script>
     <script type="text/javascript" src="../resources/video-js/video.js"></script>
@@ -49,6 +53,7 @@
 
         $("#control-container").load("menu/controls.html");
         $("#chat-container").load("menu/chat.html");
+        $("#helpOverlay").load("menu/overlays/help.html");
         $("#loginOverlay").load("menu/overlays/login.html", function() {
           $('#loginModal').modal('show');
         });
