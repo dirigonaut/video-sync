@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "browserify": "^14.1.0",
+    "marked": "^0.3.6",
     "mocha": "^3.4.2",
     "should": "^11.2.1",
     "watchify": "^3.9.0"
