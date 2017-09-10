@@ -301,8 +301,7 @@ function initGUI(client, isAdmin) {
     var isNum = /^\d+$/.test(streamId);
 
     var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.SUBTITLE);
-    template = client.encode.setKeyValue('i', `${input}`, template);
-    template = client.encode.setKeyValue('y', `${isNum ? '-map 0:' + streamId : ''}`, template);
+    template = client.encode.setKeyValue('i', `${input}${isNum ? ' -map 0:' + streamId : ''}`, template);
     template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}.vtt`, template);
 
     if(template) {
@@ -459,8 +458,6 @@ function initGUI(client, isAdmin) {
   });
 
   $('#btnHelp').click(function() {
-    loadSessions();
-
     $('#helpModal').modal('show');
   });
 
