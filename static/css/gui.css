@@ -75,6 +75,11 @@
   z-index: 2147483648
 }
 
+.documentation {
+  height: 750px;
+  width:100%;
+}
+
 .chat-bar {
   position:relative;
   float: right;

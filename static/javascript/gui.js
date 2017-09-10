@@ -458,6 +458,12 @@ function initGUI(client, isAdmin) {
     });
   });
 
+  $('#btnHelp').click(function() {
+    loadSessions();
+
+    $('#helpModal').modal('show');
+  });
+
   //Chat Events ------------------------------------------------------------------
   function sendChat() {
     var value = $('#chatMessage').val();
