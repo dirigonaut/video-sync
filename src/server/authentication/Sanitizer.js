@@ -1,7 +1,7 @@
 const NUMBER = '^((?=.)((\\d*)(\\.(\\d+))?))$';
 const ALPHANUMERIC = '([^\\u0000-\\u007F]|\\w|\\s)+';
 const SPECIAL	= '([^\\u0000-\\u007F]|[?!&:;@.,/\\-\\\'\\\"\\s\\w\\\\])+';
-const EMAIL = '[\\w._-]+@[\\w]+\\.com';
+const EMAIL = '[\\w._-]+@[\\w]+\\.[\\w]+';
 
 var fileSystemUtils, schemaFactory, eventKeys, log;
 

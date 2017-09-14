@@ -28,21 +28,37 @@
 <li>Node version &gt;= 8.4.0</li>
 <li>Ffmpeg version &gt;= 2.7.6</li>
 <li>Redis version &gt;= 3.0.3</li>
-<li>Git version</li>
+<li>Git</li>
 </ol>
 <p>Download and install git if you do not already have it. Then clone this repository to the files system of the computer you wish to run it on.</p>
-<p>Install nodejs and run the following commands from within the directory where you downloaded the code repository.
-<code>npm install npm@latest -g</code> <em>Updates npm: may require elevated access to run</em>
-<code>npm install</code> <em>Installs the necessary dependencies</em></p>
+<p>Install nodejs and run the following commands from within the directory where you downloaded the code repository.</p>
+<p><code>npm install npm@latest -g</code> <em>Updates npm: may require elevated access to run</em></p>
+<p><code>npm install</code> <em>Installs the necessary dependencies</em></p>
 <p>Install Ffmpeg and Redis and add them both to your path</p>
 <h3 id="watch-a-video">Watch a Video</h3>
 <hr>
 <h3 id="synchronization-techniques">Synchronization Techniques</h3>
 <hr>
+<p>Currently the synchronization events happen when a pause or seek video event is triggered. All users are set to the furthest behind persons time stamp. If a user joins or triggers a resync when they are desynced the video player will set their video to the furthest ahead persons time.</p>
+<p>The system will not currently stop players if they fall out of sync but if a sync issue is noticed a pause will synchronize everyone.</p>
+<p>On the control bar under the gear icon there is a checkbox called &quot;Synchronize&quot;. If that box is checked the player will receive sync events and act on them. If that box is unchecked then the individual player can issue any video command without causing those events to be sent out to any other player. The video player will also no longer respond to the server sync events.</p>
 <h3 id="video-controls">Video Controls</h3>
 <hr>
 <h3 id="log-in">Log in</h3>
 <hr>
+<p>The Log in prompt has three fields</p>
+<ul>
+<li>Handle: The users desired moniker</li>
+<li>Email: The email address the user received the invitation with</li>
+<li>Token: A system generated token emailed to the users</li>
+</ul>
+<p>To get a token just submit your email and handle in the prompt. If you are a valid user then the system will generate a random password and email it to the email you entered. If you accidentally closed the prompt click the button of a person on the left side bar. Only one user can be logged in per email address at a time one.</p>
+<p>Allowed Characters per Field</p>
+<ul>
+<li>Handle: String</li>
+<li>Email: Email</li>
+<li>Token: String</li>
+</ul>
 <h3 id="session">Session</h3>
 <hr>
 <h3 id="email">Email</h3>
@@ -57,6 +73,12 @@
 <hr>
 <h3 id="misc">Misc</h3>
 <hr>
+<p><strong>Input Type Definitions</strong>:</p>
+<ul>
+<li>String: Alphanumeric, spaces, and underscores</li>
+<li>Email: An email patterned string that allows alphanumerics and [._-]</li>
+<li>Special: Alphanumeric, spaces, and [?!&amp;:;@.,/_-&#39;&quot;\]</li>
+</ul>
 <h3 id="troubleshooting">Troubleshooting</h3>
 <hr>
 <h3 id="license">License</h3>
