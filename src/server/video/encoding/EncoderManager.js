@@ -22,6 +22,8 @@ EncoderManager.prototype.initialize = function(force) {
 		Object.setPrototypeOf(EncoderManager.prototype, Events.prototype);
 		encoding				= false;
 		processes 			= [];
+		
+		processedEvent.call(this);
   }
 };
 
@@ -67,7 +69,6 @@ EncoderManager.prototype.encode = function(operations) {
 	}
 
 	if(!encoding) {
-		itterator.call(this);
 		encoding = true;
 		this.emit('processed');
 
@@ -84,12 +85,12 @@ EncoderManager.prototype.encode = function(operations) {
 
 module.exports = EncoderManager;
 
-function itterator() {
+function processedEvent() {
 	this.on('processed', Promise.coroutine(function* (oldProcess) {
 		if(processes.length > 0) {
-			var process = processes.shift();
-			attachEvents.call(this, process);
-			yield process.execute().catch(log.error);
+			var encodeProcess = processes.shift();
+			attachEvents.call(this, encodeProcess);
+			yield encodeProcess.execute().catch(log.error);
 		} else {
 			this.emit('finished', 'All files encoded.');
 			encoding = false;
@@ -101,8 +102,8 @@ function itterator() {
 	}.bind(this)));
 }
 
-function attachEvents(process) {
-	process.on('start', function() {
+function attachEvents(encodeProcess) {
+	encodeProcess.on('start', function() {
 		log.debug('Server: Start encoding: ' + new Date().getTime());
 		log.socket('Server: Start encoding at : ' + new Date().getTime());
 	}).on('data', function(percent) {
@@ -116,17 +117,17 @@ function attachEvents(process) {
 			log.socket(`Server: failed with error code: ${exitCode}, ` + new Date().getTime());
 		}
 
-		removeEvents(process);
-		this.emit('processed', process);
+		removeEvents(encodeProcess);
+		this.emit('processed', encodeProcess);
 	}.bind(this)).on('error', function(err) {
 		log.error('There was an error encoding: ', err);
 		log.socket('There was an error encoding: ', err);
 	}.bind(this));
 }
 
-function removeEvents(process) {
-	process.removeAllListeners("start");
-	process.removeAllListeners("data");
-	process.removeAllListeners("exit");
-	process.removeAllListeners("error");
+function removeEvents(encodeProcess) {
+	encodeProcess.removeAllListeners("start");
+	encodeProcess.removeAllListeners("data");
+	encodeProcess.removeAllListeners("exit");
+	encodeProcess.removeAllListeners("error");
 }
