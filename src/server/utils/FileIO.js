@@ -71,7 +71,7 @@ FileIO.prototype.readDirAsync = Promise.coroutine(function* (path, extType) {
   return matchingFiles;
 });
 
-FileIO.prototype.ensureDirExistsAsync = Promise.coroutine(function* (path, mask) {
+FileIO.prototype.ensureDirExistsAsync = function(path, mask) {
   log.debug('FileIO.ensureDirExistsAsync', path);
   return Fs.mkdirAsync(path, mask)
   .catch(function(err) {
@@ -79,24 +79,26 @@ FileIO.prototype.ensureDirExistsAsync = Promise.coroutine(function* (path, mask)
       throw new Error(err);
     }
   });
-});
+};
 
 FileIO.prototype.dirExists = function(path) {
   log.debug('FileIO.dirExists', path);
-  var isDir = true;
+  return Fs.statAsync(path).then(function(stats) {
+    var isDir = false;
 
-  Fs.stat(path, function(err, stats) {
-    if (err) {
-      log.error('FileIO.dirExists err', err);
-      isDir = false;
-    } else if(!stats.isDirectory()) {
+    if(stats.isDirectory()) {
+      isDir = true;
+    } else {
       log.error('FileIO.dirExists is not dir', path);
-      isDir = false;
     }
-  });
 
-  return isDir;
-}
+    return isDir;
+  }).catch(function(err) {
+    log.error('FileIO.dirExists is not dir', path);
+
+    return false;
+  });
+};
 
 FileIO.prototype.createStreamConfig = function(path, callback) {
   log.debug('FileIO.streamConfig');
