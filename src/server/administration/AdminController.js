@@ -51,18 +51,19 @@ AdminController.prototype.attachSocket = function(socket) {
       var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
       if(request) {
-        var exists = fileIO.dirExists(request.data);
+        var dir = fileSystemUtils.ensureEOL(request.data);
+        var exists = yield fileIO.dirExists(dir);
 
         if(exists) {
-          data = fileSystemUtils.ensureEOL(request.data);
-
-          yield session.setMediaPath(request.data);
+          yield session.setMediaPath(dir);
           yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.INITPLAYERS, []]);
 
           log.debug(eventKeys.MEDIAREADY);
           var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'Video has been initialized.']);
           yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
           yield redisSocket.broadcast(eventKeys.MEDIAREADY);
+        } else {
+          log.socket(`${dir} is not found.`);
         }
       }
     }

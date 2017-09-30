@@ -182,7 +182,7 @@ StateEngine.prototype.sync = Promise.coroutine(function* (id) {
       }
     }
   }
-  log.debug(command)
+
   return command;
 });
 
