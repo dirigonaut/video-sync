@@ -62,26 +62,26 @@ If you are using the default self signed certificate when you will need to click
 ---
 Once the application has been setup it is time to watch a video. This step will walk you through a basic story of inviting users and watching a video with them.
 
-- Setup/Start App
-  - Follow steps in [Setup](#setup)
-- Encode Media
-  - Info [Encoding](#encoding)
-  - Submit the commands to encode the media file
-- Setup Email
-  - Info [Email](#email)
-  - Setup a email account with the application so you can send out invites and tokens
-- Setup Session
-  - Info [Session](#session)
-  - Create and save a session entry with the above configured email and a list of invitees. Click the Load and then Send.
-- Log in(Invited Client only):
-  - Info [Log in](#log-in)
-  - Submit the email and handle to get a token
-- Load Video
-  - Info [Path bar](#path-bar)
-  - Paste the absolute path to the media file directory and select the load button
-- Watch Video
-  - Info [Video Controls](#video-controls)
-  - Click play and enjoy your experience.
+  - Setup/Start App
+    - Follow steps in [Setup](#setup)
+  - Encode Media
+    - Info [Encoding](#encoding)
+    - Submit the commands to encode the media file
+  - Setup Email
+    - Info [Email](#email)
+    - Setup a email account with the application so you can send out invites and tokens
+  - Setup Session
+    - Info [Session](#session)
+    - Create and save a session entry with the above configured email and a list of invitees. Click the Load and then Send.
+  - Log in(Invited Client only):
+    - Info [Log in](#log-in)
+    - Submit the email and handle to get a token
+  - Load Video
+    - Info [Path bar](#path-bar)
+    - Paste the absolute path to the media file directory and select the load button
+  - Watch Video
+    - Info [Video Controls](#video-controls)
+    - Click play and enjoy your experience.
 
 ### Synchronization Techniques
 ---
@@ -95,35 +95,35 @@ On a play or seek event the server will not issue a resume command until it has 
 
 ### Video Controls
 ---
-- Play/Pause: Issues play or pause to the player
-- Progress bar: Shows the current progress of the video as well as allows the seek action
-- Audio: Mute or Unmute audio
-- Volume: Adjust the volume of the player
-- Options:
-  - Type: Select the type of video codec(currently only webm is supported)
-  - Video: Select the Video quality to watch
-  - Audio: Select the Audio quality to watch
-  - Subtitles: Select the Subtitles to display is available
-  - Buffer: How far ahead to buffer the file
-  - Synchronize: Sync/Desync the client from the watchers swarm
-  - Force Buffer: Force the buffer to download a different track even if the data already has been downloaded at a different quality level
-- Fullscreen: Make the player fullscreen
+  - Play/Pause: Issues play or pause to the player
+  - Progress bar: Shows the current progress of the video as well as allows the seek action
+  - Audio: Mute or Unmute audio
+  - Volume: Adjust the volume of the player
+  - Options:
+    - Type: Select the type of video codec(currently only webm is supported)
+    - Video: Select the Video quality to watch
+    - Audio: Select the Audio quality to watch
+    - Subtitles: Select the Subtitles to display is available
+    - Buffer: How far ahead to buffer the file
+    - Synchronize: Sync/Desync the client from the watchers swarm
+    - Force Buffer: Force the buffer to download a different track even if the data already has been downloaded at a different quality level
+  - Fullscreen: Make the player fullscreen
 
 ### Log in
 ---
 The Log in prompt has three fields
-- Handle: The users desired moniker
-- Email: The email address the user received the invitation with
-- Token: A system generated token emailed to the users
+  - Handle: The users desired moniker
+  - Email: The email address the user received the invitation with
+  - Token: A system generated token emailed to the users
 
 To get a token just submit your email and handle in the prompt. If you are a valid user then the system will generate a random password and email it to the email you entered. If you accidentally closed the prompt click the button of a person on the left side bar. Only one user can be logged in per email address at a time one.
 
 As a client logging in you might see a warning screen saying the site is not secured. This is due to the fact that the application uses a self signed certificate. To get to the site click through the warnings and allow the page to resolve.
 
 Allowed Characters per Field
-- Handle: [String](#misc)
-- Email: [Email](#misc)
-- Token: [String](#misc)
+  - Handle: [String](#misc)
+  - Email: [Email](#misc)
+  - Token: [String](#misc)
 
 ### Session
 ---
@@ -132,24 +132,24 @@ The session form can be reached by the admin only using the side bar on the left
 The session form is for setting up a list of valid users and a valid email. The specified list of users will be entered into the system to be able to generate tokens and log in to the session. The email will be used to send invitations to the users in question as well as send them the system generated token to log in.
 
 Form:
-- Title: Name of the session
-  - Input Type [Special](#misc)
-- Email: The Email to invite users with setup in [Email](#email)
-  - Input Type: [Email](#misc)
-- Invitees: The list of users emails to be invited
-  - Input Type: [Email](#misc) comma separated list
-- Subject: The subject of the email
-  - Input Type [Special](#misc)
-- Message: The message of the email. The link to the application will be appended to the end before it is sent.
-  - Input Type [Special](#misc)
+  - Title: Name of the session
+    - Input Type [Special](#misc)
+  - Email: The Email to invite users with setup in [Email](#email)
+    - Input Type: [Email](#misc)
+  - Invitees: The list of users emails to be invited
+    - Input Type: [Email](#misc) comma separated list
+  - Subject: The subject of the email
+    - Input Type [Special](#misc)
+  - Message: The message of the email. The link to the application will be appended to the end before it is sent.
+    - Input Type [Special](#misc)
 
 Buttons:
-- Session '+':  Creates a new Session object.
-- Entry(beneath Session): will select that email entry
-  - Entry 'x': will delete the entry
-- Save: Save the session in question. If it does not exist create a new session. If the session already exists then update it with the new information.
-- Load: The selected session will be loaded in to memory and activated.
-- Send: Issue invites against he loaded session invitees.
+  - Session '+':  Creates a new Session object.
+  - Entry(beneath Session): will select that email entry
+    - Entry 'x': will delete the entry
+  - Save: Save the session in question. If it does not exist create a new session. If the session already exists then update it with the new information.
+  - Load: The selected session will be loaded in to memory and activated.
+  - Send: Issue invites against he loaded session invitees.
 
 ### Email
 ---
@@ -158,38 +158,38 @@ The email form can be accessed by selecting the envelope icon on the left hand s
 This feature has only been tested with gmail as of right now. To work with gmail the account in question will need to have 2 factor authentication setup. Once that is done you can now generate token passwords through your gmail account to use your email account which is what you will need to do in order to integrate the application with gmail.
 
 Form:
-- Type: Ignore
-- Host: The provider of your email
-  - ex: gmail [String](#misc)
-- Address: The email address to invite users with
-  - ex: test@gmail.com [Email](#misc)
-- Password: The password to give access to use the account
+  - Type: Ignore
+  - Host: The provider of your email
+    - ex: gmail [String](#misc)
+  - Address: The email address to invite users with
+    - ex: test@gmail.com [Email](#misc)
+  - Password: The password to give access to use the account
 
 Buttons:
-- Smpt '+': Creates a new Smtp object
-- Smtp Entry(beneath Smtp): will select that email entry
-  - Entry 'x': will delete the entry
-- Save: Saves the entry to the backend
-- Close: Closes the form.
+  - Smpt '+': Creates a new Smtp object
+  - Smtp Entry(beneath Smtp): will select that email entry
+    - Entry 'x': will delete the entry
+  - Save: Saves the entry to the backend
+  - Close: Closes the form.
 
 ### Encoding
 ---
 This is the front end interface with the Ffmpeg encoding solution. Currently it only supports webm encoding at the moment.
 
 Form:
-- File to Encode: The path to the file to be encoded
-- Metadata: When the File has been specified then the metadata field will populate with the files meta info. Each tab represents a stream in the codec.
-- Output Directory: The directory to save all the encoded files to.
-- Encoding Options: These options will encode the specified file into a web compliant set of media file(s)
-  - Video: The desired video quality
-  - Audio: The desired Audio quality
-  - Subtitle: The desired Subtitle stream track, if left blank will just grab the first one.
-- Encoding Commands: A list of what the back end commands will look like.
+  - File to Encode: The path to the file to be encoded
+  - Metadata: When the File has been specified then the metadata field will populate with the files meta info. Each tab represents a stream in the codec.
+  - Output Directory: The directory to save all the encoded files to.
+  - Encoding Options: These options will encode the specified file into a web compliant set of media file(s)
+    - Video: The desired video quality
+    - Audio: The desired Audio quality
+    - Subtitle: The desired Subtitle stream track, if left blank will just grab the first one.
+  - Encoding Commands: A list of what the back end commands will look like.
 
 Buttons:
-- Video/Audio: takes the specified quality and creates a well formatted command Video/Audio encoding command
-- Subtitle: will pull out a specific subtitle track
-- Encode: Will submit the commands to the back end to encode
+  - Video/Audio: takes the specified quality and creates a well formatted command Video/Audio encoding command
+  - Subtitle: will pull out a specific subtitle track
+  - Encode: Will submit the commands to the back end to encode
 
 Encoding commands Explained:
 The list of commands under encoding commands are a list of valid Ffmpeg commands that are just missing the Ffmpeg keyword infront of them. This being the case if
@@ -214,25 +214,25 @@ If the video player gets in a non recoverable state selecting the load button wi
 A general communication center that will show user messages as well as user actions that interact with the video. By default the general allowed characters in chat are [Special](#misc). If the first character of the string is a '/' then it is recognized as a command.
 
 Commands:
-- Play: Resumes play on a video
-  - ex: /play
-- Pause: Pauses a video
-  - ex: /pause
-- Seek: Seeks to a position in the video
-  - ex: /seek hh:mm:ss
-- Handle: Changes the visible handle of a user
-  - ex: /handle bob(input type [Special](#misc)
-- Help: Shows help
-  - ex: /help
+  - Play: Resumes play on a video
+    - ex: /play
+  - Pause: Pauses a video
+    - ex: /pause
+  - Seek: Seeks to a position in the video
+    - ex: /seek hh:mm:ss
+  - Handle: Changes the visible handle of a user
+    - ex: /handle bob(input type [Special](#misc)
+  - Help: Shows help
+    - ex: /help
 
 Admin Commands:
-- Invite: Invites a new user to the session
-  - ex: /invite test@gmail.com
-- Kick: Kicks a user from the session
-  - ex: /kick playerId(can be found by hovering over their name in chat)
-- Downgrade: Removes permissions for a player to issue video commands
-  - ex: /downgrade playerId(can be found by hovering over their name in chat)
-  - Entry 'x': will delete the entry
+  - Invite: Invites a new user to the session
+    - ex: /invite test@gmail.com
+  - Kick: Kicks a user from the session
+    - ex: /kick playerId(can be found by hovering over their name in chat)
+  - Downgrade: Removes permissions for a player to issue video commands
+    - ex: /downgrade playerId(can be found by hovering over their name in chat)
+    - Entry 'x': will delete the entry
 
 ### Logs
 ---
@@ -241,18 +241,18 @@ Logs are split into three types. A masterProcess, serverProcess, and stateProces
 Each thread of the application creates its own log file with the PID used as the unique identifier.
 
 Location:
-- Windows: %APPDATA%/video-sync/logs/
-- Linux: ~/.config/video-sync/logs/
-- Mac: ~/.config/video-sync/logs/
+  - Windows: %APPDATA%/video-sync/logs/
+  - Linux: ~/.config/video-sync/logs/
+  - Mac: ~/.config/video-sync/logs/
 
 ### Configs
 ---
 When the application is started for the first time it will populate the associated dir with a default config template which you can then edit as necessary.
 
 Location:
-- Windows: %APPDATA%/video-sync/
-- Linux: ~/.config/video-sync/
-- Mac: ~/.config/video-sync/
+  - Windows: %APPDATA%/video-sync/
+  - Linux: ~/.config/video-sync/
+  - Mac: ~/.config/video-sync/
 
 Example Config
 ```
@@ -271,21 +271,21 @@ Example Config
 }```
 
 Config Definitions:
-- host: The external ip that given to you by your isp.
-- port: The port that your application will start up on.
-- static: The base static file directory of that application.
-- redis: The specs of the redis server.
-  - If you wish to change the info on redis you will need to also edit the redis.config
-- redisStartUp(optional): Pass in the dir to redis instead of using a class path.
+  - host: The external ip that given to you by your isp.
+  - port: The port that your application will start up on.
+  - static: The base static file directory of that application.
+  - redis: The specs of the redis server.
+    - If you wish to change the info on redis you will need to also edit the redis.config
+  - redisStartUp(optional): Pass in the dir to redis instead of using a class path.
 
 In the same directory as the configs is the certificate for the applications https encryption. It will be auto generated if there is not already one there.
 
 ### Misc
 ---
 **Input Type Definitions**:
-- String: Alphanumeric, spaces, and underscores
-- Email: An email patterned string that allows alphanumerics and [._-]
-- Special: Alphanumeric, spaces, and [?!&:;@.,/_-'"\\]
+  - String: Alphanumeric, spaces, and underscores
+  - Email: An email patterned string that allows alphanumerics and [._-]
+  - Special: Alphanumeric, spaces, and [?!&:;@.,/_-'"\\]
 
 ### Troubleshooting
 ---
