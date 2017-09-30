@@ -112,6 +112,7 @@ On a play or seek event the server will not issue a resume command until it has 
 ### Log in
 ---
 The Log in prompt has three fields
+
   - Handle: The users desired moniker
   - Email: The email address the user received the invitation with
   - Token: A system generated token emailed to the users
@@ -120,7 +121,8 @@ To get a token just submit your email and handle in the prompt. If you are a val
 
 As a client logging in you might see a warning screen saying the site is not secured. This is due to the fact that the application uses a self signed certificate. To get to the site click through the warnings and allow the page to resolve.
 
-Allowed Characters per Field
+Allowed Characters per Field:
+
   - Handle: [String](#misc)
   - Email: [Email](#misc)
   - Token: [String](#misc)
@@ -132,6 +134,7 @@ The session form can be reached by the admin only using the side bar on the left
 The session form is for setting up a list of valid users and a valid email. The specified list of users will be entered into the system to be able to generate tokens and log in to the session. The email will be used to send invitations to the users in question as well as send them the system generated token to log in.
 
 Form:
+
   - Title: Name of the session
     - Input Type [Special](#misc)
   - Email: The Email to invite users with setup in [Email](#email)
@@ -144,6 +147,7 @@ Form:
     - Input Type [Special](#misc)
 
 Buttons:
+
   - Session '+':  Creates a new Session object.
   - Entry(beneath Session): will select that email entry
     - Entry 'x': will delete the entry
@@ -158,6 +162,7 @@ The email form can be accessed by selecting the envelope icon on the left hand s
 This feature has only been tested with gmail as of right now. To work with gmail the account in question will need to have 2 factor authentication setup. Once that is done you can now generate token passwords through your gmail account to use your email account which is what you will need to do in order to integrate the application with gmail.
 
 Form:
+
   - Type: Ignore
   - Host: The provider of your email
     - ex: gmail [String](#misc)
@@ -166,6 +171,7 @@ Form:
   - Password: The password to give access to use the account
 
 Buttons:
+
   - Smpt '+': Creates a new Smtp object
   - Smtp Entry(beneath Smtp): will select that email entry
     - Entry 'x': will delete the entry
@@ -177,6 +183,7 @@ Buttons:
 This is the front end interface with the Ffmpeg encoding solution. Currently it only supports webm encoding at the moment.
 
 Form:
+
   - File to Encode: The path to the file to be encoded
   - Metadata: When the File has been specified then the metadata field will populate with the files meta info. Each tab represents a stream in the codec.
   - Output Directory: The directory to save all the encoded files to.
@@ -187,6 +194,7 @@ Form:
   - Encoding Commands: A list of what the back end commands will look like.
 
 Buttons:
+
   - Video/Audio: takes the specified quality and creates a well formatted command Video/Audio encoding command
   - Subtitle: will pull out a specific subtitle track
   - Encode: Will submit the commands to the back end to encode
@@ -214,6 +222,7 @@ If the video player gets in a non recoverable state selecting the load button wi
 A general communication center that will show user messages as well as user actions that interact with the video. By default the general allowed characters in chat are [Special](#misc). If the first character of the string is a '/' then it is recognized as a command.
 
 Commands:
+
   - Play: Resumes play on a video
     - ex: /play
   - Pause: Pauses a video
@@ -226,6 +235,7 @@ Commands:
     - ex: /help
 
 Admin Commands:
+
   - Invite: Invites a new user to the session
     - ex: /invite test@gmail.com
   - Kick: Kicks a user from the session
@@ -241,6 +251,7 @@ Logs are split into three types. A masterProcess, serverProcess, and stateProces
 Each thread of the application creates its own log file with the PID used as the unique identifier.
 
 Location:
+
   - Windows: %APPDATA%/video-sync/logs/
   - Linux: ~/.config/video-sync/logs/
   - Mac: ~/.config/video-sync/logs/
@@ -250,6 +261,7 @@ Location:
 When the application is started for the first time it will populate the associated dir with a default config template which you can then edit as necessary.
 
 Location:
+
   - Windows: %APPDATA%/video-sync/
   - Linux: ~/.config/video-sync/
   - Mac: ~/.config/video-sync/
@@ -271,6 +283,7 @@ Example Config
 }```
 
 Config Definitions:
+
   - host: The external ip that given to you by your isp.
   - port: The port that your application will start up on.
   - static: The base static file directory of that application.
@@ -283,6 +296,7 @@ In the same directory as the configs is the certificate for the applications htt
 ### Misc
 ---
 **Input Type Definitions**:
+
   - String: Alphanumeric, spaces, and underscores
   - Email: An email patterned string that allows alphanumerics and [._-]
   - Special: Alphanumeric, spaces, and [?!&:;@.,/_-'"\\]
