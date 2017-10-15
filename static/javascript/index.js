@@ -27,6 +27,10 @@ function setupClient() {
   $(document).on('initializeConnection', function() {
     client.initialize(window.location.host)
     .then(function(results) {
+      if(typeof results.acknowledge === 'undefined') {
+        throw new Error('Missing connection hook from server authentication.');
+      }
+
       loadExtraResources(results.isAdmin)
       .then(function() {
         initializeGui(results.isAdmin, results.acknowledge);

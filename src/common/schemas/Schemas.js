@@ -21,7 +21,7 @@ var Schemas = {
     Enum: { DATA: 'data' } } },
 
   pair: { schema: { id: undefined, data: undefined },
-    definition: { id: 'string', data, 'special',
+    definition: { id: 'string', data: 'special',
     Enum: { ID: 'id', DATA: 'data' } } },
 
   state: { schema: { timestamp: undefined, state: undefined, buffered: undefined },

@@ -100,6 +100,11 @@ CredentialManager.prototype.setTokenLevel = Promise.coroutine(function* (key, le
   return entries;
 });
 
+CredentialManager.prototype.getTokenLevel = Promise.coroutine(function* (key, level) {
+  var entries = yield getUserData(CredentialManager.Enum.User.CLIENT);
+  return entries.get(key).level;
+});
+
 CredentialManager.prototype.authenticateToken = Promise.coroutine(function* (key, socketId, secret) {
   var entries = yield getUserData(CredentialManager.Enum.User.CLIENT);
   var entry = entries.get(key);
@@ -121,8 +126,8 @@ CredentialManager.prototype.authenticateToken = Promise.coroutine(function* (key
 
 module.exports = CredentialManager;
 
-CredentialManager.Enum.User = { ADMIN: "auth-admin", CLIENT: "auth-client"};
-CredentialManager.Enum.Level = { CONTROLS : "controls" };
+CredentialManager.Enum.User = { ADMIN: 'auth-admin', CLIENT: 'auth-client' };
+CredentialManager.Enum.Level = { CONTROLS : 'controls', NONE: 'none' };
 
 var setUserData = function(key, data) {
   log.silly('setCredentialData for key: ', key);

@@ -11,6 +11,7 @@ process.on('uncaughtException', function(err) {
 var b = browserify({
   entries: [path.join(__dirname, '../src/client/Client.js')],
   standalone: 'Client',
+  cache: {}
 });
 
 b.bundle().pipe(fs.createWriteStream(path.join(__dirname, '../static/resources/bundle.js')));

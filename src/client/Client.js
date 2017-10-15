@@ -13,7 +13,7 @@ Client.prototype.initialize = function(serverUrl) {
 
     var logManager = factory.createClientLogManager();
     var log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
-  });
+  }
 
   var clientSocket = factory.createClientSocket();
 
@@ -22,7 +22,7 @@ Client.prototype.initialize = function(serverUrl) {
     log.ui('Authenticated with server.');
 
     var isAdmin = response[1] ? true : false
-    var acknowledged = response[0] ? response[0] : throw new Error('Missing connection hook from server authentication.');
+    var acknowledged = response[0] !== 'undefined' ? response[0] : undefined;
     initComponents.call(this, isAdmin);
 
     return { 'acknowledge': acknowledged, 'isAdmin': isAdmin };
@@ -49,4 +49,4 @@ var initComponents = function(isAdmin) {
   if(isAdmin) {
     var formData = factory.createFormData();
   }
-});
+};

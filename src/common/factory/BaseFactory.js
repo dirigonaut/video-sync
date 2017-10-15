@@ -2,7 +2,6 @@ const FUNCTIONS   = 'functions';
 const ENUMS       = 'Enums';
 const FACTORY     = 'factory';
 
-
 function BaseFactory() { }
 
 BaseFactory.prototype.genObjects = function(imports) {
