@@ -1,5 +1,5 @@
 const Promise  = require('bluebird');
-const Events    = require('events');
+const Events   = require('events');
 
 const TIMEOUT  = 6000;
 
@@ -10,24 +10,19 @@ function FileBuffer() { }
 FileBuffer.prototype.initialize = function(force) {
   if(typeof FileBuffer.prototype.protoInit === 'undefined') {
     FileBuffer.prototype.protoInit = true;
-    var logManager  = this.factory.createClientLogManager();
-		log             = logManager.getLog(logManager.LogEnum.GENERAL);
-
     eventKeys       = this.factory.createKeys();
     schemaFactory   = this.factory.createSchemaFactory();
-  }
-
-  if(force === undefined ? typeof FileBuffer.prototype.stateInit === 'undefined' : force) {
-    FileBuffer.prototype.stateInit = true;
     socket          = this.factory.createClientSocket();
+    fileRequests    = new Map();
+    buffers         = new Map();
+    trigger         = new Events();
 
     removeTriggerEvents();
     removeSocketEvents();
     setSocketEvents();
 
-    fileRequests    = new Map();
-    buffers         = new Map();
-    trigger         = new Events();
+    var logManager  = this.factory.createClientLogManager();
+		log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);
   }
 };
 

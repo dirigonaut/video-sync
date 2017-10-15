@@ -1,27 +1,30 @@
 const Promise  = require('bluebird');
 
-var player, schemaFactory, sanitizer, chatEngine, redisSocket, publisher, stateEngine, eventKeys, log;
+const METRICSINTERVAL = 1000;
+
+var media, schemaFactory, sanitizer, redisSocket, publisher, autoSyncInterval, stateEngine, eventKeys, log;
 
 function StateController() { }
 
-StateController.prototype.initialize = function(force) {
+StateController.prototype.initialize = function() {
   if(typeof StateController.prototype.protoInit === 'undefined') {
     StateController.prototype.protoInit = true;
-    player          = this.factory.createPlayer();
     schemaFactory   = this.factory.createSchemaFactory();
     sanitizer       = this.factory.createSanitizer();
-    chatEngine      = this.factory.createChatEngine();
     eventKeys       = this.factory.createKeys();
 
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.STATE);
-  }
-
-  if(force === undefined ? typeof StateController.prototype.stateInit === 'undefined' : force) {
-    StateController.prototype.stateInit = true;
     publisher       = this.factory.createRedisPublisher();
     redisSocket     = this.factory.createRedisSocket();
-    stateEngine     = this.factory.createStateEngine(false);
+    stateEngine     = this.factory.getStateEngineInfo();
+    media           = this.factory.createMedia();
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.STATE);
+
+    autoMetricsInterval = setInterval(Promise.coroutine(function* () {
+      var metrics = yield media.getPlayerMetrics();
+      yield redisSocket.broadcast.apply(null, [eventKeys.PLAYERINFO, metrics]);
+    }), METRICSINTERVAL);
   }
 };
 
@@ -31,54 +34,54 @@ StateController.prototype.attachSocket = function(socket) {
   socket.on(eventKeys.REQPLAY, Promise.coroutine(function* () {
     log.info(eventKeys.REQPLAY);
 
-    var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.PLAY, [socket.id]]);
+    var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.functions.PLAY, [socket.id]]);
     if(commands) {
       for(var i = 0; i < commands.length; ++i) {
         yield redisSocket.ping.apply(null, commands[i]);
       }
 
-      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'issued play.']);
-      yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.CHATRESPONSE, [socket.id, 'issued play.']);
+      yield redisSocket.broadcast(eventKeys.EVENTRESP, response);
     }
   }));
 
   socket.on(eventKeys.REQPAUSE, Promise.coroutine(function* () {
     log.debug(eventKeys.REQPAUSE);
 
-    var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.PAUSE, [socket.id]]);
+    var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.functions.PAUSE, [socket.id]]);
     if(commands) {
       for(var i = 0; i < commands.length; ++i) {
         yield redisSocket.ping.apply(null, commands[i]);
       }
 
-      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'issued pause.']);
-      yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.CHATRESPONSE, [socket.id, 'issued pause.']);
+      yield redisSocket.broadcast(eventKeys.EVENTRESP, response);
     }
   }));
 
   socket.on(eventKeys.REQSEEK, Promise.coroutine(function* (data) {
     log.debug(eventKeys.REQSEEK, data);
 
-    var schema = schemaFactory.createDefinition(schemaFactory.Enum.STATE);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.STATE);
     var request = sanitizer.sanitize(data, schema, [schema.Enum.TIMESTAMP], socket);
 
     if(request) {
-      var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SEEK, [socket.id, request]]);
+      var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.functions.SEEK, [socket.id, request]]);
 
       if(commands) {
         for(var i = 0; i < commands.length; ++i) {
           yield redisSocket.ping.apply(null, commands[i]);
         }
 
-        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, `issued seek to ${request.timestamp}.`]);
-        yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.CHATRESPONSE, [socket.id, `issued seek to ${request.timestamp}.`]);
+        yield redisSocket.broadcast(eventKeys.EVENTRESP, response);
       }
     }
   }));
 
   socket.on(eventKeys.SYNC, Promise.coroutine(function* () {
     log.debug(eventKeys.SYNC);
-    var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SYNC, [socket.id]]);
+    var commands = yield publisher.publishAsync(publisher.Enum.KEY.STATE, [stateEngine.functions.SYNC, [socket.id]]);
 
     if(commands) {
       for(var i = 0; i < commands.length; ++i) {
@@ -86,25 +89,8 @@ StateController.prototype.attachSocket = function(socket) {
         yield redisSocket.ping.apply(null, commands[i]);
       }
 
-      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'issued sync.']);
-      yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
-    }
-  }));
-
-  socket.on(eventKeys.CHANGESYNC, Promise.coroutine(function* (data) {
-    log.debug(eventKeys.CHANGESYNC, data);
-
-    var schema = schemaFactory.createDefinition(schemaFactory.Enum.BOOL);
-    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
-
-    if(request) {
-      var value = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.CHANGESYNCSTATE, [socket.id, request]]);
-      if(typeof value === 'boolean') {
-        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, ` desync value is ${value}.`]);
-        yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
-
-        socket.emit('state-sync-state', schemaFactory.createPopulatedSchema(schemaFactory.Enum.RESPONSE, [value]));
-      }
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.CHATRESPONSE, [socket.id, 'issued sync.']);
+      yield redisSocket.broadcast(eventKeys.EVENTRESP, response);
     }
   }));
 
@@ -115,11 +101,11 @@ StateController.prototype.attachSocket = function(socket) {
       acknowledge(null, true);
     }
 
-    var schema = schemaFactory.createDefinition(schemaFactory.Enum.STATE);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.STATE);
     var request = sanitizer.sanitize(data, schema, [schema.Enum.TIMESTAMP], socket);
 
     if(request) {
-      var commands = yield publisher.publishAsync(publisher.Enum.STATE, [stateEngine.functions.SYNCINGPING, [socket.id, request]]);
+      var commands = yield publisher.publishAsync(publisher.Enum.KEY.STATE, [stateEngine.functions.SYNCINGPING, [socket.id, request]]);
 
       if(commands) {
         for(var i = 0; i < commands.length; ++i) {

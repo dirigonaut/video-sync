@@ -9,13 +9,12 @@ Video.prototype.initialize = function(force) {
   if(typeof Video.prototype.protoInit === 'undefined') {
     Video.prototype.protoInit = true;
     Object.setPrototypeOf(Video.prototype, Events.prototype);
-
-    var logManager = this.factory.createClientLogManager();
-    log = logManager.getLog(logManager.LogEnum.VIDEO);
-
     eventKeys       = this.factory.createKeys();
     schemaFactory   = this.factory.createSchemaFactory();
     socket          = this.factory.createClientSocket();
+
+    var logManager = this.factory.createClientLogManager();
+    log = logManager.getLog(logManager.Enums.LOGS.VIDEO);
   }
 };
 

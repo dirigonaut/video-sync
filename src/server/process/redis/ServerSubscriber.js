@@ -8,18 +8,15 @@ var adapter, subscriber, log;
 
 function ServerSubscriber() { }
 
-ServerSubscriber.prototype.initialize = Promise.coroutine(function* (force) {
+ServerSubscriber.prototype.initialize = Promise.coroutine(function* () {
   if(typeof ServerSubscriber.prototype.protoInit === 'undefined') {
     ServerSubscriber.prototype.protoInit = true;
     var config      = this.factory.createConfig();
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.GENERAL);
-  }
+    adapter         = this.factory.createRedisAdapter();
+    subscriber      = Redis.createClient(config.getConfig().redis);
 
-  if(force === undefined ? typeof ServerSubscriber.prototype.stateInit === 'undefined' : force) {
-    ServerSubscriber.prototype.stateInit = true;
-    adapter    = this.factory.createRedisAdapter();
-    subscriber = Redis.createClient(config.getConfig().redis);
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);
 
     attachEvents();
   }
@@ -29,7 +26,7 @@ ServerSubscriber.prototype.cleanUp = Promise.coroutine(function* () {
   log.debug("ServerSubscriber.cleanUp");
   if(typeof subscriber !== 'undefined' && subscriber) {
     log.info('sub unscribe');
-    yield subscriber.unsubscribeAsync("session");
+    yield subscriber.unsubscribeAsync("media");
 
     log.info('sub unref');
     subscriber.unref();
@@ -47,8 +44,8 @@ module.exports = ServerSubscriber;
 
 function attachEvents() {
   subscriber.on("message", Promise.coroutine(function* (channel, message) {
-    if(channel === "session"){
-      yield adapter.callFunction(session, message);
+    if(channel === "media"){
+      yield adapter.callFunction(media, message);
     }
   }));
 
@@ -68,5 +65,5 @@ function attachEvents() {
     log.info(err);
   });
 
-  subscriber.subscribe("session");
+  subscriber.subscribe("media");
 }

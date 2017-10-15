@@ -10,10 +10,9 @@ Subtitles.prototype.initialize = function(force) {
     Subtitles.prototype.protoInit = true;
     Object.setPrototypeOf(Subtitles.prototype, Events.prototype);
 
-    var logManager = this.factory.createClientLogManager();
-    log = logManager.getLog(logManager.LogEnum.VIDEO);
-
     eventKeys      = this.factory.createKeys();
+    var logManager = this.factory.createClientLogManager();
+    log = logManager.getLog(logManager.Enums.LOGS.VIDEO);
   }
 };
 

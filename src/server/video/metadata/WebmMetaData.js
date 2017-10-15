@@ -7,18 +7,15 @@ var fileSystemUtils, fileIO, log;
 
 function WebmMetaData() { }
 
-WebmMetaData.prototype.initialize = function(force) {
+WebmMetaData.prototype.initialize = function() {
   if(typeof WebmMetaData.prototype.protoInit === 'undefined') {
     WebmMetaData.prototype.protoInit = true;
-    fileSystemUtils  = this.factory.createFileSystemUtils();
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.ENCODING);
-  }
-
-  if(force === undefined ? typeof WebmMetaData.prototype.stateInit === 'undefined' : force) {
-    WebmMetaData.prototype.stateInit = true;
     Object.setPrototypeOf(WebmMetaData.prototype, Events.prototype);
-    fileIO  = this.factory.createFileIO();
+    fileSystemUtils = this.factory.createFileSystemUtils();
+    fileIO          = this.factory.createFileIO();
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
   }
 };
 
@@ -71,14 +68,14 @@ var getClusters = function(dirPath, tracks) {
   var metaRequests = [];
 
   for(var i in tracks) {
-    var metaRequest = {};
     var fileName    = fileSystemUtils.splitNameFromPath(tracks[i].baseUrl);
     var fileExt     = fileSystemUtils.splitExtensionFromPath(tracks[i].baseUrl);
-    var readConfig  = fileIO.createStreamConfig(`${dirPath}${fileName}.${fileExt}`, parseEBML);
 
+    var metaRequest = {};
+    metaRequest.path          = `${dirPath}${fileName}.${fileExt}`;
+    metaRequest.onData        = parseEBML;
     metaRequest.manifest      = this.factory.createManifest();
     metaRequest.manifest.prime(`${fileName}.${fileExt}`, tracks[i].initRange.split('-'));
-    metaRequest.readConfig    = readConfig;
     metaRequests.push(metaRequest);
   }
 

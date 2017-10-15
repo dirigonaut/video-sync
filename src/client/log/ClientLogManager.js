@@ -2,22 +2,14 @@ const Util = require('util');
 
 var logs;
 
-function ClientLogManager() {
-}
-
-ClientLogManager.prototype.initialize = function(force) {
-  if(typeof ClientLogManager.prototype.protoInit === 'undefined') {
-    ClientLogManager.prototype.protoInit = true;
-    ClientLogManager.prototype.LogEnum = ClientLogManager.LogEnum;
-  }
-};
+function ClientLogManager() { }
 
 ClientLogManager.prototype.addUILogging = function(callback) {
   logs = [];
 
-  var keys = Object.keys(ClientLogManager.LogEnum);
+  var keys = Object.keys(ClientLogManager.Enum.Log);
   for(var i of keys) {
-    var logger = buildUILogger(ClientLogManager.LogEnum[i], 'debug', false, callback);
+    var logger = buildUILogger(ClientLogManager.Enum.Log[i], 'debug', false, callback);
     logs[ClientLogManager.LogEnum[i]] = logger;
   }
 };
@@ -28,8 +20,8 @@ ClientLogManager.prototype.getLog = function(id) {
 
 module.exports = ClientLogManager;
 
-ClientLogManager.LogEnum = { FACTORY: 'factory', GENERAL: 'general', SOCKET: 'socket', VIDEO: 'video'};
-ClientLogManager.LogLevel = { ui: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
+ClientLogManager.Enum.Log = { FACTORY: 'factory', GENERAL: 'general', SOCKET: 'socket', VIDEO: 'video'};
+ClientLogManager.Enum.Level = { ui: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
 
 var buildUILogger = function(label, level, enableConsoleLogging, callback) {
   var uiLogger = {
@@ -40,10 +32,10 @@ var buildUILogger = function(label, level, enableConsoleLogging, callback) {
     log: log
   };
 
-  var keys = Object.keys(ClientLogManager.LogLevel);
+  var keys = Object.keys(ClientLogManager.Enum.Level);
   for(let i of keys) {
     uiLogger[i] = function(message, meta) {
-       uiLogger.log.call(uiLogger, i, message, meta);
+      uiLogger.log.call(uiLogger, i, message, meta);
     }
   }
 
@@ -62,11 +54,11 @@ function log(level, message, meta) {
     logMessage.meta = Util.inspect(meta, { showHidden: false, depth: 1 });
   }
 
-  if(ClientLogManager.LogLevel[level] === ClientLogManager.LogLevel.ui) {
+  if(ClientLogManager.Enum.Level[level] === ClientLogManager.Enum.Level.ui) {
     this.uiLog(logMessage);
   }
 
-  if(!this.silent && ClientLogManager.LogLevel[level] <= ClientLogManager.LogLevel[this.level]) {
+  if(!this.silent && ClientLogManager.Enum.Level[level] <= ClientLogManager.Enum.Level[this.level]) {
     var logLevel = typeof console[level] !== 'undefined' ? level : 'trace';
     console[logLevel](logMessage);
   }

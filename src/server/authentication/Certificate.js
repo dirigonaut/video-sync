@@ -17,7 +17,7 @@ Certificate.prototype.initialize = function(force) {
     config          = this.factory.createConfig();
 
     var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);  
+    log             = logManager.getLog(logManager.Enums.LOGS.AUTHENTICATION);  
   }
 };
 

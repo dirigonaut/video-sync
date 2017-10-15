@@ -6,16 +6,12 @@ var fileSystemUtils, log;
 
 function MpdUtil() { }
 
-MpdUtil.prototype.initialize = function(force) {
+MpdUtil.prototype.initialize = function() {
 	if(typeof MpdUtil.prototype.protoInit === 'undefined') {
     MpdUtil.prototype.protoInit = true;
+		fileSystemUtils = this.factory.createFileSystemUtils();
     var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.ENCODING);
-  }
-
-  if(force === undefined ? typeof MpdUtil.prototype.stateInit === 'undefined' : force) {
-    MpdUtil.prototype.stateInit = true;
-    fileSystemUtils = this.factory.createFileSystemUtils();
+    log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
   }
 };
 

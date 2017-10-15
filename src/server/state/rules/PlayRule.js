@@ -1,13 +1,12 @@
-var player, log;
+var log;
 
 function PlayRule() { }
 
 PlayRule.prototype.initialize = function(force) {
   if(typeof PlayRule.prototype.protoInit === 'undefined') {
     PlayRule.prototype.protoInit = true;
-    player          = this.factory.createPlayer();
     var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.STATE);
+    log             = logManager.getLog(logManager.Enums.LOGS.STATE);
   }
 };
 
@@ -21,7 +20,7 @@ PlayRule.prototype.evaluate = function(issuer, players, mediaStarted, fuzzyRange
   } else {
     log.debug(players);
     for(let player of players.values()) {
-      if(player.sync === player.Sync.SYNCED || (mediaStarted === false)) {
+      if(player && player.sync === player.Enums.SYNC.SYNCED || (mediaStarted === false)) {
         if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(player.timestamp)) < fuzzyRange) {
           issuees.push(player);
         }

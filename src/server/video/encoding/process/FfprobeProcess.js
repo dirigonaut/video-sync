@@ -12,16 +12,13 @@ var log;
 
 function FfprobeProcess() { }
 
-FfprobeProcess.prototype.initialize = function(force) {
+FfprobeProcess.prototype.initialize = function() {
   if(typeof FfprobeProcess.prototype.protoInit === 'undefined') {
     FfprobeProcess.prototype.protoInit = true;
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.ENCODING);
-  }
+    Object.setPrototypeOf(FfprobeProcess.prototype, Events.prototype);
 
-  if(force === undefined ? typeof FfprobeProcess.prototype.stateInit === 'undefined' : force) {
-    FfprobeProcess.prototype.stateInit = true;
-		Object.setPrototypeOf(FfprobeProcess.prototype, Events.prototype);
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
   }
 };
 

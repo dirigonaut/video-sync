@@ -9,20 +9,17 @@ var command, encoding, processes, log;
 
 function EncoderManager() { }
 
-EncoderManager.prototype.initialize = function(force) {
+EncoderManager.prototype.initialize = function() {
 	if(typeof EncoderManager.prototype.protoInit === 'undefined') {
     EncoderManager.prototype.protoInit = true;
-		command			    = this.factory.createCommand();
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.ENCODING);
-  }
-
-	if(force === undefined ? typeof EncoderManager.prototype.stateInit === 'undefined' : force) {
-    EncoderManager.prototype.stateInit = true;
 		Object.setPrototypeOf(EncoderManager.prototype, Events.prototype);
 		encoding				= false;
 		processes 			= [];
-		
+
+		command			    = this.factory.createCommand();
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
+
 		processedEvent.call(this);
   }
 };

@@ -13,14 +13,12 @@ const EXCEPTION = `${TYPE}_${process.pid}_exception.txt`;
 
 function LogManager() { }
 
-LogManager.prototype.initialize = function(force) {
-  if(force === undefined ? typeof LogManager.prototype.stateInit === 'undefined' : force) {
+LogManager.prototype.initialize = function() {
+  if(force === undefined ? typeof LogManager.prototype.protoInit === 'undefined') {
     LogManager.prototype.stateInit = true;
     config          = this.factory.createConfig(false);
     schemaFactory   = this.factory.createSchemaFactory();
-  }
 
-  if(typeof LogManager.prototype.protoInit === 'undefined') {
     LogManager.prototype.protoInit = true;
     var keys = Object.keys(LogManager.LogEnum);
     log = Winston.loggers.get(LogManager.LogEnum.LOG);
@@ -57,8 +55,8 @@ LogManager.prototype.getLog = function(id) {
 
 module.exports = LogManager;
 
-LogManager.Levels   = { socket: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
-LogManager.LogEnum  = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
+LogManager.Enum.Levels   = { socket: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
+LogManager.Enum.Logs  = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
                         CHAT: 'chat', DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};
 
 var LevelEnum       = { GENERAL: 'debug', ADMINISTRATION: 'debug', AUTHENTICATION: 'debug',
@@ -82,7 +80,7 @@ var buildFileTransport = function(path, label, level, handleExceptions) {
 };
 
 function createFormatter(label) {
-  var session, redisSocket;
+  var credentials, redisSocket;
 
   return function(options) {
     var logMessage = {
@@ -98,19 +96,19 @@ function createFormatter(label) {
 
     var json = JSON.stringify(logMessage);
     if(LogManager.Levels[options.level] === LogManager.Levels.socket) {
-      if(!session) {
-        session = this.factory.createSession();
+      if(!credentials) {
+        credentials = this.factory.createCredentialManager();
       }
 
       if(!redisSocket) {
         redisSocket = this.factory.createRedisSocket();
       }
 
-      session.getAdmin().then(function(ids) {
-        if(ids) {
+      credentials.getAdmin().then(function(id) {
+        if(id) {
           var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.LOGRESPONSE,
             [logMessage.time, 'server', logMessage.label, logMessage.text, logMessage.meta]);
-          redisSocket.ping(ids, 'chat-log-resp', response);
+          redisSocket.ping(id, 'chat-log-resp', response);
         }
       });
     }

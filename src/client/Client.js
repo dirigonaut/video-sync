@@ -5,30 +5,29 @@ var resetMedia, factory;
 
 function Client() { }
 
-Client.prototype.initialize = Promise.coroutine(function* (serverUrl) {
+Client.prototype.initialize = function(serverUrl) {
   if(typeof Client.prototype.protoInit === 'undefined') {
     Client.prototype.protoInit = true;
-    this.getFactory();
+    var factoryManager = Object.create(ClientFactoryManager.prototype);
+    factory = factoryManager.initialize();
 
     var logManager = factory.createClientLogManager();
-    var log = logManager.getLog(logManager.LogEnum.GENERAL);
+    var log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
+  });
 
-    clientSocket = factory.createClientSocket();
-    var response = yield clientSocket.connectAsync(serverUrl);
+  var clientSocket = factory.createClientSocket();
+
+  return clientSocket.connectAsync(serverUrl)
+  .then(function(response) {
     log.ui('Authenticated with server.');
 
-    if(response[0]) {
-      var acknowledge = response[0];
-    } else {
-      throw new Error('The server did not send an acknowledge hook.');
-    }
+    var isAdmin = response[1] ? true : false
+    var acknowledged = response[0] ? response[0] : throw new Error('Missing connection hook from server authentication.');
+    initComponents.call(this, isAdmin);
 
-    var isAdmin = response[1] ? response[1] : false;
-    yield initComponents.call(this, isAdmin);
-
-    return new Promise.resolve({acknowledge: acknowledge, isAdmin: isAdmin});
-  }
-});
+    return { 'acknowledge': acknowledged, 'isAdmin': isAdmin };
+  });
+};
 
 Client.prototype.startMedia = Promise.coroutine(function* (mediaController, domElements) {
   if(resetMedia) {
@@ -39,22 +38,15 @@ Client.prototype.startMedia = Promise.coroutine(function* (mediaController, domE
 });
 
 Client.prototype.getFactory = function() {
-  if(!factory) {
-    var factoryManager = Object.create(ClientFactoryManager.prototype);
-    factory = factoryManager.initialize();
-  }
-
   return factory;
 };
 
 module.exports = Client;
 
-var initComponents = Promise.coroutine(function* (isAdmin) {
-  var fileBuffer = factory.createFileBuffer(true);
-  var chatUtil   = factory.createChatUtil(true);
+var initComponents = function(isAdmin) {
+  var fileBuffer = factory.createFileBuffer();
 
   if(isAdmin) {
-    var formData = factory.createFormData(true);
-    yield formData.requestFormData();
+    var formData = factory.createFormData();
   }
 });

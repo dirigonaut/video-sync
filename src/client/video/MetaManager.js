@@ -10,13 +10,10 @@ MetaManager.prototype.initialize = function(force) {
   if(typeof MetaManager.prototype.protoInit === 'undefined') {
     MetaManager.prototype.protoInit = true;
     var logManager  = this.factory.createClientLogManager();
-    log             = logManager.getLog(logManager.LogEnum.VIDEO);
+    log             = logManager.getLog(logManager.Enums.LOGS.VIDEO);
     schemaFactory   = this.factory.createSchemaFactory();
     eventKeys       = this.factory.createKeys();
-  }
 
-  if(force === undefined ? typeof MetaManager.prototype.stateInit === 'undefined' : force) {
-    MetaManager.prototype.stateInit = true;
     socket        = this.factory.createClientSocket();
   }
 };

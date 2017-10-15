@@ -7,41 +7,28 @@ Promise.promisifyAll(Redis.RedisClient.prototype);
 const EXPIRES     = 15000;
 const READID      = '-readRequest';
 
-var session, publisher, client, fileIO, schemaFactory, log;
+var media, publisher, client, fileIO, schemaFactory, log;
 
 function Cache() { }
 
-Cache.prototype.initialize = function(force) {
+Cache.prototype.initialize = function() {
   if(typeof Cache.prototype.protoInit === 'undefined') {
     Cache.prototype.protoInit = true;
+    Object.setPrototypeOf(Cache.prototype, Events.prototype);
+
+    var config      = this.factory.createConfig();
+
     fileIO          = this.factory.createFileIO();
     schemaFactory   = this.factory.createSchemaFactory();
 
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.VIDEO);
-  }
-
-  if(force === undefined ? typeof Cache.prototype.stateInit === 'undefined' : force) {
-    Cache.prototype.stateInit = true;
-    Object.setPrototypeOf(Cache.prototype, Events.prototype);
-    var config      = this.factory.createConfig();
-
-    session         = this.factory.createSession();
+    media           = this.factory.createMedia();
     publisher       = Redis.createClient(config.getConfig().redis);
     client          = Redis.createClient(config.getConfig().redis);
 
-    client.on("message", function(channel, message) {
-      log.debug('Subscribers onMessage ', channel);
-      message = typeof message === 'string' ? JSON.parse(message) : message;
+    setSubscriber.call(this);
 
-      if(channel.substring(channel.length - READID.length) === READID) {
-        var key = channel.substring(0, channel.length - READID.length);
-        readFile(key, message);
-        client.unsubscribe(channel);
-      } else {
-        this.emit(channel, message);
-      }
-    }.bind(this));
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.VIDEO);
   }
 };
 
@@ -112,33 +99,47 @@ Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback)
 
 module.exports = Cache;
 
+var setSubscriber = function() {
+  client.on('message', function(channel, message) {
+    log.debug('Subscribers onMessage ', channel);
+    message = typeof message === 'string' ? JSON.parse(message) : message;
+
+    if(channel.substring(channel.length - READID.length) === READID) {
+      var key = channel.substring(0, channel.length - READID.length);
+      readFile(key, message);
+      client.unsubscribe(channel);
+    } else {
+      this.emit(channel, message);
+    }
+  }.bind(this));
+};
+
 var readFile = Promise.coroutine(function* (key, requestData) {
   log.debug(`Cache.readFile ${key}`);
   var result = yield registerFileRead(key);
   if(result) {
-    var basePath = yield session.getMediaPath();
+    var basePath = yield media.getMediaPath();
 
     if(basePath && basePath.length > 0) {
-      var readConfig = fileIO.createStreamConfig(basePath + requestData.path, Promise.coroutine(function* (data, index) {
+      var onData = Promise.coroutine(function* (data, index) {
         log.debug(`Cache on data for key: ${key} of size: ${data ? data.length : null}`);
         var args = [requestData.typeId, key, data, index];
-        var segment = schemaFactory.createPopulatedSchema(schemaFactory.Enum.VIDEORESPONSE, args);
-
-        yield setCacheData(segment.name, segment.index, segment);
-      }));
-
-      var options = {"start": parseInt(requestData.segment[0]), "end": parseInt(requestData.segment[1])};
-      readConfig.options = options;
-
-      readConfig.onFinish = Promise.coroutine(function* (index) {
-        log.debug('Cache finished read: ', key);
-        var args = [requestData.typeId, key, null, index];
-        var segment = schemaFactory.createPopulatedSchema(schemaFactory.Enum.VIDEORESPONSE, args);
+        var segment = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.VIDEORESPONSE, args);
 
         yield setCacheData(segment.name, segment.index, segment);
       });
 
-      fileIO.read(readConfig);
+      var options = {"start": parseInt(requestData.segment[0]), "end": parseInt(requestData.segment[1])};
+
+      var onFinish = Promise.coroutine(function* (index) {
+        log.debug('Cache finished read: ', key);
+        var args = [requestData.typeId, key, null, index];
+        var segment = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.VIDEORESPONSE, args);
+
+        yield setCacheData(segment.name, segment.index, segment);
+      });
+
+      fileIO.read(`${fileSystemUtils.ensureEOL(basePath)}${requestData.path}`, options, onData, onFinish);
     }
   }
 });

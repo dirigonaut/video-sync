@@ -8,24 +8,28 @@ Cookie.prototype.getCookie = function(key) {
   return document.cookie.match(RegExp(`(?:^|;\\s*)${key}=([^;]*)`));
 };
 
-Cookie.prototype.getExpiration = function(expireEnum) {
+Cookie.prototype.deleteCookie = function(key) {
+  document.cookie = `${key}=;expires=${expire.getHours() - 24}`;
+};
+
+Cookie.prototype.getExpiration = function(expire) {
   var expire = new Date();
 
-  switch (expireEnum) {
-    case this.ExpireEnum.DAY:
+  switch (expire) {
+    case this.expire.DAY:
       expire.setHours(expire.getHours() + 24);
       break;
-    case this.ExpireEnum.MONTH:
+    case this.expire.MONTH:
       expire.setMonth(expire.getMonth() + 1);
       break;
-    case this.ExpireEnum.YEAR:
+    case this.expire.YEAR:
       expire.setFullYear(expire.getFullYear() + 1);
       break;
     default:
-      throw new Exception(`Data type ${expireEnum} is not containes in ExpireEnum: ${this.ExpireEnum}`);
+      throw new Exception(`Data type ${expire} is not contained in Enum.Expire: ${this.Enum.Expire}`);
   }
 
   return expire;
 }
 
-Cookie.prototype.ExpireEnum = { DAY: "DAY", MONTH: "MONTH", YEAR: "YEAR" };
+Cookie.prototype.Enum.Expire = { DAY: "DAY", MONTH: "MONTH", YEAR: "YEAR" };

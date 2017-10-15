@@ -13,7 +13,7 @@ MediaController.prototype.initialize = function(force) {
     eventKeys       = this.factory.createKeys();
 
     var logManager  = this.factory.createClientLogManager();
-    log             = logManager.getLog(logManager.LogEnum.VIDEO);
+    log             = logManager.getLog(logManager.Emums.LOGS.VIDEO);
 
     metaManager     = this.factory.createMetaManager();
     schemaFactory   = this.factory.createSchemaFactory();

@@ -1,161 +1,121 @@
 const Promise = require('bluebird');
 
-var publisher, redisSocket, smtp, userAdmin, schemaFactory, sanitizer, authenticator,
-      session, chatEngine, playerManager, eventKeys, log;
+var publisher, schemaFactory, sanitizer, credentialManager,
+      redisSocket, playerManager, eventKeys, log;
 
 function AuthenticationController() { }
 
-AuthenticationController.prototype.initialize = function(force) {
+AuthenticationController.prototype.initialize = function() {
   if(typeof AuthenticationController.prototype.protoInit === 'undefined') {
     AuthenticationController.prototype.protoInit = true;
-    userAdmin       = this.factory.createUserAdministration();
-    schemaFactory		= this.factory.createSchemaFactory();
-    sanitizer		    = this.factory.createSanitizer();
-    chatEngine      = this.factory.createChatEngine();
-    eventKeys       = this.factory.createKeys();
-
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);
-  }
-
-  if(force === undefined ? typeof AuthenticationController.prototype.stateInit === 'undefined' : force) {
-    AuthenticationController.prototype.stateInit = true;
-    session         = this.factory.createSession();
-    authenticator   = this.factory.createAuthenticator();
+    credentials     = this.factory.createCredentialManager();
     publisher       = this.factory.createRedisPublisher();
     redisSocket     = this.factory.createRedisSocket();
-    smtp            = this.factory.createSmtp();
-    playerManager   = this.factory.createPlayerManager(false);
+
+    schemaFactory		= this.factory.createSchemaFactory();
+    sanitizer		    = this.factory.createSanitizer();
+    eventKeys       = this.factory.createKeys();
+
+    playerManager   = this.factory.getPlayerManagerInfo();
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.AUTHENTICATION);
   }
 };
 
 AuthenticationController.prototype.attachIO = function (io) {
-  io.on('connection', Promise.coroutine(function*(socket) {
-    log.socket(`socket has connected: ${socket.id} ip: ${socket.handshake.address}`);
-    socket.logonAttempts = 0;
+  io.use(Promise.coroutine(function* (socket, next) {
+    let token = socket.handshake.query.token;
+    let isValid;
 
-    yield isAdministrator.call(this, socket);
+    if(token) {
+      isValid = yield isUser.call(this, socket, token);
+    } else {
+      isValid = isAdministrator.call(this, socket);
+    }
 
-    socket.on(eventKeys.GETTOKEN, Promise.coroutine(function* (data) {
-      log.debug(eventKeys.GETTOKEN, socket.id);
-      var schema = schemaFactory.createDefinition(schemaFactory.Enum.LOGIN);
-      var request = sanitizer.sanitize(data, schema, [schema.Enum.ADDRESS], socket);
+    return isValid ? next(log.info(`${socket.id} has been authenticated.`, socket.id))
+                    : next(log.error(`${socket.id} has failed authentication.`));
+  }.bind(this)));
 
-      if(request) {
-        var activeSession = yield session.getSession();
+  io.on('connection', Promise.coroutine(function* (socket, data) {
+    log.socket(`Socket has connected: ${socket.id} ip: ${socket.handshake.address}`);
 
-        if(activeSession) {
-          var token = yield authenticator.requestToken(socket.id, request);
+    socket.emit(eventKeys.AUTHENTICATED, credentials.isAdmin(socket), Promise.coroutine(function* () {
+      yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.functions.CREATEPLAYER, [socket.id]]);
 
-          if(token) {
-            smtp.initializeTransport(activeSession.smtp);
-            var mailOptions = smtp.createMailOptions(activeSession.smtp, token.address, "Video-Sync Token", "Session token: " + token.pass, "");
-
-            smtp.sendMail(mailOptions);
-            socket.emit(eventKeys.SENTTOKEN);
-          }
-        }
+      var mediaPath = yield media.getMediaPath();
+      if(mediaPath && mediaPath.length > 0) {
+        socket.emit(eventKeys.MEDIAREADY);
       }
     }));
-
-    socket.on(eventKeys.AUTHTOKEN, Promise.coroutine(function* (data) {
-      log.debug(eventKeys.AUTHTOKEN, socket.id);
-      var schema = schemaFactory.createDefinition(schemaFactory.Enum.LOGIN);
-      var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
-
-      if(request) {
-        var authorized = yield authenticator.validateToken(socket.id, request);
-        if(authorized) {
-          yield userAuthorized.call(this, socket, request.handle, request.address);
-        } else {
-          socket.logonAttempts += 1;
-
-          if(socket.logonAttempts > 4) {
-            socket.disconnect(socket.id);
-          }
-        }
-      }
-    }.bind(this)));
 
     socket.on(eventKeys.DISCONNECT, Promise.coroutine(function*() {
       log.info(eventKeys.DISCONNECT, socket.id);
 
-      if(socket.id) {
-        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'has left the session.']);
-        yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
+      if(socket && socket.id && socket.auth) {
+        var adminId = yield credentialManager.getAdmin();
 
-        var isAdmin = yield session.isAdmin(socket.id);
-        if(isAdmin) {
-          session.removeAdmin(socket.id);
+        if(adminId) {
+          credentialManager.removeAdmin(socket.id);
+        } else {
+          redisSocket.ping(adminId, eventKeys.TOKENS, credentialManager.resetToken(socket.id));
         }
 
-        yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.REMOVEPLAYER, [socket.id]]);
+        yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.functions.REMOVEPLAYER, [socket.id]]);
       }
-
-      socket.disconnect(socket.id);
     }));
 
-    setTimeout(Promise.coroutine(function* () {
-      //If the socket didn't authenticate, disconnect it
-      if (!socket.auth) {
-        log.debug(socket.auth);
-        log.info("timing out socket", socket.id);
-        socket.disconnect(socket.id);
-      }
-    }.bind(this)), 300000);
-
-    socket.emit(eventKeys.CONNECTED);
-  }.bind(this)));
+    if(credentials.isAdmin(socket)) {
+      socket.on(eventKeys.SHUTDOWN, function() {
+        log.info(eventKeys.SHUTDOWN, socket.id);
+        socket.emit(eventKeys.CONFIRM, function(confirmed) {
+          if(confirmed) {
+            log.info(eventKeys.SHUTDOWN, 'The shutdown command has been received and confirmed.');
+            process.send('master-process:shutdown');
+          }
+        });
+      });
+    }
+  }
 };
 
 module.exports = AuthenticationController;
 
-var userAuthorized = Promise.coroutine(function* (socket, handle, authId, isAdmin) {
-  socket.auth = true;
+var isAdministrator = function(socket) {
+  var isAuth;
 
-  yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.CREATEPLAYER, [socket.id, handle, authId]]);
+  if(credentials.isAdmin(socket)) {
+    var adminController       = this.factory.createAdminController();
+    var credentialController  = this.factory.createCredentialController();
+    var encodingContoller     = this.factory.createEncodingController();
+
+    adminController.attachSocket(socket);
+    credentialController.attachSocket(socket);
+    encodingContoller.attachSocket(socket);
+
+    isAuth = userAuthorized.call(this, socket);
+  }
+
+  return isAuth;
+};
+
+var isUser = Promise.coroutine(function* (socket, data) {
+  var schema  = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
+  var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
+  var isAuth  = yield credentials.authenticateToken(socket.id, request.id, request.data);
+
+  return isAuth ? userAuthorized.call(this, socket) : false;
+});
+
+var userAuthorized = function(socket) {
+  socket.auth = true;
 
   var videoController = this.factory.createVideoController();
   var stateController = this.factory.createStateController();
-  var chatController  = this.factory.createChatController();
 
   videoController.attachSocket(socket);
   stateController.attachSocket(socket);
-  chatController.attachSocket(socket);
 
-  var chatEngine = this.factory.createChatEngine();
-
-  socket.emit(eventKeys.AUTHENTICATED, isAdmin, Promise.coroutine(function* () {
-    var mediaPath = yield session.getMediaPath();
-    if(mediaPath && mediaPath.length > 0) {
-      socket.emit(eventKeys.MEDIAREADY);
-    }
-
-    var handles = yield publisher.publishAsync(publisher.Enum.PLAYER, [playerManager.functions.GETHANDLES, []]);
-    yield redisSocket.broadcast(eventKeys.HANDLES, handles);
-
-    var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.CHATRESPONSE, [socket.id, 'has joined.']);
-    yield chatEngine.broadcast(eventKeys.EVENTRESP, response);
-  }));
-
-  log.info("socket has been authenticated.", socket.id);
-});
-
-var isAdministrator = Promise.coroutine(function* (socket) {
-  socket.auth = false;
-
-  var admin = yield session.getAdmin();
-  log.info(`Admin is ${admin} new socket is ${socket.id}`);
-  if(socket.handshake.address.includes("127.0.0.1")) {
-    var adminController   = this.factory.createAdminController();
-    var databaseContoller = this.factory.createDatabaseController();
-    var encodingContoller = this.factory.createEncodingController();
-
-    adminController.attachSocket(socket);
-    databaseContoller.attachSocket(socket);
-    encodingContoller.attachSocket(socket);
-
-    yield session.addAdmin(socket.id);
-    userAuthorized.call(this, socket, 'admin', 'admin', true);
-  }
-});
+  return socket.auth;
+};
