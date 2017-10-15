@@ -1,7 +1,7 @@
 const Promise   = require('bluebird');
 const Events    = require('events');
 const Find      = require('find');
-const Path      = require('Path');
+const Path      = require('path');
 
 const FileUtils = require('../utils/FileSystemUtils');
 

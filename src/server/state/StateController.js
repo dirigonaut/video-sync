@@ -2,13 +2,14 @@ const Promise  = require('bluebird');
 
 const METRICSINTERVAL = 1000;
 
-var media, schemaFactory, sanitizer, redisSocket, publisher, autoSyncInterval, stateEngine, eventKeys, log;
+var media, schemaFactory, sanitizer, redisSocket, publisher, autoSyncInterval, stateEngine, eventKeys, credentials, log;
 
 function StateController() { }
 
 StateController.prototype.initialize = function() {
   if(typeof StateController.prototype.protoInit === 'undefined') {
     StateController.prototype.protoInit = true;
+    credentials     = this.factory.createCredentialManager();
     schemaFactory   = this.factory.createSchemaFactory();
     sanitizer       = this.factory.createSanitizer();
     eventKeys       = this.factory.createKeys();
@@ -34,47 +35,53 @@ StateController.prototype.attachSocket = function(socket) {
   socket.on(eventKeys.REQPLAY, Promise.coroutine(function* () {
     log.info(eventKeys.REQPLAY);
 
-    var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.functions.PLAY, [socket.id]]);
-    if(commands) {
-      for(var i = 0; i < commands.length; ++i) {
-        yield redisSocket.ping.apply(null, commands[i]);
-      }
+    if(credentials.getTokenLevel === credentials.Enums.LEVEL.CONTROLS) {
+      var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.functions.PLAY, [socket.id]]);
+      if(commands) {
+        for(var i = 0; i < commands.length; ++i) {
+          yield redisSocket.ping.apply(null, commands[i]);
+        }
 
-      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.CHATRESPONSE, [socket.id, 'issued play.']);
-      yield redisSocket.broadcast(eventKeys.EVENTRESP, response);
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.CHATRESPONSE, [socket.id, 'issued play.']);
+        yield redisSocket.broadcast(eventKeys.EVENTRESP, response);
+      }
     }
   }));
 
   socket.on(eventKeys.REQPAUSE, Promise.coroutine(function* () {
     log.debug(eventKeys.REQPAUSE);
 
-    var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.functions.PAUSE, [socket.id]]);
-    if(commands) {
-      for(var i = 0; i < commands.length; ++i) {
-        yield redisSocket.ping.apply(null, commands[i]);
-      }
+    if(credentials.getTokenLevel === credentials.Enums.LEVEL.CONTROLS) {
+      var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.functions.PAUSE, [socket.id]]);
+      if(commands) {
+        for(var i = 0; i < commands.length; ++i) {
+          yield redisSocket.ping.apply(null, commands[i]);
+        }
 
-      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.CHATRESPONSE, [socket.id, 'issued pause.']);
-      yield redisSocket.broadcast(eventKeys.EVENTRESP, response);
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.CHATRESPONSE, [socket.id, 'issued pause.']);
+        yield redisSocket.broadcast(eventKeys.EVENTRESP, response);
+      }
     }
   }));
 
   socket.on(eventKeys.REQSEEK, Promise.coroutine(function* (data) {
     log.debug(eventKeys.REQSEEK, data);
 
-    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.STATE);
-    var request = sanitizer.sanitize(data, schema, [schema.Enum.TIMESTAMP], socket);
+    if(credentials.getTokenLevel === credentials.Enums.LEVEL.CONTROLS) {
+      var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.STATE);
+      var request = sanitizer.sanitize(data, schema, [schema.Enum.TIMESTAMP], socket);
 
-    if(request) {
-      var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.functions.SEEK, [socket.id, request]]);
+      if(request) {
+        var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.functions.SEEK, [socket.id, request]]);
 
-      if(commands) {
-        for(var i = 0; i < commands.length; ++i) {
-          yield redisSocket.ping.apply(null, commands[i]);
+        if(commands) {
+          for(var i = 0; i < commands.length; ++i) {
+            yield redisSocket.ping.apply(null, commands[i]);
+          }
+
+          var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.CHATRESPONSE, [socket.id, `issued seek to ${request.timestamp}.`]);
+          yield redisSocket.broadcast(eventKeys.EVENTRESP, response);
         }
-
-        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.CHATRESPONSE, [socket.id, `issued seek to ${request.timestamp}.`]);
-        yield redisSocket.broadcast(eventKeys.EVENTRESP, response);
       }
     }
   }));

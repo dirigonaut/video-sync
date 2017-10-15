@@ -1,5 +1,7 @@
 node_modules/
 static/media/*
+static/html/info/*
+static/resources/bundle.js
 npm-debug.log
 build/*
 dump.rdb

@@ -17,7 +17,7 @@ const Video             = require('../video/Video');
 //Common Packages
 const BaseFactory       = require('../../common/factory/BaseFactory');
 const EnumUtil          = require('../../common/factory/EnumUtil');
-const Keys              = require('../../common/Keys');
+const Keys              = require('../../common/utils/Keys');
 const SchemaFactory     = require('../../common/schemas/SchemaFactory');
 
 module.exports = {
