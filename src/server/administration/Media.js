@@ -68,6 +68,7 @@ Media.prototype.setPlayerMetrics = function(metrics) {
 
 module.exports = Media;
 
+Media.Enum = {};
 Media.Enum.Keys = { PATH: "media-path", STARTED: "media-started", RULE: "media-rule", METRICS: "media-metrics"};
 
 var setMediaData = function(key, data) {

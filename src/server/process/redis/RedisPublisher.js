@@ -56,6 +56,7 @@ RedisPublisher.prototype.publish = function(channel, args) {
   return publisher.publishAsync(channel, JSON.stringify(args));
 };
 
+RedisPublisher.Enum = {};
 RedisPublisher.Enum.Key = { STATE: 'state', PLAYER: 'player' };
 RedisPublisher.Enum.Resp  = { RESPONSE: 'stateRedisResponse', COMMAND: 'stateRedisCommand'};
 

@@ -45,9 +45,9 @@ CredentialController.prototype.attachSocket = function(socket) {
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
-      var socketIds = credentials.deleteToken(request.id, request.data));
+      var socketIds = credentials.deleteToken(request.id, request.data);
     }
   }.bind(this)));
 };
 
-module.exports = AuthenticationController;
+module.exports = CredentialController;

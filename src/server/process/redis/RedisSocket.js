@@ -41,6 +41,7 @@ RedisSocket.prototype.disconnect = Promise.coroutine(function* (id) {
   yield publisher.publishAsync(RedisSocket.Enums.KEY.DISCONNECT, id);
 });
 
+RedisSocket.Enum = {};
 RedisSocket.Enum.Key = { BROADCAST: 'redisSocketBroadcast', PING: 'redisSocketPing', DISCONNECT: 'redisDisconnect' };
 
 module.exports = RedisSocket;

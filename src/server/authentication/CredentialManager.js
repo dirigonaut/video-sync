@@ -126,6 +126,7 @@ CredentialManager.prototype.authenticateToken = Promise.coroutine(function* (key
 
 module.exports = CredentialManager;
 
+CredentialManager.Enum = {};
 CredentialManager.Enum.User = { ADMIN: 'auth-admin', CLIENT: 'auth-client' };
 CredentialManager.Enum.Level = { CONTROLS : 'controls', NONE: 'none' };
 

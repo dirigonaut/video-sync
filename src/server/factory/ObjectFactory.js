@@ -18,7 +18,7 @@ ObjectFactory.prototype.initialize = Promise.coroutine(function* (baseFactory, e
   Object.assign(imports, commmonImports);
   ObjectFactory.prototype.Enum = enumUtil.createEnums(imports);
 
-  baseFactory.generateObjects.call(this, imports);
+  baseFactory.generateFactory.call(this, imports);
 });
 
 module.exports = ObjectFactory;
