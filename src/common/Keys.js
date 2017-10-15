@@ -1,49 +1,20 @@
 module.exports = {
   //AdminController
   //Server
-  INVITE:         'admin-smtp-invited',
   SETMEDIA:       'admin-set-media',
-  LOADSESSION:    'admin-load-session',
   //Client
-  INVITED:        'admin-smtp-invited',
   MEDIAREADY:     'admin-media-ready',
-  LOADEDSESSION:  'admin-loaded-session',
 
-  //AuthenticationController
+  //CredentialController
   //Server
-  GETTOKEN:       'auth-get-token',
-  AUTHTOKEN:      'auth-validate-token',
+  TOKENS:         'tokens',
+  AUTHTOKEN:      'auth-token',
   DISCONNECT:     'disconnect',
+  SHUTDOWN:       'shutdown',
   //Client
-  CONNECTED:      'connected',
-  SENTTOKEN:      'auth-token',
+  CREATETOKENS:   'gen-tokens',
+  SETLEVEL:       'set-level',
   AUTHENTICATED:  'authenticated',
-
-  //ChatController
-  //Server
-  BROADCAST:      'chat-broadcast',
-  COMMAND:        'chat-command',
-  //Client
-  HANDLES:        'chat-handles',
-  BROADCASTRESP:  'chat-broadcast-resp',
-  EVENTRESP:      'chat-event-resp',
-  PINGRESP:       'chat-ping-resp',
-  LOGRESP:        'chat-log-resp',
-
-  //DatabaseController
-  //Server
-  CREATESMTP:     'db-create-smtp',
-  CREATESESSION:  'db-create-session',
-  READSMTP:       'db-read-smpts',
-  READSESSIONS:   'db-read-sessions',
-  UPDATESMTP:     'db-update-smtp',
-  UPDATESESSION:  'db-update-session',
-  DELETESMTP:     'db-delete-smtp',
-  DELETESESSION:  'db-delete-session',
-  //Client
-  SMTP:           'db-smtp',
-  SESSION:        'db-sessions',
-  DBREFRESH:      'db-refresh',
 
   //StateController
   //Server

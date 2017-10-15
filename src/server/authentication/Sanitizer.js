@@ -1,7 +1,9 @@
-const NUMBER = '^((?=.)((\\d*)(\\.(\\d+))?))$';
-const ALPHANUMERIC = '([^\\u0000-\\u007F]|\\w|\\s)+';
-const SPECIAL	= '([^\\u0000-\\u007F]|[?!&:;@.,/\\-\\\'\\\"\\s\\w\\\\])+';
-const EMAIL = '[\\w._-]+@[\\w]+\\.[\\w]+';
+const Path 					= require('Path');
+
+const NUMBER 				= '^((?=.)((\\d*)(\\.(\\d+))?))$';
+const ALPHANUMERIC 	= '([^\\u0000-\\u007F]|\\w|\\s)+';
+const SPECIAL				= '([^\\u0000-\\u007F]|[?!&:;@.,/\\-\\\'\\\"\\s\\w\\\\])+';
+const EMAIL 				= '[\\w._-]+@[\\w]+\\.[\\w]+';
 
 var fileSystemUtils, schemaFactory, eventKeys, log;
 
@@ -12,11 +14,11 @@ Sanitizer.prototype.initialize = function(force) {
     Sanitizer.prototype.protoInit = true;
 		eventKeys       = this.factory.createKeys();
 
-		var logManager  = this.factory.createLogManager();
-		log             = logManager.getLog(logManager.LogEnum.GENERAL);
-
 		fileSystemUtils = this.factory.createFileSystemUtils();
-		schemaFactory = this.factory.createSchemaFactory();
+		schemaFactory 	= this.factory.createSchemaFactory();
+
+		var logManager  = this.factory.createLogManager();
+		log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);
   }
 };
 
@@ -92,7 +94,7 @@ function checkInput(key, input, schema) {
 			clean = typeof input === 'boolean';
 			break;
 		case 'path':
-			clean = fileSystemUtils.isPath(input);
+			clean = input !== Path.basename(input);
 			break;
 		case 'special':
 			clean = validate(input, new RegExp(SPECIAL), true);
@@ -106,7 +108,7 @@ function checkInput(key, input, schema) {
 			clean &= validate(command, new RegExp(ALPHANUMERIC), false);
 			break;
 		case 'schema':
-			var nestedSchema = schemaFactory.createDefinition(schemaFactory.Enum[key.toUpperCase()]);
+			var nestedSchema = schemaFactory.createDefinition(schemaFactory.Enum.SCHEMA[key.toUpperCase()]);
 			clean = this.sanitize(input, nestedSchema, Object.values(nestedSchema.Enum));
 			break;
 	  default:

@@ -11,7 +11,7 @@ SourceBuffer.prototype.initialize = function(force) {
     Object.setPrototypeOf(SourceBuffer.prototype, Events.prototype);
 
     var logManager = this.factory.createClientLogManager();
-    log = logManager.getLog(logManager.LogEnum.VIDEO);
+    log = logManager.getLog(logManager.Enums.LOGS.VIDEO);
 
     schemaFactory   = this.factory.createSchemaFactory();
     socket          = this.factory.createClientSocket();

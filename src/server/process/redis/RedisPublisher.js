@@ -12,24 +12,21 @@ var publisher, subscriber, redisSocket, requestMap, asyncEmitter, log;
 
 function RedisPublisher() { }
 
-RedisPublisher.prototype.initialize = function(force) {
+RedisPublisher.prototype.initialize = function() {
   if(typeof RedisPublisher.prototype.protoInit === 'undefined') {
     RedisPublisher.prototype.protoInit = true;
     var config      = this.factory.createConfig();
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.GENERAL);
-  }
 
-  if(force === undefined ? typeof RedisPublisher.prototype.stateInit === 'undefined' : force) {
-    RedisPublisher.prototype.stateInit = true;
     requestMap    = new Map();
-    redisSocket   = this.factory.createRedisSocket();
     asyncEmitter  = new Events();
-
+    redisSocket   = this.factory.createRedisSocket();
     subscriber    = Redis.createClient(config.getConfig().redis);
     publisher     = Redis.createClient(config.getConfig().redis);
 
     attachEvents.call(this);
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);
   }
 };
 
@@ -59,11 +56,8 @@ RedisPublisher.prototype.publish = function(channel, args) {
   return publisher.publishAsync(channel, JSON.stringify(args));
 };
 
-RedisPublisher.Enum = { DATABASE: 'database', STATE: 'state', PLAYER: 'player', SESSION: 'session'};
-RedisPublisher.RespEnum = { RESPONSE: 'stateRedisResponse', COMMAND: 'stateRedisCommand'};
-
-RedisPublisher.prototype.Enum = RedisPublisher.Enum;
-RedisPublisher.prototype.RespEnum = RedisPublisher.RespEnum;
+RedisPublisher.Enum.Key = { STATE: 'state', PLAYER: 'player' };
+RedisPublisher.Enum.Resp  = { RESPONSE: 'stateRedisResponse', COMMAND: 'stateRedisCommand'};
 
 module.exports = RedisPublisher;
 
@@ -81,7 +75,7 @@ var attachEvents = function() {
   });
 
   subscriber.on("message", Promise.coroutine(function* (channel, message) {
-    if(channel === RedisPublisher.RespEnum.RESPONSE) {
+    if(channel === RedisPublisher.Enum.Resp.RESPONSE) {
       if(message) {
         if(requestMap.get(message)) {
           let data = yield getRedisData.call(this, message);
@@ -94,7 +88,7 @@ var attachEvents = function() {
           asyncEmitter.emit(message, data);
         }
       }
-    } else if(channel === RedisPublisher.RespEnum.COMMAND) {
+    } else if(channel === RedisPublisher.Enum.Resp.COMMAND) {
       message = JSON.parse(message);
       if(message) {
         log.silly(Util.inspect(message, { showHidden: false, depth: 1}));

@@ -22,13 +22,13 @@ var fileIO, config;
 
 function Config() { }
 
-Config.prototype.initialize = function(force) {
-  if(force === undefined ? typeof Config.prototype.stateInit === 'undefined' : force) {
-    //Must happen first otherwise infinite recursion happens
-    Config.prototype.stateInit = true;
+Config.prototype.initialize = function() {
+  if(typeof Config.prototype.protoInit === 'undefined') {
+    Config.prototype.protoInit = true;
     Object.setPrototypeOf(Config.prototype, Events.prototype);
 
     fileIO = this.factory.createFileIO();
+
     setupAppDataDir().then(Promise.coroutine(function* () {
       config = yield loadConfig();
 
@@ -86,6 +86,8 @@ var setupAppDataDir = Promise.coroutine(function* () {
     yield ensureAssetExists(CONFIG_NAME, CONFIG_NAME_OS, "json");
 
     yield fileIO.ensureDirExistsAsync(LOG_DIR, 484);
+  } else {
+    throw new Error('Only the Master thread can setup the appData directory.')
   }
 });
 

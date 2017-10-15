@@ -9,7 +9,7 @@ MpdMeta.prototype.initialize = function() {
   if(typeof MpdMeta.prototype.protoInit === 'undefined') {
     MpdMeta.prototype.protoInit = true;
     var logManager  = this.factory.createClientLogManager();
-    log             = logManager.getLog(logManager.LogEnum.VIDEO);
+    log             = logManager.getLog(logManager.Enums.LOGS.VIDEO);
   }
 
   this.threshold       = 2;

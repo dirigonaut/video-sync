@@ -10,13 +10,13 @@ FileIO.prototype.initialize = function(force) {
   if(typeof FileIO.prototype.protoInit === 'undefined') {
     FileIO.prototype.protoInit = true;
     var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.UTILS);
+    log             = logManager.getLog(logManager.Enums.LOGS.UTILS);
   }
 };
 
-FileIO.prototype.read = function(readConfig) {
-  log.debug('FileIO.read', readConfig);
-  var readStream  = Fs.createReadStream(readConfig.path, readConfig.options);
+FileIO.prototype.read = function(path, options, onData, onFinish) {
+  log.debug('FileIO.read', path);
+  var readStream  = Fs.createReadStream(path, options);
   var index = 0;
 
   readStream.on('error', function(e) {
@@ -25,34 +25,15 @@ FileIO.prototype.read = function(readConfig) {
 
   readStream.on('close', function() {
     log.debug("FileIO.read, Server: Finished reading.");
-    if(readConfig.onFinish) {
-      readConfig.onFinish(index);
+    if(onFinish) {
+      onFinish(index);
     }
 	});
 
   readStream.on('data', function(chunk) {
-    log.silly("on data", readConfig);
-    readConfig.callback(chunk, index);
+    onData(chunk, index);
     index += 1;
   });
-};
-
-FileIO.prototype.write = function(writeConfig, data) {
-  log.debug('FileIO.write', writeConfig);
-	var writeStream = Fs.createWriteStream(writeConfig.path, writeConfig.options);
-
-  writeStream.on('error', function(e) {
-		log.error("FileIO.write, Server: Error: " + e);
-	}.bind(this));
-
-  writeStream.on('finish', function() {
-		log.debug("FileIO.write, Server: Finished writing file");
-    if(writeConfig.onFinish) {
-      writeConfig.onFinish();
-    }
-	}.bind(this));
-
-  writeStream.write(data);
 };
 
 FileIO.prototype.readDirAsync = Promise.coroutine(function* (path, extType) {
@@ -98,18 +79,6 @@ FileIO.prototype.dirExists = function(path) {
 
     return false;
   });
-};
-
-FileIO.prototype.createStreamConfig = function(path, callback) {
-  log.debug('FileIO.streamConfig');
-
-  var streamConfig = {};
-  streamConfig.path = path;
-  streamConfig.options = {};
-  streamConfig.callback = callback;
-  streamConfig.onFinish = null;
-
-  return streamConfig;
 };
 
 module.exports = FileIO;

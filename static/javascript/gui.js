@@ -74,159 +74,13 @@ function initGUI(client, isAdmin) {
     }
   });
 
-  //Location Events --------------------------------------------------------------
+  //Location Events -------------------------------------------------------------
   $('#btnSessionMedia').click(function() {
     client.log.info("Load new video.");
     var media = $('#locationBar').val();
     client.socket.request(client.keys.SETMEDIA,
       client.schema.createPopulatedSchema(client.schema.Enum.PATH, [media]));
     $('#seek-bar').val(0);
-  });
-
-  //Session Events --------------------------------------------------------------
-  $('#createSession').click(function createSession() {
-    var sender  = $('#sessionAddress').val();
-    var to      = $('#sessionInvitees').val();
-    var subject = $('#sessionSubject').val();
-    var text    = $('#sessionText').val();
-
-    var mailOptions = client.schema.createPopulatedSchema(client.schema.Enum.MAILOPTIONS, [sender, to, subject, text]);
-
-    var id        = $('#sessionId').val();
-    var title     = $('#sessionTitle').val();
-    var address   = $('#sessionAddress').val();
-    var invitees  = ($('#sessionInvitees').val()).split(",");
-
-    for(var i = 0; i < invitees.length; ++i) {
-      invitees[i] = invitees[i].trim();
-    }
-
-    if(!id) {
-      client.socket.request(client.keys.CREATESESSION,
-        client.schema.createPopulatedSchema(client.schema.Enum.SESSION, [undefined, title, address, invitees, mailOptions]));
-    } else {
-      client.socket.request(client.keys.UPDATESESSION,
-        client.schema.createPopulatedSchema(client.schema.Enum.SESSION, [id, title, address, invitees, mailOptions]));
-    }
-  });
-
-  $('#readSessions').click(function readSessions() {
-    client.socket.request(client.keys.READSESSIONS);
-  });
-
-  $('#setSession').click(function setSession() {
-    var id = $('#sessionId').val();
-    client.socket.request(client.keys.LOADSESSION,
-      client.schema.createPopulatedSchema(client.schema.Enum.STRING, [id]));
-  });
-
-  $('#sendInvitation').click(function readSessions() {
-    client.socket.request(client.keys.INVITE);
-  })
-
-  $('#sessionList').on("click", "tr", function(e) {
-      var id = e.currentTarget.children[0].outerText;
-      var sessions = client.formData.getSessionList();
-      var session;
-
-      if(id == "Session") {
-        $("#sessionId").val("");
-        $("#sessionTitle").val("");
-        $("#sessionAddress").val("");
-        $("#sessionInvitees").val("");
-        $("#sessionSubject").val("");
-        $("#sessionText").val("");
-        $("#createSession").html("Create");
-      } else {
-        for(var i in sessions) {
-          if(sessions[i]._id === id) {
-            session = sessions[i];
-            break;
-          }
-        }
-      }
-
-      if(session) {
-        $("#sessionId").val(session._id);
-        $("#sessionTitle").val(session.title);
-        $("#sessionAddress").val(session.smtp);
-        $("#sessionInvitees").val(session.invitees);
-        $("#sessionSubject").val(session.mailOptions.subject);
-        $("#sessionText").val(session.mailOptions.text);
-        $("#createSession").html("Save");
-      }
-  });
-
-  $('#sessionList').on("click", "button", function(e) {
-    var session = $($(e.currentTarget).parent()).parent();
-    var id = session[0].children[0].outerText;
-
-    session.remove();
-
-    client.socket.request(client.keys.DELETESESSION,
-      client.schema.createPopulatedSchema(client.schema.Enum.STRING, [id]));
-  });
-
-  //Smtp Events -----------------------------------------------------------------
-  $('#createSmtp').click(function createSmtp() {
-    var id        = $('#smtpId').val();
-    var type      = $('#smtpType').val();
-    var host      = $('#smtpHost').val();
-    var address   = $('#smtpAddress').val();
-    var password  = $('#smtpPassword').val();
-
-    if(!id) {
-      client.socket.request(client.keys.CREATESMTP,
-        client.schema.createPopulatedSchema(client.schema.Enum.SMTP, [undefined, type, host, address, password]));
-    } else {
-      client.socket.request(client.keys.UPDATESMTP,
-        client.schema.createPopulatedSchema(client.schema.Enum.SMTP, [id, type, host, address, password]));
-    }
-  });
-
-  $('#readSmtps').click(function readSmtps() {
-    client.socket.request("db-read-smtps");
-  });
-
-  $('#smtpList').on("click", "tr", function(e) {
-      var id = e.currentTarget.children[0].outerText;
-      var smtps = client.formData.getSmtpList();
-      var smtp;
-
-      if(id == "Smtp") {
-        $("#smtpId").val("");
-        $("#smtpType").val("");
-        $("#smtpHost").val("");
-        $("#smtpAddress").val("");
-        $("#smtpPassword").val("");
-        $("#createSmtp").html("Create");
-      } else {
-        for(var i in smtps) {
-          if(smtps[i]._id === id) {
-            smtp = smtps[i];
-            break;
-          }
-        }
-      }
-
-      if(smtp) {
-        $("#smtpId").val(smtp._id);
-        $("#smtpType").val(smtp.smtpType);
-        $("#smtpHost").val(smtp.smtpHost);
-        $("#smtpAddress").val(smtp.smtpAddress);
-        $("#smtpPassword").val(smtp.smtpPassword);
-        $("#createSmtp").html("Save");
-      }
-  });
-
-  $('#smtpList').on("click", "button", function(e) {
-    var smtp = $($(e.currentTarget).parent()).parent();
-    var id = smtp[0].children[0].outerText;
-
-    smtp.remove();
-
-    client.socket.request(client.keys.DELETESMTP,
-      client.schema.createPopulatedSchema(client.schema.Enum.STRING, [id]));
   });
 
   //Encode Events ---------------------------------------------------------------
@@ -376,79 +230,22 @@ function initGUI(client, isAdmin) {
   });
 
   //Side Events -----------------------------------------------------------------
-  $('#btnSession').click(function() {
-    loadSessions();
+  var loadTokens = function() {
+    var tokens = client.formData.getTokenList();
 
-    $('#sessionModal').modal('show');
-    $('#sessionModal').on('shown', function() {
-      $("#sessionId").focus();
-    })
-  });
-
-  var loadSessions = function() {
-    var sessions = client.formData.getSessionList();
-
-    if(sessions.length > 0) {
-      if($("#sessionId").val() == '') {
-        var session = sessions[0];
-
-        if(session) {
-          $("#sessionId").val(session._id);
-          $("#sessionTitle").val(session.title);
-          $("#sessionAddress").val(session.smtp);
-          $("#sessionInvitees").val(session.invitees);
-          $("#sessionSubject").val(session.mailOptions.subject);
-          $("#sessionText").val(session.mailOptions.text);
-        }
-      }
-
-      $('#sessionList tbody tr:not(:first)').remove();
-
-
-      for(var i in sessions) {
-        $('#sessionList tr:last').after('<tr><td style="display:none;">' + sessions[i]._id + '</td><td>' + sessions[i].title +
+    if(tokens.length > 0) {
+      for(var i in tokens) {
+        $('#tokenList tr:last').after('<tr><td>' + tokens[i].token + '</td><td>' + tokens[i].handle + '</td><td>' + tokens[i].level +
         '<button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>');
       }
     }
   };
 
-  client.socket.setEvent(client.keys.SESSION, loadSessions);
+  client.socket.setEvent(client.keys.TOKENS, loadTokens);
 
-  $('#btnSmtp').click(function() {
-    loadSmtps();
-
-    $('#smtpModal').modal('show');
-    $('#smtpModal').on('shown', function() {
-      $("#smtpType").focus();
-    });
+  $('#btnTokens').click(function() {
+    $('#tokenModal').modal('show');
   });
-
-  var loadSmtps = function() {
-    var smtps = client.formData.getSmtpList();
-
-    if(smtps.length > 0) {
-      if($("#smtpId").val() == '') {
-        var smtp = smtps[0];
-
-        if(smtp) {
-          $("#smtpId").val(smtp._id);
-          $("#smtpType").val(smtp.type);
-          $("#smtpHost").val(smtp.smtpHost);
-          $("#smtpAddress").val(smtp.smtpAddress);
-          $("#smtpPassword").val(smtp.smtpPassword);
-        }
-      }
-
-      $('#smtpList tbody tr:not(:first)').remove();
-
-      for(var i in smtps) {
-        $('#smtpList tr:last').after('<tr><td style="display:none;">' + smtps[i]._id + '</td><td>' + smtps[i].smtpAddress +
-        '<button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>');
-      }
-    }
-  }
-
-  client.socket.setEvent(client.keys.SMTP, loadSmtps);
 
   $('#btnEncode').click(function() {
     $('#encodeModal').modal('show');
@@ -461,75 +258,10 @@ function initGUI(client, isAdmin) {
     $('#helpModal').modal('show');
   });
 
-  //Chat Events ------------------------------------------------------------------
-  function sendChat() {
-    var value = $('#chatMessage').val();
-    $('#chatMessage').val("");
-    client.chatUtil.send(value);
-  }
-
-  function autoScroll(id) {
-    if($(id).hasClass("auto-scroll")) {
-      $(id).scrollTop($(id)[0].scrollHeight);
-    }
-  }
-
-  $('#sendChat').click(sendChat);
-
-  $('#chatMessage').keydown(function(event) {
-    var keyId = event.keyCode || event.which;
-
-    if (keyId === 13) {
-      event.preventDefault();
-      sendChat();
-    }
-  });
-
-  var chatScrollTimeOut;
-  $('#chatManuscript').on('scroll', function() {
-    if(!chatScrollTimeOut) {
-      chatScrollTimeOut = setTimeout(function(){
-        clearTimeout(chatScrollTimeOut);
-        chatScrollTimeOut = undefined;
-
-        var element = $('#chatManuscript');
-        var totalHeight = element.scrollTop() + element.innerHeight();
-        if(totalHeight === element[0].scrollHeight) {
-          element.addClass("auto-scroll");
-        } else {
-          element.removeClass("auto-scroll");
-        }
-      }, 250);
-    }
-  });
-
-  var logScrollTimeOut;
-  $('#logManuscript').on('scroll', function() {
-    if(!logScrollTimeOut) {
-      logScrollTimeOut = setTimeout(function(){
-        clearTimeout(logScrollTimeOut);
-        logScrollTimeOut = undefined;
-
-        var element = $('#logManuscript');
-        var totalHeight = element.scrollTop() + element.innerHeight();
-        if(totalHeight === element[0].scrollHeight) {
-          element.addClass("auto-scroll");
-        } else {
-          element.removeClass("auto-scroll");
-        }
-      }, 250);
-    }
-  });
-
+  //Log Events ------------------------------------------------------------------
   function systemMessage(message) {
     $('#chatManuscript').append(`<p><span class="chat-message" title="System" style="color:gray; font-weight: bold;">
       ${new Date().toTimeString().split(" ")[0]} System: </span>${client.chatUtil.getUserHandle(message.from)} ${message.data}</p>`);
-    autoScroll('#chatManuscript');
-  }
-
-  function chatMessage(message) {
-    $('#chatManuscript').append(`<p><span class="chat-message" title="${message.from}" style="color:blue; font-weight: bold;">
-      ${new Date().toTimeString().split(" ")[0]} ${client.chatUtil.getUserHandle(message.from)}: </span>${message.data}</p>`);
     autoScroll('#chatManuscript');
   }
 
@@ -540,7 +272,6 @@ function initGUI(client, isAdmin) {
       autoScroll('#logManuscript');
   }
 
-  client.socket.setEvent(client.keys.BROADCASTRESP, chatMessage);
   client.socket.setEvent(client.keys.EVENTRESP, systemMessage);
   client.socket.setEvent(client.keys.PINGRESP, systemMessage);
   client.socket.setEvent(client.keys.LOGRESP, logMessage);

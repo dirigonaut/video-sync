@@ -13,7 +13,7 @@ ServerProcess.prototype.initialize = function(force) {
   if(typeof ServerProcess.prototype.protoInit === 'undefined') {
     ServerProcess.prototype.protoInit = true;
     logManager      = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.GENERAL);
+    log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);
   }
 };
 

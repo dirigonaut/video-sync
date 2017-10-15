@@ -6,19 +6,16 @@ var webmMetaData, xmlUtil, mpdUtil, log;
 
 function WebmMetaProcess() { }
 
-WebmMetaProcess.prototype.initialize = function(force) {
+WebmMetaProcess.prototype.initialize = function() {
   if(typeof WebmMetaProcess.prototype.protoInit === 'undefined') {
     WebmMetaProcess.prototype.protoInit = true;
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.ENCODING);
-  }
-
-  if(force === undefined ? typeof WebmMetaProcess.prototype.stateInit === 'undefined' : force) {
-    WebmMetaProcess.prototype.stateInit = true;
-		Object.setPrototypeOf(WebmMetaProcess.prototype, Events.prototype);
+    Object.setPrototypeOf(WebmMetaProcess.prototype, Events.prototype);
     webmMetaData    = this.factory.createWebmMetaData();
     xmlUtil         = this.factory.createXmlUtil();
     mpdUtil         = this.factory.createMpdUtil();
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
   }
 };
 

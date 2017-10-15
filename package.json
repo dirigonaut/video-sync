@@ -3,23 +3,21 @@
   "version": "0.2.0",
   "main": "index.js",
   "scripts": {
+    "init": "npm install && node develop/init.js",
     "start": "node index.js",
-    "debug": "node develop/devInit.js && node --inspect=9999 index.js",
-    "test": "mocha test/src/**/*.js",
+    "debug": "node develop/init.js && node --inspect=9999 index.js",
     "stats": "cloc --not-match-d resources --by-file ./src/ ./static/ index.js",
-    "allStats": "cloc --not-match-d resources --by-file ./src/ ./static/ ./develop ./test index.js",
     "update-deps": "npm outdated --depth=0 | grep -v Package | awk '{print $1}' | xargs -I% npm install %@latest --save"
   },
   "dependencies": {
-    "async": "^2.3.0",
     "bluebird": "^3.5.0",
+    "browserify": "^14.1.0",
     "ebml": "^2.2.0",
     "express": "^4.15.2",
     "find": "^0.2.7",
+    "marked": "^0.3.6",
     "moment": "^2.14.1",
-    "nedb": "^1.8.0",
     "node-forge": "^0.7.0",
-    "nodemailer": "^3.1.4",
     "redis": "^2.7.1",
     "redis-server": "^1.1.0",
     "socket.io": "^1.7.3",
@@ -27,13 +25,6 @@
     "winston": "^2.3.1",
     "xml2js": "^0.4.17",
     "xmldom": "^0.1.27"
-  },
-  "devDependencies": {
-    "browserify": "^14.1.0",
-    "marked": "^0.3.6",
-    "mocha": "^3.4.2",
-    "should": "^11.2.1",
-    "watchify": "^3.9.0"
   },
   "description": "This README would normally document whatever steps are necessary to get your application up and running.",
   "repository": {

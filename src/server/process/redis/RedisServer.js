@@ -1,30 +1,24 @@
 const Redis = require('redis-server');
 
-var server, config, log;
+var server, log;
 
 //TODO: There is an issue where the port can never be changed from the config as the startup
 //process does not respect it and will always spin up 6379 instead.
 function RedisServer() { };
 
-RedisServer.prototype.initialize = function(force) {
+RedisServer.prototype.initialize = function() {
   if(typeof RedisServer.prototype.protoInit === 'undefined') {
     RedisServer.prototype.protoInit = true;
-    config 			    = this.factory.createConfig();
+    var config  = this.factory.createConfig();
+
+    if(config.getConfig().redisStartUp) {
+      server = new Redis(config.getRedisConfigPath());
+    } else {
+      server = new Redis();
+    }
+
     var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.ADMINISTRATION);
-  }
-
-  if(force === undefined ? typeof RedisServer.prototype.stateInit === 'undefined' : force) {
-    RedisServer.prototype.stateInit = true;
-    var options = config.getConfig().redisStartUp;
-
-    if(options) {
-      options.conf = config.getRedisConfigPath();
-    }
-
-    if(options) {
-      server = new Redis(options);
-    }
+    log             = logManager.getLog(logManager.Enums.LOGS.ADMINISTRATION);
   }
 };
 

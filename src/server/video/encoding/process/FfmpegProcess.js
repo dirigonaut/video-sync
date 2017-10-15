@@ -8,16 +8,12 @@ var log;
 
 function FfmpegProcess() { }
 
-FfmpegProcess.prototype.initialize = function(force) {
+FfmpegProcess.prototype.initialize = function() {
   if(typeof FfmpegProcess.prototype.protoInit === 'undefined') {
     FfmpegProcess.prototype.protoInit = true;
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.ENCODING);
-  }
-
-  if(force === undefined ? typeof FfmpegProcess.prototype.stateInit === 'undefined' : force) {
-    FfmpegProcess.prototype.stateInit = true;
     Object.setPrototypeOf(FfmpegProcess.prototype, Events.prototype);
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
   }
 };
 

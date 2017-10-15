@@ -17,7 +17,7 @@ MasterProcess.prototype.initialize = function(force) {
   if(typeof MasterProcess.prototype.protoInit === 'undefined') {
     MasterProcess.prototype.protoInit = true;
     var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.GENERAL);
+    log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);
   }
 };
 
@@ -51,6 +51,8 @@ var startMaster = Promise.coroutine(function* () {
         } else {
           proxy.spawnWorker(workerIndex);
         }
+      } else if((message === 'master-process-process:shutdown') {
+        process.exit(0);
       }
     });
   });
