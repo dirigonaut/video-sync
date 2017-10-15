@@ -8,7 +8,7 @@ const FileUtils = require('../utils/FileSystemUtils');
 function EnumUtil() { }
 
 EnumUtil.prototype.getAllImports = function(path, excludes) {
-  if(path && path === Path.basename(path)) {
+  if(path && Path.isAbsolute(path)) {
     var fileUtils = new FileUtils();
 
     var imports = {};

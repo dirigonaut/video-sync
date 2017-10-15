@@ -14,29 +14,28 @@ const EXCEPTION = `${TYPE}_${process.pid}_exception.txt`;
 function LogManager() { }
 
 LogManager.prototype.initialize = function() {
-  if(force === undefined ? typeof LogManager.prototype.protoInit === 'undefined') {
-    LogManager.prototype.stateInit = true;
-    config          = this.factory.createConfig(false);
-    schemaFactory   = this.factory.createSchemaFactory();
+  if(typeof LogManager.prototype.protoInit === 'undefined') {
+    config          = this.factory.createConfig();
 
-    LogManager.prototype.protoInit = true;
-    var keys = Object.keys(LogManager.LogEnum);
-    log = Winston.loggers.get(LogManager.LogEnum.LOG);
-    LogManager.prototype.LogEnum = LogManager.LogEnum;
+    if(config.isInit()) {
+      LogManager.prototype.protoInit = true;
+      schemaFactory   = this.factory.createSchemaFactory();
+      log = Winston.loggers.get(LogManager.Enum.Logs.LOG);
+    }
   }
 };
 
 LogManager.prototype.addFileLogging = function() {
-  var keys = Object.keys(LogManager.LogEnum);
-  var logLevels = typeof config.getConfig().logLevels !== 'undefined' ? config.getConfig().logLevels : LevelEnum;
+  var keys = Object.keys(LogManager.Enum.Logs);
+  var logLevels = LevelEnum;
 
   for(var i in keys) {
     var fileTransport = buildFileTransport.call(this, Path.join(config.getLogDir(), FILE_NAME),
-                          LogManager.LogEnum[keys[i]], logLevels[keys[i]], false);
-    var container     = Winston.loggers.get(LogManager.LogEnum[keys[i]]);
+                          LogManager.Enum.Logs[keys[i]], logLevels[keys[i]], false);
+    var container     = Winston.loggers.get(LogManager.Enum.Logs[keys[i]]);
 
     container.configure({
-      levels: LogManager.Levels,
+      levels: LogManager.Enum.Levels,
       transports: [fileTransport]
     });
   }
@@ -55,8 +54,9 @@ LogManager.prototype.getLog = function(id) {
 
 module.exports = LogManager;
 
-LogManager.Enum.Levels   = { socket: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
-LogManager.Enum.Logs  = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
+LogManager.Enum = {};
+LogManager.Enum.Levels  = { socket: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
+LogManager.Enum.Logs    = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
                         CHAT: 'chat', DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};
 
 var LevelEnum       = { GENERAL: 'debug', ADMINISTRATION: 'debug', AUTHENTICATION: 'debug',
@@ -95,7 +95,7 @@ function createFormatter(label) {
     }
 
     var json = JSON.stringify(logMessage);
-    if(LogManager.Levels[options.level] === LogManager.Levels.socket) {
+    if(LogManager.Enum.Levels[options.level] === LogManager.Enum.Levels.socket) {
       if(!credentials) {
         credentials = this.factory.createCredentialManager();
       }
@@ -106,7 +106,7 @@ function createFormatter(label) {
 
       credentials.getAdmin().then(function(id) {
         if(id) {
-          var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.LOGRESPONSE,
+          var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
             [logMessage.time, 'server', logMessage.label, logMessage.text, logMessage.meta]);
           redisSocket.ping(id, 'chat-log-resp', response);
         }

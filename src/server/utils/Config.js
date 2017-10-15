@@ -22,8 +22,8 @@ var fileIO, config;
 
 function Config() { }
 
-Config.prototype.initialize = function() {
-  if(typeof Config.prototype.protoInit === 'undefined') {
+Config.prototype.initialize = function(init) {
+  if(init && typeof Config.prototype.protoInit === 'undefined') {
     Config.prototype.protoInit = true;
     Object.setPrototypeOf(Config.prototype, Events.prototype);
 
@@ -44,6 +44,10 @@ Config.prototype.initialize = function() {
       this.once('error', reject);
     }.bind(this));
   }
+};
+
+Config.prototype.isInit = function() {
+  return config ? true : false;
 };
 
 Config.prototype.getConfig = function() {

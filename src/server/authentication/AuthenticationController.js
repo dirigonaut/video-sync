@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-var publisher, schemaFactory, sanitizer, credentialManager,
+var publisher, schemaFactory, sanitizer, credentials,
       redisSocket, playerManager, eventKeys, log;
 
 function AuthenticationController() { }
@@ -77,7 +77,7 @@ AuthenticationController.prototype.attachIO = function (io) {
         });
       });
     }
-  }
+  }));
 };
 
 module.exports = AuthenticationController;

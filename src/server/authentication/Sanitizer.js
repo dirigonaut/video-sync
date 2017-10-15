@@ -1,4 +1,4 @@
-const Path 					= require('Path');
+const Path 					= require('path');
 
 const NUMBER 				= '^((?=.)((\\d*)(\\.(\\d+))?))$';
 const ALPHANUMERIC 	= '([^\\u0000-\\u007F]|\\w|\\s)+';

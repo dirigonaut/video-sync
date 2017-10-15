@@ -3,7 +3,7 @@ const Events  = require('events');
 
 const METRICSINTERVAL = 500;
 
-var publisher, playRule, syncingRule, schemaFactory, redisSocket, autoSyncInterval
+var publisher, playRule, syncingRule, schemaFactory, redisSocket, autoSyncInterval,
     playerManager, trigger, accuracy, media, publisher, eventKeys, log;
 
 function StateEngine() { };

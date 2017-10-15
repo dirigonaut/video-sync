@@ -4,7 +4,7 @@ const FACTORY     = 'factory';
 
 function BaseFactory() { }
 
-BaseFactory.prototype.genObjects = function(imports) {
+BaseFactory.prototype.generateFactory = function(imports) {
   generateFunctionHeaders.call(this, imports);
 };
 
@@ -12,78 +12,64 @@ module.exports = BaseFactory;
 
 var generateFunctionHeaders = function(imports) {
   for(let i in this.Enum) {
-    this[`create${this.Enum[i]}`] = function () {
-      var object;
-      var ObjectImport = require(imports[this.Enum[i]]);
+    let ObjectImport = require(imports[this.Enum[i]]);
 
-      if(ObjectImport.prototype) {
-        object = Object.create(ObjectImport.prototype);
+    this[`create${this.Enum[i]}`] = function(initFlag) {
+      return generateObject.call(this, ObjectImport, initFlag);
+    };
 
-        if(!ObjectImport.prototype[FACTORY]) {
-          Object.defineProperty(ObjectImport.prototype, FACTORY, {
-            enumerable: false,
-            writeable: false,
-            value: this
-          });
-        }
+    if(ObjectImport.prototype) {
+      this[`get${this.Enum[i]}Info`] = function() {
+        return generateObjectInfo.call(this, ObjectImport);
+      };
+    }
+  }
+};
 
-        if(!ObjectImport.prototype[FUNCTIONS]) {
-          Object.defineProperty(ObjectImport.prototype, FUNCTIONS, {
-            enumerable: false,
-            writeable: false,
-            value: generateObjectFunctionInfo(object)
-          });
-        }
+var generateObject = function (ObjectImport, initFlag) {
+  var object;
 
-        if(!ObjectImport.prototype[ENUMS]) {
-          Object.defineProperty(ObjectImport.prototype, ENUMS, {
-            enumerable: false,
-            writeable: false,
-            value: generateObjectEnumInfo(object)
-          });
-        }
+  if(ObjectImport.prototype) {
+    object = Object.create(ObjectImport.prototype);
 
-        if(typeof object.initialize !== 'undefined') {
-          var result = object.initialize();
-          if(result instanceof Promise) {
-            object = result;
-          }
-        }
-      } else {
-        object = ObjectImport;
+    if(!ObjectImport.prototype[FACTORY]) {
+      Object.defineProperty(ObjectImport.prototype, FACTORY, {
+        enumerable: false,
+        writeable: false,
+        value: this
+      });
+    }
+
+    generateObjectInfo(ObjectImport);
+
+    if(typeof object.initialize !== 'undefined') {
+      var result = object.initialize(initFlag);
+      if(result instanceof Promise) {
+        object = result;
       }
+    }
+  } else {
+    object = ObjectImport;
+  }
 
-      return object;
-    }.bind(this);
+  return object;
+};
 
-    this[`get${this.Enum[i]}Info`] = function () {
-      var object;
-      var ObjectImport = require(imports[this.Enum[i]]);
+var generateObjectInfo = function (ObjectImport) {
+  if(!ObjectImport.prototype[FUNCTIONS]) {
+    Object.defineProperty(ObjectImport.prototype, FUNCTIONS, {
+      enumerable: false,
+      writeable: false,
+      value: generateObjectFunctionInfo(ObjectImport)
+    });
+  }
 
-      if(ObjectImport.prototype) {
-        object = Object.create(ObjectImport.prototype);
-
-        if(!ObjectImport.prototype[FUNCTIONS]) {
-          Object.defineProperty(ObjectImport.prototype, FUNCTIONS, {
-            enumerable: false,
-            writeable: false,
-            value: generateObjectFunctionInfo(object)
-          });
-        }
-
-        if(!ObjectImport.prototype[ENUMS]) {
-          Object.defineProperty(ObjectImport.prototype, ENUMS, {
-            enumerable: false,
-            writeable: false,
-            value: generateObjectEnumInfo(object)
-          });
-        }
-      } else {
-        throw new Error(`There is not a prototype base for ${this.Enum[i]}`)
-      }
-
-      return object;
-    }.bind(this);
+  if(!ObjectImport.prototype[ENUMS]) {
+    Object.defineProperty(ObjectImport.prototype, ENUMS, {
+      enumerable: false,
+      writeable: false,
+      value: generateObjectEnumInfo(ObjectImport)
+    });
   }
 };
 
@@ -100,9 +86,7 @@ var generateObjectFunctionInfo = function(object) {
 var generateObjectEnumInfo = function(object) {
   var enums = { };
   for (var property in object.Enum) {
-    if (typeof object.Enum[property] === 'object') {
-      enums[property.toUpperCase()] = object.Enum[property];
-    }
+    enums[property.toUpperCase()] = object.Enum[property];
   }
   return enums;
 };
