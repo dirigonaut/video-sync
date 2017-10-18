@@ -3,8 +3,8 @@ const Events  = require('events');
 
 const METRICSINTERVAL = 500;
 
-var publisher, playRule, syncingRule, schemaFactory, redisSocket, autoSyncInterval,
-    playerManager, trigger, accuracy, media, publisher, eventKeys, log;
+var publisher, playRule, syncingRule, syncRule, schemaFactory, redisSocket, autoSyncInterval,
+    playerManager, trigger, media, publisher, eventKeys, log;
 
 function StateEngine() { };
 
@@ -19,6 +19,7 @@ StateEngine.prototype.initialize = function() {
 
     playRule        = this.factory.createPlayRule();
     syncingRule     = this.factory.createSyncingRule();
+    syncRule        = this.factory.createSyncRule();
 
     schemaFactory   = this.factory.createSchemaFactory();
     eventKeys       = this.factory.createKeys();
@@ -27,7 +28,7 @@ StateEngine.prototype.initialize = function() {
     log             = logManager.getLog(logManager.Enums.LOGS.STATE);
 
     autoSyncInterval = setInterval(Promise.coroutine(function* () {
-      if(syncingRule.evaluate(playerManager.getPlayers())) {
+      if(syncRule.evaluate(playerManager.getPlayers())) {
         yield redisSocket.broadcast.apply(null, [eventKeys.PAUSE]);
       }
     }), METRICSINTERVAL);
@@ -41,10 +42,11 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
 
   if(basePath && basePath.length > 0) {
     var mediaStarted = yield media.getMediaStarted();
+    var ruleInfo = yield media.getMediaRule();
     var issuer = playerManager.getPlayer(id);
 
     if(issuer) {
-      var players = playRule.evaluate(issuer, playerManager.getPlayers(), mediaStarted, accuracy);
+      var players = playRule.evaluate(issuer, playerManager.getPlayers(), mediaStarted, typeof ruleInfo.range !== 'undefined' ? ruleInfo.range : 3);
       if(players) {
         commands = [];
         var buffering = [];
@@ -178,6 +180,7 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
         }
       }
 
+      console.log(player)
       if(player.sync === player.Enums.SYNC.SYNCING) {
         var leader = syncingRule.evaluate(player, playerManager.getOtherPlayers(player.id));
 

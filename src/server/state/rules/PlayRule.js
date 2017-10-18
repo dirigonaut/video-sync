@@ -14,16 +14,10 @@ PlayRule.prototype.evaluate = function(issuer, players, mediaStarted, fuzzyRange
   log.debug("PlayRule.evaluate");
   var issuees = [];
 
-  if(issuer.isDesynced()) {
-    log.silly("PlayRule triggered", [issuer]);
-    return [issuer];
-  } else {
-    log.debug(players);
-    for(let player of players.values()) {
-      if(player && player.sync === player.Enums.SYNC.SYNCED || (mediaStarted === false)) {
-        if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(player.timestamp)) < fuzzyRange) {
-          issuees.push(player);
-        }
+  for(let player of players.values()) {
+    if(player && player.sync === player.Enums.SYNC.SYNCED || (mediaStarted === false)) {
+      if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(player.timestamp)) < fuzzyRange) {
+        issuees.push(player);
       }
     }
   }

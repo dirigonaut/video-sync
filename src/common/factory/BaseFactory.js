@@ -1,6 +1,6 @@
-const FUNCTIONS   = 'functions';
-const ENUMS       = 'Enums';
-const FACTORY     = 'factory';
+const FUNCTIONS = 'functions';
+const ENUMS     = 'Enums';
+const FACTORY   = 'factory';
 
 function BaseFactory() { }
 
@@ -14,14 +14,14 @@ var generateFunctionHeaders = function(imports) {
   for(let i in this.Enum) {
     let ObjectImport = require(imports[this.Enum[i]]);
 
-    this[`create${this.Enum[i]}`] = function(initFlag) {
+    BaseFactory.prototype[`create${this.Enum[i]}`] = function(initFlag) {
       return generateObject.call(this, ObjectImport, initFlag);
-    };
+    }.bind(this);
 
     if(ObjectImport.prototype) {
-      this[`get${this.Enum[i]}Info`] = function() {
+      BaseFactory.prototype[`get${this.Enum[i]}Info`] = function() {
         return generateObjectInfo.call(this, ObjectImport);
-      };
+      }.bind(this);
     }
   }
 };

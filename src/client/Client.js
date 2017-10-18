@@ -6,11 +6,10 @@ var resetMedia, factory;
 function Client() { }
 
 Client.prototype.initialize = function(serverUrl) {
+  var factory = this.getFactory();
+
   if(typeof Client.prototype.protoInit === 'undefined') {
     Client.prototype.protoInit = true;
-    var factoryManager = Object.create(ClientFactoryManager.prototype);
-    factory = factoryManager.initialize();
-
     var logManager = factory.createClientLogManager();
     var log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
   }
@@ -38,6 +37,12 @@ Client.prototype.startMedia = Promise.coroutine(function* (mediaController, domE
 });
 
 Client.prototype.getFactory = function() {
+  if(factory === undefined) {
+    var factoryManager = Object.create(ClientFactoryManager.prototype);
+    factory = factoryManager.initialize();
+  }
+
+  console.log(factory);
   return factory;
 };
 

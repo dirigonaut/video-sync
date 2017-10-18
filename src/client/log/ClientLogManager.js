@@ -20,6 +20,7 @@ ClientLogManager.prototype.getLog = function(id) {
 
 module.exports = ClientLogManager;
 
+ClientLogManager.Enum = {};
 ClientLogManager.Enum.Log = { FACTORY: 'factory', GENERAL: 'general', SOCKET: 'socket', VIDEO: 'video'};
 ClientLogManager.Enum.Level = { ui: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
 

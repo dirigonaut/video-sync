@@ -90,8 +90,6 @@ var setupAppDataDir = Promise.coroutine(function* () {
     yield ensureAssetExists(CONFIG_NAME, CONFIG_NAME_OS, "json");
 
     yield fileIO.ensureDirExistsAsync(LOG_DIR, 484);
-  } else {
-    throw new Error('Only the Master thread can setup the appData directory.')
   }
 });
 

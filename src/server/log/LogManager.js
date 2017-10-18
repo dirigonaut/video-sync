@@ -43,9 +43,6 @@ LogManager.prototype.addFileLogging = function() {
   var exceptionTransport = buildFileTransport(Path.join(config.getLogDir(), EXCEPTION), 'exception', 'error', true);
   Winston.loggers.add(EXCEPTION, { transports: [exceptionTransport] });
   Winston.loggers.get(EXCEPTION).exitOnError = false;
-
-  log.debug('LogManager.addFileLogging');
-  log.info('Attached file logging.');
 };
 
 LogManager.prototype.getLog = function(id) {

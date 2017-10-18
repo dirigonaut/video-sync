@@ -28,17 +28,17 @@ RedisSocket.prototype.setIO = function(socketIO) {
 
 RedisSocket.prototype.broadcast = Promise.coroutine(function* (key, message) {
   log.debug(`RedisSocket.broadcast ${key}`);
-  yield publisher.publishAsync(RedisSocket.Enums.KEY.BROADCAST, JSON.stringify([key, message]));
+  yield publisher.publishAsync(RedisSocket.Enum.Key.BROADCAST, JSON.stringify([key, message]));
 });
 
 RedisSocket.prototype.ping = Promise.coroutine(function* (id, key, message) {
   log.debug(`RedisSocket.ping ${key}`);
-  yield publisher.publishAsync(RedisSocket.Enums.KEY.PING, JSON.stringify([id, key, message]));
+  yield publisher.publishAsync(RedisSocket.Enum.Key.PING, JSON.stringify([id, key, message]));
 });
 
 RedisSocket.prototype.disconnect = Promise.coroutine(function* (id) {
   log.debug(`RedisSocket.disconnect ${id}`);
-  yield publisher.publishAsync(RedisSocket.Enums.KEY.DISCONNECT, id);
+  yield publisher.publishAsync(RedisSocket.Enum.Key.DISCONNECT, id);
 });
 
 RedisSocket.Enum = {};

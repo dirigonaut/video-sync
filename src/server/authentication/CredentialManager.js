@@ -9,8 +9,8 @@ var log;
 function CredentialManager() { }
 
 CredentialManager.prototype.initialize = function(force) {
-  if(typeof Authenticator.prototype.protoInit === 'undefined') {
-    Authenticator.prototype.protoInit = true;
+  if(typeof CredentialManager.prototype.protoInit === 'undefined') {
+    CredentialManager.prototype.protoInit = true;
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.AUTHENTICATION);
   }

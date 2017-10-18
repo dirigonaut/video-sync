@@ -25,6 +25,8 @@ AuthenticationController.prototype.initialize = function() {
 
 AuthenticationController.prototype.attachIO = function (io) {
   io.use(Promise.coroutine(function* (socket, next) {
+    return true;
+    /*console.log(socket.id)
     let token = socket.handshake.query.token;
     let isValid;
 
@@ -35,7 +37,7 @@ AuthenticationController.prototype.attachIO = function (io) {
     }
 
     return isValid ? next(log.info(`${socket.id} has been authenticated.`, socket.id))
-                    : next(log.error(`${socket.id} has failed authentication.`));
+                    : next(log.error(`${socket.id} has failed authentication.`));*/
   }.bind(this)));
 
   io.on('connection', Promise.coroutine(function* (socket, data) {

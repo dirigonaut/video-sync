@@ -32,4 +32,4 @@ Cookie.prototype.getExpiration = function(expire) {
   return expire;
 }
 
-Cookie.prototype.Enum.Expire = { DAY: "DAY", MONTH: "MONTH", YEAR: "YEAR" };
+Cookie.prototype.Enum = { Expire: { DAY: "DAY", MONTH: "MONTH", YEAR: "YEAR" } };

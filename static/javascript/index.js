@@ -3,8 +3,21 @@ var cookie = Object.create(Cookie.prototype);
 $(document).ready(setupClient);
 
 function setupClient() {
+  console.log("1")
   window.URL = window.URL || window.webkitURL;
   window.MediaSource = window.MediaSource || window.WebKitMediaSource
+
+  var loadAsyncFile = function(elementId, location) {
+    return new Promise((resolve, reject) => {
+      $(`${elementId}`).load(location, function() { resolve(); console.log(location); });
+    });
+  };
+
+  var loadAsyncScript = function(location) {
+    return new Promise((resolve, reject) => {
+      $.getScript(location, function() { resolve(); console.log(location); });
+    });
+  };
 
   Promise.all([
     loadAsyncFile('#control-container', 'menu/controls.html'),
@@ -15,16 +28,18 @@ function setupClient() {
   ]).then(function() {
     $('#loginModal').modal('show');
 
-    client = Object.create(Client.prototype);
-    var factory = client.getFactory();
-    var socket = factory.createClientSocket();
-    var logManager = factory.createClientLogManager();
+    console.log("2")
+    client          = Object.create(Client.prototype);
+    var factory     = client.getFactory();
+    var socket      = factory.createClientSocket();
+    var logManager  = factory.createClientLogManager();
     logManager.addUILogging(guiLog());
 
     initClientLogin(socket, factory.createSchemaFactory(), factory.createKeys());
   });
 
   $(document).on('initializeConnection', function() {
+    console.log("3")
     client.initialize(window.location.host)
     .then(function(results) {
       if(typeof results.acknowledge === 'undefined') {
@@ -42,17 +57,17 @@ function setupClient() {
   });
 
   $(document).on('initializeMedia', function() {
+    console.log("4")
     var domElements = {
-      mediaSource: new MediaSource(),
-      window: window,
-      document: document,
+      mediaSource:  new MediaSource(),
+      window:       window,
+      document:     document,
       videoElement: document.getElementById('video')
     };
-
-    client.startMedia(container.media, domElements);
-  });
+  })
 
   var initializeGui = function(isAdmin, acknowledge) {
+    console.log("5")
     $('#loginModal').modal('hide');
     $('#btnLogin').parent().remove();
 
@@ -76,9 +91,10 @@ function setupClient() {
 
     results.acknowledge();
     initGUI(container, isAdmin);
-  });
+  };
 
   var loadExtraResources = function(isAdmin) {
+    console.log("6")
     if(isAdmin) {
       return Promise.all([
         loadAsyncFile('#side-container', 'menu/side.html'),
@@ -91,17 +107,5 @@ function setupClient() {
     } else {
       return loadAsyncScript('../javascript/gui.js');
     }
-  };
-
-  var loadAsyncFile = function(elementId, location) {
-    return new Promise((resolve, reject) => {
-      $(`${elementId}`).load(location, resolve);
-    });
-  };
-
-  var loadAsyncScript = function(location) {
-    return new Promise((resolve, reject) => {
-      $.getScript(location, resolve);
-    });
   };
 }
