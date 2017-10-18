@@ -12,11 +12,12 @@ SyncingRule.prototype.initialize = function(force) {
 
 SyncingRule.prototype.evaluate = function(issuer, others) {
   log.info("SyncingRule.evaluate", issuer);
-  if(issuer.sync === player.Sync.SYNCING) {
+  console.log(issuer)
+  if(issuer.sync === issuer.Enums.SYNC.SYNCING) {
     var leader;
 
     for(var i = 0; i < others.length; ++i) {
-      if(others[i].sync === player.Enums.SYNC.SYNCED) {
+      if(others[i].sync === others[i].Enums.SYNC.SYNCED) {
         if(!leader || others[i].timestamp > leader.timestamp) {
           leader = others[i];
         }

@@ -5,8 +5,8 @@ var media, log;
 function SyncRule() { }
 
 SyncRule.prototype.initialize = function(force) {
-  if(typeof SyncingRule.prototype.protoInit === 'undefined') {
-    SyncingRule.prototype.protoInit = true;
+  if(typeof SyncRule.prototype.protoInit === 'undefined') {
+    SyncRule.prototype.protoInit = true;
     media           = this.factory.createMedia();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.STATE);
@@ -36,7 +36,7 @@ SyncRule.prototype.evaluate = Promise.coroutine(function* (players) {
       yield media.setPlayerMetrics(stats);
 
       if(ruleInfo) {
-        var range = typeof ruleInfo.range !== undefined? ruleInfo.range : 5;
+        var range = typeof ruleInfo.range !== undefined? ruleInfo.range : 3;
         return ruleInfo.active && range > stats.difference;
       }
     }

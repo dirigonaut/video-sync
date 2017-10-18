@@ -5,19 +5,25 @@ function ClientFactoryManager() { }
 ClientFactoryManager.prototype.initialize = function() {
   if(typeof ClientFactoryManager.prototype.protoInit === 'undefined') {
     ClientFactoryManager.prototype.protoInit = true;
-    var factory   = Object.create(Object.prototype);
-    var imports   = Object.create(Imports.prototype);
-
-    var base      = Object.create(imports.BaseFactory.prototype);
-    var enumUtil  = Object.create(imports.EnumUtil.prototype);
-
-    factory.prototype.Enum = enumUtil.createEnums(imports);
-    base.generateFactory.call(factory, imports);
-
-    return factory;
+    var imports   = Object.create(Object.prototype);
+    Object.assign(imports, Imports);
+    
+    return createFactory(imports);
   } else {
-    throw new Error('ClientFactoryManager has already been initialized.')
+    throw new Error('ClientFactoryManager has already been initialized.');
   }
 };
 
 module.exports = ClientFactoryManager;
+
+function createFactory(imports) {
+  function ObjectFactory() { }
+
+  var base      = Object.create(imports.BaseFactory.prototype);
+  var enumUtil  = Object.create(imports.EnumUtil.prototype);
+
+  ObjectFactory.prototype.Enum = enumUtil.createEnums(imports);
+  base.generateFactory.call(ObjectFactory, imports);
+
+  return ObjectFactory;
+}

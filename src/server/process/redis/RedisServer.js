@@ -10,11 +10,13 @@ RedisServer.prototype.initialize = function() {
   if(typeof RedisServer.prototype.protoInit === 'undefined') {
     RedisServer.prototype.protoInit = true;
     var config  = this.factory.createConfig();
+    var options = config.getConfig().redisStartUp;
 
     if(config.getConfig().redisStartUp) {
-      server = new Redis(config.getRedisConfigPath());
+      options.conf = config.getConfig().getRedisConfigPath;
+      server = new Redis(options);
     } else {
-      server = new Redis();
+      server = new Redis(options);
     }
 
     var logManager  = this.factory.createLogManager();
