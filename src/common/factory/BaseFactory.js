@@ -1,10 +1,13 @@
+const Promise   = require('bluebird');
+
 const FUNCTIONS = 'functions';
 const ENUMS     = 'Enums';
 const FACTORY   = 'factory';
 
 function BaseFactory() { }
 
-BaseFactory.prototype.generateFactory = function(imports) {
+BaseFactory.prototype.generateFactory = function(Factory, imports) {
+  Object.setPrototypeOf(Factory.prototype, BaseFactory.prototype);
   generateFunctionHeaders.call(this, imports);
 };
 
@@ -12,13 +15,19 @@ module.exports = BaseFactory;
 
 var generateFunctionHeaders = function(imports) {
   for(let i in this.Enum) {
-    let ObjectImport = require(imports[this.Enum[i]]);
+    let ObjectImport;
+
+    if(typeof imports[this.Enum[i]] === 'string') {
+      ObjectImport = require(imports[this.Enum[i]]);
+    } else {
+      ObjectImport = imports[this.Enum[i]];
+    }
 
     BaseFactory.prototype[`create${this.Enum[i]}`] = function(initFlag) {
       return generateObject.call(this, ObjectImport, initFlag);
     }.bind(this);
 
-    if(ObjectImport.prototype) {
+    if(ObjectImport && typeof ObjectImport.prototype !== 'undefined') {
       BaseFactory.prototype[`get${this.Enum[i]}Info`] = function() {
         return generateObjectInfo.call(this, ObjectImport);
       }.bind(this);
@@ -47,6 +56,7 @@ var generateObject = function (ObjectImport, initFlag) {
       if(result instanceof Promise) {
         object = result;
       }
+
     }
   } else {
     object = ObjectImport;

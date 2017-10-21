@@ -8,10 +8,11 @@ function FactoryManager() { }
 FactoryManager.prototype.initialize = Promise.coroutine(function* () {
   if(typeof FactoryManager.prototype.protoInit === 'undefined') {
     FactoryManager.prototype.protoInit = true;
+    var baseFactory = Object.create(BaseFactory.prototype);
     var enumUtil    = Object.create(EnumUtil.prototype);
 
     var factory = Object.create(ObjectFactory.prototype);
-    yield factory.initialize(BaseFactory, enumUtil);
+    yield factory.initialize(baseFactory, enumUtil);
 
     return factory;
   } else {
