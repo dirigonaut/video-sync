@@ -60,7 +60,7 @@ AuthenticationController.prototype.attachIO = function (io) {
         if(adminId) {
           credentials.removeAdmin(socket.id);
         } else {
-          redisSocket.ping(adminId, eventKeys.TOKENS, credentials.resetToken(socket.id));
+          redisSocket.ping.call(this, adminId, eventKeys.TOKENS, credentials.resetToken(socket.id));
         }
 
         yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.Functions.REMOVEPLAYER, [socket.id]]);

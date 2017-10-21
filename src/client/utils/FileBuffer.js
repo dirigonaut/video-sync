@@ -34,7 +34,7 @@ FileBuffer.prototype.requestFilesAsync = function(key) {
 
   fileRequests.set(requestInfo.requestId, requestInfo);
 
-  var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STRING, [requestInfo.requestId]);
+  var request = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.STRING, [requestInfo.requestId]);
   socket.request(key, request);
 
   return new Promise(function(resolve, reject) {

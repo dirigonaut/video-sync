@@ -12,17 +12,17 @@ PlayRule.prototype.initialize = function(force) {
 
 PlayRule.prototype.evaluate = function(issuer, players, mediaStarted, fuzzyRange) {
   log.debug("PlayRule.evaluate");
-  var issuees = [];
+  var issuees = new Map();
 
-  for(let player of players.values()) {
-    if(player && player.sync === player.Enums.SYNC.SYNCED || (mediaStarted === false)) {
-      if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(player.timestamp)) < fuzzyRange) {
-        issuees.push(player);
+  for(let player of players.entries()) {
+    if(player[1] && player[1].sync === player[1].Enums.SYNC.SYNCED || !mediaStarted) {
+      if(Math.abs(parseFloat(issuer.timestamp) - parseFloat(player[1].timestamp)) < fuzzyRange) {
+        issuees.set(player[0], player[1]);
       }
     }
   }
 
-  if(issuees.length > 0) {
+  if(issuees.size > 0) {
     log.debug("PlayRule triggered", issuees);
     return issuees;
   }

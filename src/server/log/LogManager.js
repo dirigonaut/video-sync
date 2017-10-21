@@ -105,7 +105,7 @@ function createFormatter(label) {
         if(id) {
           var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
             [logMessage.time, 'server', logMessage.label, logMessage.text, logMessage.meta]);
-          redisSocket.ping(id, 'chat-log-resp', response);
+          redisSocket.ping.call(this, id, 'chat-log-resp', response);
         }
       });
     }

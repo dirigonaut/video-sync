@@ -36,7 +36,7 @@ PlayerManager.prototype.getOtherPlayers = function(id) {
   log.silly(`PlayerManager.getOtherPlayers ${id}`);
   var newMap = new Map(players);
   newMap.delete(id);
-  return Array.from(newMap);
+  return newMap;
 };
 
 PlayerManager.prototype.initPlayers = function() {

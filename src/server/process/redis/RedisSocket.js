@@ -27,12 +27,12 @@ RedisSocket.prototype.setIO = function(socketIO) {
 };
 
 RedisSocket.prototype.broadcast = Promise.coroutine(function* (key, message) {
-  log.debug(`RedisSocket.broadcast ${key} from ${this.constructor.name}`);
+  log.debug(`RedisSocket.broadcast key: ${key}, message: ${message} caller: ${this.constructor.name}`);
   yield publisher.publishAsync(RedisSocket.Enum.Key.BROADCAST, JSON.stringify([key, message]));
 });
 
 RedisSocket.prototype.ping = Promise.coroutine(function* (id, key, message) {
-  log.debug(`RedisSocket.ping ${key} from ${this.constructor.name}`);
+  log.debug(`RedisSocket.ping id: ${id}, key: ${key}, message: ${message} caller: ${this.constructor.name}`);
   yield publisher.publishAsync(RedisSocket.Enum.Key.PING, JSON.stringify([id, key, message]));
 });
 

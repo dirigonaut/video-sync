@@ -65,6 +65,8 @@ function setupClient() {
       document:     document,
       videoElement: document.getElementById('video')
     };
+
+    client.startMedia(client.getFactory().createMediaController(), domElements);
   });
 
   var initializeGui = function(isAdmin, acknowledge) {
@@ -98,6 +100,7 @@ function setupClient() {
       return Promise.all([
         loadAsyncFile('#side-container', 'menu/side.html'),
         loadAsyncFile('#encode-overlay', 'menu/overlays/encode.html'),
+        loadAsyncFile('#token-overlay', 'menu/overlays/tokens.html'),
         loadAsyncFile('#location-container', 'menu/location.html')
       ])
       .then(function() {

@@ -42,7 +42,7 @@ AdminController.prototype.attachSocket = function(socket) {
         yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.Functions.INITPLAYERS, []]);
 
         log.debug(eventKeys.MEDIAREADY);
-        yield redisSocket.broadcast(eventKeys.MEDIAREADY);
+        yield redisSocket.broadcast.call(this, eventKeys.MEDIAREADY);
       } else {
         log.socket(`${dir} is not found.`);
       }

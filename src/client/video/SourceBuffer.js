@@ -211,7 +211,7 @@ function onReset(video, mediaSource, events) {
 }
 
 var requestVideoData = function(requestDetails) {
-  socket.request(eventKeys.SEGMENT, schemaFactory.createPopulatedSchema(schemaFactory.Enum.VIDEO, [this.type, requestDetails[0], requestDetails[1]]));
+  socket.request(eventKeys.SEGMENT, schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.VIDEO, [this.type, requestDetails[0], requestDetails[1]]));
 };
 
 var isTimeRangeBuffered = function(timestamp) {

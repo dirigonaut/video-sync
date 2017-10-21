@@ -27,7 +27,7 @@ VideoController.prototype.attachSocket = function(socket) {
 
   socket.on(eventKeys.FILES, Promise.coroutine(function* (data) {
     log.debug(eventKeys.FILES, data);
-    var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.STRING);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
@@ -37,7 +37,7 @@ VideoController.prototype.attachSocket = function(socket) {
 
   socket.on(eventKeys.SUBTITLES, Promise.coroutine(function* (data) {
     log.debug(eventKeys.SUBTITLES, data);
-    var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.STRING);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
@@ -47,7 +47,7 @@ VideoController.prototype.attachSocket = function(socket) {
 
   socket.on(eventKeys.SEGMENT, Promise.coroutine(function* (data) {
     log.debug(eventKeys.SEGMENT, data);
-    var schema = schemaFactory.createDefinition(schemaFactory.Enum.VIDEO);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.VIDEO);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
@@ -78,15 +78,15 @@ var getFiles = Promise.coroutine(function* (socket, request, fileType) {
         var splitName = files[i].split(".")[0].split("_");
         header.type = splitName[splitName.length - 1];
 
-        let result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.SCHEMAS.IDRESPONSE, [request.data, header]);
+        let result = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.IDRESPONSE, [request.data, header]);
         socket.emit(eventKeys.FILEREGISTER, result, function(bufferId) {
           var onData = function(bufferData) {
-            var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [bufferId, bufferData]);
+            var result = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.IDRESPONSE, [bufferId, bufferData]);
             socket.emit(eventKeys.FILESEGMENT, result);
           };
 
           var onFinish = function() {
-            var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [bufferId, null]);
+            var result = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.IDRESPONSE, [bufferId, null]);
             socket.emit(eventKeys.FILEEND, result);
           };
 
@@ -94,7 +94,7 @@ var getFiles = Promise.coroutine(function* (socket, request, fileType) {
         });
       }
     } else {
-      var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [request.data, '']);
+      var result = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.IDRESPONSE, [request.data, '']);
       socket.emit(eventKeys.NOFILES, result);
     }
   }

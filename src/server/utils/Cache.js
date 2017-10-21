@@ -7,7 +7,7 @@ Promise.promisifyAll(Redis.RedisClient.prototype);
 const EXPIRES     = 15000;
 const READID      = '-readRequest';
 
-var media, publisher, client, fileIO, schemaFactory, log;
+var media, publisher, client, fileIO, fileUtils, schemaFactory, log;
 
 function Cache() { }
 
@@ -19,6 +19,7 @@ Cache.prototype.initialize = function() {
     var config      = this.factory.createConfig();
 
     fileIO          = this.factory.createFileIO();
+    fileUtils       = this.factory.createFileSystemUtils();
     schemaFactory   = this.factory.createSchemaFactory();
 
     media           = this.factory.createMedia();
@@ -49,9 +50,8 @@ Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback)
         if(!indexes.includes(index)) {
           segment = yield getCacheData(`${key}:${index}`);
           ++index;
-        } else if (index > lastIndex) {
-          segment = undefined;
         } else {
+          segment = undefined;
           ++index;
           continue;
         }
@@ -71,11 +71,11 @@ Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback)
 
             if(lastIndex) {
               if(lastIndex === indexes.length - 1) {
-                log.debug(`Unsubscribing key: ${key} lastIndex: ${lastIndex}, indexes: ${indexes.length}`);
                 if(!timeout) {
                   timeout = setTimeout(function() {
+                    this.removeListener(key, segmentHandler);
                     client.unsubscribe(key);
-                  }, EXPIRES/4);
+                  }.bind(this), EXPIRES/4);
                 }
                 break;
               } else if(!triggerCheck) {
@@ -85,7 +85,7 @@ Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback)
             }
           }
         }
-      } while(segment);
+      } while(indexes.includes(index) || segment);
     }
   });
 
@@ -139,20 +139,20 @@ var readFile = Promise.coroutine(function* (key, requestData) {
         yield setCacheData(segment.name, segment.index, segment);
       });
 
-      fileIO.read(`${fileSystemUtils.ensureEOL(basePath)}${requestData.path}`, options, onData, onFinish);
+      fileIO.read(`${fileUtils.ensureEOL(basePath)}${requestData.path}`, options, onData, onFinish);
     }
   }
 });
 
 var setCacheData = Promise.coroutine(function* (key, index, data) {
-  log.debug(`setCacheData for key: ${key}:${index}`);
+  log.silly(`setCacheData for key: ${key}:${index}`);
   var json = JSON.stringify(data);
   yield publisher.setAsync(`${key}:${index}`, json, 'EX', EXPIRES);
   yield publisher.publishAsync(key, index);
 });
 
 var getCacheData = Promise.coroutine(function* (key) {
-  log.debug(`getCacheData for key: ${key}`);
+  log.silly(`getCacheData for key: ${key}`);
   var data = yield publisher.getAsync(key);
 
   if(data) {
