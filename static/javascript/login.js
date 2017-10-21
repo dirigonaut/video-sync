@@ -20,11 +20,9 @@ function initClientLogin(socket, schemaFactory, keys) {
   });
 
   var creds = cookie.getCookie('creds');
-  if(creds) {
+  if(creds && creds[1]) {
     creds = JSON.parse(creds[1]);
     $('#loginHandle').val(creds.handle);
     $('#loginToken').val(creds.token);
-
-    $(document).trigger('initializeConnection');
   }
 }

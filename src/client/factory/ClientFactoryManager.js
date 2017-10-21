@@ -20,7 +20,6 @@ function createFactory(imports) {
   function ObjectFactory() { }
 
   var base      = Object.create(imports.BaseFactory.prototype);
-  var enumUtil  = Object.create(imports.EnumUtil.prototype);
   var factory   = Object.create(ObjectFactory.prototype);
 
   ObjectFactory.prototype.Enum = Object.keys(imports);

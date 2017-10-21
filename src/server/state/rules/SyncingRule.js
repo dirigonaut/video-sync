@@ -12,7 +12,6 @@ SyncingRule.prototype.initialize = function(force) {
 
 SyncingRule.prototype.evaluate = function(issuer, others) {
   log.info("SyncingRule.evaluate", issuer);
-  console.log(issuer)
   if(issuer.sync === issuer.Enums.SYNC.SYNCING) {
     var leader;
 

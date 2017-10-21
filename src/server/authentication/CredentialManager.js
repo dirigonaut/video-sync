@@ -4,13 +4,16 @@ const Crypto  = require('crypto');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-var log;
+var client, log;
 
 function CredentialManager() { }
 
 CredentialManager.prototype.initialize = function(force) {
   if(typeof CredentialManager.prototype.protoInit === 'undefined') {
     CredentialManager.prototype.protoInit = true;
+    var config          = this.factory.createConfig();
+    client          = Redis.createClient(config.getConfig().redis);
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.AUTHENTICATION);
   }

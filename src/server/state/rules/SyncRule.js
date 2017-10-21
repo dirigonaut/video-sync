@@ -30,8 +30,8 @@ SyncRule.prototype.evaluate = Promise.coroutine(function* (players) {
 	}
 
   try {
-    if(players.size() > 1) {
-      stats.average = stats.average / players.size();
+    if(players.size > 1) {
+      stats.average = stats.average / players.size;
       stats.difference = stats.foreGuard - stats.rearGuard;
       yield media.setPlayerMetrics(stats);
 

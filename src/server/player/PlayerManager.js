@@ -2,7 +2,7 @@ var players, redisSocket, eventKeys, log;
 
 function PlayerManager () { };
 
-PlayerManager.prototype.initialize = function(force) {
+PlayerManager.prototype.initialize = function() {
   if(typeof PlayerManager.prototype.protoInit === 'undefined') {
     PlayerManager.prototype.protoInit = true;
     redisSocket     = this.factory.createRedisSocket();

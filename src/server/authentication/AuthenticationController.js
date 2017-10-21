@@ -1,7 +1,7 @@
 const Promise = require('bluebird');
 
 var publisher, schemaFactory, sanitizer, credentials,
-      redisSocket, playerManager, eventKeys, log;
+      redisSocket, playerManager, media, eventKeys, log;
 
 function AuthenticationController() { }
 
@@ -17,6 +17,7 @@ AuthenticationController.prototype.initialize = function() {
     eventKeys       = this.factory.createKeys();
 
     playerManager   = this.factory.getPlayerManagerInfo();
+    media           = this.factory.createMedia();
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.AUTHENTICATION);
@@ -25,26 +26,24 @@ AuthenticationController.prototype.initialize = function() {
 
 AuthenticationController.prototype.attachIO = function (io) {
   io.use(Promise.coroutine(function* (socket, next) {
-    return true;
-    /*console.log(socket.id)
     let token = socket.handshake.query.token;
     let isValid;
 
-    if(token) {
+    if(token && token !== 'undefined') {
       isValid = yield isUser.call(this, socket, token);
     } else {
       isValid = isAdministrator.call(this, socket);
     }
 
     return isValid ? next(log.info(`${socket.id} has been authenticated.`, socket.id))
-                    : next(log.error(`${socket.id} has failed authentication.`));*/
+                    : next(log.error(`${socket.id} has failed authentication.`));
   }.bind(this)));
 
   io.on('connection', Promise.coroutine(function* (socket, data) {
     log.socket(`Socket has connected: ${socket.id} ip: ${socket.handshake.address}`);
 
     socket.emit(eventKeys.AUTHENTICATED, credentials.isAdmin(socket), Promise.coroutine(function* () {
-      yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.functions.CREATEPLAYER, [socket.id]]);
+      yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.Functions.CREATEPLAYER, [socket.id]]);
 
       var mediaPath = yield media.getMediaPath();
       if(mediaPath && mediaPath.length > 0) {
@@ -56,15 +55,15 @@ AuthenticationController.prototype.attachIO = function (io) {
       log.info(eventKeys.DISCONNECT, socket.id);
 
       if(socket && socket.id && socket.auth) {
-        var adminId = yield credentialManager.getAdmin();
+        var adminId = yield credentials.getAdmin();
 
         if(adminId) {
-          credentialManager.removeAdmin(socket.id);
+          credentials.removeAdmin(socket.id);
         } else {
-          redisSocket.ping(adminId, eventKeys.TOKENS, credentialManager.resetToken(socket.id));
+          redisSocket.ping(adminId, eventKeys.TOKENS, credentials.resetToken(socket.id));
         }
 
-        yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.functions.REMOVEPLAYER, [socket.id]]);
+        yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.Functions.REMOVEPLAYER, [socket.id]]);
       }
     }));
 

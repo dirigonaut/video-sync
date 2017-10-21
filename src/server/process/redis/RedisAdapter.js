@@ -38,7 +38,7 @@ RedisAdapter.prototype.callFunction = Promise.coroutine(function* (object, messa
           yield client.setAsync(key, JSON.stringify(response));
         }
 
-        yield client.publishAsync(publisher.Enums.Resp.RESPONSE, key);
+        yield client.publishAsync(publisher.Enums.RESP.RESPONSE, key);
       } else {
         log.debug(`No function found with name ${functionHandle}`);
       }

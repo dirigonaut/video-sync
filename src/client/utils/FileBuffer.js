@@ -7,18 +7,17 @@ var fileRequests, buffers, trigger, socket, schemaFactory, eventKeys, log;
 
 function FileBuffer() { }
 
-FileBuffer.prototype.initialize = function(force) {
-  if(typeof FileBuffer.prototype.protoInit === 'undefined') {
+FileBuffer.prototype.initialize = function(init) {
+  if(typeof init !== 'undefined' ? init : true && typeof FileBuffer.prototype.protoInit === 'undefined') {
     FileBuffer.prototype.protoInit = true;
     eventKeys       = this.factory.createKeys();
     schemaFactory   = this.factory.createSchemaFactory();
     socket          = this.factory.createClientSocket();
     fileRequests    = new Map();
     buffers         = new Map();
-    trigger         = new Events();
 
-    removeTriggerEvents();
-    removeSocketEvents();
+    removeEvents();
+    trigger = new Events();
     setSocketEvents();
 
     var logManager  = this.factory.createClientLogManager();
@@ -129,18 +128,19 @@ function setSocketEvents() {
   }.bind(this));
 }
 
-function removeSocketEvents() {
-  socket.removeEvent(eventKeys.FILEREGISTER);
-  socket.removeEvent(eventKeys.FILESEGMENT);
-  socket.removeEvent(eventKeys.FILEEND);
-  socket.removeEvent(eventKeys.NOFILES);
-}
-
-function removeTriggerEvents() {
+function removeEvents() {
   if(trigger) {
     var allEvents = trigger.eventNames();
     for(var i = 0; i < allEvents.length; ++i) {
       trigger.removeAllListeners(allEvents[i]);
     }
+    removeSocketEvents();
   }
+}
+
+function removeSocketEvents() {
+  socket.removeEvent(eventKeys.FILEREGISTER);
+  socket.removeEvent(eventKeys.FILESEGMENT);
+  socket.removeEvent(eventKeys.FILEEND);
+  socket.removeEvent(eventKeys.NOFILES);
 }

@@ -9,7 +9,8 @@ Cookie.prototype.getCookie = function(key) {
 };
 
 Cookie.prototype.deleteCookie = function(key) {
-  document.cookie = `${key}=;expires=${expire.getHours() - 24}`;
+  var expire = new Date();
+  document.cookie = `${key}=;expires=${expire.setHours(expire.getHours() - 24)}`;
 };
 
 Cookie.prototype.getExpiration = function(expire) {

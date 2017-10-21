@@ -9,7 +9,6 @@ const SCHEMAS     = 'Schemas.js'
 
 function ObjectFactory() { }
 
-
 ObjectFactory.prototype.initialize = Promise.coroutine(function* (baseFactory, enumUtil) {
   var imports = Object.create(Object.prototype);
   var serverImports   = yield enumUtil.getAllImports(SERVER_DIR, [FACTORY_DIR]);
