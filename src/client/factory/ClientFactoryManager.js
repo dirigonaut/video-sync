@@ -7,7 +7,7 @@ ClientFactoryManager.prototype.initialize = function() {
     ClientFactoryManager.prototype.protoInit = true;
     var imports   = Object.create(Object.prototype);
     Object.assign(imports, Imports);
-    
+
     return createFactory(imports);
   } else {
     throw new Error('ClientFactoryManager has already been initialized.');
@@ -21,9 +21,10 @@ function createFactory(imports) {
 
   var base      = Object.create(imports.BaseFactory.prototype);
   var enumUtil  = Object.create(imports.EnumUtil.prototype);
+  var factory   = Object.create(ObjectFactory.prototype);
 
-  ObjectFactory.prototype.Enum = enumUtil.createEnums(imports);
-  base.generateFactory.call(ObjectFactory, imports);
+  ObjectFactory.prototype.Enum = Object.keys(imports);
+  base.generateFactory.call(factory, ObjectFactory, imports);
 
-  return ObjectFactory;
+  return factory;
 }

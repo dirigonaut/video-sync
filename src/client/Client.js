@@ -42,7 +42,6 @@ Client.prototype.getFactory = function() {
     factory = factoryManager.initialize();
   }
 
-  console.log(factory);
   return factory;
 };
 

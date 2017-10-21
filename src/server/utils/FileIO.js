@@ -6,8 +6,8 @@ var log;
 
 function FileIO() { }
 
-FileIO.prototype.initialize = function() {
-  if(typeof FileIO.prototype.protoInit === 'undefined') {
+FileIO.prototype.initialize = function(init) {
+  if(typeof FileIO.prototype.protoInit === 'undefined' && typeof init !== 'undefined' ? init : true) {
     FileIO.prototype.protoInit = true;
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.UTILS);
@@ -37,7 +37,7 @@ FileIO.prototype.read = function(path, options, onData, onFinish) {
 };
 
 FileIO.prototype.readDirAsync = Promise.coroutine(function* (path, extType) {
-  log.debug('FileIO.readDirAsync ' + path + ' ' + extType);
+  FileIO.prototype.protoInit ? log.debug('FileIO.readDirAsync ' + path + ' ' + extType) : undefined;
   var files = yield Fs.readdirAsync(path);
 
   var matchingFiles = [];
@@ -53,7 +53,7 @@ FileIO.prototype.readDirAsync = Promise.coroutine(function* (path, extType) {
 });
 
 FileIO.prototype.ensureDirExistsAsync = function(path, mask) {
-  log.debug('FileIO.ensureDirExistsAsync', path);
+  FileIO.prototype.protoInit ? log.debug('FileIO.ensureDirExistsAsync', path) : undefined;
   return Fs.mkdirAsync(path, mask)
   .catch(function(err) {
     if (err.code !== 'EEXIST') {

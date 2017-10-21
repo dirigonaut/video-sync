@@ -27,7 +27,7 @@ Config.prototype.initialize = function(init) {
     Config.prototype.protoInit = true;
     Object.setPrototypeOf(Config.prototype, Events.prototype);
 
-    fileIO = this.factory.createFileIO();
+    fileIO = this.factory.createFileIO(false);
 
     setupAppDataDir().then(Promise.coroutine(function* () {
       config = yield loadConfig();
