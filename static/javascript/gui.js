@@ -28,7 +28,7 @@ function initGUI(client, isAdmin) {
     var time = Math.round(length * (percent / 100));
 
     client.socket.request(client.keys.REQSEEK,
-      client.schema.createPopulatedSchema(client.schema.Enum.STATE, [time]));
+      client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STATE, [time]));
 
     $("video").on("timeupdate", updateProgressBar);
   });
@@ -79,7 +79,7 @@ function initGUI(client, isAdmin) {
     client.log.info("Load new video.");
     var media = $('#locationBar').val();
     client.socket.request(client.keys.SETMEDIA,
-      client.schema.createPopulatedSchema(client.schema.Enum.PATH, [media]));
+      client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PATH, [media]));
     $('#seek-bar').val(0);
   });
 
@@ -87,7 +87,7 @@ function initGUI(client, isAdmin) {
   $('#encode-input').on("focusout", function requestFileInfo() {
     var input = $('#encode-input').val();
     var inspect = ` -show_streams ${input}`;
-    client.socket.request(client.keys.GETMETA, client.schema.createPopulatedSchema(client.schema.Enum.SPECIAL, [inspect]));
+    client.socket.request(client.keys.GETMETA, client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [inspect]));
   });
 
   var loadFileInfo = function(metaData) {
@@ -117,13 +117,13 @@ function initGUI(client, isAdmin) {
     var input = $('#encode-input').val();
     var output = $('#encode-output').val();
 
-    var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.VIDEO);
+    var template = client.encode.getTemplate(client.encode.CodecEnums.WEBM, client.encode.TypeEnums.VIDEO);
     template = client.encode.setKeyValue('i', `${input}`, template);
     template = client.encode.setKeyValue('s', quality, template);
-    template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.CodecEnum.WEBM}`, template);
+    template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.CodecEnums.WEBM}`, template);
 
     if(template) {
-      $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.VIDEO}</td><td contenteditable="true">${template}</td><td>
+      $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnums.VIDEO}</td><td contenteditable="true">${template}</td><td>
       <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
     }
 
@@ -135,13 +135,13 @@ function initGUI(client, isAdmin) {
     var input = $('#encode-input').val();
     var output = $('#encode-output').val();
 
-    var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.AUDIO);
+    var template = client.encode.getTemplate(client.encode.CodecEnums.WEBM, client.encode.TypeEnums.AUDIO);
     template = client.encode.setKeyValue('i', `${input}`, template);
     template = client.encode.setKeyValue('b:a', quality, template);
-    template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.CodecEnum.WEBM}`, template);
+    template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.CodecEnums.WEBM}`, template);
 
     if(template) {
-      $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.AUDIO}</td><td contenteditable="true">${template}</td><td>
+      $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnums.AUDIO}</td><td contenteditable="true">${template}</td><td>
       <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
     }
 
@@ -154,12 +154,12 @@ function initGUI(client, isAdmin) {
     var output = $('#encode-output').val();
     var isNum = /^\d+$/.test(streamId);
 
-    var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.SUBTITLE);
+    var template = client.encode.getTemplate(client.encode.CodecEnums.WEBM, client.encode.TypeEnums.SUBTITLE);
     template = client.encode.setKeyValue('i', `${input}${isNum ? ' -map 0:' + streamId : ''}`, template);
     template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}.vtt`, template);
 
     if(template) {
-      $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.SUBTITLE}</td><td contenteditable="true">${template}</td><td>
+      $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnums.SUBTITLE}</td><td contenteditable="true">${template}</td><td>
       <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
     }
 
@@ -182,7 +182,7 @@ function initGUI(client, isAdmin) {
         var command = {};
         $('td', tr).each(function(i, td) {
           var cell = $(td).text();
-          if(i === 0 && cell === client.encode.TypeEnum.MANIFEST) {
+          if(i === 0 && cell === client.encode.TypeEnums.MANIFEST) {
             command.type = cell;
             tr.remove();
           } else if(i === 0 && cell) {
@@ -192,17 +192,17 @@ function initGUI(client, isAdmin) {
           }
         });
 
-        if(typeof command.input !== 'undefined' && command.type !== client.encode.TypeEnum.MANIFEST &&
-          command.type !== client.encode.TypeEnum.SUBTITLE) {
+        if(typeof command.input !== 'undefined' && command.type !== client.encode.TypeEnums.MANIFEST &&
+          command.type !== client.encode.TypeEnums.SUBTITLE) {
           list.push(command);
         }
       });
 
       if(list.length > 0) {
-        var template = client.encode.createManifest(input, output, list, client.encode.CodecEnum.WEBM);
+        var template = client.encode.createManifest(input, output, list, client.encode.CodecEnums.WEBM);
 
         if(template) {
-          $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.MANIFEST}</td><td contenteditable="true">${template}</td><td>
+          $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnums.MANIFEST}</td><td contenteditable="true">${template}</td><td>
           <input type="checkbox" id="row_locked" name="locked"></td></tr>`);
         }
       }
@@ -217,7 +217,7 @@ function initGUI(client, isAdmin) {
       $('td', tr).each(function(i, td) {
         var cell = $(td).text();
         if(i === 1 && cell) {
-          commands.push({input: cell, encoder: client.encode.EncoderEnum.FFMPEG});
+          commands.push({input: cell, encoder: client.encode.EncoderEnums.FFMPEG});
         }
       });
     });
@@ -344,7 +344,7 @@ function initGUI(client, isAdmin) {
   });
 
   $('#synchronize').on("change", function (e) {
-    var request = client.schema.createPopulatedSchema(client.schema.Enum.BOOL, [$('#synchronize').find('input')[0].checked]);
+    var request = client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.BOOL, [$('#synchronize').find('input')[0].checked]);
     client.socket.request(client.keys.CHANGESYNC, request);
   });
 

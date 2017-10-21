@@ -1,8 +1,6 @@
 const Promise  = require('bluebird');
 
-const METRICSINTERVAL = 1000;
-
-var media, schemaFactory, sanitizer, redisSocket, publisher, autoSyncInterval, stateEngine, eventKeys, credentials, log;
+var media, schemaFactory, sanitizer, redisSocket, publisher, stateEngine, eventKeys, credentials, log;
 
 function StateController() { }
 
@@ -21,11 +19,6 @@ StateController.prototype.initialize = function() {
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.STATE);
-
-    autoMetricsInterval = setInterval(Promise.coroutine(function* () {
-      var metrics = yield media.getPlayerMetrics();
-      yield redisSocket.broadcast.apply(null, [eventKeys.PLAYERINFO, metrics]);
-    }), METRICSINTERVAL);
   }
 };
 
@@ -36,7 +29,7 @@ StateController.prototype.attachSocket = function(socket) {
     log.info(eventKeys.REQPLAY);
 
     if(credentials.getTokenLevel === credentials.Enums.LEVEL.CONTROLS) {
-      var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.functions.PLAY, [socket.id]]);
+      var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.PLAY, [socket.id]]);
       if(commands) {
         for(var i = 0; i < commands.length; ++i) {
           yield redisSocket.ping.apply(null, commands[i]);
@@ -52,7 +45,7 @@ StateController.prototype.attachSocket = function(socket) {
     log.debug(eventKeys.REQPAUSE);
 
     if(credentials.getTokenLevel === credentials.Enums.LEVEL.CONTROLS) {
-      var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.functions.PAUSE, [socket.id]]);
+      var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.PAUSE, [socket.id]]);
       if(commands) {
         for(var i = 0; i < commands.length; ++i) {
           yield redisSocket.ping.apply(null, commands[i]);
@@ -72,7 +65,7 @@ StateController.prototype.attachSocket = function(socket) {
       var request = sanitizer.sanitize(data, schema, [schema.Enum.TIMESTAMP], socket);
 
       if(request) {
-        var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.functions.SEEK, [socket.id, request]]);
+        var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.SEEK, [socket.id, request]]);
 
         if(commands) {
           for(var i = 0; i < commands.length; ++i) {
@@ -88,7 +81,7 @@ StateController.prototype.attachSocket = function(socket) {
 
   socket.on(eventKeys.SYNC, Promise.coroutine(function* () {
     log.debug(eventKeys.SYNC);
-    var commands = yield publisher.publishAsync(publisher.Enum.KEY.STATE, [stateEngine.functions.SYNC, [socket.id]]);
+    var commands = yield publisher.publishAsync(publisher.Enum.KEY.STATE, [stateEngine.Functions.SYNC, [socket.id]]);
 
     if(commands) {
       for(var i = 0; i < commands.length; ++i) {
@@ -112,7 +105,7 @@ StateController.prototype.attachSocket = function(socket) {
     var request = sanitizer.sanitize(data, schema, [schema.Enum.TIMESTAMP], socket);
 
     if(request) {
-      var commands = yield publisher.publishAsync(publisher.Enum.KEY.STATE, [stateEngine.functions.SYNCINGPING, [socket.id, request]]);
+      var commands = yield publisher.publishAsync(publisher.Enum.KEY.STATE, [stateEngine.Functions.SYNCINGPING, [socket.id, request]]);
 
       if(commands) {
         for(var i = 0; i < commands.length; ++i) {

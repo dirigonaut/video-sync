@@ -6,14 +6,14 @@ var video, buffers, metaManager, subtitles, schemaFactory, socket, eventKeys, lo
 
 function MediaController() { }
 
-MediaController.prototype.initialize = function(force) {
+MediaController.prototype.initialize = function() {
   if(typeof MediaController.prototype.protoInit === 'undefined') {
     MediaController.prototype.protoInit = true;
     Object.setPrototypeOf(MediaController.prototype, Events.prototype);
     eventKeys       = this.factory.createKeys();
 
     var logManager  = this.factory.createClientLogManager();
-    log             = logManager.getLog(logManager.Emums.LOGS.VIDEO);
+    log             = logManager.getLog(logManager.Enums.LOGS.VIDEO);
 
     metaManager     = this.factory.createMetaManager();
     schemaFactory   = this.factory.createSchemaFactory();

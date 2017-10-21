@@ -7,10 +7,10 @@ function ClientLogManager() { }
 ClientLogManager.prototype.addUILogging = function(callback) {
   logs = [];
 
-  var keys = Object.keys(ClientLogManager.Enum.Log);
+  var keys = Object.keys(ClientLogManager.Enum.Logs);
   for(var i of keys) {
-    var logger = buildUILogger(ClientLogManager.Enum.Log[i], 'debug', false, callback);
-    logs[ClientLogManager.LogEnum[i]] = logger;
+    var logger = buildUILogger(ClientLogManager.Enum.Logs[i], 'debug', false, callback);
+    logs[ClientLogManager.Enum.Logs[i]] = logger;
   }
 };
 
@@ -21,26 +21,29 @@ ClientLogManager.prototype.getLog = function(id) {
 module.exports = ClientLogManager;
 
 ClientLogManager.Enum = {};
-ClientLogManager.Enum.Log = { FACTORY: 'factory', GENERAL: 'general', SOCKET: 'socket', VIDEO: 'video'};
-ClientLogManager.Enum.Level = { ui: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
+ClientLogManager.Enum.Logs = { FACTORY: 'factory', GENERAL: 'general', SOCKET: 'socket', VIDEO: 'video'};
+ClientLogManager.Enum.Levels = { ui: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
 
 var buildUILogger = function(label, level, enableConsoleLogging, callback) {
-  var uiLogger = {
+  var UiLogger = function() { };
+  var uiLogger = Object.create(UiLogger.prototype);
+
+  var keys = Object.keys(ClientLogManager.Enum.Levels);
+  for(let i of keys) {
+    UiLogger.prototype[i] = function(message, meta) {
+      log.call(uiLogger, i, message, meta);
+    }
+  }
+
+  uiLogger = Object.assign(uiLogger, {
     level: level,
     label: label,
     silent: enableConsoleLogging,
     uiLog: callback,
     log: log
-  };
+  });
 
-  var keys = Object.keys(ClientLogManager.Enum.Level);
-  for(let i of keys) {
-    uiLogger[i] = function(message, meta) {
-      uiLogger.log.call(uiLogger, i, message, meta);
-    }
-  }
-
-  return Object.create(uiLogger);
+  return uiLogger;
 };
 
 function log(level, message, meta) {
@@ -55,11 +58,11 @@ function log(level, message, meta) {
     logMessage.meta = Util.inspect(meta, { showHidden: false, depth: 1 });
   }
 
-  if(ClientLogManager.Enum.Level[level] === ClientLogManager.Enum.Level.ui) {
+  if(ClientLogManager.Enum.Levels[level] === ClientLogManager.Enum.Levels.ui) {
     this.uiLog(logMessage);
   }
 
-  if(!this.silent && ClientLogManager.Enum.Level[level] <= ClientLogManager.Enum.Level[this.level]) {
+  if(!this.silent && ClientLogManager.Enum.Levels[level] <= ClientLogManager.Enum.Levels[this.level]) {
     var logLevel = typeof console[level] !== 'undefined' ? level : 'trace';
     console[logLevel](logMessage);
   }

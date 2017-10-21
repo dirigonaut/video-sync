@@ -39,7 +39,7 @@ AdminController.prototype.attachSocket = function(socket) {
 
       if(exists) {
         yield media.setMediaPath(dir);
-        yield publisher.publishAsync(publisher.enum.KEY.PLAYER, [playerManager.functions.INITPLAYERS, []]);
+        yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.Functions.INITPLAYERS, []]);
 
         log.debug(eventKeys.MEDIAREADY);
         yield redisSocket.broadcast(eventKeys.MEDIAREADY);

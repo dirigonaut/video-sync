@@ -1,7 +1,7 @@
 const Promise       = require('bluebird');
 const ObjectFactory = require('./ObjectFactory');
 const BaseFactory   = require('../../common/factory/BaseFactory');
-const EnumUtil      = require('../../common/factory/EnumUtil');
+const EnumUtil      = require('../utils/EnumUtil');
 
 function FactoryManager() { }
 

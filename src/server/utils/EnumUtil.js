@@ -3,7 +3,7 @@ const Events    = require('events');
 const Find      = require('find');
 const Path      = require('path');
 
-const FileUtils = require('../utils/FileSystemUtils');
+const FileUtils = require('./FileSystemUtils');
 
 function EnumUtil() { }
 

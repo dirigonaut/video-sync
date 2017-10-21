@@ -27,11 +27,11 @@ StateEngine.prototype.initialize = function() {
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.STATE);
 
-    autoSyncInterval = setInterval(Promise.coroutine(function* () {
+    /*autoSyncInterval = setInterval(Promise.coroutine(function* () {
       if(syncRule.evaluate(playerManager.getPlayers())) {
-        yield redisSocket.broadcast.apply(null, [eventKeys.PAUSE]);
+        yield redisSocket.broadcast.apply(this, [eventKeys.PAUSE]);
       }
-    }), METRICSINTERVAL);
+    }.bind(this)), METRICSINTERVAL);*/
   }
 };
 
@@ -180,7 +180,6 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
         }
       }
 
-      console.log(player)
       if(player.sync === player.Enums.SYNC.SYNCING) {
         var leader = syncingRule.evaluate(player, playerManager.getOtherPlayers(player.id));
 

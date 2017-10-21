@@ -1,6 +1,6 @@
 const Promise   = require('bluebird');
 
-const FUNCTIONS = 'functions';
+const FUNCTIONS = 'Functions';
 const ENUMS     = 'Enums';
 const FACTORY   = 'factory';
 
@@ -27,11 +27,11 @@ var generateFunctionHeaders = function(imports) {
       return generateObject.call(this, ObjectImport, initFlag);
     }.bind(this);
 
-    if(ObjectImport && typeof ObjectImport.prototype !== 'undefined') {
-      BaseFactory.prototype[`get${this.Enum[i]}Info`] = function() {
-        return generateObjectInfo.call(this, ObjectImport);
-      }.bind(this);
-    }
+    BaseFactory.prototype[`get${this.Enum[i]}Info`] = function() {
+      var Info = function() {};
+      generateObjectInfo(Info, ObjectImport);
+      return Object.create(Info.prototype);
+    }.bind(this);
   }
 };
 
@@ -47,16 +47,15 @@ var generateObject = function (ObjectImport, initFlag) {
         writeable: false,
         value: this
       });
-    }
 
-    generateObjectInfo(ObjectImport);
+      generateObjectInfo(ObjectImport, ObjectImport);
+    }
 
     if(typeof object.initialize !== 'undefined') {
       var result = object.initialize(initFlag);
       if(result instanceof Promise) {
         object = result;
       }
-
     }
   } else {
     object = ObjectImport;
@@ -65,28 +64,28 @@ var generateObject = function (ObjectImport, initFlag) {
   return object;
 };
 
-var generateObjectInfo = function (ObjectImport) {
-  if(!ObjectImport.prototype[FUNCTIONS]) {
-    Object.defineProperty(ObjectImport.prototype, FUNCTIONS, {
+var generateObjectInfo = function (Import, Info) {
+  if(typeof Import.prototype !== 'undefined' && !Import.prototype[FUNCTIONS]) {
+    Object.defineProperty(Import.prototype, FUNCTIONS, {
       enumerable: false,
       writeable: false,
-      value: generateObjectFunctionInfo(ObjectImport)
+      value: generateObjectFunctionInfo(Info)
     });
   }
 
-  if(!ObjectImport.prototype[ENUMS]) {
-    Object.defineProperty(ObjectImport.prototype, ENUMS, {
+  if(typeof Import.prototype !== 'undefined' && !Import.prototype[ENUMS]) {
+    Object.defineProperty(Import.prototype, ENUMS, {
       enumerable: false,
       writeable: false,
-      value: generateObjectEnumInfo(ObjectImport)
+      value: generateObjectEnumInfo(Info)
     });
   }
 };
 
 var generateObjectFunctionInfo = function(object) {
   var funcs = { };
-  for (var property in object) {
-    if (typeof object[property] === 'function') {
+  for (var property in object.prototype) {
+    if (typeof object.prototype[property] === 'function') {
       funcs[property.toUpperCase()] = property;
     }
   }
