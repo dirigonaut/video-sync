@@ -108,7 +108,7 @@ function checkInput(key, input, schema) {
 			clean &= validate(command, new RegExp(ALPHANUMERIC), false);
 			break;
 		case 'schema':
-			var nestedSchema = schemaFactory.createDefinition(schemaFactory.Enum.SCHEMA[key.toUpperCase()]);
+			var nestedSchema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.SCHEMA[key.toUpperCase()]);
 			clean = this.sanitize(input, nestedSchema, Object.values(nestedSchema.Enum));
 			break;
 	  default:

@@ -56,9 +56,9 @@ RedisPublisher.prototype.publish = function(channel, args) {
   return publisher.publishAsync(channel, JSON.stringify(args));
 };
 
-RedisPublisher.Enum = {};
-RedisPublisher.Enum.Key = { STATE: 'state', PLAYER: 'player' };
-RedisPublisher.Enum.Resp  = { RESPONSE: 'stateRedisResponse', COMMAND: 'stateRedisCommand'};
+RedisPublisher.Enum       = {};
+RedisPublisher.Enum.Key   = { STATE: 'state', PLAYER: 'player' };
+RedisPublisher.Enum.Resp  = { RESPONSE: 'stateRedisResponse' };
 
 module.exports = RedisPublisher;
 
@@ -89,16 +89,8 @@ var attachEvents = function() {
           asyncEmitter.emit(message, data);
         }
       }
-    } else if(channel === RedisPublisher.Enum.Resp.COMMAND) {
-      message = JSON.parse(message);
-      if(message) {
-        log.silly(Util.inspect(message, { showHidden: false, depth: 1}));
-        if(Array.isArray(message)) {
-          yield redisSocket.ping.apply(null, message);
-        }
-      }
     }
-  }));
+  }.bind(this)));
 
   subscriber.on("subscribe", function(channel, count) {
     log.info(`RedisSubscriber subscribed to ${channel}`);
@@ -116,8 +108,7 @@ var attachEvents = function() {
     log.error(err);
   });
 
-  subscriber.subscribe("stateRedisResponse");
-  subscriber.subscribe("stateRedisCommand");
+  subscriber.subscribe(RedisPublisher.Enum.Resp.RESPONSE);
 };
 
 var createKey = function(seed) {
@@ -135,8 +126,7 @@ var getRedisData = function(key) {
 var cleanUp = Promise.coroutine(function* () {
   log.debug("RedisPublisher._cleanUp");
   if(subscriber) {
-    yield subscriber.unsubscribeAsync("stateRedisResponse");
-    yield subscriber.unsubscribeAsync("stateRedisCommand");
+    yield subscriber.unsubscribeAsync(RedisPublisher.Enum.Resp.RESPONSE);
 
     subscriber.unref();
 

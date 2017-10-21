@@ -3,8 +3,8 @@ const Events  = require('events');
 
 const METRICSINTERVAL = 500;
 
-var publisher, playRule, syncingRule, syncRule, schemaFactory, redisSocket, autoSyncInterval,
-    playerManager, trigger, media, publisher, eventKeys, log;
+var publisher, playRule, syncingRule, syncRule, schemaFactory, redisSocket,
+    metricInterval, playerManager, trigger, media, publisher, eventKeys, log;
 
 function StateEngine() { };
 
@@ -26,19 +26,13 @@ StateEngine.prototype.initialize = function() {
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.STATE);
-
-    /*autoSyncInterval = setInterval(Promise.coroutine(function* () {
-      if(syncRule.evaluate(playerManager.getPlayers())) {
-        yield redisSocket.broadcast.apply(this, [eventKeys.PAUSE]);
-      }
-    }.bind(this)), METRICSINTERVAL);*/
   }
 };
 
 StateEngine.prototype.play = Promise.coroutine(function* (id) {
   log.debug(`StateEngine.play ${id}`);
-  var commands;
   var basePath = yield media.getMediaPath();
+  var result;
 
   if(basePath && basePath.length > 0) {
     var mediaStarted = yield media.getMediaStarted();
@@ -46,29 +40,32 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
     var issuer = playerManager.getPlayer(id);
 
     if(issuer) {
-      var players = playRule.evaluate(issuer, playerManager.getPlayers(), mediaStarted, typeof ruleInfo.range !== 'undefined' ? ruleInfo.range : 3);
+      var players = playRule.evaluate(issuer, playerManager.getPlayers(), mediaStarted, ruleInfo && typeof ruleInfo.range !== 'undefined' ? ruleInfo.range : 3);
+      result = true;
+      
       if(players) {
-        commands = [];
-        var buffering = [];
+        var buffering = new Map();
 
-        for(var i = 0; i < players.length; ++i) {
-          log.info(`StateEngine issuing play ${players[i].id}`);
-          buffering.push(players[i]);
+        for(var player of players.entries()) {
+          log.info(`StateEngine issuing play ${player[0]}`);
+          buffering.set(player[0], player[1]);
 
           if(mediaStarted === false) {
-            players[i].sync = player.Enums.SYNC.SYNCED;
+            player[1].sync = player[1].Enums.SYNC.SYNCED;
           }
         }
-        canPlay(buffering, player.Enums.STATE.PLAY);
+        canPlay.call(this, buffering, issuer.Enums.STATE.PLAY);
 
         if(!mediaStarted) {
           yield media.setMediaStarted(!mediaStarted);
+          metricInterval !== 'undefined' ? clearInterval(metricInterval) : undefined;
+          metricInterval = createMetricInterval.call(this);
         }
       }
     }
   }
 
-  return commands;
+  return result;
 });
 
 StateEngine.prototype.pause = Promise.coroutine(function* (id) {
@@ -84,7 +81,7 @@ StateEngine.prototype.pause = Promise.coroutine(function* (id) {
       var players = playerManager.getPlayers();
       for(let player of players.entries()) {
         commands.push([player[0], eventKeys.PAUSE]);
-        player[1].sync = player.Enums.SYNC.SYNCED;
+        player[1].sync = player[1].Enums.SYNC.SYNCED;
       }
     }
   }
@@ -103,22 +100,22 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
 
     if(issuer) {
       commands = [];
-      var buffering = [];
+      var buffering = new Map();
       var players = playerManager.getPlayers();
 
       for(let player of players.entries()) {
-        buffering.push(player[1]);
+        buffering.set(player[0], player[1]);
         var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.STATERESPONSE, [false, data.timestamp]);
         commands.push([player[0], eventKeys.SEEK, schema]);
 
         if(mediaStarted === false) {
-          player[1].sync       = player.Enums.SYNC.BUFFWAIT;
+          player[1].sync       = player[1].Enums.SYNC.BUFFWAIT;
           player[1].timestamp  = data.timestamp;
           player[1].buffered   = false;
         }
       }
 
-      canPlay(buffering, issuer.state);
+      canPlay.call(this, buffering, issuer.state);
     }
   }
 
@@ -144,8 +141,8 @@ StateEngine.prototype.sync = Promise.coroutine(function* (id) {
           }
         }
 
-        var command = [];
-        var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATERESPONSE, [false, syncTime]);
+        command = [];
+        var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.STATERESPONSE, [false, syncTime]);
         command.push([id, eventKeys.SEEK, schema]);
       }
     }
@@ -155,7 +152,7 @@ StateEngine.prototype.sync = Promise.coroutine(function* (id) {
 });
 
 StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
-  log.debug(`StateEngine.syncingPing ${id}`, data);
+  log.silly(`StateEngine.syncingPing ${id}`, data);
   var commands;
   var basePath = yield media.getMediaPath();
   var mediaStarted = yield media.getMediaStarted();
@@ -185,7 +182,7 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
 
         if(leader) {
           commands = [];
-          var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enum.SCHEMAS.STATERESPONSE,
+          var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.STATERESPONSE,
             leader.state === player.Enums.STATE.PLAY ? [true, leader.timestamp + 1] : [false, leader.timestamp]);
           commands.push([player.id, eventKeys.SEEK, schema]);
           player.sync = player.Enums.SYNC.SYNCED;
@@ -200,30 +197,41 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
 module.exports = StateEngine;
 
 var canPlay = function(players, state) {
-  var buffering = {};
+  var buffering = new Map();
 
-  for(let i = 0; i < players.length; ++i) {
-    players[i].sync = player.Enums.SYNC.BUFFWAIT;
-    buffering[players[i].id] = players[i].id;
+  for(let player of players.entries()) {
+    player[1].sync = player[1].Enums.SYNC.BUFFWAIT;
+    buffering.set(player[0], player[1].id);
   }
 
   var canPlayLogic = function(id) {
     log.debug(`StateEngine player: ${id} canPlay.`);
-    delete buffering[id];
+    buffering.delete(id);
 
-    if(Object.entries(buffering).length === 0) {
-      trigger.removeAllListeners('canPlay');
-
-      for(let i = 0; i < players.length; ++i) {
-        players[i].sync = player.Enums.SYNC.SYNCED;
-        publisher.publish(publisher.Enums.Resp.COMMAND, [players[i].id, state === player.Enums.STATE.PLAY ? eventKeys.PLAY : eventKeys.PAUSE]);
+    if(buffering.size === 0) {
+      for(let player of players.values()) {
+        player.sync = player.Enums.SYNC.SYNCED;
+        redisSocket.ping.apply(this, [id, state === player.Enums.STATE.PLAY ? eventKeys.PLAY : eventKeys.PAUSE]);
       }
-    }
-  };
 
-  if(Object.entries(buffering).length > 0) {
+      trigger.removeAllListeners('canPlay');
+    }
+  }.bind(this);
+
+  if(buffering.size > 0) {
     log.debug(`StateEngine all players canPlay.`);
     trigger.removeAllListeners('canPlay');
     trigger.on('canPlay', canPlayLogic);
   }
+};
+
+var createMetricInterval = function() {
+  return setInterval(Promise.coroutine(function* () {
+    var metrics = yield media.getPlayerMetrics();
+    yield redisSocket.broadcast.apply(this, [eventKeys.PLAYERINFO, metrics]);
+
+    if(syncRule.evaluate(playerManager.getPlayers()) === true) {
+      yield redisSocket.broadcast.apply(this, [eventKeys.PAUSE]);
+    }
+  }.bind(this)), 1000);
 };

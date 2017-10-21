@@ -204,7 +204,7 @@ function onSeek(typeId) {
 }
 
 function videoPing() {
-  var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
+  var request = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.STATE,
     [videoElement.currentTime, !videoElement.paused, videoElement.readyState >= 2]);
   socket.request(eventKeys.PING, request);
 }

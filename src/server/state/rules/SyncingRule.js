@@ -15,10 +15,10 @@ SyncingRule.prototype.evaluate = function(issuer, others) {
   if(issuer.sync === issuer.Enums.SYNC.SYNCING) {
     var leader;
 
-    for(var i = 0; i < others.length; ++i) {
-      if(others[i].sync === others[i].Enums.SYNC.SYNCED) {
-        if(!leader || others[i].timestamp > leader.timestamp) {
-          leader = others[i];
+    for(var player of others.entries()) {
+      if(player[1].sync === player[1].Enums.SYNC.SYNCED) {
+        if(!leader || player[1].timestamp > leader.timestamp) {
+          leader = player;
         }
       }
     }

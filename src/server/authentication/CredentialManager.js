@@ -30,7 +30,7 @@ CredentialManager.prototype.isAdmin = Promise.coroutine(function* (socket) {
 });
 
 CredentialManager.prototype.getAdmin = Promise.coroutine(function* () {
-  return getUserData(CredentialManager.Enum.User.ADMIN);
+  return yield getUserData(CredentialManager.Enum.User.ADMIN);
 });
 
 CredentialManager.prototype.removeAdmin = Promise.coroutine(function* (socket) {
@@ -69,7 +69,7 @@ CredentialManager.prototype.getTokens = Promise.coroutine(function* () {
 });
 
 CredentialManager.prototype.resetToken = Promise.coroutine(function* (socketId) {
-  var entries = yield getUserData(CredentialManager.Enum.User.CLIENT);
+  var entries = yield getTokens(CredentialManager.Enum.User.CLIENT);
 
   if(entries) {
     for(var i = 0; i < entries.length; ++i) {
@@ -90,7 +90,7 @@ CredentialManager.prototype.resetToken = Promise.coroutine(function* (socketId) 
 });
 
 CredentialManager.prototype.setTokenLevel = Promise.coroutine(function* (key, level) {
-  var entries = yield getUserData(CredentialManager.Enum.User.CLIENT);
+  var entries = yield getTokens(CredentialManager.Enum.User.CLIENT);
   var entry = entries.get(key);
 
   if(entry) {
@@ -103,9 +103,12 @@ CredentialManager.prototype.setTokenLevel = Promise.coroutine(function* (key, le
   return entries;
 });
 
-CredentialManager.prototype.getTokenLevel = Promise.coroutine(function* (key, level) {
-  var entries = yield getUserData(CredentialManager.Enum.User.CLIENT);
-  return entries.get(key).level;
+CredentialManager.prototype.getTokenLevel = Promise.coroutine(function* (key) {
+  var entries = yield this.getTokens();
+  var admin   = yield this.getAdmin();
+  var entry   = entries ? entries.get(key) : undefined;
+
+  return entry !== undefined ? entry.level : admin === key ? CredentialManager.Enum.Level.CONTROLS : undefined;
 });
 
 CredentialManager.prototype.authenticateToken = Promise.coroutine(function* (key, socketId, secret) {

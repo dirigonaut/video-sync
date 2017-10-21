@@ -8,6 +8,7 @@ SyncRule.prototype.initialize = function(force) {
   if(typeof SyncRule.prototype.protoInit === 'undefined') {
     SyncRule.prototype.protoInit = true;
     media           = this.factory.createMedia();
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.STATE);
   }
@@ -15,7 +16,7 @@ SyncRule.prototype.initialize = function(force) {
 
 SyncRule.prototype.evaluate = Promise.coroutine(function* (players) {
   var ruleInfo  = yield media.getMediaRule();
-  var stats       = { };
+  var stats     = { };
 
   for(let player of players.values()) {
     if(player.sync === player.Enums.SYNC.SYNCED) {
@@ -30,13 +31,13 @@ SyncRule.prototype.evaluate = Promise.coroutine(function* (players) {
 	}
 
   try {
-    if(players.size > 1) {
+    if(players.size > 0) {
       stats.average = stats.average / players.size;
       stats.difference = stats.foreGuard - stats.rearGuard;
       yield media.setPlayerMetrics(stats);
 
       if(ruleInfo) {
-        var range = typeof ruleInfo.range !== undefined? ruleInfo.range : 3;
+        var range = typeof ruleInfo.range !== 'undefined' ? ruleInfo.range : 3;
         return ruleInfo.active && range > stats.difference;
       }
     }

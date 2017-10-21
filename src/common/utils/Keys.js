@@ -26,6 +26,7 @@ module.exports = {
   PING:           'state-ping',
   CHANGESYNC:     'state-change-sync',
   UPDATEINIT:     'state-update-init',
+  PLAYERINFO:     'state-metrics',
   //Client
   INIT:           'state-init',
   PLAY:           'state-play',
