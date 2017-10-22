@@ -18,16 +18,18 @@ ClientSocket.prototype.initialize = function() {
 };
 
 ClientSocket.prototype.connectAsync = function(serverUrl, token) {
-	log.info("Socket connecting to: " + serverUrl);
-	socket = Io.connect(`${serverUrl}?token=${token}`, {rejectUnauthorized: true});
+	log.info(`Socket connecting to: ${serverUrl} with token: `, token);
+	socket = Io.connect(`${serverUrl}`, {
+		rejectUnauthorized: true,
+		query: { token: encodeURIComponent(token) }
+  });
 
 	return new Promise(function(resolve, reject) {
     socket.once(eventKeys.AUTHENTICATED, function(isAdmin, callback) {
-			socket.off(eventKeys.DISCONNECT, reject);
 			resolve([callback, isAdmin]);
 		});
 
-		socket.once(eventKeys.DISCONNECT, reject);
+		socket.once('error', reject);
   });
 };
 

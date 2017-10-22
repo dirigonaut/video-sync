@@ -18,6 +18,23 @@ function setupClient() {
     });
   };
 
+  $(document).on('initializeConnection', function() {
+    client.initialize(window.location.host, cookie.getCookie('creds'))
+    .then(function(results) {
+      if(typeof results.acknowledge === 'undefined') {
+        throw new Error('Missing connection hook from server authentication.');
+      }
+
+      loadExtraResources(results.isAdmin)
+      .then(function() {
+        initializeGui(results.isAdmin, results.acknowledge);
+      });
+    }).catch(function(error) {
+      cookie.deleteCookie('creds');
+      log.ui(error);
+    });
+  });
+
   var socket;
 
   Promise.all([
@@ -39,23 +56,6 @@ function setupClient() {
     socket          = factory.createClientSocket();
     initClientLogin(socket, factory.createSchemaFactory(), factory.createKeys());
     $(document).trigger('initializeConnection');
-  });
-
-  $(document).on('initializeConnection', function() {
-    client.initialize(window.location.host)
-    .then(function(results) {
-      if(typeof results.acknowledge === 'undefined') {
-        throw new Error('Missing connection hook from server authentication.');
-      }
-
-      loadExtraResources(results.isAdmin)
-      .then(function() {
-        initializeGui(results.isAdmin, results.acknowledge);
-      });
-    }).catch(function(error) {
-      cookie.deleteCookie('creds');
-      log.error(error);
-    });
   });
 
   $(document).on('initializeMedia', function() {
