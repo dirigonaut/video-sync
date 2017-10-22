@@ -83,6 +83,54 @@ function initGUI(client, isAdmin) {
     $('#seek-bar').val(0);
   });
 
+  //Token Events ----------------------------------------------------------------
+  $('#token-create').click(function() {
+    client.log.info("Create Tokens.");
+    var count = $('#token-count').val();
+    var pem = $('#token-permissions').is(':checked');
+
+    client.socket.request(client.keys.CREATETOKENS, client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PAIR, [count, pem]));
+  });
+
+  $('#tokenList').on("click", "button", function(e) {
+    var token = $($(e.currentTarget).parent()).parent();
+    var id = token[0].children[0].outerText;
+
+    if(id === 'Update') {
+      var tokens = client.formData.getTokenList();
+      id = '';
+
+      for(var token in tokens) {
+        id = id ? `${id},${token}` : token;
+      }
+
+      $('#tokenList').find("tr:gt(1)").remove();
+    } else if(!id.includes('Create Tokens')) {
+      token.remove();
+    }
+
+    client.socket.request(client.keys.DELETETOKENS,
+      client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [id]));
+  });
+
+  $('#tokenList').on("click", "input", function(e) {
+    var token = $($(e.currentTarget).parent()).parent();
+    var id    = token[0].children[0].outerText;
+    var level = $(`#${id}`).is(':checked') ? 'controls' : 'none';
+
+    if(id === 'Update') {
+      var tokens = client.formData.getTokenList();
+
+      for(var token in tokens) {
+        client.socket.request(client.keys.SETTOKENLEVEL,
+          client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PAIR, [token, level]));
+      }
+    } else if(!id.includes('Create Tokens')) {
+      client.socket.request(client.keys.SETTOKENLEVEL,
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PAIR, [id, level]));
+    }
+  });
+
   //Encode Events ---------------------------------------------------------------
   $('#encode-input').on("focusout", function requestFileInfo() {
     var input = $('#encode-input').val();
@@ -233,10 +281,16 @@ function initGUI(client, isAdmin) {
   var loadTokens = function() {
     var tokens = client.formData.getTokenList();
 
-    if(tokens.length > 0) {
-      for(var i in tokens) {
-        $('#tokenList tr:last').after('<tr><td>' + tokens[i].token + '</td><td>' + tokens[i].handle + '</td><td>' + tokens[i].level +
-        '<button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>');
+    if(tokens) {
+      $('#tokenList').find("tr:gt(1)").remove();
+
+      for(var token in tokens) {
+        $('#tokenList tr:last').after(`<tr><td>${token}</td><td>${tokens[token].handle}</td><td><input type="checkbox" id='${token}' class="align-center"></td><td>
+        <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
+
+        if(tokens[token].level === 'controls') {
+          $(`#${token}`).prop('checked', true);
+        }
       }
     }
   };

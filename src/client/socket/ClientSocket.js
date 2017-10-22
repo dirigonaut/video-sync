@@ -1,5 +1,6 @@
 const Promise = require('bluebird');
 const Io 			= require('socket.io-client');
+const Events  = require('events');
 
 var socket, eventKeys, log;
 
@@ -8,6 +9,7 @@ function ClientSocket() { }
 ClientSocket.prototype.initialize = function() {
 	if(typeof ClientSocket.prototype.protoInit === 'undefined') {
 		ClientSocket.prototype.protoInit = true;
+		Object.setPrototypeOf(ClientSocket.prototype, Events.prototype);
 		eventKeys = this.factory.createKeys();
 
 		var logManager = this.factory.createClientLogManager();

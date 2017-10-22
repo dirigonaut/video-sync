@@ -97,7 +97,7 @@ function checkInput(key, input, schema) {
 			clean = input !== Path.basename(input);
 			break;
 		case 'special':
-			clean = validate(input, new RegExp(SPECIAL), true);
+			clean = validate(input, new RegExp(SPECIAL), true) || typeof input === 'boolean';
 			break;
 	  case 'email':
 			clean = validate(input, new RegExp(EMAIL), true);
