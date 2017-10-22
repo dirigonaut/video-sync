@@ -47,7 +47,7 @@ CredentialManager.prototype.generateTokens = Promise.coroutine(function* (count,
   var entries = yield getUserData(CredentialManager.Enum.User.CLIENT);
   entries = entries ? entries : { };
 
-  for(var i = 0; i < count; ++i) {
+  for(let i = 0; i < count; ++i) {
     var entry = {
       id: undefined,
       level: level ? CredentialManager.Enum.Level.CONTROLS : CredentialManager.Enum.Level.NONE,
@@ -64,7 +64,7 @@ CredentialManager.prototype.generateTokens = Promise.coroutine(function* (count,
 CredentialManager.prototype.deleteTokens = Promise.coroutine(function* (keys) {
   var entries = yield getUserData(CredentialManager.Enum.User.CLIENT);
 
-  for(var i = 0; i < keys.length; ++i) {
+  for(let i = 0; i < keys.length; ++i) {
     if(entries && entries[keys[i]]) {
       delete entries[keys[i]];
     }
@@ -82,7 +82,7 @@ CredentialManager.prototype.resetToken = Promise.coroutine(function* (socketId) 
   var entries = yield this.getTokens(CredentialManager.Enum.User.CLIENT);
 
   if(entries) {
-    for(var i = 0; i < entries.length; ++i) {
+    for(let i = 0; i < entries.length; ++i) {
       var entry = entries.get(key);
 
       if(entry && entry.id === socketId) {
@@ -135,7 +135,7 @@ CredentialManager.prototype.authenticateToken = Promise.coroutine(function* (key
     entries[key] = invitee;
     yield setUserData(CredentialManager.Enum.User.CLIENT, entries);
 
-    return sendUpdatedTokens(entries);
+    return sendUpdatedTokens.call(this, entries);
   }
 });
 
@@ -157,9 +157,9 @@ var getUserData = function(key) {
   });
 };
 
-var sendUpdatedTokens = function(tokens) {
+var sendUpdatedTokens = Promise.coroutine(function* (tokens) {
   var admin = yield this.getAdmin();
   var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, tokens);
   redisSocket.ping.call(this, admin, eventKeys.TOKENS, response);
   return true;
-};
+});
