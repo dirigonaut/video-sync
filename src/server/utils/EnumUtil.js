@@ -9,7 +9,7 @@ function EnumUtil() { }
 
 EnumUtil.prototype.getAllImports = function(path, excludes) {
   if(path && Path.isAbsolute(path)) {
-    var fileUtils = new FileUtils();
+    var fileUtils = Object.create(FileUtils.prototype);
 
     var imports = {};
 

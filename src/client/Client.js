@@ -1,7 +1,7 @@
 const Promise               = require('bluebird');
 const ClientFactoryManager  = require('./factory/ClientFactoryManager');
 
-var resetMedia, factory;
+var factory, log;
 
 function Client() { }
 
@@ -11,7 +11,7 @@ Client.prototype.initialize = function(serverUrl, token) {
   if(typeof Client.prototype.protoInit === 'undefined') {
     Client.prototype.protoInit = true;
     var logManager = factory.createClientLogManager();
-    var log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
+    log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
   }
 
   var clientSocket = factory.createClientSocket();
@@ -22,19 +22,10 @@ Client.prototype.initialize = function(serverUrl, token) {
 
     var isAdmin = response[1] ? true : false;
     var acknowledged = response[0] !== 'undefined' ? response[0] : undefined;
-    initComponents.call(this, isAdmin);
 
     return { 'acknowledge': acknowledged, 'isAdmin': isAdmin };
   });
 };
-
-Client.prototype.startMedia = Promise.coroutine(function* (mediaController, domElements) {
-  if(resetMedia) {
-    yield resetMedia();
-  }
-
-  resetMedia = yield mediaController.setup(domElements);
-});
 
 Client.prototype.getFactory = function() {
   if(factory === undefined) {
@@ -46,11 +37,3 @@ Client.prototype.getFactory = function() {
 };
 
 module.exports = Client;
-
-var initComponents = function(isAdmin) {
-  var fileBuffer = factory.createFileBuffer();
-
-  if(isAdmin) {
-    var formData = factory.createFormData();
-  }
-};

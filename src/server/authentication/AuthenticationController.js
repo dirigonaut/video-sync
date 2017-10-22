@@ -27,7 +27,13 @@ AuthenticationController.prototype.initialize = function() {
 AuthenticationController.prototype.attachIO = function (io) {
   io.use(Promise.coroutine(function* (socket, next) {
     var token = decodeURIComponent(socket.handshake.query.token);
-    token = token ? JSON.parse(token) : undefined;
+
+    try {
+      token = JSON.parse(token);
+    } catch(error) {
+      log.warn(error);
+      token = undefined;
+    }
 
     var isUser = yield isValidUser.call(this, socket, token)
     var isAdmin = yield isAdministrator.call(this, socket);
@@ -50,13 +56,14 @@ AuthenticationController.prototype.attachIO = function (io) {
     socket.on(eventKeys.DISCONNECT, Promise.coroutine(function*() {
       log.info(eventKeys.DISCONNECT, socket.id);
 
-      if(socket && socket.id && socket.auth) {
+      if(socket && socket.id) {
         var adminId = yield credentials.getAdmin();
 
-        if(adminId) {
+        if(adminId === socket.id) {
           credentials.removeAdmin(socket);
         } else {
-          redisSocket.ping.call(this, adminId, eventKeys.TOKENS, credentials.resetToken(socket.id));
+          var tokens = yield credentials.resetToken(socket.id);
+          redisSocket.ping.call(this, adminId, eventKeys.TOKENS, tokens);
         }
 
         yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.Functions.REMOVEPLAYER, [socket.id]]);
@@ -98,22 +105,19 @@ var isAdministrator = Promise.coroutine(function* (socket) {
 });
 
 var isValidUser = Promise.coroutine(function* (socket, data) {
-  if(data) {
-    var schema  = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
-    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
+  var schema  = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
+  var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
+
+  if(request) {
     var isAuth  = yield credentials.authenticateToken(socket.id, request.id, request.data);
-    return isAuth ? userAuthorized.call(this, socket) : false;
+    return isAuth ? isAuth || userAuthorized.call(this, socket) : false;
   }
 });
 
 var userAuthorized = function(socket) {
-  socket.auth = true;
-
   var videoController = this.factory.createVideoController();
   var stateController = this.factory.createStateController();
 
   videoController.attachSocket(socket);
   stateController.attachSocket(socket);
-
-  return socket.auth;
 };

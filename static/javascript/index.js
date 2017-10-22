@@ -1,25 +1,38 @@
-var client, log;
+var client;
 var cookie = Object.create(Cookie.prototype);
 $(document).ready(setupClient);
 
 function setupClient() {
+  var socket, log;
+
   window.URL = window.URL || window.webkitURL;
   window.MediaSource = window.MediaSource || window.WebKitMediaSource
 
-  var loadAsyncFile = function(elementId, location) {
-    return new Promise((resolve, reject) => {
-      $(`${elementId}`).load(location, resolve);
+  var initialize = function() {
+    Promise.all([
+      loadAsyncFile('#control-container', 'menu/controls.html'),
+      loadAsyncFile('#login-overlay', 'menu/overlays/login.html'),
+      loadAsyncFile('#help-overlay', 'menu/overlays/help.html'),
+      loadAsyncScript('../javascript/log.js'),
+      loadAsyncScript('../javascript/login.js')
+    ]).then(function() {
+      $('#loginModal').modal('show');
+
+      client          = Object.create(Client.prototype);
+      var factory     = client.getFactory();
+
+      var logManager  = factory.createClientLogManager();
+      logManager.addUILogging(guiLog());
+      log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
+
+      socket          = factory.createClientSocket();
+      $(document).trigger('initializeConnection',
+        initClientLogin(socket, factory.createSchemaFactory(), factory.createKeys()));
     });
   };
 
-  var loadAsyncScript = function(location) {
-    return new Promise((resolve, reject) => {
-      $.getScript(location, resolve);
-    });
-  };
-
-  $(document).on('initializeConnection', function() {
-    client.initialize(window.location.host, cookie.getCookie('creds'))
+  $(document).on('initializeConnection', function(event, token) {
+    client.initialize(window.location.host, token)
     .then(function(results) {
       if(typeof results.acknowledge === 'undefined') {
         throw new Error('Missing connection hook from server authentication.');
@@ -31,34 +44,11 @@ function setupClient() {
       });
     }).catch(function(error) {
       cookie.deleteCookie('creds');
-      log.ui(error);
+      log.error(error);
     });
   });
 
-  var socket;
-
-  Promise.all([
-    loadAsyncFile('#control-container', 'menu/controls.html'),
-    loadAsyncFile('#login-overlay', 'menu/overlays/login.html'),
-    loadAsyncFile('#help-overlay', 'menu/overlays/help.html'),
-    loadAsyncScript('../javascript/log.js'),
-    loadAsyncScript('../javascript/login.js')
-  ]).then(function() {
-    $('#loginModal').modal('show');
-
-    client          = Object.create(Client.prototype);
-    var factory     = client.getFactory();
-
-    var logManager  = factory.createClientLogManager();
-    logManager.addUILogging(guiLog());
-    log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
-
-    socket          = factory.createClientSocket();
-    initClientLogin(socket, factory.createSchemaFactory(), factory.createKeys());
-    $(document).trigger('initializeConnection');
-  });
-
-  $(document).on('initializeMedia', function() {
+  $(document).on('initializeMedia', function(mediaController) {
     var domElements = {
       mediaSource:  new MediaSource(),
       window:       window,
@@ -66,7 +56,7 @@ function setupClient() {
       videoElement: document.getElementById('video')
     };
 
-    client.startMedia(client.getFactory().createMediaController(), domElements);
+    mediaController.initializeMedia(domElements);
   });
 
   var initializeGui = function(isAdmin, acknowledge) {
@@ -88,7 +78,7 @@ function setupClient() {
 
     //Reload media
     socket.setEvent(container.keys.MEDIAREADY, function() {
-      $(document).trigger('initializeMedia');
+      $(document).trigger('initializeMedia', [container.media]);
     });
 
     acknowledge();
@@ -110,4 +100,18 @@ function setupClient() {
       return loadAsyncScript('../javascript/gui.js');
     }
   };
+
+  var loadAsyncFile = function(elementId, location) {
+    return new Promise((resolve, reject) => {
+      $(`${elementId}`).load(location, resolve);
+    });
+  };
+
+  var loadAsyncScript = function(location) {
+    return new Promise((resolve, reject) => {
+      $.getScript(location, resolve);
+    });
+  };
+
+  initialize();
 }

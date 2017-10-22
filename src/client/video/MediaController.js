@@ -2,7 +2,7 @@ const Promise = require('bluebird');
 const Util    = require('util');
 const Events  = require('events');
 
-var video, buffers, metaManager, subtitles, schemaFactory, socket, eventKeys, log;
+var video, buffers, metaManager, subtitles, schemaFactory, socket, eventKeys, resetMedia, log;
 
 function MediaController() { }
 
@@ -21,7 +21,43 @@ MediaController.prototype.initialize = function() {
   }
 };
 
-MediaController.prototype.setup = Promise.coroutine(function* (domElements) {
+MediaController.prototype.initializeMedia = Promise.coroutine(function* (domElements) {
+  if(resetMedia) {
+    yield resetMedia();
+  }
+
+  resetMedia = yield setupMedia.call(this, domElements);
+});
+
+MediaController.prototype.getTrackInfo = function() {
+  return metaManager.getTrackInfo();
+};
+
+MediaController.prototype.setBufferAhead = function(bufferThreshold) {
+  metaManager.setBufferThreshold(bufferThreshold);
+};
+
+MediaController.prototype.setForceBuffer = function(forceBuffer) {
+  log.debug('MediaController.setForceBuffer')
+  var meta = metaManager.getActiveMetaData();
+
+  if(meta.activeMeta.get(metaManager.Enum.VIDEO)) {
+    meta.setForceBuffer(metaManager.Enum.VIDEO, forceBuffer);
+  }
+
+  if(meta.activeMeta.get(metaManager.Enum.AUDIO)) {
+    meta.setForceBuffer(metaManager.Enum.AUDIO, forceBuffer);
+  }
+};
+
+MediaController.prototype.setActiveMetaData = function(key, videoIndex, audioIndex, subtitleIndex) {
+  var metaInfo = metaManager.buildMetaInfo(key, videoIndex, audioIndex, subtitleIndex);
+  metaManager.setActiveMetaData(metaInfo);
+};
+
+module.exports = MediaController;
+
+var setupMedia = Promise.coroutine(function* (domElements) {
   log.debug("MediaController.setup");
   yield metaManager.requestMetaData();
   this.emit('meta-data-loaded', metaManager.getTrackInfo());
@@ -62,34 +98,6 @@ MediaController.prototype.setup = Promise.coroutine(function* (domElements) {
   domElements.mediaSource.addEventListener('error', log.error);
   return onReset.call(this, resetCallbacks, domElements.mediaSource);
 });
-
-MediaController.prototype.getTrackInfo = function() {
-  return metaManager.getTrackInfo();
-};
-
-MediaController.prototype.setBufferAhead = function(bufferThreshold) {
-  metaManager.setBufferThreshold(bufferThreshold);
-};
-
-MediaController.prototype.setForceBuffer = function(forceBuffer) {
-  log.debug('MediaController.setForceBuffer')
-  var meta = metaManager.getActiveMetaData();
-
-  if(meta.activeMeta.get(metaManager.Enum.VIDEO)) {
-    meta.setForceBuffer(metaManager.Enum.VIDEO, forceBuffer);
-  }
-
-  if(meta.activeMeta.get(metaManager.Enum.AUDIO)) {
-    meta.setForceBuffer(metaManager.Enum.AUDIO, forceBuffer);
-  }
-};
-
-MediaController.prototype.setActiveMetaData = function(key, videoIndex, audioIndex, subtitleIndex) {
-  var metaInfo = metaManager.buildMetaInfo(key, videoIndex, audioIndex, subtitleIndex);
-  metaManager.setActiveMetaData(metaInfo);
-};
-
-module.exports = MediaController;
 
 function onReset(resets, mediaSource) {
   var resetMedia = function() {
