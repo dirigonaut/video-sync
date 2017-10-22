@@ -5,7 +5,8 @@ Cookie.prototype.setCookie = function(key, value, expire) {
 };
 
 Cookie.prototype.getCookie = function(key) {
-  return document.cookie.match(RegExp(`(?:^|;\\s*)${key}=([^;]*)`));
+  var value = document.cookie.match(RegExp(`(?:^|;\\s*)${key}=([^;]*)`));
+  return value.length > 1 ? value[1] : undefined;
 };
 
 Cookie.prototype.deleteCookie = function(key) {
@@ -13,24 +14,24 @@ Cookie.prototype.deleteCookie = function(key) {
   document.cookie = `${key}=;expires=${expire.setHours(expire.getHours() - 24)}`;
 };
 
-Cookie.prototype.getExpiration = function(expire) {
+Cookie.prototype.getExpiration = function(type) {
   var expire = new Date();
 
-  switch (expire) {
-    case this.expire.DAY:
+  switch (type) {
+    case this.Enums.EXPIRES.DAY:
       expire.setHours(expire.getHours() + 24);
       break;
-    case this.expire.MONTH:
+    case this.Enums.EXPIRES.MONTH:
       expire.setMonth(expire.getMonth() + 1);
       break;
-    case this.expire.YEAR:
+    case this.Enums.EXPIRES.YEAR:
       expire.setFullYear(expire.getFullYear() + 1);
       break;
     default:
-      throw new Exception(`Data type ${expire} is not contained in Enum.Expire: ${this.Enum.Expire}`);
+      throw new Error(`Data type ${expire} is not contained in Enum.Expires: ${JSON.stringify(Object.keys(this.Enums.EXPIRES))}`);
   }
 
   return expire;
 }
 
-Cookie.prototype.Enum = { Expire: { DAY: "DAY", MONTH: "MONTH", YEAR: "YEAR" } };
+Cookie.prototype.Enums = { EXPIRES: { DAY: "DAY", MONTH: "MONTH", YEAR: "YEAR" } };

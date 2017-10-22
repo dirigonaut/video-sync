@@ -26,23 +26,19 @@ AuthenticationController.prototype.initialize = function() {
 
 AuthenticationController.prototype.attachIO = function (io) {
   io.use(Promise.coroutine(function* (socket, next) {
-    let token = socket.handshake.query.token;
-    let isValid;
+    var token = decodeURIComponent(socket.handshake.query.token);
+    token = token ? JSON.parse(token) : undefined;
 
-    if(token && token !== 'undefined') {
-      isValid = yield isUser.call(this, socket, token);
-    } else {
-      isValid = isAdministrator.call(this, socket);
-    }
+    var isUser = yield isValidUser.call(this, socket, token)
+    var isAdmin = yield isAdministrator.call(this, socket);
 
-    return isValid ? next(log.info(`${socket.id} has been authenticated.`, socket.id))
-                    : next(log.error(`${socket.id} has failed authentication.`));
+    return isAdmin || isUser ? next(log.info(`${socket.id} has been authenticated.`, socket.id))
+                    : next(new Error(`${JSON.stringify(token)} has failed authentication.`));
   }.bind(this)));
 
   io.on('connection', Promise.coroutine(function* (socket, data) {
     log.socket(`Socket has connected: ${socket.id} ip: ${socket.handshake.address}`);
-
-    socket.emit(eventKeys.AUTHENTICATED, credentials.isAdmin(socket), Promise.coroutine(function* () {
+    socket.emit(eventKeys.AUTHENTICATED, yield credentials.isAdmin(socket), Promise.coroutine(function* () {
       yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.Functions.CREATEPLAYER, [socket.id]]);
 
       var mediaPath = yield media.getMediaPath();
@@ -83,10 +79,10 @@ AuthenticationController.prototype.attachIO = function (io) {
 
 module.exports = AuthenticationController;
 
-var isAdministrator = function(socket) {
-  var isAuth;
+var isAdministrator = Promise.coroutine(function* (socket) {
+  var isAdmin = yield credentials.isAdmin(socket);
 
-  if(credentials.isAdmin(socket)) {
+  if(isAdmin) {
     var adminController       = this.factory.createAdminController();
     var credentialController  = this.factory.createCredentialController();
     var encodingContoller     = this.factory.createEncodingController();
@@ -95,18 +91,19 @@ var isAdministrator = function(socket) {
     credentialController.attachSocket(socket);
     encodingContoller.attachSocket(socket);
 
-    isAuth = userAuthorized.call(this, socket);
+    userAuthorized.call(this, socket);
   }
 
-  return isAuth;
-};
+  return isAdmin;
+});
 
-var isUser = Promise.coroutine(function* (socket, data) {
-  var schema  = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
-  var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
-  var isAuth  = yield credentials.authenticateToken(socket.id, request.id, request.data);
-
-  return isAuth ? userAuthorized.call(this, socket) : false;
+var isValidUser = Promise.coroutine(function* (socket, data) {
+  if(data) {
+    var schema  = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
+    var isAuth  = yield credentials.authenticateToken(socket.id, request.id, request.data);
+    return isAuth ? userAuthorized.call(this, socket) : false;
+  }
 });
 
 var userAuthorized = function(socket) {

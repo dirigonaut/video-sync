@@ -5,7 +5,7 @@ var resetMedia, factory;
 
 function Client() { }
 
-Client.prototype.initialize = function(serverUrl) {
+Client.prototype.initialize = function(serverUrl, token) {
   var factory = this.getFactory();
 
   if(typeof Client.prototype.protoInit === 'undefined') {
@@ -16,11 +16,11 @@ Client.prototype.initialize = function(serverUrl) {
 
   var clientSocket = factory.createClientSocket();
 
-  return clientSocket.connectAsync(serverUrl)
+  return clientSocket.connectAsync(serverUrl, token)
   .then(function(response) {
     log.ui('Authenticated with server.');
 
-    var isAdmin = response[1] ? true : false
+    var isAdmin = response[1] ? true : false;
     var acknowledged = response[0] !== 'undefined' ? response[0] : undefined;
     initComponents.call(this, isAdmin);
 
