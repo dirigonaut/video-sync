@@ -58,7 +58,7 @@ AuthenticationController.prototype.attachIO = function (io) {
         var adminId = yield credentials.getAdmin();
 
         if(adminId) {
-          credentials.removeAdmin(socket.id);
+          credentials.removeAdmin(socket);
         } else {
           redisSocket.ping.call(this, adminId, eventKeys.TOKENS, credentials.resetToken(socket.id));
         }

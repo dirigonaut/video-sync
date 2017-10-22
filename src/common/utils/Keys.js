@@ -13,7 +13,8 @@ module.exports = {
   SHUTDOWN:       'shutdown',
   //Client
   CREATETOKENS:   'gen-tokens',
-  SETLEVEL:       'set-level',
+  DELETETOKENS:   'delete-tokens',
+  SETTOKENLEVEL:   'set-level',
   AUTHENTICATED:  'authenticated',
 
   //StateController

@@ -23,11 +23,13 @@ CredentialController.prototype.attachSocket = function(socket) {
   log.info('CredentialController.attachSocket');
 
   socket.on(eventKeys.CREATETOKENS, Promise.coroutine(function*(data) {
-    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.NUMBER);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
-      socket.emit(eventKeys.TOKENS, credentials.generateTokens(request.data));
+      var tokens = yield credentials.generateTokens(request.id, request.data);
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [tokens]);
+      socket.emit(eventKeys.TOKENS, response);
     }
   }.bind(this)));
 
@@ -36,16 +38,20 @@ CredentialController.prototype.attachSocket = function(socket) {
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
-      socket.emit(eventKeys.TOKENS, credentialManager.setTokenLevel(request.id, request.data));
+      var tokens = yield credentials.setTokenLevel(request.id, request.data);
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [tokens]);
+      socket.emit(eventKeys.TOKENS, response);
     }
   }.bind(this)));
 
-  socket.on(eventKeys.DELETETOKEN, Promise.coroutine(function*(data) {
-    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
+  socket.on(eventKeys.DELETETOKENS, Promise.coroutine(function*(data) {
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.SPECIAL);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
-      var socketIds = credentials.deleteToken(request.id, request.data);
+      var tokens = yield credentials.deleteTokens(request.data.split(','));
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, tokens);
+      socket.emit(eventKeys.TOKENS, response);
     }
   }.bind(this)));
 };
