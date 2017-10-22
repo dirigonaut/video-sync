@@ -6,7 +6,7 @@ function initClientLogin(socket, schemaFactory, keys) {
 
     if(request) {
       cookie.setCookie('creds', JSON.stringify(request), cookie.getExpiration(cookie.Enums.EXPIRES.DAY));
-      $(document).trigger('initializeConnection');
+      $(document).trigger('initializeConnection', [request]);
     }
   });
 
@@ -18,9 +18,10 @@ function initClientLogin(socket, schemaFactory, keys) {
   });
 
   var creds = cookie.getCookie('creds');
-  if(creds && creds[1]) {
-    creds = JSON.parse(creds[1]);
+  if(creds) {
+    creds = JSON.parse(creds);
     $('#loginHandle').val(creds.handle);
     $('#loginToken').val(creds.token);
+    return [creds];
   }
 }

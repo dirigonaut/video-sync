@@ -17,11 +17,13 @@ ClientSocket.prototype.initialize = function() {
 	}
 };
 
-ClientSocket.prototype.connectAsync = function(serverUrl, token) {
-	log.info(`Socket connecting to: ${serverUrl} with token: `, token);
+ClientSocket.prototype.connectAsync = function(serverUrl, authToken) {
+	log.info(`Socket connecting to: ${serverUrl} with token: `, authToken);
+	authToken = typeof authToken === 'object' ? JSON.stringify(authToken) : authToken;
+
 	socket = Io.connect(`${serverUrl}`, {
 		rejectUnauthorized: true,
-		query: { token: encodeURIComponent(token) }
+		query: { token: encodeURIComponent(authToken) }
   });
 
 	return new Promise(function(resolve, reject) {

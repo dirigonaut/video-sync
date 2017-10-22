@@ -84,6 +84,23 @@ function initGUI(client, isAdmin) {
   });
 
   //Token Events ----------------------------------------------------------------
+  var loadTokens = function(tokens) {
+    if(tokens) {
+      $('#tokenList').find("tr:gt(1)").remove();
+
+      for(var token in tokens) {
+        $('#tokenList tr:last').after(`<tr><td>${token}</td><td>${tokens[token].handle}</td><td><input type="checkbox" id='${token}' class="align-center"></td><td>
+        <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
+
+        if(tokens[token].level === 'controls') {
+          $(`#${token}`).prop('checked', true);
+        }
+      }
+    }
+  };
+
+  client.formData.on(client.formData.Enums.FORMS.TOKENS, loadTokens);
+
   $('#token-create').click(function() {
     client.log.info("Create Tokens.");
     var count = $('#token-count').val();
@@ -97,7 +114,8 @@ function initGUI(client, isAdmin) {
     var id = token[0].children[0].outerText;
 
     if(id === 'Update') {
-      var tokens = client.formData.getTokenList();
+      var tokens = client.formData.getFormData(client.formData.Enums.FORMS.TOKENS);
+      console.log(tokens);
       id = '';
 
       for(var token in tokens) {
@@ -119,7 +137,7 @@ function initGUI(client, isAdmin) {
     var level = $(`#${id}`).is(':checked') ? 'controls' : 'none';
 
     if(id === 'Update') {
-      var tokens = client.formData.getTokenList();
+      var tokens = client.formData.getFormData(client.formData.Enums.FORMS.TOKENS);
 
       for(var token in tokens) {
         client.socket.request(client.keys.SETTOKENLEVEL,
@@ -278,25 +296,6 @@ function initGUI(client, isAdmin) {
   });
 
   //Side Events -----------------------------------------------------------------
-  var loadTokens = function() {
-    var tokens = client.formData.getTokenList();
-
-    if(tokens) {
-      $('#tokenList').find("tr:gt(1)").remove();
-
-      for(var token in tokens) {
-        $('#tokenList tr:last').after(`<tr><td>${token}</td><td>${tokens[token].handle}</td><td><input type="checkbox" id='${token}' class="align-center"></td><td>
-        <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
-
-        if(tokens[token].level === 'controls') {
-          $(`#${token}`).prop('checked', true);
-        }
-      }
-    }
-  };
-
-  client.socket.setEvent(client.keys.TOKENS, loadTokens);
-
   $('#btnTokens').click(function() {
     $('#tokenModal').modal('show');
   });
