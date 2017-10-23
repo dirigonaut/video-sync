@@ -29,13 +29,15 @@ AuthenticationController.prototype.attachIO = function (io) {
     var token = decodeURIComponent(socket.handshake.query.token);
 
     try {
-      token = JSON.parse(token);
+      if(token !== 'undefined') {
+        token = JSON.parse(token);
+      }
     } catch(error) {
       log.warn(error);
       token = undefined;
     }
 
-    var isUser = yield isValidUser.call(this, socket, token)
+    var isUser = yield isValidUser.call(this, socket, token);
     var isAdmin = yield isAdministrator.call(this, socket);
 
     return isAdmin || isUser ? next(log.info(`${socket.id} has been authenticated.`, socket.id))
@@ -44,7 +46,10 @@ AuthenticationController.prototype.attachIO = function (io) {
 
   io.on('connection', Promise.coroutine(function* (socket, data) {
     log.socket(`Socket has connected: ${socket.id} ip: ${socket.handshake.address}`);
-    socket.emit(eventKeys.AUTHENTICATED, yield credentials.isAdmin(socket), Promise.coroutine(function* () {
+    let isAdmin = yield credentials.isAdmin(socket);
+
+    socket.emit(eventKeys.AUTHENTICATED, isAdmin, Promise.coroutine(function* () {
+      log.info(`Socket: ${socket.id} has acknowledged the handshake.`);
       yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.Functions.CREATEPLAYER, [socket.id]]);
 
       var mediaPath = yield media.getMediaPath();
@@ -53,24 +58,28 @@ AuthenticationController.prototype.attachIO = function (io) {
       }
     }));
 
-    socket.on(eventKeys.DISCONNECT, Promise.coroutine(function*() {
+    socket.on(eventKeys.DISCONNECT, Promise.coroutine(function* () {
       log.info(eventKeys.DISCONNECT, socket.id);
 
       if(socket && socket.id) {
         var adminId = yield credentials.getAdmin();
+        var includes = yield credentials.includes(socket.id);
 
         if(adminId === socket.id) {
           credentials.removeAdmin(socket);
-        } else {
+        } else if(includes) {
           var tokens = yield credentials.resetToken(socket.id);
-          redisSocket.ping.call(this, adminId, eventKeys.TOKENS, tokens);
+
+          if(adminId) {
+            redisSocket.ping.call(this, adminId, eventKeys.TOKENS, tokens);
+          }
         }
 
         yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.Functions.REMOVEPLAYER, [socket.id]]);
       }
     }));
 
-    if(credentials.isAdmin(socket)) {
+    if(isAdmin) {
       socket.on(eventKeys.SHUTDOWN, function() {
         log.info(eventKeys.SHUTDOWN, socket.id);
         socket.emit(eventKeys.CONFIRM, function(confirmed) {
@@ -109,8 +118,12 @@ var isValidUser = Promise.coroutine(function* (socket, data) {
   var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
   if(request) {
-    var isAuth  = yield credentials.authenticateToken(socket.id, request.id, request.data);
-    return isAuth ? isAuth || userAuthorized.call(this, socket) : false;
+    var isAuth = yield credentials.authenticateToken(socket.id, request.id, request.data);
+
+    if(isAuth) {
+      userAuthorized.call(this, socket);
+    }
+    return isAuth;
   }
 });
 

@@ -47,9 +47,7 @@ CredentialManager.prototype.generateTokens = Promise.coroutine(function* (count,
 
   for(let i = 0; i < count; ++i) {
     var entry = {
-      id: undefined,
       level: level ? CredentialManager.Enum.Level.CONTROLS : CredentialManager.Enum.Level.NONE,
-      handle: undefined
     };
 
     entries[Crypto.randomBytes(24).toString('hex')] = entry;
@@ -65,7 +63,10 @@ CredentialManager.prototype.deleteTokens = Promise.coroutine(function* (keys) {
 
   for(let i = 0; i < keys.length; ++i) {
     if(entries && entries[keys[i]]) {
-      redisSocket.disconnect(entries[keys[i]].id)
+      if(entries[keys[i]].id) {
+        redisSocket.disconnect(entries[keys[i]].id);
+      }
+
       delete entries[keys[i]];
     }
   }
@@ -77,6 +78,16 @@ CredentialManager.prototype.deleteTokens = Promise.coroutine(function* (keys) {
 CredentialManager.prototype.getTokens = Promise.coroutine(function* () {
   var tokens = yield getUserData(CredentialManager.Enum.User.CLIENT);
   return tokens;
+});
+
+CredentialManager.prototype.includes = Promise.coroutine(function* (id) {
+  var entries = yield this.getTokens();
+
+  for(var key in entries) {
+    if(entries[key].id === id) {
+      return true;
+    }
+  }
 });
 
 CredentialManager.prototype.resetToken = Promise.coroutine(function* (socketId) {
@@ -130,8 +141,9 @@ CredentialManager.prototype.authenticateToken = Promise.coroutine(function* (soc
 
       entries[key] = user;
       yield setUserData(CredentialManager.Enum.User.CLIENT, entries);
+      sendUpdatedTokens.call(this, entries);
 
-      return sendUpdatedTokens.call(this, entries);
+      return true;
     }
   }
 });
@@ -144,7 +156,7 @@ CredentialManager.Enum.Level = { CONTROLS : 'controls', NONE: 'none' };
 CredentialManager.Enum.Event = { DELETE : 'delete' };
 
 var setUserData = function(key, data) {
-  log.silly('setCredentialData for key: ', key);
+  log.silly(`setCredentialData for key: ${key}`, data);
   return client.setAsync(key, JSON.stringify(data));
 };
 
@@ -156,8 +168,10 @@ var getUserData = function(key) {
 };
 
 var sendUpdatedTokens = Promise.coroutine(function* (tokens) {
-  var admin = yield this.getAdmin();
+  var adminId = yield this.getAdmin();
   var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [tokens]);
-  redisSocket.ping.call(this, admin, eventKeys.TOKENS, response);
-  return true;
+
+  if(adminId) {
+    redisSocket.ping.call(this, adminId, eventKeys.TOKENS, response);
+  }
 });

@@ -9,8 +9,8 @@ process.on('uncaughtException', function(err) {
 });
 
 var b = browserify({
-  entries: [path.join(__dirname, '../src/client/Client.js')],
-  standalone: 'Client',
+  entries: [path.join(__dirname, '../src/client/factory/ClientFactoryManager.js')],
+  standalone: 'FactoryManager',
   cache: {}
 });
 

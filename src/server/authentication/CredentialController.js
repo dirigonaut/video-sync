@@ -49,8 +49,8 @@ CredentialController.prototype.attachSocket = function(socket) {
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
-      var tokens = yield credentials.deleteTokens(request.data.split(','));
-      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, tokens);
+      var tokens = yield credentials.deleteTokens(request.data.includes(',') ? request.data.split(',') : [request.data]);
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [tokens]);
       socket.emit(eventKeys.TOKENS, response);
     }
   }.bind(this)));
