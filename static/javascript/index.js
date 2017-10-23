@@ -1,9 +1,8 @@
-var client;
 var cookie = Object.create(Cookie.prototype);
 $(document).ready(setupClient);
 
 function setupClient() {
-  var socket, log;
+  var factory, log;
 
   window.URL = window.URL || window.webkitURL;
   window.MediaSource = window.MediaSource || window.WebKitMediaSource
@@ -18,24 +17,41 @@ function setupClient() {
     ]).then(function() {
       $('#loginModal').modal('show');
 
-      client          = Object.create(Client.prototype);
-      var factory     = client.getFactory();
+      var factoryManager  = Object.create(FactoryManager.prototype);
+      factory             = factoryManager.getFactory();
 
       var logManager  = factory.createClientLogManager();
       logManager.addUILogging(guiLog());
       log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
 
-      socket          = factory.createClientSocket();
       $(document).trigger('initializeConnection',
-        initClientLogin(socket, factory.createSchemaFactory(), factory.createKeys()));
+        initClientLogin(factory.createSchemaFactory(), factory.createKeys()));
     });
   };
 
-  $(document).on('initializeConnection', function(event, token) {
-    client.initialize(window.location.host, token)
-    .then(function(results) {
+  $(document).on('initializeConnection', function(e, token) {
+    var clientSocket = factory.createClientSocket();
+
+    clientSocket.events.once(clientSocket.Enums.EVENTS.DISCONNECT, function() {
+      $('#loginModal').modal('show');
+      $(document).trigger('initializeMedia', [true]);
+    });
+
+    clientSocket.connectAsync(window.location.host, token)
+    .then(function(response) {
+      log.ui('Authenticated with server.');
+
+      var isAdmin = response[1] ? true : false;
+      var acknowledged = response[0] !== 'undefined' ? response[0] : undefined;
+
+      return { 'acknowledge': acknowledged, 'isAdmin': isAdmin };
+    }).then(function(results) {
       if(typeof results.acknowledge === 'undefined') {
         throw new Error('Missing connection hook from server authentication.');
+      }
+
+      if(results.isAdmin) {
+        factory.createFileBuffer(true);
       }
 
       loadExtraResources(results.isAdmin)
@@ -44,30 +60,19 @@ function setupClient() {
       });
     }).catch(function(error) {
       cookie.deleteCookie('creds');
+      $('#loginToken').val('');
       log.error(error);
     });
   });
 
-  $(document).on('initializeMedia', function(mediaController) {
-    var domElements = {
-      mediaSource:  new MediaSource(),
-      window:       window,
-      document:     document,
-      videoElement: document.getElementById('video')
-    };
-
-    mediaController.initializeMedia(domElements);
-  });
-
   var initializeGui = function(isAdmin, acknowledge) {
     $('#loginModal').modal('hide');
-    $('#btnLogin').parent().remove();
+    isAdmin ? $('#btnLogin').parent().remove() : undefined;
 
-    var factory     = client.getFactory();
     var logManager  = factory.createClientLogManager();
 
-    var container = {
-      socket:   socket,
+    var container   = {
+      socket:   factory.createClientSocket(),
       formData: factory.createFormData(),
       media:    factory.createMediaController(),
       encode:   factory.createEncodeFactory(),
@@ -77,13 +82,25 @@ function setupClient() {
     };
 
     //Reload media
-    socket.setEvent(container.keys.MEDIAREADY, function() {
-      $(document).trigger('initializeMedia', [container.media]);
+    container.socket.setEvent(container.keys.MEDIAREADY, function() {
+      $(document).trigger('initializeMedia');
     });
 
     acknowledge();
     initGUI(container, isAdmin);
   };
+
+  $(document).on('initializeMedia', function(e, reset) {
+    var domElements = {
+      mediaSource:  new MediaSource(),
+      window:       window,
+      document:     document,
+      videoElement: document.getElementById('video')
+    };
+
+    var mediaController = factory.createMediaController();
+    mediaController.initializeMedia(domElements, reset);
+  });
 
   var loadExtraResources = function(isAdmin) {
     if(isAdmin) {

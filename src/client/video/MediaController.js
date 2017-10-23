@@ -21,12 +21,15 @@ MediaController.prototype.initialize = function() {
   }
 };
 
-MediaController.prototype.initializeMedia = Promise.coroutine(function* (domElements) {
+MediaController.prototype.initializeMedia = Promise.coroutine(function* (domElements, resetOnly) {
   if(resetMedia) {
     yield resetMedia();
+    resetMedia = undefined
   }
 
-  resetMedia = yield setupMedia.call(this, domElements);
+  if(!resetOnly) {
+    resetMedia = yield setupMedia.call(this, domElements);
+  }
 });
 
 MediaController.prototype.getTrackInfo = function() {

@@ -1,4 +1,4 @@
-function initClientLogin(socket, schemaFactory, keys) {
+function initClientLogin(schemaFactory, keys) {
   $('#submitCreds').click(function() {
     var handle	= $('#loginHandle').val();
     var token	  = $('#loginToken').val();

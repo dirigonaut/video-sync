@@ -79,7 +79,7 @@ var attachEvents = function() {
         try{
           var socket = io.sockets.connected[payload];
           if(socket) {
-            socket.disconnect();
+            socket.disconnect(true);
           }
         } catch(err) {
           log.error(err);

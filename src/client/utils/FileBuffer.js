@@ -7,8 +7,8 @@ var fileRequests, buffers, trigger, socket, schemaFactory, eventKeys, log;
 
 function FileBuffer() { }
 
-FileBuffer.prototype.initialize = function() {
-  if(typeof FileBuffer.prototype.protoInit === 'undefined') {
+FileBuffer.prototype.initialize = function(init) {
+  if(typeof FileBuffer.prototype.protoInit === 'undefined' || typeof init !== 'undefined' ? init : false) {
     FileBuffer.prototype.protoInit = true;
     eventKeys       = this.factory.createKeys();
     schemaFactory   = this.factory.createSchemaFactory();

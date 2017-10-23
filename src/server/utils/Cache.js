@@ -87,7 +87,7 @@ Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback)
         }
       } while(indexes.includes(index) || segment);
     }
-  });
+  }.bind(this));
 
   this.on(key, segmentHandler);
   yield client.subscribeAsync(key);
