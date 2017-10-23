@@ -50,9 +50,7 @@ function setupClient() {
         throw new Error('Missing connection hook from server authentication.');
       }
 
-      if(results.isAdmin) {
-        factory.createFileBuffer(true);
-      }
+      factory.createFileBuffer(true);
 
       loadExtraResources(results.isAdmin)
       .then(function() {
