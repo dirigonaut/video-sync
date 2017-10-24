@@ -10,8 +10,8 @@ function ClientSocket() { }
 
 ClientSocket.prototype.initialize = function() {
 	if(typeof ClientSocket.prototype.protoInit === 'undefined') {
-		ClientSocket.prototype.protoInit = true;
-		ClientSocket.prototype.events =  Object.create(Events.prototype);
+		ClientSocket.prototype.protoInit 	= true;
+		ClientSocket.prototype.events 		=  Object.create(Events.prototype);
 		eventKeys = this.factory.createKeys();
 
 		var logManager = this.factory.createClientLogManager();
@@ -29,10 +29,7 @@ ClientSocket.prototype.connectAsync = function(serverUrl, authToken) {
 			query: { token: encodeURIComponent(authToken) }
 	  });
 
-		socket.once(eventKeys.DISCONNECT, function() {
-			log.info(`Disconnected from ${serverUrl}`);
-			ClientSocket.prototype.events.emit(ClientSocket.Enum.Events.DISCONNECT);
-		});
+		var clearEvents = setSocketEvents(socket, serverUrl);
 
 		return new Promise(function(resolve, reject) {
 			var rejectRequest = setTimeout(function(err) {
@@ -44,8 +41,10 @@ ClientSocket.prototype.connectAsync = function(serverUrl, authToken) {
 				resolve([callback, isAdmin]);
 			});
 
-			socket.once('error', function(error) {
+			socket.once(eventKeys.ERROR, function(error) {
 				socket = undefined;
+				this.events.emit();
+				clearEvents();
 				clearTimeout(rejectRequest);
 				reject(error);
 			});
@@ -105,4 +104,24 @@ ClientSocket.prototype.removeEvent = function(event, callback) {
 module.exports = ClientSocket;
 
 ClientSocket.Enum = {};
-ClientSocket.Enum.Events = { DISCONNECT: 'socket-disconnect' };
+ClientSocket.Enum.Events = { DISCONNECT: 'socket-disconnect', RECONNECT: 'socket-reconnect', ERROR: 'socket-error'};
+
+var setSocketEvents = function(socket, serverUrl) {
+	var events = new Map();
+
+	for(let e in ClientSocket.Enum.Events) {
+		var eventFunc = function() {
+			log.info(`${ClientSocket.Enum.Events[e]} from ${serverUrl}`);
+			ClientSocket.prototype.events.emit(ClientSocket.Enum.Events[e]);
+		}
+
+		events.set(e, eventFunc);
+		socket.on(eventKeys[e], eventFunc);
+	};
+
+	return function() {
+		for(let e of events.entries()) {
+			socket.off(eventKeys[e[0]], e[1]);
+		}
+	};
+};

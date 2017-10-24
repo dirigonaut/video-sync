@@ -37,8 +37,12 @@ AuthenticationController.prototype.attachIO = function (io) {
       token = undefined;
     }
 
-    var isUser = yield isValidUser.call(this, socket, token);
     var isAdmin = yield isAdministrator.call(this, socket);
+    var isUser;
+
+    if(!isAdmin) {
+      isUser = yield isValidUser.call(this, socket, token);
+    }
 
     return isAdmin || isUser ? next(log.info(`${socket.id} has been authenticated.`, socket.id))
                     : next(new Error(`${JSON.stringify(token)} has failed authentication.`));
