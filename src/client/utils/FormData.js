@@ -5,8 +5,8 @@ var formEvents, formList, socket, eventKeys, log;
 
 function FormData() { }
 
-FormData.prototype.initialize = function() {
-  if(typeof FormData.prototype.protoInit === 'undefined') {
+FormData.prototype.initialize = function(init) {
+  if(typeof FormData.prototype.protoInit === 'undefined' && typeof init !== 'undefined' ? init : false) {
     FormData.prototype.protoInit = true;
     Object.setPrototypeOf(FormData.prototype, Events.prototype);
 

@@ -2,7 +2,7 @@ var cookie = Object.create(Cookie.prototype);
 $(document).ready(setupClient);
 
 function setupClient() {
-  var factory, log;
+  var factory, container, log;
 
   window.URL = window.URL || window.webkitURL;
   window.MediaSource = window.MediaSource || window.WebKitMediaSource
@@ -24,6 +24,22 @@ function setupClient() {
       logManager.addUILogging(guiLog());
       log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
 
+      var clientSocket = factory.createClientSocket();
+
+      clientSocket.events.on(clientSocket.Enums.EVENTS.RECONNECT, function() {
+        if(factory.createMediaController().isMediaInitialized()) {
+          $(document).trigger('initializeMedia');
+        }
+      });
+
+      clientSocket.events.on(clientSocket.Enums.EVENTS.ERROR, function() {
+        if(factory.createMediaController().isMediaInitialized()) {
+          $(document).trigger('initializeMedia', [true]);
+        }
+
+        $('#loginModal').modal('show');
+      });
+
       $(document).trigger('initializeConnection',
         initClientLogin(factory.createSchemaFactory(), factory.createKeys()));
     });
@@ -31,11 +47,6 @@ function setupClient() {
 
   $(document).on('initializeConnection', function(e, token) {
     var clientSocket = factory.createClientSocket();
-
-    clientSocket.events.once(clientSocket.Enums.EVENTS.DISCONNECT, function() {
-      $('#loginModal').modal('show');
-      $(document).trigger('initializeMedia', [true]);
-    });
 
     clientSocket.connectAsync(window.location.host, token)
     .then(function(response) {
@@ -50,11 +61,13 @@ function setupClient() {
         throw new Error('Missing connection hook from server authentication.');
       }
 
-      factory.createFileBuffer(true);
-
       loadExtraResources(results.isAdmin)
       .then(function() {
+        factory.createFileBuffer(true);
         initializeGui(results.isAdmin, results.acknowledge);
+      }).catch(function(e) {
+        log.info(e);
+        log.info('Gui is already init.');
       });
     }).catch(function(error) {
       cookie.deleteCookie('creds');
@@ -69,9 +82,9 @@ function setupClient() {
 
     var logManager  = factory.createClientLogManager();
 
-    var container   = {
+    container   = {
       socket:   factory.createClientSocket(),
-      formData: factory.createFormData(),
+      formData: factory.createFormData(true),
       media:    factory.createMediaController(),
       encode:   factory.createEncodeFactory(),
       schema:   factory.createSchemaFactory(),
@@ -84,8 +97,8 @@ function setupClient() {
       $(document).trigger('initializeMedia');
     });
 
-    acknowledge();
     initGUI(container, isAdmin);
+    acknowledge();
   };
 
   $(document).on('initializeMedia', function(e, reset) {
@@ -96,23 +109,28 @@ function setupClient() {
       videoElement: document.getElementById('video')
     };
 
-    var mediaController = factory.createMediaController();
-    mediaController.initializeMedia(domElements, reset);
+    container.media.initializeMedia(domElements, reset);
   });
 
+  var isExtraResourcesLoaded;
   var loadExtraResources = function(isAdmin) {
-    if(isAdmin) {
-      return Promise.all([
-        loadAsyncFile('#side-container', 'menu/side.html'),
-        loadAsyncFile('#encode-overlay', 'menu/overlays/encode.html'),
-        loadAsyncFile('#token-overlay', 'menu/overlays/tokens.html'),
-        loadAsyncFile('#location-container', 'menu/location.html')
-      ])
-      .then(function() {
+    if(!isExtraResourcesLoaded) {
+      isExtraResourcesLoaded = true;
+      if(isAdmin) {
+        return Promise.all([
+          loadAsyncFile('#side-container', 'menu/side.html'),
+          loadAsyncFile('#encode-overlay', 'menu/overlays/encode.html'),
+          loadAsyncFile('#token-overlay', 'menu/overlays/tokens.html'),
+          loadAsyncFile('#location-container', 'menu/location.html')
+        ])
+        .then(function() {
+          return loadAsyncScript('../javascript/gui.js');
+        })
+      } else {
         return loadAsyncScript('../javascript/gui.js');
-      })
+      }
     } else {
-      return loadAsyncScript('../javascript/gui.js');
+      return new Promise.reject('Extra resources already loaded.');
     }
   };
 

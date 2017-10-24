@@ -5,11 +5,14 @@ module.exports = {
   //Client
   MEDIAREADY:     'admin-media-ready',
 
+  //Sokcet Connection Events
+  ERROR:          'error',
+  DISCONNECT:     'disconnect',
+  RECONNECT:      'reconnect',
   //CredentialController
   //Server
   TOKENS:         'tokens',
   AUTHTOKEN:      'auth-token',
-  DISCONNECT:     'disconnect',
   SHUTDOWN:       'shutdown',
   //Client
   CREATETOKENS:   'gen-tokens',

@@ -32,6 +32,10 @@ MediaController.prototype.initializeMedia = Promise.coroutine(function* (domElem
   }
 });
 
+MediaController.prototype.isMediaInitialized = function() {
+  return resetMedia ? true : false;
+};
+
 MediaController.prototype.getTrackInfo = function() {
   return metaManager.getTrackInfo();
 };
