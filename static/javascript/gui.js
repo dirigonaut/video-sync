@@ -1,4 +1,35 @@
 function initGUI(client, isAdmin) {
+  //Setup -----------------------------------------------------------------------
+  client.socket.events.on(client.socket.Enums.EVENTS.RECONNECT, function() {
+    if(client.media.isMediaInitialized()) {
+      $(document).trigger('initializeMedia');
+    }
+  });
+
+  client.socket.events.on(client.socket.Enums.EVENTS.ERROR, function() {
+    if(client.media.isMediaInitialized()) {
+      $(document).trigger('initializeMedia', [true]);
+    }
+
+    $('#loginModal').modal('show');
+  });
+
+  //Reload media
+  client.socket.setEvent(client.keys.MEDIAREADY, function() {
+    $(document).trigger('initializeMedia');
+  });
+
+  if(isAdmin) {
+    $(document).on('shutdown', function(e) {
+      client.socket.setEvent(client.keys.CONFIRM, function(confirm) {
+        confirm();
+      });
+
+      log.info('Reqesting server shutdown.');
+      client.socket.request(client.keys.SHUTDOWN);
+    });
+  }
+
   //Control Bar Events ----------------------------------------------------------
   function updateProgressBar(e) {
     $('#seek-bar').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
@@ -6,8 +37,10 @@ function initGUI(client, isAdmin) {
 
   $('#btnPlay').click(function() {
     if ($('#video')[0].paused) {
+      client.log.info(`Requesting ${client.keys.REQPLAY}`);
       client.socket.request(client.keys.REQPLAY);
     } else {
+      client.log.info(`Requesting ${client.keys.REQPAUSE}`);
       client.socket.request(client.keys.REQPAUSE);
     }
   });
@@ -27,6 +60,7 @@ function initGUI(client, isAdmin) {
     var length  = $('#video')[0].duration;
     var time = Math.round(length * (percent / 100));
 
+    client.log.info(`Requesting ${client.keys.REQSEEK} at ${time}`);
     client.socket.request(client.keys.REQSEEK,
       client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STATE, [time]));
 

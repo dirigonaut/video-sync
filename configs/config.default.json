@@ -7,7 +7,25 @@
     "port" : 6379,
     "password" : null
   },
-  "redisStartUp" : {
+  "redisPath" : {
     "bin" : "/usr/bin/redis-server"
+  },
+  "ffmpegPath" : {
+    "bin" : "/usr/bin/redis-server"
+  },
+  "certificate" : {
+    "path" : "/usr/bin/redis-server"
+  },
+  "log" : {
+    "GENERAL": "debug",
+    "ADMINISTRATION": "debug",
+    "AUTHENTICATION": "debug",
+    "CHAT": "debug",
+    "DATABASE": "debug",
+    "LOG": "debug",
+    "VIDEO": "debug",
+    "ENCODING": "debug",
+    "STATE": "debug",
+    "UTILS": "debug"
   }
 }
