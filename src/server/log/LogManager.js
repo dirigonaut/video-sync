@@ -27,11 +27,11 @@ LogManager.prototype.initialize = function() {
 
 LogManager.prototype.addFileLogging = function() {
   var keys = Object.keys(LogManager.Enum.Logs);
-  var logLevels = LevelEnum;
+  var logLevels = config.getConfig().log ? config.getConfig().log : undefined;
 
   for(var i in keys) {
     var fileTransport = buildFileTransport.call(this, Path.join(config.getLogDir(), FILE_NAME),
-                          LogManager.Enum.Logs[keys[i]], logLevels[keys[i]], false);
+                          LogManager.Enum.Logs[keys[i]], logLevels ? logLevels[keys[i]] : LogManager.Enum.Logs.error, false);
     var container     = Winston.loggers.get(LogManager.Enum.Logs[keys[i]]);
 
     container.configure({
@@ -55,9 +55,6 @@ LogManager.Enum = {};
 LogManager.Enum.Levels  = { socket: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
 LogManager.Enum.Logs    = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
                         CHAT: 'chat', DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};
-
-var LevelEnum       = { GENERAL: 'debug', ADMINISTRATION: 'debug', AUTHENTICATION: 'debug',
-                        CHAT: 'debug', DATABASE: 'debug', LOG: 'debug', VIDEO: 'debug', ENCODING: 'debug', STATE: 'debug', UTILS: "debug"};
 
 var buildFileTransport = function(path, label, level, handleExceptions) {
   var fileTransport = new (Winston.transports.File) ({

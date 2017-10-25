@@ -4,7 +4,7 @@ const Util    = require('util');
 
 const Spawn = require('child_process').spawn;
 
-var log;
+var config, log;
 
 function FfmpegProcess() { }
 
@@ -12,6 +12,8 @@ FfmpegProcess.prototype.initialize = function() {
   if(typeof FfmpegProcess.prototype.protoInit === 'undefined') {
     FfmpegProcess.prototype.protoInit = true;
     Object.setPrototypeOf(FfmpegProcess.prototype, Events.prototype);
+    config          = this.factory.createConfig();
+
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
   }
@@ -22,7 +24,8 @@ FfmpegProcess.prototype.setCommand = function(command) {
 };
 
 FfmpegProcess.prototype.execute = function() {
-  var ffmpeg = Spawn("ffmpeg", this.command);
+  var ffmpegPath = config.getConfig() ? config.getConfig().certificate : undefined;
+  var ffmpeg = Spawn(ffmpegPath ? ffmpegPath : "ffmpeg", this.command);
   log.info(`Spawned child pid: ${ffmpeg.pid}`, this.command);
 
   ffmpeg.on('exit', function(data) {

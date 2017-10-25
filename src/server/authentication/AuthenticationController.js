@@ -86,11 +86,9 @@ AuthenticationController.prototype.attachIO = function (io) {
     if(isAdmin) {
       socket.on(eventKeys.SHUTDOWN, function() {
         log.info(eventKeys.SHUTDOWN, socket.id);
-        socket.emit(eventKeys.CONFIRM, function(confirmed) {
-          if(confirmed) {
-            log.info(eventKeys.SHUTDOWN, 'The shutdown command has been received and confirmed.');
-            process.send('master-process:shutdown');
-          }
+        socket.emit(eventKeys.CONFIRM, function() {
+          log.info(eventKeys.SHUTDOWN, 'The shutdown command has been received and confirmed.');
+          process.send('master-process:shutdown');
         });
       });
     }

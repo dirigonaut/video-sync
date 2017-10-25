@@ -77,12 +77,12 @@ ClientSocket.prototype.request = function(event, request) {
 	if(socket && socket.connected) {
 		socket.emit(event, request);
 	} else {
-		log.warn(`socket is undefined, and thus unable to send event: ${event}`);
+		log.warn(`socket is disconnected, and thus unable to send event: ${event}`);
 	}
 };
 
 ClientSocket.prototype.setEvent = function(event, callback) {
-	if(socket && socket.connected) {
+	if(socket) {
 		socket.on(event, callback);
 	} else {
 		log.warn(`Socket is undefined, and thus unable to set event: ${event}`);
@@ -90,7 +90,7 @@ ClientSocket.prototype.setEvent = function(event, callback) {
 };
 
 ClientSocket.prototype.removeEvent = function(event, callback) {
-	if(socket && socket.connected) {
+	if(socket) {
 		if(callback) {
 			socket.off(event, callback);
 		} else {

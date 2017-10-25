@@ -2,7 +2,7 @@ var cookie = Object.create(Cookie.prototype);
 $(document).ready(setupClient);
 
 function setupClient() {
-  var factory, container, log;
+  var factory, clientSocket, log;
 
   window.URL = window.URL || window.webkitURL;
   window.MediaSource = window.MediaSource || window.WebKitMediaSource
@@ -24,21 +24,7 @@ function setupClient() {
       logManager.addUILogging(guiLog());
       log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
 
-      var clientSocket = factory.createClientSocket();
-
-      clientSocket.events.on(clientSocket.Enums.EVENTS.RECONNECT, function() {
-        if(factory.createMediaController().isMediaInitialized()) {
-          $(document).trigger('initializeMedia');
-        }
-      });
-
-      clientSocket.events.on(clientSocket.Enums.EVENTS.ERROR, function() {
-        if(factory.createMediaController().isMediaInitialized()) {
-          $(document).trigger('initializeMedia', [true]);
-        }
-
-        $('#loginModal').modal('show');
-      });
+      clientSocket = factory.createClientSocket();
 
       $(document).trigger('initializeConnection',
         initClientLogin(factory.createSchemaFactory(), factory.createKeys()));
@@ -46,14 +32,12 @@ function setupClient() {
   };
 
   $(document).on('initializeConnection', function(e, token) {
-    var clientSocket = factory.createClientSocket();
-
     clientSocket.connectAsync(window.location.host, token)
     .then(function(response) {
       log.ui('Authenticated with server.');
 
       var isAdmin = response[1] ? true : false;
-      var acknowledged = response[0] !== 'undefined' ? response[0] : undefined;
+      var acknowledged = typeof response[0] === 'function' ? response[0] : undefined;
 
       return { 'acknowledge': acknowledged, 'isAdmin': isAdmin };
     }).then(function(results) {
@@ -80,37 +64,30 @@ function setupClient() {
     $('#loginModal').modal('hide');
     isAdmin ? $('#btnLogin').parent().remove() : undefined;
 
-    var logManager  = factory.createClientLogManager();
-
     container   = {
-      socket:   factory.createClientSocket(),
+      socket:   clientSocket,
       formData: factory.createFormData(true),
       media:    factory.createMediaController(),
       encode:   factory.createEncodeFactory(),
       schema:   factory.createSchemaFactory(),
       keys:     factory.createKeys(),
-      log:      logManager.getLog(logManager.Enums.LOGS.GENERAL),
+      log:      log,
     };
 
-    //Reload media
-    container.socket.setEvent(container.keys.MEDIAREADY, function() {
-      $(document).trigger('initializeMedia');
+    $(document).on('initializeMedia', function(e, reset) {
+      var domElements = {
+        mediaSource:  new MediaSource(),
+        window:       window,
+        document:     document,
+        videoElement: document.getElementById('video')
+      };
+
+      container.media.initializeMedia(domElements, reset);
     });
 
     initGUI(container, isAdmin);
     acknowledge();
   };
-
-  $(document).on('initializeMedia', function(e, reset) {
-    var domElements = {
-      mediaSource:  new MediaSource(),
-      window:       window,
-      document:     document,
-      videoElement: document.getElementById('video')
-    };
-
-    container.media.initializeMedia(domElements, reset);
-  });
 
   var isExtraResourcesLoaded;
   var loadExtraResources = function(isAdmin) {
