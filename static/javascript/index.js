@@ -31,6 +31,7 @@ function setupClient() {
     });
   };
 
+  var resets;
   $(document).on('initializeConnection', function(e, token) {
     clientSocket.connectAsync(window.location.host, token)
     .then(function(response) {
@@ -48,10 +49,12 @@ function setupClient() {
       loadExtraResources(results.isAdmin)
       .then(function() {
         factory.createFileBuffer(true);
-        initializeGui(results.isAdmin, results.acknowledge);
-      }).catch(function(e) {
-        log.info(e);
-        log.info('Gui is already init.');
+
+        if(resets) {
+          resets();
+        }
+
+        resets = initializeGui(results.isAdmin, results.acknowledge);
       });
     }).catch(function(error) {
       cookie.deleteCookie('creds');
@@ -64,7 +67,7 @@ function setupClient() {
     $('#loginModal').modal('hide');
     isAdmin ? $('#btnLogin').parent().remove() : undefined;
 
-    container   = {
+    var client   = {
       socket:   clientSocket,
       formData: factory.createFormData(true),
       media:    factory.createMediaController(),
@@ -74,25 +77,27 @@ function setupClient() {
       log:      log,
     };
 
-    $(document).on('initializeMedia', function(e, reset) {
-      var domElements = {
-        mediaSource:  new MediaSource(),
-        window:       window,
-        document:     document,
-        videoElement: document.getElementById('video')
-      };
-
-      container.media.initializeMedia(domElements, reset);
+    client.socket.events.on(client.socket.Enums.EVENTS.RECONNECT, function() {
+      if(client.media.isMediaInitialized()) {
+        $(document).trigger('initializeMedia');
+      }
     });
 
-    initGUI(container, isAdmin);
+    client.socket.events.on(client.socket.Enums.EVENTS.ERROR, function() {
+      if(client.media.isMediaInitialized()) {
+        $(document).trigger('initializeMedia', [true]);
+      }
+
+      $('#loginModal').modal('show');
+    });
+
     acknowledge();
+    return initGUI(container, isAdmin);
   };
 
   var isExtraResourcesLoaded;
   var loadExtraResources = function(isAdmin) {
     if(!isExtraResourcesLoaded) {
-      isExtraResourcesLoaded = true;
       if(isAdmin) {
         return Promise.all([
           loadAsyncFile('#side-container', 'menu/side.html'),
@@ -101,13 +106,15 @@ function setupClient() {
           loadAsyncFile('#location-container', 'menu/location.html')
         ])
         .then(function() {
-          return loadAsyncScript('../javascript/gui.js');
+          return loadAsyncScript('../javascript/gui.js')
+                    .then(function() { isExtraResourcesLoaded = true; });
         })
       } else {
-        return loadAsyncScript('../javascript/gui.js');
+        return loadAsyncScript('../javascript/gui.js')
+                  .then(function() { isExtraResourcesLoaded = true; });
       }
     } else {
-      return new Promise.reject('Extra resources already loaded.');
+      return new Promise.resolve('Extra resources already loaded.');
     }
   };
 

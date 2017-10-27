@@ -1,40 +1,41 @@
 function initGUI(client, isAdmin) {
   //Setup -----------------------------------------------------------------------
-  client.socket.events.on(client.socket.Enums.EVENTS.RECONNECT, function() {
-    if(client.media.isMediaInitialized()) {
-      $(document).trigger('initializeMedia');
-    }
-  });
+  jqueryReset();
+  var resets = new Map();
 
-  client.socket.events.on(client.socket.Enums.EVENTS.ERROR, function() {
-    if(client.media.isMediaInitialized()) {
-      $(document).trigger('initializeMedia', [true]);
-    }
+  var initializeMedia = function(e, reset) {
+    var domElements = {
+      mediaSource:  new MediaSource(),
+      window:       window,
+      document:     document,
+      videoElement: document.getElementById('video')
+    };
 
-    $('#loginModal').modal('show');
-  });
+    client.media.initializeMedia(domElements, reset);
+  };
 
-  //Reload media
+  $(document).on(initializeMedia.name, initializeMedia);
+  resets.set(initializeMedia.name, initializeMedia);
+
   client.socket.setEvent(client.keys.MEDIAREADY, function() {
-    $(document).trigger('initializeMedia');
-  });
+    $(document).trigger(initializeMedia.name);
+  }, true);
 
   if(isAdmin) {
-    $(document).on('shutdown', function(e) {
+    var shutdown = function(e) {
       client.socket.setEvent(client.keys.CONFIRM, function(confirm) {
         confirm();
-      });
+      }, true);
 
       log.info('Reqesting server shutdown.');
       client.socket.request(client.keys.SHUTDOWN);
-    });
+    };
+
+    $(document).on(shutdown.name, shutdown);
+    resets.set(shutdown.name, shutdown);
   }
 
   //Control Bar Events ----------------------------------------------------------
-  function updateProgressBar(e) {
-    $('#seek-bar').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
-  }
-
   $('#btnPlay').click(function() {
     if ($('#video')[0].paused) {
       client.log.info(`Requesting ${client.keys.REQPLAY}`);
@@ -45,7 +46,7 @@ function initGUI(client, isAdmin) {
     }
   });
 
-  $('#btnMute').click(function() {
+  $('#btnMute').click(  var btnMute = function() {
     if ($('#video')[0].muted) {
       $('.glyphicon-volume-off').attr('class', 'glyphicon glyphicon-thumbnail glyphicon-volume-up');
       $("video").prop('muted', false);
@@ -54,6 +55,10 @@ function initGUI(client, isAdmin) {
       $("video").prop('muted', true);
     }
   });
+
+  function updateProgressBar(e) {
+    $('#seek-bar').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
+  }
 
   $('#seek-bar').on('mouseup', function() {
     var percent = parseInt($('#seek-bar').val());
@@ -149,7 +154,6 @@ function initGUI(client, isAdmin) {
 
     if(id === 'Update') {
       var tokens = client.formData.getFormData(client.formData.Enums.FORMS.TOKENS);
-      console.log(tokens);
       id = '';
 
       for(var token in tokens) {
@@ -210,7 +214,7 @@ function initGUI(client, isAdmin) {
     }
   };
 
-  client.socket.setEvent(client.keys.META, loadFileInfo);
+  client.socket.setEvent(client.keys.META, loadFileInfo, true);
 
   $('#createVideo').click(function createVideo() {
     var quality = $('#video-quality').val();
@@ -359,10 +363,10 @@ function initGUI(client, isAdmin) {
       autoScroll('#logManuscript');
   }
 
-  client.socket.setEvent(client.keys.EVENTRESP, systemMessage);
-  client.socket.setEvent(client.keys.PINGRESP, systemMessage);
-  client.socket.setEvent(client.keys.LOGRESP, logMessage);
-  client.socket.setEvent(client.keys.INPUTERROR, console.error);
+  client.socket.setEvent(client.keys.EVENTRESP, systemMessage, true);
+  client.socket.setEvent(client.keys.PINGRESP, systemMessage, true);
+  client.socket.setEvent(client.keys.LOGRESP, logMessage, true);
+  client.socket.setEvent(client.keys.INPUTERROR, console.error, true);
 
   //Video Events -----------------------------------------------------------------
   $('#meta-types').on("change", function (e) {
@@ -428,11 +432,6 @@ function initGUI(client, isAdmin) {
   $('#force-buffer').on("change", function (e) {
     var value = $(e.currentTarget.children[0]).is(':checked');
     client.media.setForceBuffer(value);
-  });
-
-  $('#synchronize').on("change", function (e) {
-    var request = client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.BOOL, [$('#synchronize').find('input')[0].checked]);
-    client.socket.request(client.keys.CHANGESYNC, request);
   });
 
   client.media.on('meta-data-loaded', function(trackInfo) {
@@ -528,4 +527,17 @@ function initGUI(client, isAdmin) {
   }
 
   client.log.ui("Gui initialized");
+}
+
+function jqueryReset() {
+  $('#btnPlay').off();
+  $('#btnMute').off();
+  $('#seek-bar').off();
+  $("video").off();
+  $('#btnFullScreen').off();
+  $("#volume-bar").off();
+  $("#btnOptions").off();
+  $('#btnSessionMedia').off();
+  $('#token-create').off();
+  $('#tokenList').off();
 }

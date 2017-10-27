@@ -4,7 +4,7 @@ const Events  = require('events');
 
 const TIMEOUT = 5000;
 
-var socket, eventKeys, log;
+var socket, eventKeys, resets, log;
 
 function ClientSocket() { }
 
@@ -13,6 +13,7 @@ ClientSocket.prototype.initialize = function() {
 		ClientSocket.prototype.protoInit 	= true;
 		ClientSocket.prototype.events 		=  Object.create(Events.prototype);
 		eventKeys = this.factory.createKeys();
+		resets		= new Map();
 
 		var logManager = this.factory.createClientLogManager();
 		log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
@@ -42,13 +43,18 @@ ClientSocket.prototype.connectAsync = function(serverUrl, authToken) {
 			});
 
 			socket.once(eventKeys.ERROR, function(error) {
+				if(resets && resets.size > 0) {
+					resets.forEach((key, callback) => {
+						this.removeEvent(key, callback);
+					});
+				}
+
 				socket = undefined;
-				this.events.emit();
 				clearEvents();
 				clearTimeout(rejectRequest);
 				reject(error);
-			});
-	  });
+			}.bind(this));
+	  }.bind(this));
 	} else {
 		return Promise.reject(`Already connected to server: ${serverUrl}`);
 	}
@@ -81,9 +87,15 @@ ClientSocket.prototype.request = function(event, request) {
 	}
 };
 
-ClientSocket.prototype.setEvent = function(event, callback) {
+ClientSocket.prototype.setEvent = function(event, callback, autoClean) {
+	autoClean = typeof callback === 'function' ? autoClean : callback
+
 	if(socket) {
 		socket.on(event, callback);
+
+		if(autoClean) {
+			resets.set(event, callback);
+		}
 	} else {
 		log.warn(`Socket is undefined, and thus unable to set event: ${event}`);
 	}
