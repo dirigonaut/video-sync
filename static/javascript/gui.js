@@ -540,4 +540,20 @@ function jqueryReset() {
   $('#btnSessionMedia').off();
   $('#token-create').off();
   $('#tokenList').off();
+  $('#encode-input').off();
+  $('#createVideo').off();
+  $('#createAudio').off();
+  $('#createSubtitle').off();
+  $('#encode-list').off();
+  $('#submitEncoding').off();
+  $('#btnTokens').off();
+  $('#btnEncode').off();
+  $('#btnHelp').off();
+  $('#meta-types').off();
+  $('#track-video').off();
+  $('#track-audio').off();
+  $('#track-subtitle').off();
+  $('#buffer-ahead').off();
+  $('#force-buffer').off();
+  $('.container').off();
 }
