@@ -120,11 +120,21 @@ CredentialManager.prototype.setTokenLevel = Promise.coroutine(function* (key, le
 });
 
 CredentialManager.prototype.getTokenLevel = Promise.coroutine(function* (key) {
-  var entries = yield this.getTokens();
-  var admin   = yield this.getAdmin();
-  var entry   = entries ? entries[key] : undefined;
+  var admin = yield this.getAdmin();
 
-  return entry !== undefined ? entry.level : admin === key ? CredentialManager.Enum.Level.CONTROLS : undefined;
+  if(admin === key) {
+    return CredentialManager.Enum.Level.CONTROLS
+  }
+
+  var entries = yield this.getTokens();
+  var user;
+  Object.entries(entries).forEach((entry, index) => {
+    if(!user && entry[1].id === key) {
+      user = entry[1];
+    }
+  });
+
+  return user !== undefined ? user.level : CredentialManager.Enum.Level.NONE
 });
 
 CredentialManager.prototype.authenticateToken = Promise.coroutine(function* (socketId, key, handle) {

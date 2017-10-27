@@ -16,7 +16,6 @@ FileBuffer.prototype.initialize = function(init) {
     fileRequests    = new Map();
     buffers         = new Map();
 
-    removeEvents();
     trigger = new Events();
     setSocketEvents();
 
@@ -50,6 +49,10 @@ FileBuffer.prototype.requestFilesAsync = function(key) {
       resolve(data);
     });
   });
+};
+
+FileBuffer.prototype.clean = function() {
+  removeSocketEvents();
 };
 
 module.exports = FileBuffer;
@@ -126,16 +129,6 @@ function setSocketEvents() {
     log.debug(eventKeys.NOFILES, response.id);
     trigger.emit(response.id);
   }.bind(this));
-}
-
-function removeEvents() {
-  if(trigger) {
-    var allEvents = trigger.eventNames();
-    for(var i = 0; i < allEvents.length; ++i) {
-      trigger.removeAllListeners(allEvents[i]);
-    }
-    removeSocketEvents();
-  }
 }
 
 function removeSocketEvents() {

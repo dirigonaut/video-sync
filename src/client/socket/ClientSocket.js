@@ -4,7 +4,7 @@ const Events  = require('events');
 
 const TIMEOUT = 5000;
 
-var socket, eventKeys, resets, log;
+var socket, eventKeys, log;
 
 function ClientSocket() { }
 
@@ -13,7 +13,6 @@ ClientSocket.prototype.initialize = function() {
 		ClientSocket.prototype.protoInit 	= true;
 		ClientSocket.prototype.events 		=  Object.create(Events.prototype);
 		eventKeys = this.factory.createKeys();
-		resets		= new Map();
 
 		var logManager = this.factory.createClientLogManager();
 		log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
@@ -32,6 +31,15 @@ ClientSocket.prototype.connectAsync = function(serverUrl, authToken) {
 
 		var clearEvents = setSocketEvents(socket, serverUrl);
 
+		socket.once(eventKeys.DISCONNECT, function() {
+			setTimeout(function() {
+				if(!socket || !socket.connected) {
+					socket = undefined;
+					ClientSocket.prototype.events.emit(ClientSocket.Enum.Events.ERROR);
+				}
+			}.bind(this), 10000);
+		}.bind(this));
+
 		return new Promise(function(resolve, reject) {
 			var rejectRequest = setTimeout(function(err) {
 				reject(err);
@@ -43,14 +51,7 @@ ClientSocket.prototype.connectAsync = function(serverUrl, authToken) {
 			});
 
 			socket.once(eventKeys.ERROR, function(error) {
-				if(resets && resets.size > 0) {
-					resets.forEach((key, callback) => {
-						this.removeEvent(key, callback);
-					});
-				}
-
 				socket = undefined;
-				clearEvents();
 				clearTimeout(rejectRequest);
 				reject(error);
 			}.bind(this));
@@ -87,15 +88,9 @@ ClientSocket.prototype.request = function(event, request) {
 	}
 };
 
-ClientSocket.prototype.setEvent = function(event, callback, autoClean) {
-	autoClean = typeof callback === 'function' ? autoClean : callback
-
+ClientSocket.prototype.setEvent = function(event, callback) {
 	if(socket) {
 		socket.on(event, callback);
-
-		if(autoClean) {
-			resets.set(event, callback);
-		}
 	} else {
 		log.warn(`Socket is undefined, and thus unable to set event: ${event}`);
 	}
@@ -129,11 +124,5 @@ var setSocketEvents = function(socket, serverUrl) {
 
 		events.set(e, eventFunc);
 		socket.on(eventKeys[e], eventFunc);
-	};
-
-	return function() {
-		for(let e of events.entries()) {
-			socket.off(eventKeys[e[0]], e[1]);
-		}
 	};
 };

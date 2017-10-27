@@ -16,12 +16,4 @@ function initClientLogin(schemaFactory, keys) {
       $("#loginUser").focus();
     });
   });
-
-  var creds = cookie.getCookie('creds');
-  if(creds) {
-    creds = JSON.parse(creds);
-    $('#loginHandle').val(creds.handle);
-    $('#loginToken').val(creds.token);
-    return [creds];
-  }
 }

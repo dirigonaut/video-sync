@@ -15,8 +15,6 @@ function setupClient() {
       loadAsyncScript('../javascript/log.js'),
       loadAsyncScript('../javascript/login.js')
     ]).then(function() {
-      $('#loginModal').modal('show');
-
       var factoryManager  = Object.create(FactoryManager.prototype);
       factory             = factoryManager.getFactory();
 
@@ -26,12 +24,11 @@ function setupClient() {
 
       clientSocket = factory.createClientSocket();
 
-      $(document).trigger('initializeConnection',
-        initClientLogin(factory.createSchemaFactory(), factory.createKeys()));
+      initClientLogin(factory.createSchemaFactory(), factory.createKeys());
+      $(document).trigger('initializeConnection', getCreds());
     });
   };
 
-  var resets;
   $(document).on('initializeConnection', function(e, token) {
     clientSocket.connectAsync(window.location.host, token)
     .then(function(response) {
@@ -47,19 +44,16 @@ function setupClient() {
       }
 
       loadExtraResources(results.isAdmin)
-      .then(function() {
+      .then(function(message) {
+        log.ui(message);
         factory.createFileBuffer(true);
-
-        if(resets) {
-          resets();
-        }
-
-        resets = initializeGui(results.isAdmin, results.acknowledge);
-      });
+        initializeGui(results.isAdmin, results.acknowledge);
+      }).catch(console.error);
     }).catch(function(error) {
       cookie.deleteCookie('creds');
       $('#loginToken').val('');
       log.error(error);
+      $('#loginModal').modal('show');
     });
   });
 
@@ -70,7 +64,7 @@ function setupClient() {
     var client   = {
       socket:   clientSocket,
       formData: factory.createFormData(true),
-      media:    factory.createMediaController(),
+      media:    factory.createMediaController(true),
       encode:   factory.createEncodeFactory(),
       schema:   factory.createSchemaFactory(),
       keys:     factory.createKeys(),
@@ -88,11 +82,23 @@ function setupClient() {
         $(document).trigger('initializeMedia', [true]);
       }
 
+      cookie.deleteCookie('creds');
+      $('#loginToken').val('');
       $('#loginModal').modal('show');
     });
 
+    initGui(client, isAdmin);
     acknowledge();
-    return initGUI(container, isAdmin);
+  };
+
+  var getCreds = function() {
+    var creds = cookie.getCookie('creds');
+    if(creds) {
+      creds = JSON.parse(creds);
+      $('#loginHandle').val(creds.handle);
+      $('#loginToken').val(creds.token);
+      return [creds];
+    }
   };
 
   var isExtraResourcesLoaded;
@@ -104,29 +110,34 @@ function setupClient() {
           loadAsyncFile('#encode-overlay', 'menu/overlays/encode.html'),
           loadAsyncFile('#token-overlay', 'menu/overlays/tokens.html'),
           loadAsyncFile('#location-container', 'menu/location.html')
-        ])
-        .then(function() {
-          return loadAsyncScript('../javascript/gui.js')
-                    .then(function() { isExtraResourcesLoaded = true; });
-        })
+        ]).then(function() {
+          return loadAsyncScript('../javascript/gui.js').then(function() {
+            isExtraResourcesLoaded = true;
+            return Promise.resolve('Extra resources loaded.')
+          });
+        });
       } else {
-        return loadAsyncScript('../javascript/gui.js')
-                  .then(function() { isExtraResourcesLoaded = true; });
+        return loadAsyncScript('../javascript/gui.js').then(function() {
+          isExtraResourcesLoaded = true;
+          return Promise.resolve('Extra resources loaded.')
+        });
       }
     } else {
-      return new Promise.resolve('Extra resources already loaded.');
+      return Promise.resolve('Extra resources already loaded.');
     }
   };
 
   var loadAsyncFile = function(elementId, location) {
     return new Promise((resolve, reject) => {
-      $(`${elementId}`).load(location, resolve);
+      $(`${elementId}`).load(location, resolve)
     });
   };
 
   var loadAsyncScript = function(location) {
     return new Promise((resolve, reject) => {
-      $.getScript(location, resolve);
+      $.getScript(location, resolve).fail(function(jqxhr, settings, exception) {
+        reject(exception);
+      });
     });
   };
 

@@ -6,7 +6,7 @@ Cookie.prototype.setCookie = function(key, value, expire) {
 
 Cookie.prototype.getCookie = function(key) {
   var value = document.cookie.match(RegExp(`(?:^|;\\s*)${key}=([^;]*)`));
-  return value.length > 1 ? value[1] : undefined;
+  return value && value.length > 1 ? value[1] : undefined;
 };
 
 Cookie.prototype.deleteCookie = function(key) {
