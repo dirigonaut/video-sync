@@ -24,7 +24,7 @@ Subtitles.prototype.setup = function(videoElement) {
 
   video.addEventListener("loadedmetadata", onLoad);
 
-  return new Promise.resolve(onReset(videoElement, onLoad));
+  return new Promise.resolve(onReset.call(this, videoElement, onLoad));
 };
 
 module.exports = Subtitles;
@@ -57,10 +57,10 @@ var onReset = function(videoElement, onLoad) {
     }
 
     videoElement.removeEventListener('loadedmetadata', onLoad);
-  };
+  }.bind(this);
 
   return reset;
-}
+};
 
 var initTrack = function(videoElement, name, file) {
   var track;

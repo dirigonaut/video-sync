@@ -48,12 +48,12 @@ MediaController.prototype.setForceBuffer = function(forceBuffer) {
   log.debug('MediaController.setForceBuffer')
   var meta = metaManager.getActiveMetaData();
 
-  if(meta.activeMeta.get(metaManager.Enum.VIDEO)) {
-    meta.setForceBuffer(metaManager.Enum.VIDEO, forceBuffer);
+  if(meta.activeMeta.get(metaManager.Enums.TYPES.VIDEO)) {
+    meta.setForceBuffer(metaManager.Enums.TYPES.VIDEO, forceBuffer);
   }
 
-  if(meta.activeMeta.get(metaManager.Enum.AUDIO)) {
-    meta.setForceBuffer(metaManager.Enum.AUDIO, forceBuffer);
+  if(meta.activeMeta.get(metaManager.Enums.TYPES.AUDIO)) {
+    meta.setForceBuffer(metaManager.Enums.TYPES.AUDIO, forceBuffer);
   }
 };
 
@@ -75,24 +75,24 @@ var setupMedia = Promise.coroutine(function* (domElements) {
   var mediaPromises = [video.setup(domElements.videoElement, domElements.window, domElements.mediaSource)];
   buffers = [];
 
-  if(active.activeMeta.get(metaManager.Enum.VIDEO)) {
-    buffers[metaManager.Enum.VIDEO] = this.factory.createSourceBuffer();
-    mediaPromises.push(buffers[metaManager.Enum.VIDEO].setup(metaManager.Enum.VIDEO, domElements.mediaSource, video));
+  if(active.activeMeta.get(metaManager.Enums.TYPES.VIDEO)) {
+    buffers[metaManager.Enums.TYPES.VIDEO] = this.factory.createSourceBuffer();
+    mediaPromises.push(buffers[metaManager.Enums.TYPES.VIDEO].setup(metaManager.Enums.TYPES.VIDEO, domElements.mediaSource, video));
 
-    buffers[metaManager.Enum.VIDEO].once('init', function() { video.emit('get-segment', metaManager.Enum.VIDEO,
+    buffers[metaManager.Enums.TYPES.VIDEO].once('init', function() { video.emit('get-segment', metaManager.Enums.TYPES.VIDEO,
       video.getVideoElement().currentTime ? video.getVideoElement().currentTime : 0) });
 
-    buffers[metaManager.Enum.VIDEO].on('error', video.resetVideoElementErrorState);
+    buffers[metaManager.Enums.TYPES.VIDEO].on('error', video.resetVideoElementErrorState);
   }
 
-  if(active.activeMeta.get(metaManager.Enum.AUDIO)) {
-    buffers[metaManager.Enum.AUDIO] = this.factory.createSourceBuffer();
-    mediaPromises.push(buffers[metaManager.Enum.AUDIO].setup(metaManager.Enum.AUDIO, domElements.mediaSource, video));
+  if(active.activeMeta.get(metaManager.Enums.TYPES.AUDIO)) {
+    buffers[metaManager.Enums.TYPES.AUDIO] = this.factory.createSourceBuffer();
+    mediaPromises.push(buffers[metaManager.Enums.TYPES.AUDIO].setup(metaManager.Enums.TYPES.AUDIO, domElements.mediaSource, video));
 
-    buffers[metaManager.Enum.AUDIO].once('init', function() { video.emit('get-segment', metaManager.Enum.AUDIO,
+    buffers[metaManager.Enums.TYPES.AUDIO].once('init', function() { video.emit('get-segment', metaManager.Enums.TYPES.AUDIO,
       video.getVideoElement().currentTime ? video.getVideoElement().currentTime : 0) });
 
-    buffers[metaManager.Enum.AUDIO].on('error', video.resetVideoElementErrorState);
+    buffers[metaManager.Enums.TYPES.AUDIO].on('error', video.resetVideoElementErrorState);
   }
 
   subtitles = this.factory.createSubtitles();
@@ -129,12 +129,12 @@ function onReset(resets, mediaSource) {
         if(mediaSource.readyState === 'open') {
           var active = metaManager.getActiveMetaData();
 
-          if(active.activeMeta.get(metaManager.Enum.VIDEO)) {
-            buffers[metaManager.Enum.VIDEO].removeListener('error', video.resetVideoElementErrorState);
+          if(active.activeMeta.get(metaManager.Enums.TYPES.VIDEO)) {
+            buffers[metaManager.Enums.TYPES.VIDEO].removeListener('error', video.resetVideoElementErrorState);
           }
 
-          if(active.activeMeta.get(metaManager.Enum.AUDIO)) {
-            buffers[metaManager.Enum.AUDIO].removeListener('error', video.resetVideoElementErrorState);
+          if(active.activeMeta.get(metaManager.Enums.TYPES.AUDIO)) {
+            buffers[metaManager.Enums.TYPES.AUDIO].removeListener('error', video.resetVideoElementErrorState);
           }
 
           for(let i = 0; i < resets.length; ++i) {
@@ -142,7 +142,6 @@ function onReset(resets, mediaSource) {
           }
 
           mediaSource.endOfStream();
-          mediaSource.removeEventListener('error',  log.error);
           this.emit('media-reset');
         }
       } else {

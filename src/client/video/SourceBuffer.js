@@ -200,13 +200,10 @@ function onReset(video, mediaSource, events) {
     video.removeListener('get-init', events.init);
     video.removeListener('get-segment', events.getSegment);
 
-    this.sourceBuffer.removeEventListener('error', logBufferEntries.call(this));
-    this.sourceBuffer.removeEventListener('abort', log.error);
-    this.sourceBuffer.removeEventListener('update', events.ready);
-
     socket.removeEvent(eventKeys.SEGMENTCHUNK, events.onSegment);
     mediaSource.removeSourceBuffer(this.sourceBuffer);
   }.bind(this);
+
   return reset;
 }
 

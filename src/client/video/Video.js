@@ -46,12 +46,12 @@ Video.prototype.setup = function(element, window, mediaSource) {
     sourceEvents = [];
 
     if(metaData && metaData.activeMeta) {
-      if(metaData.activeMeta.get(metaManager.Enum.VIDEO)) {
-        sourceEvents[metaManager.Enum.VIDEO] = setVideoSourceEvents.call(this, metaManager.Enum.VIDEO);
+      if(metaData.activeMeta.get(metaManager.Enums.TYPES.VIDEO)) {
+        sourceEvents[metaManager.Enums.TYPES.VIDEO] = setVideoSourceEvents.call(this, metaManager.Enums.TYPES.VIDEO);
       }
 
-      if(metaData.activeMeta.get(metaManager.Enum.AUDIO)) {
-        sourceEvents[metaManager.Enum.AUDIO] = setVideoSourceEvents.call(this, metaManager.Enum.AUDIO);
+      if(metaData.activeMeta.get(metaManager.Enums.TYPES.AUDIO)) {
+        sourceEvents[metaManager.Enums.TYPES.AUDIO] = setVideoSourceEvents.call(this, metaManager.Enums.TYPES.AUDIO);
       }
     } else {
       throw new Error('Video.setup: metaData.activeMeta is not defined.');
@@ -59,7 +59,7 @@ Video.prototype.setup = function(element, window, mediaSource) {
 
     setSocketEvents();
 
-    return new Promise.resolve(onReset(eventId, metaManager));
+    return new Promise.resolve(onReset.call(this, eventId, metaManager));
   } else {
     throw new Error('Video.setup: element is not defined.');
   }
@@ -167,16 +167,17 @@ function onReset(eventId, metaManager) {
     videoElement.removeEventListener('timeupdate', videoPing, false);
     clearInterval(eventId);
 
-    if(sourceEvents[metaManager.Enum.VIDEO].length > 0) {
-      removeVideoSourceEvents(metaManager.Enum.VIDEO);
+    if(sourceEvents[metaManager.Enums.TYPES.VIDEO].length > 0) {
+      removeVideoSourceEvents(metaManager.Enums.TYPES.VIDEO);
     }
 
-    if(sourceEvents[metaManager.Enum.AUDIO].length > 0) {
-      removeVideoSourceEvents(metaManager.Enum.AUDIO);
+    if(sourceEvents[metaManager.Enums.TYPES.AUDIO].length > 0) {
+      removeVideoSourceEvents(metaManager.Enums.TYPES.AUDIO);
     }
 
     removeSocketEvents();
-  };
+  }.bind(this);
+
   return reset;
 }
 

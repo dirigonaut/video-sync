@@ -16,8 +16,6 @@ FormData.prototype.initialize = function(init) {
     var logManager  = this.factory.createClientLogManager();
 		log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);
 
-    removeSocketEvents(formEvents);
-
     formList    = new Map();
     formEvents  = new Map();
     formEvents.set(FormData.Enum.Forms.TOKENS, function(data) { setData.call(this, FormData.Enum.Forms.TOKENS, data) }.bind(this));
@@ -28,6 +26,10 @@ FormData.prototype.initialize = function(init) {
 
 FormData.prototype.getFormData = function(key) {
   return formList.get(key);
+};
+
+FormData.prototype.clean = function() {
+  removeSocketEvents(formEvents);
 };
 
 module.exports = FormData;

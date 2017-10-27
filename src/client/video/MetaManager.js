@@ -59,11 +59,11 @@ MetaManager.prototype.setActiveMetaData = function(metaInfo) {
   var metaData = metaDataList.get(metaInfo.key);
 
   if(metaInfo.video) {
-    metaData.setTrackQuality(this.Enum.VIDEO, metaInfo.video);
+    metaData.setTrackQuality(MetaManager.Enum.Types.VIDEO, metaInfo.video);
   }
 
   if(metaInfo.audio) {
-    metaData.setTrackQuality(this.Enum.AUDIO, metaInfo.audio);
+    metaData.setTrackQuality(MetaManager.Enum.Types.AUDIO, metaInfo.audio);
   }
 
   if(activeMetaData !== metaData) {
@@ -108,8 +108,8 @@ MetaManager.prototype.getTrackInfo = function() {
       var trackInfo = meta[1].getActiveTrackInfo();
       activeKeys = {};
       activeKeys.type = meta[0];
-      activeKeys.video = trackInfo && trackInfo.get(this.Enum.VIDEO) ? trackInfo.get(this.Enum.VIDEO).getTrackIndex() : undefined;
-      activeKeys.audio = trackInfo && trackInfo.get(this.Enum.AUDIO) ? trackInfo.get(this.Enum.AUDIO).getTrackIndex() : undefined;
+      activeKeys.video = trackInfo && trackInfo.get(MetaManager.Enum.Types.VIDEO) ? trackInfo.get(MetaManager.Enum.Types.VIDEO).getTrackIndex() : undefined;
+      activeKeys.audio = trackInfo && trackInfo.get(MetaManager.Enum.Types.AUDIO) ? trackInfo.get(MetaManager.Enum.Types.AUDIO).getTrackIndex() : undefined;
       activeKeys.subtitle = undefined;
     }
 
@@ -130,6 +130,7 @@ MetaManager.prototype.buildMetaInfo = function(key, video, audio, subtitle) {
   };
 };
 
-MetaManager.prototype.Enum = { "VIDEO" : 0, "AUDIO" : 1 };
-
 module.exports = MetaManager;
+
+MetaManager.Enum = { };
+MetaManager.Enum.Types = { VIDEO: 0, AUDIO: 1 };
