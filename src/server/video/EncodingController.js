@@ -1,15 +1,17 @@
 const Promise = require('bluebird');
 
-var encoderManager, media, fileIO, fileSystemUtils, schemaFactory, sanitizer, eventKeys, log;
+var encoderManager, media, redisSocket, fileIO, fileSystemUtils, schemaFactory, sanitizer, eventKeys, log;
 
 function EncodingController() { }
 
 EncodingController.prototype.initialize = function() {
   if(typeof EncodingController.prototype.protoInit === 'undefined') {
     EncodingController.prototype.protoInit = true;
+
     fileIO          = this.factory.createFileIO();
     encoderManager  = this.factory.createEncoderManager();
     media           = this.factory.createMedia();
+    redisSocket     = this.factory.createRedisSocket();
 
     fileSystemUtils = this.factory.createFileSystemUtils();
     schemaFactory   = this.factory.createSchemaFactory();
@@ -18,6 +20,12 @@ EncodingController.prototype.initialize = function() {
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.VIDEO);
+
+    encoderManager.on('encodingList', function(results) {
+      credentials.getAdmin().then(function(admin) {
+        redisSocket.ping.apply(this, [admin, eventKeys.ENCODINGS, results]);
+      });
+    });
   }
 };
 
@@ -36,9 +44,20 @@ EncodingController.prototype.attachSocket = function(socket) {
     }
 
     if(processes) {
-      yield encoderManager.encode(processes).then(function() {
+      var results = yield encoderManager.encode(processes).then(function() {
         socket.emit(eventKeys.ENCODED);
       });
+    }
+  }));
+
+  socket.on(eventKeys.CANCELENCODE, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.CANCELENCODE, data);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.STRING);
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
+
+    if(request) {
+      var results = encoderManager.cancel(request.data);
+      socket.emit(eventKeys.ENCODINGS, results);
     }
   }));
 

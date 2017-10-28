@@ -23,16 +23,20 @@ FfmpegProcess.prototype.setCommand = function(command) {
   this.command = command;
 };
 
+FfmpegProcess.prototype.getCommand = function() {
+  return this.command;
+};
+
 FfmpegProcess.prototype.execute = function() {
   var ffmpegPath = config.getConfig() ? config.getConfig().certificate : undefined;
-  var ffmpeg = Spawn(ffmpegPath ? ffmpegPath : "ffmpeg", this.command);
-  log.info(`Spawned child pid: ${ffmpeg.pid}`, this.command);
+  this.ffmpeg = Spawn(ffmpegPath ? ffmpegPath : "ffmpeg", this.command);
+  log.info(`Spawned child pid: ${this.ffmpeg.pid}`, this.command);
 
-  ffmpeg.on('exit', function(data) {
+  this.ffmpeg.on('exit', function(data) {
     this.emit('exit', data);
   }.bind(this));
 
-  ffmpeg.stderr.on('data', function(data) {
+  this.ffmpeg.stderr.on('data', function(data) {
     this.emit('data', data.toString('utf8'));
   }.bind(this));
 
@@ -43,6 +47,10 @@ FfmpegProcess.prototype.execute = function() {
       resolve(code);
     });
   }.bind(this));
+};
+
+FfmpegProcess.prototype.cancel = function() {
+  this.ffmpeg.exit(1);
 };
 
 module.exports = FfmpegProcess;

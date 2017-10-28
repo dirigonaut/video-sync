@@ -29,9 +29,15 @@ ClientSocket.prototype.connectAsync = function(serverUrl, authToken) {
 			query: { token: encodeURIComponent(authToken) }
 	  });
 
-		var clearEvents = setSocketEvents(socket, serverUrl);
+		socket.on(eventKeys.DISCONNECT, function() {
+			log.info(`${ClientSocket.Enum.Events.DISCONNECT} from ${serverUrl}`);
+			this.events.emit(ClientSocket.Enum.Events.DISCONNECT);
 
-		socket.once(eventKeys.DISCONNECT, function() {
+			socket.once(eventKeys.AUTHENTICATED, function(isAdmin, callback) {
+				log.info(`${ClientSocket.Enum.Events.RECONNECT} from ${serverUrl}`);
+				this.events.emit(ClientSocket.Enum.Events.RECONNECT, [callback, isAdmin]);
+			}.bind(this));
+
 			setTimeout(function() {
 				if(!socket || !socket.connected) {
 					socket = undefined;
@@ -112,17 +118,3 @@ module.exports = ClientSocket;
 
 ClientSocket.Enum = {};
 ClientSocket.Enum.Events = { DISCONNECT: 'socket-disconnect', RECONNECT: 'socket-reconnect', ERROR: 'socket-error'};
-
-var setSocketEvents = function(socket, serverUrl) {
-	var events = new Map();
-
-	for(let e in ClientSocket.Enum.Events) {
-		var eventFunc = function() {
-			log.info(`${ClientSocket.Enum.Events[e]} from ${serverUrl}`);
-			ClientSocket.prototype.events.emit(ClientSocket.Enum.Events[e]);
-		}
-
-		events.set(e, eventFunc);
-		socket.on(eventKeys[e], eventFunc);
-	};
-};

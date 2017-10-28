@@ -54,6 +54,11 @@ function log(level, message, meta) {
     text: message ? message : ''
   };
 
+  if(logMessage.text instanceof Object) {
+    logMessage.meta = JSON.stringify(logMessage.text, null, 2);
+    logMessage.text = null;
+  }
+
   if(meta) {
     logMessage.meta = JSON.stringify(meta, null, 2);
   }

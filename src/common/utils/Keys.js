@@ -40,8 +40,10 @@ module.exports = {
   //EncodingController
   //Server
   ENCODE:         'video-encode',
+  CANCELENCODE:   'video-cancel-encode',
   GETMETA:        'video-get-meta',
   //Client
+  ENCODINGS:      'video-encodins',
   ENCODED:        'video-encoded',
   META:           'video-meta',
 

@@ -5,7 +5,6 @@ const EncodeFactory     = require('../utils/EncodeFactory');
 const FileBuffer        = require('../utils/FileBuffer');
 const FormData          = require('../utils/FormData');
 const MetaState         = require('../video/meta/MetaState');
-const Mp4Parser         = require('../video/meta/Mp4Parser');
 const MpdMeta           = require('../video/meta/MpdMeta');
 const WebmParser        = require('../video/meta/WebmParser');
 const MediaController   = require('../video/MediaController');
@@ -28,7 +27,6 @@ module.exports = {
   FormData:         FormData,
   Keys:             Keys,
   MetaState:        MetaState,
-  Mp4Parser:        Mp4Parser,
   MpdMeta:          MpdMeta,
   WebmParser:       WebmParser,
   MediaController:  MediaController,
