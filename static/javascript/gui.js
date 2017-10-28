@@ -221,13 +221,13 @@ function initGui(client, isAdmin) {
       var input = $('#encode-input').val();
       var output = $('#encode-output').val();
 
-      var template = client.encode.getTemplate(client.encode.CodecEnums.WEBM, client.encode.TypeEnums.VIDEO);
+      var template = client.encode.getTemplate(client.encode.Enums.CODEC.WEBM, client.encode.Enums.TYPES.VIDEO);
       template = client.encode.setKeyValue('i', `${input}`, template);
       template = client.encode.setKeyValue('s', quality, template);
-      template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.CodecEnums.WEBM}`, template);
+      template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.Enums.CODEC.WEBM}`, template);
 
       if(template) {
-        $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnums.VIDEO}</td><td contenteditable="true">${template}</td><td>
+        $('#encode-list tr:last').after(`<tr><td>${client.encode.Enums.TYPES.VIDEO}</td><td contenteditable="true">${template}</td><td>
         <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
       }
 
@@ -239,13 +239,13 @@ function initGui(client, isAdmin) {
       var input = $('#encode-input').val();
       var output = $('#encode-output').val();
 
-      var template = client.encode.getTemplate(client.encode.CodecEnums.WEBM, client.encode.TypeEnums.AUDIO);
+      var template = client.encode.getTemplate(client.encode.Enums.CODEC.WEBM, client.encode.Enums.TYPES.AUDIO);
       template = client.encode.setKeyValue('i', `${input}`, template);
       template = client.encode.setKeyValue('b:a', quality, template);
-      template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.CodecEnums.WEBM}`, template);
+      template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.Enums.CODEC.WEBM}`, template);
 
       if(template) {
-        $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnums.AUDIO}</td><td contenteditable="true">${template}</td><td>
+        $('#encode-list tr:last').after(`<tr><td>${client.encode.Enums.TYPES.AUDIO}</td><td contenteditable="true">${template}</td><td>
         <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
       }
 
@@ -258,12 +258,12 @@ function initGui(client, isAdmin) {
       var output = $('#encode-output').val();
       var isNum = /^\d+$/.test(streamId);
 
-      var template = client.encode.getTemplate(client.encode.CodecEnums.WEBM, client.encode.TypeEnums.SUBTITLE);
+      var template = client.encode.getTemplate(client.encode.Enums.CODEC.WEBM, client.encode.Enums.TYPES.SUBTITLE);
       template = client.encode.setKeyValue('i', `${input}${isNum ? ' -map 0:' + streamId : ''}`, template);
       template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}.vtt`, template);
 
       if(template) {
-        $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnums.SUBTITLE}</td><td contenteditable="true">${template}</td><td>
+        $('#encode-list tr:last').after(`<tr><td>${client.encode.Enums.TYPES.SUBTITLE}</td><td contenteditable="true">${template}</td><td>
         <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
       }
 
@@ -286,7 +286,7 @@ function initGui(client, isAdmin) {
           var command = {};
           $('td', tr).each(function(i, td) {
             var cell = $(td).text();
-            if(i === 0 && cell === client.encode.TypeEnums.MANIFEST) {
+            if(i === 0 && cell === client.encode.Enums.TYPES.MANIFEST) {
               command.type = cell;
               tr.remove();
             } else if(i === 0 && cell) {
@@ -296,17 +296,17 @@ function initGui(client, isAdmin) {
             }
           });
 
-          if(typeof command.input !== 'undefined' && command.type !== client.encode.TypeEnums.MANIFEST &&
-            command.type !== client.encode.TypeEnums.SUBTITLE) {
+          if(typeof command.input !== 'undefined' && command.type !== client.encode.Enums.TYPES.MANIFEST &&
+            command.type !== client.encode.Enums.TYPES.SUBTITLE) {
             list.push(command);
           }
         });
 
         if(list.length > 0) {
-          var template = client.encode.createManifest(input, output, list, client.encode.CodecEnums.WEBM);
+          var template = client.encode.createManifest(input, output, list, client.encode.Enums.CODEC.WEBM);
 
           if(template) {
-            $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnums.MANIFEST}</td><td contenteditable="true">${template}</td><td>
+            $('#encode-list tr:last').after(`<tr><td>${client.encode.Enums.TYPES.MANIFEST}</td><td contenteditable="true">${template}</td><td>
             <input type="checkbox" id="row_locked" name="locked"></td></tr>`);
           }
         }
@@ -321,7 +321,7 @@ function initGui(client, isAdmin) {
         $('td', tr).each(function(i, td) {
           var cell = $(td).text();
           if(i === 1 && cell) {
-            commands.push({input: cell, encoder: client.encode.EncoderEnums.FFMPEG});
+            commands.push({input: cell, encoder: client.encode.Enums.ENCODER.FFMPEG});
           }
         });
       });
@@ -356,20 +356,9 @@ function initGui(client, isAdmin) {
 
   //Log Events ------------------------------------------------------------------
   function initLog() {
-    function systemMessage(message) {
-      $('#chatManuscript').append(`<p><span class="chat-message" title="System" style="color:gray; font-weight: bold;">
-        ${new Date().toTimeString().split(" ")[0]} System: </span>${client.chatUtil.getUserHandle(message.from)} ${message.data}</p>`);
-    }
-
-    function logMessage(message) {
-      client.log.info(message.text);
-      $('#logManuscript').append(`<p><span class="chat-message" title="${message.label}" style="color:blue; font-weight: bold;">
-        ${message.time} ${message.level}: </span>${message.text} ${message.meta !== undefined ? message.meta : ""}</p>`);
-    }
-
-    client.socket.setEvent(client.keys.EVENTRESP, systemMessage);
-    client.socket.setEvent(client.keys.PINGRESP, systemMessage);
-    client.socket.setEvent(client.keys.LOGRESP, logMessage);
+    client.socket.setEvent(client.keys.EVENTRESP, client.log.info);
+    client.socket.setEvent(client.keys.PINGRESP, client.log.info);
+    client.socket.setEvent(client.keys.LOGRESP, client.log.info);
     client.socket.setEvent(client.keys.INPUTERROR, client.log.error);
   }
 

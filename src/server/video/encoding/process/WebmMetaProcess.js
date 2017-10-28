@@ -23,6 +23,10 @@ WebmMetaProcess.prototype.setCommand = function(command) {
   this.command = command;
 };
 
+WebmMetaProcess.prototype.getCommand = function() {
+  return this.command;
+};
+
 WebmMetaProcess.prototype.execute = Promise.coroutine(function* () {
   var meta = yield webmMetaData.generateWebmMeta(this.command);
 

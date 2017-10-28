@@ -11,7 +11,7 @@
     "bin" : "/usr/bin/redis-server"
   },
   "ffmpegPath" : {
-    "bin" : "/usr/bin/redis-server"
+    "bin" : "ffmpeg"
   },
   "certificate" : {
     "path" : "/usr/bin/redis-server"

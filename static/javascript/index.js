@@ -31,14 +31,8 @@ function setupClient() {
 
   $(document).on('initializeConnection', function(e, token) {
     clientSocket.connectAsync(window.location.host, token)
-    .then(function(response) {
-      log.ui('Authenticated with server.');
-
-      var isAdmin = response[1] ? true : false;
-      var acknowledged = typeof response[0] === 'function' ? response[0] : undefined;
-
-      return { 'acknowledge': acknowledged, 'isAdmin': isAdmin };
-    }).then(function(results) {
+    .then(parseAuth)
+    .then(function(results) {
       if(typeof results.acknowledge === 'undefined') {
         throw new Error('Missing connection hook from server authentication.');
       }
@@ -71,10 +65,14 @@ function setupClient() {
       log:      log,
     };
 
-    client.socket.events.on(client.socket.Enums.EVENTS.RECONNECT, function() {
+    client.socket.events.on(client.socket.Enums.EVENTS.RECONNECT, function(response) {
       if(client.media.isMediaInitialized()) {
         $(document).trigger('initializeMedia');
       }
+
+      log.info('Calling handshake');
+      var auth = parseAuth(response);
+      auth.acknowledge();
     });
 
     client.socket.events.on(client.socket.Enums.EVENTS.ERROR, function() {
@@ -88,6 +86,7 @@ function setupClient() {
     });
 
     initGui(client, isAdmin);
+    log.info('Calling handshake');
     acknowledge();
   };
 
@@ -99,6 +98,15 @@ function setupClient() {
       $('#loginToken').val(creds.token);
       return [creds];
     }
+  };
+
+  var parseAuth = function(response) {
+    log.ui('Authenticated with server.');
+
+    var isAdmin = response[1] ? true : false;
+    var acknowledged = typeof response[0] === 'function' ? response[0] : undefined;
+
+    return { 'acknowledge': acknowledged, 'isAdmin': isAdmin };
   };
 
   var isExtraResourcesLoaded;

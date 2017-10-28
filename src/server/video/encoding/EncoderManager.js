@@ -1,11 +1,11 @@
 const Promise = require('bluebird');
 const Events  = require('events');
-const Util 	  = require('util');
+const Crypto  = require('crypto');
 
 const webm_manifest = "webm_dash_manifest";
 const mp4_manifest = "-frag-rap";
 
-var command, encoding, processes, log;
+var command, encoding, processes, current, log;
 
 function EncoderManager() { }
 
@@ -32,19 +32,13 @@ EncoderManager.prototype.buildProcess = function(data) {
 				log.debug("Found ffmpeg encoding", data[i]);
 				var ffmpeg = this.factory.createFfmpegProcess();
 				ffmpeg.setCommand(command.parse(data[i].input));
-				processes.push(ffmpeg);
+				processes.push([Crypto.randomBytes(24).toString('hex'), ffmpeg]);
 
 				if(data[i].input.includes(webm_manifest)) {
 					var webm = this.factory.createWebmMetaProcess();
 					webm.setCommand(ffmpeg.command[ffmpeg.command.length - 1]);
-					processes.push(webm);
+					processes.push([Crypto.randomBytes(24).toString('hex'), webm]);
 				}
-			break;
-			case "mp4Box" :
-				log.silly("Found mp4Box encoding", data[i]);
-				var mp4Box = this.factory.createMp4BoxProcess();
-				mp4Box.setCommand(command.parse(data[i].input));
-				processes.push(mp4Box);
 			break;
 			default:
 				throw new Error(`EncoderManager: ${command.codec} is not supported process.`);
@@ -77,7 +71,20 @@ EncoderManager.prototype.encode = function(operations) {
 		promise = new Promise.resolve(function() { return 'Queued encoding processes.'; });
 	}
 
+	this.emit('encodingList', format(processes.slice()));
 	return promise;
+};
+
+EncoderManager.prototype.cancelEncode = function(id) {
+	if(proccess.get(id)) {
+		proccess.delete(id);
+	} else if(current && current[0] === id) {
+		if(current[1].cancel) {
+			current[1].cancel();
+		}
+	}
+
+	return format(processes.slice());
 };
 
 module.exports = EncoderManager;
@@ -86,8 +93,9 @@ function processedEvent() {
 	this.on('processed', Promise.coroutine(function* (oldProcess) {
 		if(processes.length > 0) {
 			var encodeProcess = processes.shift();
-			attachEvents.call(this, encodeProcess);
-			yield encodeProcess.execute().catch(log.error);
+			current = encodeProcess;
+			attachEvents.call(this, encodeProcess[1]);
+			yield encodeProcess[1].execute().catch(log.error);
 		} else {
 			this.emit('finished', 'All files encoded.');
 			encoding = false;
@@ -120,6 +128,15 @@ function attachEvents(encodeProcess) {
 		log.error('There was an error encoding: ', err);
 		log.socket('There was an error encoding: ', err);
 	}.bind(this));
+}
+
+function format(entries) {
+	var formatted = [];
+	entries.forEach((data) => {
+		formatted.push([data[0], data[1].getCommand()]);
+	});
+
+	return formatted;
 }
 
 function removeEvents(encodeProcess) {
