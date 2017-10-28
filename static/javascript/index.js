@@ -48,7 +48,7 @@ function setupClient() {
         log.ui(message);
         factory.createFileBuffer(true);
         initializeGui(results.isAdmin, results.acknowledge);
-      }).catch(console.error);
+      }).catch(log.error);
     }).catch(function(error) {
       cookie.deleteCookie('creds');
       $('#loginToken').val('');

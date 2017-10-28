@@ -39,7 +39,7 @@ Proxy.prototype.setOnConnect = function(numProcesses) {
 };
 
 Proxy.prototype.spawnWorker = function(index) {
-	workers[index] = Cluster.fork({processType: 'serverProcess'});
+	workers[index] = Cluster.fork({processType: 'serverProcess', index: index});
 
 	workers[index].on('exit', function(code, signal) {
 		log.info('respawning worker', index);

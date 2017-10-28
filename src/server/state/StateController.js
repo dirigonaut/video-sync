@@ -31,6 +31,7 @@ StateController.prototype.attachSocket = function(socket) {
 
     if(access === credentials.Enums.LEVEL.CONTROLS) {
       var triggered = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.PLAY, [socket.id]]);
+      
       if(triggered === true) {
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.CHATRESPONSE, [socket.id, 'issued play.']);
         yield redisSocket.broadcast.call(StateController.prototype, eventKeys.EVENTRESP, response);

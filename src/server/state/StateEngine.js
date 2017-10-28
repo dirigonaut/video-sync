@@ -32,7 +32,6 @@ StateEngine.prototype.initialize = function() {
 StateEngine.prototype.play = Promise.coroutine(function* (id) {
   log.debug(`StateEngine.play ${id}`);
   var basePath = yield media.getMediaPath();
-  var result;
 
   if(basePath && basePath.length > 0) {
     var mediaStarted = yield media.getMediaStarted();
@@ -41,19 +40,19 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
 
     if(issuer) {
       var players = playRule.evaluate(issuer, playerManager.getPlayers(), mediaStarted, ruleInfo && typeof ruleInfo.range !== 'undefined' ? ruleInfo.range : 3);
-      result = true;
-      
+
       if(players) {
         var buffering = new Map();
 
+        log.info(`StateEngine issuing play for: `, players);
         for(var player of players.entries()) {
-          log.info(`StateEngine issuing play ${player[0]}`);
           buffering.set(player[0], player[1]);
 
           if(mediaStarted === false) {
             player[1].sync = player[1].Enums.SYNC.SYNCED;
           }
         }
+
         canPlay.call(this, buffering, issuer.Enums.STATE.PLAY);
 
         if(!mediaStarted) {
@@ -64,8 +63,6 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
       }
     }
   }
-
-  return result;
 });
 
 StateEngine.prototype.pause = Promise.coroutine(function* (id) {
@@ -178,13 +175,13 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
       }
 
       if(player.sync === player.Enums.SYNC.SYNCING) {
-        var leader = syncingRule.evaluate(player, playerManager.getOtherPlayers(player.id));
+        var leader = syncingRule.evaluate(player, playerManager.getOtherPlayers(id));
 
         if(leader) {
           commands = [];
           var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.STATERESPONSE,
             leader.state === player.Enums.STATE.PLAY ? [true, leader.timestamp + 1] : [false, leader.timestamp]);
-          commands.push([player.id, eventKeys.SEEK, schema]);
+          commands.push([id, eventKeys.SEEK, schema]);
           player.sync = player.Enums.SYNC.SYNCED;
         }
       }
@@ -201,17 +198,18 @@ var canPlay = function(players, state) {
 
   for(let player of players.entries()) {
     player[1].sync = player[1].Enums.SYNC.BUFFWAIT;
-    buffering.set(player[0], player[1].id);
+    buffering.set(player[0], player[1]);
   }
 
   var canPlayLogic = function(id) {
-    log.debug(`StateEngine player: ${id} canPlay.`);
+    log.debug(`StateEngine player canPlay.`, id);
     buffering.delete(id);
 
     if(buffering.size === 0) {
-      for(let player of players.values()) {
-        player.sync = player.Enums.SYNC.SYNCED;
-        redisSocket.ping.apply(this, [id, state === player.Enums.STATE.PLAY ? eventKeys.PLAY : eventKeys.PAUSE]);
+      log.debug(`StateEngine players canplay:`, players);
+      for(let player of players.entries()) {
+        player[1].sync = player[1].Enums.SYNC.SYNCED;
+        redisSocket.ping.apply(this, [player[0], state === player[1].Enums.STATE.PLAY ? eventKeys.PLAY : eventKeys.PAUSE]);
       }
 
       trigger.removeAllListeners('canPlay');
@@ -219,7 +217,6 @@ var canPlay = function(players, state) {
   }.bind(this);
 
   if(buffering.size > 0) {
-    log.debug(`StateEngine all players canPlay.`);
     trigger.removeAllListeners('canPlay');
     trigger.on('canPlay', canPlayLogic);
   }
@@ -231,7 +228,7 @@ var createMetricInterval = function() {
     yield redisSocket.broadcast.apply(this, [eventKeys.PLAYERINFO, metrics]);
 
     if(syncRule.evaluate(playerManager.getPlayers()) === true) {
-      yield redisSocket.broadcast.apply(this, [eventKeys.PAUSE]);
+      //yield redisSocket.broadcast.apply(this, [eventKeys.PAUSE]);
     }
   }.bind(this)), 1000);
 };
