@@ -1,15 +1,14 @@
 const Promise    = require('bluebird');
 const Cluster    = require('cluster');
 const Path       = require('path');
-const Util       = require('util');
 const Winston    = require('winston');
+const Fs         = require('fs');
 
 var config, schemaFactory, log;
 
 const LOG_LEVEL = "debug";
 const TYPE      = Cluster.isMaster ? "masterProcess" : process.env.processType;
-const FILE_NAME = `${TYPE}_${process.pid}_logs.txt`;
-const EXCEPTION = `${TYPE}_${process.pid}_exception.txt`;
+const FILE_NAME = `${TYPE}-${process.env.index ? process.env.index : 0}.txt`;
 
 function LogManager() { }
 
@@ -31,18 +30,16 @@ LogManager.prototype.addFileLogging = function() {
 
   for(var i in keys) {
     var fileTransport = buildFileTransport.call(this, Path.join(config.getLogDir(), FILE_NAME),
-                          LogManager.Enum.Logs[keys[i]], logLevels ? logLevels[keys[i]] : LogManager.Enum.Logs.error, false);
+                          LogManager.Enum.Logs[keys[i]], logLevels ? logLevels[keys[i]] : LogManager.Enum.Logs.error, true);
     var container     = Winston.loggers.get(LogManager.Enum.Logs[keys[i]]);
+
+    fileTransport.exitOnError = false;
 
     container.configure({
       levels: LogManager.Enum.Levels,
       transports: [fileTransport]
     });
   }
-
-  var exceptionTransport = buildFileTransport(Path.join(config.getLogDir(), EXCEPTION), 'exception', 'error', true);
-  Winston.loggers.add(EXCEPTION, { transports: [exceptionTransport] });
-  Winston.loggers.get(EXCEPTION).exitOnError = false;
 };
 
 LogManager.prototype.getLog = function(id) {
@@ -58,7 +55,7 @@ LogManager.Enum.Logs    = { GENERAL: 'general', ADMINISTRATION: 'administration'
 
 var buildFileTransport = function(path, label, level, handleExceptions) {
   var fileTransport = new (Winston.transports.File) ({
-    filename: path,
+    stream: Fs.createWriteStream(path),
     level: level,
     lable: label,
     handleExceptions: handleExceptions,
@@ -85,7 +82,7 @@ function createFormatter(label) {
     };
 
     if(options.meta && Object.keys(options.meta).length) {
-      logMessage.meta = Util.inspect(options.meta, { showHidden: false, depth: 2 });
+      logMessage.meta = JSON.stringify(options.meta, null, 2);
     }
 
     var json = JSON.stringify(logMessage);

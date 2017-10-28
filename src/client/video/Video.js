@@ -117,7 +117,7 @@ function setSocketEvents() {
       play();
     }
 
-    videoElement.currentTime = command.time;
+    videoElement.currentTime = parseFloat(command.time);
     videoPing();
 
     if(timeout) {
@@ -126,7 +126,7 @@ function setSocketEvents() {
 
     timeout = setTimeout(function() {
       if(videoElement.readyState < 2) {
-        videoElement.currentTime = command.time;
+        videoElement.currentTime = parseFloat(command.time);
       }
     }, 2500);
   });

@@ -55,7 +55,7 @@ function log(level, message, meta) {
   };
 
   if(meta) {
-    logMessage.meta = Util.inspect(meta, { showHidden: false, depth: 1 });
+    logMessage.meta = JSON.stringify(meta, null, 2);
   }
 
   if(ClientLogManager.Enum.Levels[level] === ClientLogManager.Enum.Levels.ui) {

@@ -370,7 +370,7 @@ function initGui(client, isAdmin) {
     client.socket.setEvent(client.keys.EVENTRESP, systemMessage);
     client.socket.setEvent(client.keys.PINGRESP, systemMessage);
     client.socket.setEvent(client.keys.LOGRESP, logMessage);
-    client.socket.setEvent(client.keys.INPUTERROR, console.error);
+    client.socket.setEvent(client.keys.INPUTERROR, client.log.error);
   }
 
   //Video Events -----------------------------------------------------------------

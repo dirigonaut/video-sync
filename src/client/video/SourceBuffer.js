@@ -232,7 +232,7 @@ var isTimeRangeBuffered = function(timestamp) {
 var logBufferEntries = function() {
   var logging = function(err) {
     log.error(err);
-    console.log(this.bufferLog);
+    log.debug(this.bufferLog);
   }.bind(this);
 
   return logging;
