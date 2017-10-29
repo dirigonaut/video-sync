@@ -8,13 +8,8 @@ function setupClient() {
   window.MediaSource = window.MediaSource || window.WebKitMediaSource
 
   var initialize = function() {
-    Promise.all([
-      loadAsyncFile('#control-container', 'menu/controls.html'),
-      loadAsyncFile('#login-overlay', 'menu/overlays/login.html'),
-      loadAsyncFile('#help-overlay', 'menu/overlays/help.html'),
-      loadAsyncScript('../javascript/log.js'),
-      loadAsyncScript('../javascript/login.js')
-    ]).then(function() {
+    loadAsyncScript('../javascript/login.js')
+    .then(function() {
       var factoryManager  = Object.create(FactoryManager.prototype);
       factory             = factoryManager.getFactory();
 
@@ -114,10 +109,9 @@ function setupClient() {
     if(!isExtraResourcesLoaded) {
       if(isAdmin) {
         return Promise.all([
-          loadAsyncFile('#side-container', 'menu/side.html'),
-          loadAsyncFile('#encode-overlay', 'menu/overlays/encode.html'),
-          loadAsyncFile('#token-overlay', 'menu/overlays/tokens.html'),
-          loadAsyncFile('#location-container', 'menu/location.html')
+          loadAsyncFile('#encode-overlay',      'gui/panel/encode.html'),
+          loadAsyncFile('#token-overlay',       'gui/panel/tokens.html'),
+          loadAsyncFile('#location-container',  'gui/path.html')
         ]).then(function() {
           return loadAsyncScript('../javascript/gui.js').then(function() {
             isExtraResourcesLoaded = true;

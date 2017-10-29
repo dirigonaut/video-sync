@@ -522,6 +522,10 @@ function initGui(client, isAdmin) {
       $('.fadeout').addClass("fadein");
       $('.fadeout').removeClass("fadeout");
     }
+
+    $('.slide-in').on('click', function(){
+        $('#panel-container').toggleClass('show');
+    });
   }
 
   jqueryReset();

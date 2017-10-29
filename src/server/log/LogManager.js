@@ -55,7 +55,7 @@ LogManager.Enum.Logs    = { GENERAL: 'general', ADMINISTRATION: 'administration'
 
 var buildFileTransport = function(path, label, level, handleExceptions) {
   var fileTransport = new (Winston.transports.File) ({
-    stream: Fs.createWriteStream(path),
+    filename: path,
     level: level,
     lable: label,
     handleExceptions: handleExceptions,
