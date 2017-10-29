@@ -5,39 +5,107 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="stylesheet" type="text/css" href="../resources/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../css/gui.css">
+    <link rel="stylesheet" type="text/css" href="../css/icons/flaticon.css">
 
     <script type="text/javascript" src="../resources/jquery-2.2.4.min.js"></script>
-    <script type="text/javascript" src="../resources/bootstrap/js/bootstrap.min.js"></script>
 
     <script type="text/javascript" src="../javascript/cookies.js"></script>
-    <script type="text/javascript" src="../javascript/index.js"></script>
+    <script type="text/javascript" src="../javascript/log.js"></script>
     <script type="text/javascript" src="../resources/bundle.js"></script>
+    <script type="text/javascript" src="../javascript/index.js"></script>
   </head>
   <body>
-    <div class="container">
-      <div id="media-container" class="media-container">
-        <div id="location-container" class="file-bar flex-h fadein">
+    <div id="media-container" class="media">
+
+      <div>
+        <div id="path-container" class="path">
+          <div class="icon-h">
+            <a href="#" id="button-path"> <span class=""></span>a</a>
+          </div>
+          <div class="icon-h">
+            <input type="text" id="path-input" value="/home/sabo-kun/repo/media/bunny_test/">
+          </div>
+          <div class="icon-h">
+            <a href="#" id="media-loaded"> <span class=""></span>a</a>
+          </div>
         </div>
-        <video id="video" class="video-holder"></video>
-        <div id="side-container" class="side-bar fadein">
+
+        <div id="side-container" class="side">
           <div class="icon-v">
-            <a href="#" id="btnLogin"><span class="glyphicon glyphicon-thumbnail glyphicon-user"></span></a>
+            <a href="#" id="button-token"><span class=""></span>a</a>
           </div>
           <div class="icon-v">
-            <a href="#" id="btnHelp"><span class="glyphicon glyphicon-thumbnail glyphicon-question-sign"></span></a>
+            <a href="#" id="button-encode"><span class=""></span>a</a>
+          </div>
+          <div class="icon-v">
+            <a href="#" id="button-log"><span class=""></span>a</a>
+          </div>
+          <div class="icon-v">
+            <a href="#" id="button-help"><span class=""></span>a</a>
           </div>
         </div>
-        <div id="control-container" class="control-bar flex-h fadein">
+      </div>
+
+      <div class="video">
+        <video id="video"></video>
+      </div>
+
+      <div>
+        <div id="control-container" class="control flex-h">
+          <div class="icon-h">
+            <a href="#" id="button-play-pause" style="text-decoration:none"><span class="flaticon-play-button-1"></span></a>
+          </div>
+          <div id="video-time" class="slider">
+            <input type="range" id="seek-bar" value=0 class="center-v">
+          </div>
+          <div class="icon-h">
+            <a href="#" id="button-mute"> <span class="">a</span></a>
+          </div>
+          <div id="audio-range" class="icon-h">
+            <input type="range" id="volume-bar" value=50 class="center-v">
+          </div>
+
+          <div id="video-options" class="icon-h">
+
+            <a href="#" id="button-video-options"> <span class="">a</span></a>
+            <div class="pop-over">
+              <table id="video-options-table">
+                <tbody>
+                  <tr>
+                    <td><div class="align-left">Type</div></td>
+                    <td><div class="align-right" id='meta-types'></div></td>
+                  </tr>
+                  <tr>
+                    <td><div class="align-left">Video</div></td>
+                    <td><div class="align-right" id='track-video'></div></td>
+                  </tr>
+                  <tr>
+                    <td><div class="align-left">Audio</div></td>
+                    <td><div class="align-right" id='track-audio'></div></td>
+                  </tr>
+                  <tr>
+                    <td><div class="align-left">Subtitles</div></td>
+                    <td><div class="align-right" id='track-subtitle'></div></td>
+                  </tr>
+                  <tr>
+                    <td><div class="align-left">Buffer</div></td>
+                    <td><div class="align-right" id='buffer-ahead'><input type="range" value=20 class="align-right"></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+          <div class="icon-h">
+            <a href="#" id="button-full-screen"> <span class="">a</span></a>
+          </div>
         </div>
       </div>
-      <div id="chat-container" class="chat-container">
-      </div>
-      <div id="login-overlay"></div>
-      <div id="token-overlay"></div>
-      <div id="encode-overlay"></div>
-      <div id="help-overlay"></div>
+    </div>
+
+    <div id="panel-container" class="panel">
+      <div class="panel-tab"></div>
     </div>
   </body>
 </html>

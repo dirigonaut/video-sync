@@ -6,7 +6,7 @@
     "init": "node develop/init.js",
     "start": "node index.js",
     "debug": "node develop/init.js && node --inspect=9999 index.js",
-    "stats": "cloc --not-match-d resources --by-file ./src/ ./static/ index.js ./static/html/info/",
+    "stats": "cloc --not-match-d resources --by-file ./src/ ./static/ index.js ./static/html/info/ ./static/css/icons/",
     "update-deps": "npm outdated --depth=0 | grep -v Package | awk '{print $1}' | xargs -I% npm install %@latest --save"
   },
   "dependencies": {
