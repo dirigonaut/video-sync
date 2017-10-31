@@ -523,10 +523,14 @@ function initGui(client, isAdmin) {
       $('.fadeout').removeClass("fadeout");
     }
 
-    $('.slide-in').on('click', function(){
-        $('#panel-container').toggleClass('show');
+    $('#side-container').on('click', function() {
+      console.log('woot')
+      $('#panel-container').toggleClass('show');
+      $('#media-container').toggleClass('show');
+      $('#side-container').toggleClass('show');
     });
   }
+
 
   jqueryReset();
   initDom();
