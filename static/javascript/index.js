@@ -26,8 +26,8 @@ function setupClient() {
 
   $(document).on('initializeConnection', function(e, token) {
     clientSocket.connectAsync(window.location.host, token)
-    .then(parseAuth)
     .then(function(results) {
+      results = parseAuth(results);
       if(typeof results.acknowledge === 'undefined') {
         throw new Error('Missing connection hook from server authentication.');
       }
@@ -47,7 +47,7 @@ function setupClient() {
   });
 
   var initializeGui = function(isAdmin, acknowledge) {
-    $('#loginModal').modal('hide');
+    //$('#loginModal').modal('hide');
     isAdmin ? $('#btnLogin').parent().remove() : undefined;
 
     var client   = {
@@ -107,23 +107,10 @@ function setupClient() {
   var isExtraResourcesLoaded;
   var loadExtraResources = function(isAdmin) {
     if(!isExtraResourcesLoaded) {
-      if(isAdmin) {
-        return Promise.all([
-          loadAsyncFile('#encode-overlay',      'gui/panel/encode.html'),
-          loadAsyncFile('#token-overlay',       'gui/panel/tokens.html'),
-          loadAsyncFile('#location-container',  'gui/path.html')
-        ]).then(function() {
-          return loadAsyncScript('../javascript/gui.js').then(function() {
-            isExtraResourcesLoaded = true;
-            return Promise.resolve('Extra resources loaded.')
-          });
-        });
-      } else {
-        return loadAsyncScript('../javascript/gui.js').then(function() {
-          isExtraResourcesLoaded = true;
-          return Promise.resolve('Extra resources loaded.')
-        });
-      }
+      return loadAsyncScript('../javascript/gui.js').then(function() {
+        isExtraResourcesLoaded = true;
+        return Promise.resolve('Extra resources loaded.')
+      });
     } else {
       return Promise.resolve('Extra resources already loaded.');
     }
