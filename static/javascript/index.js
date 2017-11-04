@@ -10,6 +10,7 @@ function setupClient() {
   var initialize = function() {
     Promise.all([
       loadAsyncScript('../javascript/login.js'),
+      loadAsyncFile('#panel-log', 'gui/panels/log.html'),
       loadAsyncFile('#panel-documentation', 'info/documentation.html')
     ]).then(function() {
       var factoryManager  = Object.create(FactoryManager.prototype);
@@ -41,15 +42,15 @@ function setupClient() {
         initializeGui(results.isAdmin, results.acknowledge);
       }).catch(log.error);
     }).catch(function(error) {
-      cookie.deleteCookie('creds');
-      $('#loginToken').val('');
       log.error(error);
-      $('#loginModal').modal('show');
+      cookie.deleteCookie('creds');
+      $('#login-token').val('');
+      $('.login').show();
     });
   });
 
   var initializeGui = function(isAdmin, acknowledge) {
-    isAdmin ? $('#btnLogin').parent().remove() : undefined;
+    $('.login').hide();
 
     var client   = {
       socket:   clientSocket,
@@ -69,16 +70,14 @@ function setupClient() {
       log.info('Calling handshake');
       var auth = parseAuth(response);
       auth.acknowledge();
+      $('.login').hide();
     });
 
     client.socket.events.on(client.socket.Enums.EVENTS.ERROR, function() {
       if(client.media.isMediaInitialized()) {
         $(document).trigger('initializeMedia', [true]);
       }
-
-      cookie.deleteCookie('creds');
-      $('#loginToken').val('');
-      $('.login').toggleClass('show');
+      $('.login').show();
     });
 
     initGui(client, isAdmin);
@@ -90,8 +89,8 @@ function setupClient() {
     var creds = cookie.getCookie('creds');
     if(creds) {
       creds = JSON.parse(creds);
-      $('#loginHandle').val(creds.handle);
-      $('#loginToken').val(creds.token);
+      $('#login-handle').val(creds.handle);
+      $('#login-token').val(creds.token);
       return [creds];
     }
   };

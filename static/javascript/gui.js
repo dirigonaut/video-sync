@@ -18,11 +18,7 @@ function initGui(client, isAdmin) {
 
     if(isAdmin) {
       $(document).on('shutdown', function(e) {
-        client.socket.setEvent(client.keys.CONFIRM, function(confirm) {
-          confirm();
-        });
-
-        log.info('Reqesting server shutdown.');
+        client.log.info('Reqesting server shutdown.');
         client.socket.request(client.keys.SHUTDOWN);
       });
     }
@@ -492,16 +488,27 @@ function initGui(client, isAdmin) {
 
   //CSS Animation ----------------------------------------------------------------
   function initAnimations() {
-    var fadeOut;
+    var fadeOut, over;
     $('.container').on('mousemove', function(e) {
       if(!$('.fade').hasClass('show')) {
         $('.fade').toggleClass('show');
       }
 
       clearTimeout(fadeOut);
-      fadeOut = setTimeout(() => {
-        $('.fade').toggleClass('show');
-      }, 6000);
+      if(!over) {
+        fadeOut = setTimeout(() => {
+          $('.fade').toggleClass('show');
+        }, 6000);
+      }
+    });
+
+    $('.fade').on('mouseover', function(e) {
+      over = true;
+      clearTimeout(fadeOut);
+    });
+
+    $('.fade').on('mouseout', function(e) {
+      over = false;
     });
 
     $('.panel').mousedown(function(element){
@@ -551,6 +558,28 @@ function initGui(client, isAdmin) {
       $(`#path-dropdown`).removeClass('show');
     });
 
+    $('.invert').hover(function(e) {
+      $('.invert').each((index, element) => {
+        if(e.currentTarget == element) {
+          $(element).toggleClass('show');
+        } else {
+          $(element).removeClass('show');
+        }
+      });
+    });
+
+    $('.flaticon-multiply-1').click(function(e) {
+      $(e.currentTarget).parent().remove();
+    });
+
+    $('.path-dropdown .flex-h .flex-element').click(function(e) {
+      $('#path-input').val($(e.currentTarget).text());
+    });
+
+    $('#shutdown-button').click(function(e) {
+      $(document).trigger('shutdown');
+    });
+
     var changeOverlayPosition = function(parent, child, container) {
       if($(`.${child}`).hasClass('show')) {
         var parentPos = $(`#${parent}`).position();
@@ -590,14 +619,15 @@ function initGui(client, isAdmin) {
     };
 
     var changeDropDown = function() {
-      var width = $(`#path-input`).width();
-      $(`.path-dropdown`).attr('style', `width: ${width}px; left: ${$(`#path-input`).offset().left}px;`);
+      var width = $(`#path-input`).outerWidth();
+      var height = $(`.path`).height() + $(`.path`).offset().top;
+      $(`.path-dropdown`).attr('style', `width: ${width}px;left:${$(`#path-input`).offset().left}px;top:${height}px;`);
     };
 
     var changeSidePosition = function() {
       if($('.panel').hasClass('show')) {
-        var width = $('.panel').position().left - $('.side').width();
-        $('.side').attr('style', `left:${width}px`);
+        var left = $('.panel').position().left - $('.side').width();
+        $('.side').attr('style', `left:${left}px;`);
       }
     };
 
@@ -607,6 +637,36 @@ function initGui(client, isAdmin) {
       changeOverlayPosition('control-button-options', 'control-options', 'media');
       changeDropDown();
     };
+
+    var triggerConfirmation = function(confirm, custom) {
+      $("#confirm-no").trigger("click");
+      $("#confirm-no").off();
+      $("#confirm-yes").off();
+
+      $('#confirm-no').one('click', function(e) {
+        $('.confirm').removeClass('show');
+        confirm(false);
+      });
+
+      $('#confirm-yes').one('click', function(e) {
+        $('.confirm').removeClass('show');
+        confirm(true);
+      });
+
+      if(custom) {
+        $('.confirm-message').removeClass('show');
+        $('#confirm-custom').html(custom);
+        $('#confirm-custom').toggleClass('show');
+      } else {
+        $('.confirm-message').toggleClass('show');
+      }
+
+      $('.confirm').toggleClass('show');
+    };
+
+    client.socket.setEvent(client.keys.CONFIRM, function(message, callback) {
+      triggerConfirmation(callback, message);
+    });
 
     $(document).on('togglePanel', function() {
       $('.panel').removeAttr("style");

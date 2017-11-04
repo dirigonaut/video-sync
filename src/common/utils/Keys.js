@@ -5,10 +5,11 @@ module.exports = {
   //Client
   MEDIAREADY:     'admin-media-ready',
 
-  //Sokcet Connection Events
+  //Socket Connection Events
   ERROR:          'error',
   DISCONNECT:     'disconnect',
   RECONNECT:      'reconnect',
+
   //CredentialController
   //Server
   TOKENS:         'tokens',
@@ -61,6 +62,9 @@ module.exports = {
   FILESEGMENT:    'file-segment',
   FILEEND:        'file-end',
 
+  //Confirmation
+  CONFIRM:        'system-confirm',
+  
   //Errors
   INPUTERROR:     'error-input',
 };
