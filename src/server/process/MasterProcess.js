@@ -51,7 +51,7 @@ var startMaster = Promise.coroutine(function* () {
         } else {
           proxy.spawnWorker(workerIndex);
         }
-      } else if(message === 'master-process-process:shutdown') {
+      } else if(message === 'master-process:shutdown') {
         process.exit(0);
       }
     });

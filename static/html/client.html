@@ -22,31 +22,41 @@
         <div>
           <div class="path flex-h fade">
             <div class="flex-icon">
-              <a href="#" id="path-button"> <span class="flaticon-play-button-1"></span></a>
+              <a href="#" id="path-button"> <span class="icon flaticon-play-button-1"></span></a>
             </div>
             <input type="text" id="path-input" class="path-input" value="/home/sabo-kun/repo/media/bunny_test/">
-            <div class="flex-icon">
-              <a href="#" id="path-loaded"> <span class="flaticon-play-button-1"></span></a>
+            <div id="path-dropdown" class="path-dropdown toggle">
+              <div class="flex-h underline invert">
+                <div class="flex-element">entry one</div>
+                <span class="icon-min flex-icon flaticon-multiply-1"></span>
+              </div>
+              <div class="flex-h underline invert">
+                <div class="flex-element">entry one</div>
+                <span class="icon-min flex-icon flaticon-multiply-1"></span>
+              </div>
+              <div class="flex-h underline invert">
+                <div class="flex-element">entry one</div>
+                <span class="icon-min flex-icon flaticon-multiply-1"></span>
+              </div>
             </div>
-            <input type="text" class="path-notification" value="test--------------------------------------------------------------" readonly>
-          </div>
-
-          <div id="path-dropdown" class="path-dropdown flex-v toggle">
-            <div>entry one</div>
+            <div class="flex-icon">
+              <a href="#" id="path-loaded"> <span class="icon flaticon-play-button-1"></span></a>
+            </div>
+            <input type="text" class="path-notification" value="test---------------------" readonly>
           </div>
 
           <div class="side flex-v fade">
             <div id="side-tokens" class="flex-icon">
-              <a href="#"><span class="flaticon-play-button-1"></span></a>
+              <a href="#"><span class="icon flaticon-play-button-1"></span></a>
             </div>
             <div id="side-encode" class="flex-icon">
-              <a href="#"><span class="flaticon-play-button-1"></span></a>
+              <a href="#"><span class="icon flaticon-play-button-1"></span></a>
             </div>
             <div id="side-log" class="flex-icon">
-              <a href="#"><span class="flaticon-play-button-1"></span></a>
+              <a href="#"><span class="icon flaticon-play-button-1"></span></a>
             </div>
             <div id="side-documentation" class="flex-icon">
-              <a href="#"><span class="flaticon-play-button-1"></span></a>
+              <a href="#"><span class="icon flaticon-play-button-1"></span></a>
             </div>
           </div>
         </div>
@@ -57,7 +67,7 @@
 
         <div class="control flex-h fade">
           <div class="flex-icon">
-            <a href="#" id="button-play-pause"><span class="flaticon-play-button-1"></span></a>
+            <a href="#" id="button-play-pause"><span class="icon flaticon-play-button-1"></span></a>
           </div>
 
           <div class="control-time flex-h">
@@ -68,14 +78,14 @@
           </div>
 
           <div class="flex-icon">
-            <a href="#" id="control-button-volume"> <span class="flaticon-play-button-1"></span></a>
+            <a href="#" id="control-button-volume"> <span class="icon flaticon-play-button-1"></span></a>
             <div id="control-volume" class="control-volume toggle">
               <input type="range" id="volume-bar" class="control-volume-slider" value="50">
             </div>
           </div>
 
           <div class="flex-icon">
-            <a href="#" id="control-button-options"> <span class="flaticon-play-button-1"></span></a>
+            <a href="#" id="control-button-options"> <span class="icon flaticon-play-button-1"></span></a>
             <div id="control-options" class="control-options toggle">
               <table id="video-options-table">
                 <tbody>
@@ -105,16 +115,18 @@
           </div>
 
           <div class="flex-icon">
-            <a href="#" id="button-full-screen"> <span class="flaticon-play-button-1"></span></a>
+            <a href="#" id="button-full-screen"> <span class="icon flaticon-play-button-1"></span></a>
           </div>
         </div>
       </div>
 
       <div class="panel slide-in">
+        <div class="panel-header"></div>
         <div id="panel-tokens" class="panel-tab toggle"></div>
         <div id="panel-encode" class="panel-tab toggle"></div>
         <div id="panel-log" class="panel-tab toggle"></div>
         <div id="panel-documentation" class="panel-tab toggle"></div>
+        <div class="panel-footer"></div>
       </div>
     </div>
 
@@ -135,5 +147,17 @@
         </div>
       </div>
     </div>
+
+    <div class="confirm toggle">
+      <div class="confirm-form flex-v">
+        <div class="confirm-message toggle show">Are you sure?</div>
+        <div id="confirm-custom" class="confirm-message toggle">Custom confirmation?</div>
+        <div class="confirm-footer">
+          <button type="button" id="confirm-no">Cancel</button>
+          <button type="button" id="confirm-yes">Confirm</button>
+        </div>
+      </div>
+    </div>
+
   </body>
 </html>

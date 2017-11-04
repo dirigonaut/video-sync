@@ -26,12 +26,14 @@ body {
   overflow-x: hidden;
   float: right;
   background-color: white;
-  width: 24%;
+  width: 25%;
 }
 
 .panel-tab {
+  overflow-y:visible;
   position: relative;
-  background-color: grey;
+  padding: 1%;
+  border: 0px;
 }
 
 .media {
@@ -60,6 +62,7 @@ body {
 .path-dropdown {
   position:fixed;
   width:75%;
+  margin-top: 5px;
   background-color: white;
   z-index: 10;
 }
@@ -148,8 +151,8 @@ body {
 
 .side {
   position:fixed;
-  width:2.5%;
-  left:97.5%;
+  right:0px;
+  width:50px;
   top:5%;
   background: blue;
   z-index: 10;
@@ -175,9 +178,42 @@ body {
   z-index: 12;
 }
 
+.confirm {
+  position:absolute;
+  top:25%;
+  left:34.5%;
+  height:10%;
+  width:25%;
+  margin:2%;
+  padding:2%;
+  border:2%;
+  background:white;
+  z-index: 12;
+}
+
+.confirm-form {
+  position:relative;
+  height:100%;
+  width:100%;
+}
+
+.confirm-footer {
+  position:inherit;
+  float:right;
+  margin-top: auto;
+  margin-left: auto;
+}
+
 .flex-icon {
   float:left;
   text-align: center;
+  margin:6px;
+}
+
+.flex-element {
+  float:left;
+  flex-wrap: nowrap;
+  width:100%;
   margin:6.5px;
 }
 
@@ -193,6 +229,32 @@ body {
   display: flex;
   flex-wrap: nowrap;
   justify-content: center | space-between | space-around;
+}
+
+.icon {
+  font-size: 34px;
+  font-style: normal;
+  -webkit-text-stroke: 2px white;
+}
+
+.icon-min {
+  font-size: 17px;
+  font-style: normal;
+  -webkit-text-stroke: 1px grey;
+}
+
+.underline {
+  border-bottom:1px solid grey;
+}
+
+.invert {
+  background-color:inherit;
+  filter: invert(0%);
+}
+
+.invert.show {
+  background-color:inherit;
+  filter: invert(100%);
 }
 
 /* fullscreen */
