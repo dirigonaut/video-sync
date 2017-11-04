@@ -16,60 +16,67 @@
     <script type="text/javascript" src="../javascript/index.js"></script>
   </head>
   <body>
-    <div id="media-container" class="media fill-in show">
+    <div class="container">
+      <div class="media fill-in show">
 
-      <div>
-        <div id="path-container" class="path">
-          <div class="icon-h">
-            <a href="#" id="button-path"> <span class="flaticon-play-button-1"></span></a>
+        <div>
+          <div class="path flex-h fade">
+            <div class="flex-icon">
+              <a href="#" id="path-button"> <span class="flaticon-play-button-1"></span></a>
+            </div>
+            <input type="text" id="path-input" class="path-input" value="/home/sabo-kun/repo/media/bunny_test/">
+            <div class="flex-icon">
+              <a href="#" id="path-loaded"> <span class="flaticon-play-button-1"></span></a>
+            </div>
+            <input type="text" class="path-notification" value="test--------------------------------------------------------------" readonly>
           </div>
-          <div class="icon-h">
-            <input type="text" id="path-input" value="/home/sabo-kun/repo/media/bunny_test/">
+
+          <div id="path-dropdown" class="path-dropdown flex-v overlay">
+            <div>entry one</div>
           </div>
-          <div class="icon-h">
-            <a href="#" id="media-loaded"> <span class="flaticon-play-button-1"></span></a>
+
+          <div class="side flex-v fade">
+            <div class="flex-icon">
+              <a href="#" id="button-token"><span class="flaticon-play-button-1"></span></a>
+            </div>
+            <div class="flex-icon">
+              <a href="#" id="button-encode"><span class="flaticon-play-button-1"></span></a>
+            </div>
+            <div class="flex-icon">
+              <a href="#" id="button-log"><span class="flaticon-play-button-1"></span></a>
+            </div>
+            <div class="flex-icon">
+              <a href="#" id="button-help"><span class="flaticon-play-button-1"></span></a>
+            </div>
           </div>
         </div>
 
-        <div id="side-container" class="side slide-over show">
-          <div class="icon-v">
-            <a href="#" id="button-token"><span class="flaticon-play-button-1"></span></a>
-          </div>
-          <div class="icon-v">
-            <a href="#" id="button-encode"><span class="flaticon-play-button-1"></span></a>
-          </div>
-          <div class="icon-v">
-            <a href="#" id="button-log"><span class="flaticon-play-button-1"></span></a>
-          </div>
-          <div class="icon-v">
-            <a href="#" id="button-help"><span class="flaticon-play-button-1"></span></a>
-          </div>
+        <div class="video">
+          <video id="video" class="video-element"></video>
         </div>
-      </div>
 
-      <div id="video-container" class="video">
-        <video id="video" class="video"></video>
-      </div>
-
-      <div>
-        <div id="control-container" class="control flex-h">
-          <div class="icon-h">
+        <div class="control flex-h fade">
+          <div class="flex-icon">
             <a href="#" id="button-play-pause"><span class="flaticon-play-button-1"></span></a>
           </div>
-          <div id="video-time" class="slider">
-            <input type="range" id="seek-bar" value=0 class="center-v">
-          </div>
-          <div class="icon-h">
-            <a href="#" id="button-mute"> <span class="flaticon-play-button-1"></span></a>
-          </div>
-          <div id="audio-range" class="icon-h">
-            <input type="range" id="volume-bar" value=50 class="center-v">
+
+          <div class="control-time flex-h">
+            <input type="range" class="control-time-slider" value=0 />
+              <input type="text" class="control-time-display" value=00:00:00 >
+              <input type="text" class="control-time-spacer" value=/ readonly>
+              <input type="text" class="control-time-display" value=00:00:00 readonly>
           </div>
 
-          <div id="video-options" class="icon-h">
+          <div class="flex-icon">
+            <a href="#" id="control-button-volume"> <span class="flaticon-play-button-1"></span></a>
+            <div id="control-volume" class="control-volume overlay">
+              <input type="range" id="volume-bar" class="control-volume-slider" value="50">
+            </div>
+          </div>
 
-            <a href="#" id="button-video-options"> <span class="flaticon-play-button-1"></span></a>
-            <div class="pop-over">
+          <div class="flex-icon">
+            <a href="#" id="control-button-options"> <span class="flaticon-play-button-1"></span></a>
+            <div id="control-options" class="control-options overlay">
               <table id="video-options-table">
                 <tbody>
                   <tr>
@@ -95,17 +102,35 @@
                 </tbody>
               </table>
             </div>
-
           </div>
-          <div class="icon-h">
+
+          <div class="flex-icon">
             <a href="#" id="button-full-screen"> <span class="flaticon-play-button-1"></span></a>
           </div>
         </div>
       </div>
+
+      <div class="panel slide-in">
+        <div class="panel-tab"></div>
+      </div>
     </div>
 
-    <div id="panel-container" class="panel slide-in">
-      <div class="panel-tab"></div>
+    <div class="login overlay">
+      <div class="login-form">
+        <div>
+          <form>
+            <fieldset>
+              <label for="login-handle">Handle</label>
+              <input type="text" name="handle" id="login-handle" placeholder="John Smith"/>
+              <label for="login-token">Token</label>
+              <input type="text" name="token" id="login-token" placeholder="Token"/>
+            </fieldset>
+          </form>
+        </div>
+        <div>
+          <button type="button" id="login-submit">Submit</button>
+        </div>
+      </div>
     </div>
   </body>
 </html>
