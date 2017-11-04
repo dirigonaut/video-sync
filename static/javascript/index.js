@@ -47,7 +47,6 @@ function setupClient() {
   });
 
   var initializeGui = function(isAdmin, acknowledge) {
-    //$('#loginModal').modal('hide');
     isAdmin ? $('#btnLogin').parent().remove() : undefined;
 
     var client   = {
@@ -77,7 +76,7 @@ function setupClient() {
 
       cookie.deleteCookie('creds');
       $('#loginToken').val('');
-      $('#loginModal').modal('show');
+      $('.login').toggleClass('show');
     });
 
     initGui(client, isAdmin);
@@ -123,8 +122,11 @@ function setupClient() {
   };
 
   var loadAsyncScript = function(location) {
-    return new Promise((resolve, reject) => {
-      $.getScript(location, resolve).fail(function(jqxhr, settings, exception) {
+    return new Promise(function (resolve, reject) {
+      $.getScript(location)
+      .done(function(script, textStatus) {
+        resolve();
+      }).fail(function(jqxhr, settings, exception) {
         reject(exception);
       });
     });

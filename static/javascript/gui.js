@@ -94,17 +94,9 @@ function initGui(client, isAdmin) {
 
     $("video").on("timeupdate", updateProgressBar);
 
-    $("#volume-bar").on("input change", function (e) {
-      var range = parseInt($('#volume-bar').val()) * .01;
+    $(".control-volume-slider").on("input change", function (e) {
+      var range = parseInt($(".control-volume-slider").val()) * .01;
       $('#video')[0].volume = range;
-    });
-
-    $("#btnOptions").on("click", function (e) {
-      if($(".pop-over").css('display') === 'none') {
-        $(".pop-over").show();
-      } else {
-        $(".pop-over").hide();
-      }
     });
   }
 
@@ -496,41 +488,133 @@ function initGui(client, isAdmin) {
 
   //CSS Animation ----------------------------------------------------------------
   function initAnimations() {
-    var opaque = false;
+    var fadeOut;
+    $('.container').on('mousemove', function(e) {
+      if(!$('.fade').hasClass('show')) {
+        $('.fade').toggleClass('show');
+      }
 
-    $('.container').mousemove(function(e) {
-      if(!opaque) {
-        opaque = true;
-        showUI();
-        inactive();
+      clearTimeout(fadeOut);
+      fadeOut = setTimeout(() => {
+        $('.fade').toggleClass('show');
+      }, 6000);
+    });
+
+    $('.side').on('click', function() {
+      $('.panel').removeAttr("style");
+      $('.media').removeAttr("style");
+      $('.side').removeAttr("style");
+
+      $('.panel').toggleClass('show');
+      $('.media').toggleClass('show');
+
+      updateOverlays();
+    });
+
+    $('.panel').mousedown(function(element){
+      $(document).off('mousemove');
+      element.originalEvent.preventDefault();
+
+      if(element.offsetX <= parseInt($(this).css('borderLeftWidth'))) {
+        $(document).on('mousemove', function(e) {
+          changePanelWidth(e.pageX);
+          updateOverlays();
+        });
       }
     });
 
-    function inactive() {
-        setTimeout(function() {
-          opaque = false;
-          hideUI();
-        }, 6000);
-    }
-
-    function hideUI() {
-      $('.fadein').addClass("fadeout");
-      $('.fadein').removeClass("fadein");
-    }
-
-    function showUI() {
-      $('.fadeout').addClass("fadein");
-      $('.fadeout').removeClass("fadeout");
-    }
-
-    $('#side-container').on('click', function() {
-      console.log('woot')
-      $('#panel-container').toggleClass('show');
-      $('#media-container').toggleClass('show');
-      $('#side-container').toggleClass('show');
+    $(document).mouseup(function(e) {
+      $(document).off('mousemove');
     });
-  }
 
+    $(window).resize(function() {
+      updateOverlays();
+    });
+
+    $('#control-button-options').click(function(e) {
+      $(`#control-volume`).removeClass('show');
+      $(`#path-dropdown`).removeClass('show');
+      $(`#control-options`).toggleClass('show');
+      changeOverlayPosition('control-button-options', 'control-options', 'media');
+    });
+
+    $('#control-button-volume').click(function(e) {
+      $(`#control-options`).removeClass('show');
+      $(`#path-dropdown`).removeClass('show');
+      $(`#control-volume`).toggleClass('show');
+      changeOverlayPosition('control-button-volume', 'control-volume', 'media');
+    });
+
+    $('#path-input').click(function(e) {
+      $(`#control-options`).removeClass('show');
+      $(`#control-volume`).removeClass('show');
+      $(`#path-dropdown`).toggleClass('show');
+      changeDropDown();
+    });
+
+    $('.video').click(function(e) {
+      $(`#control-options`).removeClass('show');
+      $(`#control-volume`).removeClass('show');
+      $(`#path-dropdown`).removeClass('show');
+    });
+
+    var changeOverlayPosition = function(parent, child, container) {
+      if($(`.${child}`).hasClass('show')) {
+        var parentPos = $(`#${parent}`).position();
+        var parentOff = $(`#${parent}`).offset();
+        var parentWid = $(`#${parent}`).outerWidth(true);
+        var parentHie = $(`#${parent}`).outerHeight(true);
+
+        var position  = $(`#${child}`).position();
+        var width     = $(`#${child}`).outerWidth(true);
+        var height    = $(`#${child}`).outerHeight(true);
+
+        var left = parentOff.left - (width/2) + (parentWid/2);
+        var top = parentOff.top > (screen.height/2) ? parentOff.top - parentPos.top - height :
+          parentOff.top + parentPos.top + parentHie;
+
+        if(container) {
+          var containerWid = $(`.${container}`).outerWidth(true);
+          var containerHie = $(`.${container}`).outerHeight(true);
+
+          if(parentPos.left + width/2 > containerWid) {
+            left = containerWid - width;
+          }
+        }
+
+        $(`#${child}`).attr('style', `left:${left}px;top:${top}px`);
+      }
+    };
+
+    var changePanelWidth = function(x) {
+      var wWith =  $(window).width();
+      var width1 = Math.max(Math.min(wWith - x, wWith), 0);
+      var width2 = Math.max(Math.min(x, wWith), 0);
+
+      $(`.media`).attr('style', `width: ${width2}px`);
+      $(`.panel`).attr('style', `width: ${width1}px`);
+      $(`.path-dropdown`).attr('style', `width: ${width2}px`);
+    };
+
+    var changeDropDown = function() {
+      var width = $(`#path-input`).width();
+      $(`.path-dropdown`).attr('style', `width: ${width}px; left: ${$(`#path-input`).position().left}px;`);
+    };
+
+    var changeSidePosition = function() {
+      if($('.panel').hasClass('show')) {
+        var width = $('.panel').position().left - $('.side').width();
+        $('.side').attr('style', `left:${width}px`);
+      }
+    };
+
+    var updateOverlays = function() {
+      changeSidePosition();
+      changeOverlayPosition('control-button-volume', 'control-volume', 'media');
+      changeOverlayPosition('control-button-options', 'control-options', 'media');
+      changeDropDown();
+    };
+  }
 
   jqueryReset();
   initDom();
