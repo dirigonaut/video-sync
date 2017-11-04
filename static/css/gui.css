@@ -23,6 +23,7 @@ body {
 
 .panel {
   position: relative;
+  overflow-x: hidden;
   float: right;
   background-color: white;
   width: 24%;
@@ -238,11 +239,11 @@ body {
   opacity: 1.0;
 }
 
-.overlay {
+.toggle {
   display:none;
 }
 
-.overlay.show {
+.toggle.show {
   display:block;
 }
 

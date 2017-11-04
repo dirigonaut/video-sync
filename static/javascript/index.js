@@ -8,8 +8,10 @@ function setupClient() {
   window.MediaSource = window.MediaSource || window.WebKitMediaSource
 
   var initialize = function() {
-    loadAsyncScript('../javascript/login.js')
-    .then(function() {
+    Promise.all([
+      loadAsyncScript('../javascript/login.js'),
+      loadAsyncFile('#panel-documentation', 'info/documentation.html')
+    ]).then(function() {
       var factoryManager  = Object.create(FactoryManager.prototype);
       factory             = factoryManager.getFactory();
 
@@ -106,10 +108,22 @@ function setupClient() {
   var isExtraResourcesLoaded;
   var loadExtraResources = function(isAdmin) {
     if(!isExtraResourcesLoaded) {
-      return loadAsyncScript('../javascript/gui.js').then(function() {
-        isExtraResourcesLoaded = true;
-        return Promise.resolve('Extra resources loaded.')
-      });
+      if(isAdmin) {
+        return Promise.all([
+          loadAsyncFile('#panel-encode', 'gui/panels/encode.html'),
+          loadAsyncFile('#panel-tokens',  'gui/panels/tokens.html'),
+        ]).then(function() {
+          return loadAsyncScript('../javascript/gui.js').then(function() {
+            isExtraResourcesLoaded = true;
+            return Promise.resolve('Extra resources loaded.')
+          });
+        });
+      } else {
+        return loadAsyncScript('../javascript/gui.js').then(function() {
+          isExtraResourcesLoaded = true;
+          return Promise.resolve('Extra resources loaded.')
+        });
+      }
     } else {
       return Promise.resolve('Extra resources already loaded.');
     }
