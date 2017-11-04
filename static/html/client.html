@@ -31,22 +31,22 @@
             <input type="text" class="path-notification" value="test--------------------------------------------------------------" readonly>
           </div>
 
-          <div id="path-dropdown" class="path-dropdown flex-v overlay">
+          <div id="path-dropdown" class="path-dropdown flex-v toggle">
             <div>entry one</div>
           </div>
 
           <div class="side flex-v fade">
-            <div class="flex-icon">
-              <a href="#" id="button-token"><span class="flaticon-play-button-1"></span></a>
+            <div id="side-tokens" class="flex-icon">
+              <a href="#"><span class="flaticon-play-button-1"></span></a>
             </div>
-            <div class="flex-icon">
-              <a href="#" id="button-encode"><span class="flaticon-play-button-1"></span></a>
+            <div id="side-encode" class="flex-icon">
+              <a href="#"><span class="flaticon-play-button-1"></span></a>
             </div>
-            <div class="flex-icon">
-              <a href="#" id="button-log"><span class="flaticon-play-button-1"></span></a>
+            <div id="side-log" class="flex-icon">
+              <a href="#"><span class="flaticon-play-button-1"></span></a>
             </div>
-            <div class="flex-icon">
-              <a href="#" id="button-help"><span class="flaticon-play-button-1"></span></a>
+            <div id="side-documentation" class="flex-icon">
+              <a href="#"><span class="flaticon-play-button-1"></span></a>
             </div>
           </div>
         </div>
@@ -69,14 +69,14 @@
 
           <div class="flex-icon">
             <a href="#" id="control-button-volume"> <span class="flaticon-play-button-1"></span></a>
-            <div id="control-volume" class="control-volume overlay">
+            <div id="control-volume" class="control-volume toggle">
               <input type="range" id="volume-bar" class="control-volume-slider" value="50">
             </div>
           </div>
 
           <div class="flex-icon">
             <a href="#" id="control-button-options"> <span class="flaticon-play-button-1"></span></a>
-            <div id="control-options" class="control-options overlay">
+            <div id="control-options" class="control-options toggle">
               <table id="video-options-table">
                 <tbody>
                   <tr>
@@ -111,11 +111,14 @@
       </div>
 
       <div class="panel slide-in">
-        <div class="panel-tab"></div>
+        <div id="panel-tokens" class="panel-tab toggle"></div>
+        <div id="panel-encode" class="panel-tab toggle"></div>
+        <div id="panel-log" class="panel-tab toggle"></div>
+        <div id="panel-documentation" class="panel-tab toggle"></div>
       </div>
     </div>
 
-    <div class="login overlay">
+    <div class="login toggle">
       <div class="login-form">
         <div>
           <form>

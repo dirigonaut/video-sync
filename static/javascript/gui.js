@@ -119,7 +119,7 @@ function initGui(client, isAdmin) {
 
         for(var token in tokens) {
           $('#tokenList tr:last').after(`<tr><td>${token}</td><td>${tokens[token].handle}</td><td><input type="checkbox" id='${token}' class="align-center"></td><td>
-          <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
+          <button type="button" class="close toggle-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
 
           if(tokens[token].level === 'controls') {
             $(`#${token}`).prop('checked', true);
@@ -220,7 +220,7 @@ function initGui(client, isAdmin) {
 
       if(template) {
         $('#encode-list tr:last').after(`<tr><td>${client.encode.Enums.TYPES.VIDEO}</td><td contenteditable="true">${template}</td><td>
-        <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
+        <button type="button" class="close toggle-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
       }
 
       generateManifest();
@@ -238,7 +238,7 @@ function initGui(client, isAdmin) {
 
       if(template) {
         $('#encode-list tr:last').after(`<tr><td>${client.encode.Enums.TYPES.AUDIO}</td><td contenteditable="true">${template}</td><td>
-        <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
+        <button type="button" class="close toggle-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
       }
 
       generateManifest();
@@ -256,7 +256,7 @@ function initGui(client, isAdmin) {
 
       if(template) {
         $('#encode-list tr:last').after(`<tr><td>${client.encode.Enums.TYPES.SUBTITLE}</td><td contenteditable="true">${template}</td><td>
-        <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
+        <button type="button" class="close toggle-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
       }
 
       generateManifest();
@@ -328,21 +328,25 @@ function initGui(client, isAdmin) {
 
   //Side Events -----------------------------------------------------------------
   function initSide() {
-    if(isAdmin) {
-      $('#btnTokens').click(function() {
-        $('#tokenModal').modal('show');
-      });
+    $('.side .flex-icon').click(function(e) {
+      var id = e.currentTarget.id.split('-')[1];
+      if(!$(`.panel`).hasClass('show')) {
+        $(document).trigger('togglePanel');
+      }
 
-      $('#btnEncode').click(function() {
-        $('#encodeModal').modal('show');
-        $('#encodeModal').on('shown', function() {
-          $("#encodeInput").focus();
-        });
-      });
-    }
+      $('.side .flex-icon').each((index, element) => {
+        var elementId = element.id.split('-')[1];
 
-    $('#btnHelp').click(function() {
-      $('#helpModal').modal('show');
+        if(id == elementId) {
+          if($(`#panel-${elementId}`).hasClass('show')) {
+            $(document).trigger('togglePanel');
+          }
+
+          $(`#panel-${elementId}`).toggleClass('show');
+        } else {
+          $(`#panel-${elementId}`).removeClass('show');
+        }
+      });
     });
   }
 
@@ -500,17 +504,6 @@ function initGui(client, isAdmin) {
       }, 6000);
     });
 
-    $('.side').on('click', function() {
-      $('.panel').removeAttr("style");
-      $('.media').removeAttr("style");
-      $('.side').removeAttr("style");
-
-      $('.panel').toggleClass('show');
-      $('.media').toggleClass('show');
-
-      updateOverlays();
-    });
-
     $('.panel').mousedown(function(element){
       $(document).off('mousemove');
       element.originalEvent.preventDefault();
@@ -598,7 +591,7 @@ function initGui(client, isAdmin) {
 
     var changeDropDown = function() {
       var width = $(`#path-input`).width();
-      $(`.path-dropdown`).attr('style', `width: ${width}px; left: ${$(`#path-input`).position().left}px;`);
+      $(`.path-dropdown`).attr('style', `width: ${width}px; left: ${$(`#path-input`).offset().left}px;`);
     };
 
     var changeSidePosition = function() {
@@ -614,6 +607,17 @@ function initGui(client, isAdmin) {
       changeOverlayPosition('control-button-options', 'control-options', 'media');
       changeDropDown();
     };
+
+    $(document).on('togglePanel', function() {
+      $('.panel').removeAttr("style");
+      $('.media').removeAttr("style");
+      $('.side').removeAttr("style");
+
+      $('.panel').toggleClass('show');
+      $('.media').toggleClass('show');
+
+      updateOverlays();
+    });
   }
 
   jqueryReset();
@@ -633,6 +637,7 @@ function initGui(client, isAdmin) {
   client.log.ui("Gui initialized");
   function jqueryReset() {
     $(document).off('initializeMedia');
+    $(document).off('togglePanel');
     $(document).off('shutdown');
 
     $('#btnPlay').off();
