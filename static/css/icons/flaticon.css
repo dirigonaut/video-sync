@@ -24,6 +24,9 @@
 [class^="flaticon-"]:before, [class*=" flaticon-"]:before,
 [class^="flaticon-"]:after, [class*=" flaticon-"]:after {
   font-family: Flaticon;
+  display:inline-block;
+  text-align: center;
+  vertical-align: bottom;
 }
 
 .flaticon-add:before { content: "\f100"; }

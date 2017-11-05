@@ -11,7 +11,7 @@ function setupClient() {
     Promise.all([
       loadAsyncScript('../javascript/login.js'),
       loadAsyncFile('#panel-log', 'gui/panels/log.html'),
-      loadAsyncFile('#panel-documentation', 'info/documentation.html')
+      loadAsyncFile('#documenation-body', 'info/documentation.html')
     ]).then(function() {
       var factoryManager  = Object.create(FactoryManager.prototype);
       factory             = factoryManager.getFactory();
