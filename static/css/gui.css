@@ -28,20 +28,20 @@ body {
 }
 
 .panel-header {
-  text-align: center;
-  font-size: 32px;
-  font-style: normal;
+  text-align:center;
+  font-size:32px;
+  font-style:normal;
 }
 
 .media {
-  position: relative;
+  position:relative;
   float:left;
   min-width:25%;
   overflow:hidden;
 }
 
 .path {
-  position: relative;
+  position:relative;
   height:5%;
   width:100%;
   margin-top:.25%;
@@ -49,30 +49,27 @@ body {
 
 .path-input {
   float:left;
-  text-align: left;
+  text-align:left;
   width:70%;
   padding:.5%;
   border:0px;
-  background-color: inherit;
+  background-color:inherit;
 }
 
 .path-dropdown {
   position:fixed;
   width:75%;
-  margin-top: 5px;
-  background-color: inherit;
-  z-index: 10;
+  margin-top:.25%;
+  background-color:inherit;
+  z-index:10;
 }
 
 .path-notification {
-  float:right;
-  text-align: right;
-  width:10%;
+  text-align: left;
   padding:.5%;
-  border:0px;
-  margin-left: auto;
-  margin-right: auto;
-  background-color: inherit;
+  margin-left:auto;
+  margin-right:auto;
+  background-color:inherit;
 }
 
 .video {
@@ -120,8 +117,8 @@ body {
 .control-time-spacer {
   background-color:inherit;
   width:5px;
-  margin: 0px;
-  padding: 0px;
+  margin:0px;
+  padding:0px;
   border:0px;
 }
 
@@ -182,14 +179,13 @@ body {
   z-index: 11;
 }
 
-.login-form {
+.login-body {
   position:relative;
   top:25%;
   left:25%;
   width: 50%;
-  height: 25%;
   background:rgba(255, 255, 255, 1);
-  z-index: 12;
+  z-index: 15;
 }
 
 .confirm {
@@ -198,9 +194,7 @@ body {
   left:34.5%;
   height:10%;
   width:25%;
-  margin:2%;
-  padding:2%;
-  border:2%;
+  padding:1%;
   z-index: 12;
 }
 
@@ -210,14 +204,14 @@ body {
   width:100%;
 }
 
-.confirm-footer {
-  margin-top: auto;
-}
-
 /* Flex */
 .flex-icon {
   text-align: center;
   padding:.5%;
+}
+
+.flex-button {
+  margin:.5%;
 }
 
 .flex-element {
@@ -229,6 +223,8 @@ body {
 .flex-element-part {
   background-color:inherit;
   width:60%;
+  padding-top:1%;
+  padding-bottom:1%;
 }
 
 .flex-right {
@@ -239,6 +235,10 @@ body {
 .flex-center {
   margin-left: auto;
   margin-right: auto;
+}
+
+.flex-bottom {
+  margin-top:auto;
 }
 
 .flex-v {
@@ -264,6 +264,12 @@ body {
   font-size: 17px;
   font-style: normal;
   -webkit-text-stroke: 1px white;
+}
+
+.form {
+  position:relative;
+  background-color:inherit;
+  border:none;
 }
 
 .underline {

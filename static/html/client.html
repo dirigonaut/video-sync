@@ -20,11 +20,13 @@
       <div class="media fill-in show">
 
         <div class="path flex-h fade">
-          <div class="flex-icon ">
+          <div class="flex-icon">
             <a href="#" id="path-button"> <span class="icon flaticon-play-button-1"></span></a>
           </div>
 
-          <input type="text" id="path-input" class="path-input primary-color" value="/home/sabo-kun/repo/media/bunny_test/">
+          <form class="flex-h path-input primary-color">
+            <input type="text" id="path-input" class="flex-element secondary-color" value="/home/sabo-kun/repo/media/bunny_test/">
+          </form>
 
           <div id="path-dropdown" class="path-dropdown flex-v toggle primary-color">
             <div class="flex-h flex-element underline invert ">
@@ -45,7 +47,10 @@
             <a href="#" id="path-loaded"> <span class="icon flaticon-play-button-1"></span></a>
           </div>
 
-          <input type="text" class="path-notification primary-color" value="test---------------------" readonly>
+          <div class="flex-h path-notification primary-color">
+            <div>test---------------------asdf asdf asdf asdf asdf asdf asdf asdfasdf asdf asdf asdf asdfasdfasdf as</div>
+            <span class="icon-min flaticon-error"></span>
+          </div>
 
           <div class="side flex-v">
             <div id="side-tokens" class="flex-icon">
@@ -73,10 +78,12 @@
           </div>
 
           <div class="control-time flex-h primary-color">
-            <input type="range" class="control-time-slider" value=0 />
-            <input type="text" class="control-time-display" value=00:00:00 >
-            <input type="text" class="control-time-spacer" value=/ readonly>
-            <input type="text" class="control-time-display" value=00:00:00 readonly>
+            <form class="form flex-element flex-h">
+              <input type="range" class="control-time-slider" value=0 />
+              <input type="text" class="control-time-display" value=00:00:00 >
+              <input type="text" class="control-time-spacer" value=/ readonly>
+              <input type="text" class="control-time-display" value=00:00:00 readonly>
+            </form>
           </div>
 
           <div class="flex-icon">
@@ -84,7 +91,9 @@
           </div>
 
           <div id="control-volume" class="control-volume toggle primary-color">
-            <input type="range" id="volume-bar" class="control-volume-slider" value="50">
+            <form>
+              <input type="range" id="volume-bar" class="control-volume-slider" value="50">
+            </form>
           </div>
 
           <div class="flex-icon">
@@ -92,13 +101,15 @@
           </div>
 
           <div id="control-sync" class="control-sync toggle primary-color">
-            <input type="range" id="volume-bar" list="tickmarks" value="50">
-            <span class="icon-min flex-icon flaticon-cloud-computing-3"></span>
-            <datalist id="tickmarks">
-              <option value="0" label="0%">
-              <option value="50" label="50%">
-              <option value="100" label="100%">
-            </datalist>
+            <form id="sync-form" class="flex-h secondary-color">
+              <input type="range" id="sync-bar" list="tickmarks" value="50" readonly>
+              <datalist id="tickmarks">
+                <option value="0" label="0%">
+                <option value="50" label="50%">
+                <option value="100" label="100%">
+              </datalist>
+              <span class="icon flex-icon flaticon-cloud-computing-3"></span>
+            </form>
           </div>
 
           <div class="flex-icon">
@@ -106,30 +117,34 @@
           </div>
 
           <div id="control-options" class="control-options flex-v toggle primary-color">
-            <div class="flex-h flex-element secondary-color">
-              <label for="token-count">Type:</label>
-              <input type="text" class="flex-right flex-element-part" value="5">
-            </div>
-            <div class="flex-h flex-element secondary-color">
-              <label for="token-count">Video:</label>
-              <input type="text" class="flex-right flex-element-part" value="5">
-            </div>
-            <div class="flex-h flex-element secondary-color">
-              <label for="token-count">Audio:</label>
-              <input type="text" class="flex-right flex-element-part" value="5">
-            </div>
-            <div class="flex-h flex-element secondary-color">
-              <label for="token-count">Subtitle:</label>
-              <input type="text" class="flex-right flex-element-part" value="5">
-            </div>
-            <div class="flex-h flex-element secondary-color">
-              <label for="token-count">Buffer:</label>
-              <input type="range" class="flex-right flex-element-part" value=20>
-            </div>
-            <div class="flex-h flex-element secondary-color">
-              <label for="token-count">Sync:</label>
-              <input type="text" class="flex-right flex-element-part" value="5">
-            </div>
+            <form id="options-form">
+              <fieldset class="form flex-v secondary-color">
+                <div class="flex-h flex-element">
+                  <label for="token-count">Type:</label>
+                  <input type="text" class="flex-right flex-element-part" value="5">
+                </div>
+                <div class="flex-h flex-element">
+                  <label for="token-count">Video:</label>
+                  <input type="text" class="flex-right flex-element-part" value="5">
+                </div>
+                <div class="flex-h flex-element">
+                  <label for="token-count">Audio:</label>
+                  <input type="text" class="flex-right flex-element-part" value="5">
+                </div>
+                <div class="flex-h flex-element">
+                  <label for="token-count">Subtitle:</label>
+                  <input type="text" class="flex-right flex-element-part" value="5">
+                </div>
+                <div class="flex-h flex-element">
+                  <label for="token-count">Buffer:</label>
+                  <input type="range" class="flex-right flex-element-part" value=20>
+                </div>
+                <div class="flex-h flex-element">
+                  <label for="token-count">Sync:</label>
+                  <input type="text" class="flex-right flex-element-part" value="5">
+                </div>
+              </fieldset>
+            </form>
           </div>
 
           <div class="flex-icon">
@@ -151,28 +166,25 @@
     </div>
 
     <div class="login toggle">
-      <div class="login-form">
-        <div>
-          <form>
-            <fieldset>
-              <label for="login-handle">Handle</label>
-              <input type="text" name="handle" id="login-handle" placeholder="John Smith"/>
-              <label for="login-token">Token</label>
-              <input type="text" name="token" id="login-token" placeholder="Token"/>
-            </fieldset>
-          </form>
-        </div>
-        <div>
-          <button type="button" id="login-submit">Submit</button>
-        </div>
+      <div class="login-body flex-v primary-color">
+        <div class="flex-center">Video-Sync</div>
+        <form id="login-form">
+          <fieldset class="form flex-v secondary-color">
+            <label for="login-handle">Handle:</label>
+            <input type="text" name="handle" id="login-handle" class="flex-element" placeholder="John Smith"/>
+            <label for="login-token">Token:</label>
+            <input type="text" name="token" id="login-token" class="flex-element" placeholder="Token"/>
+            <button type="button" id="login-submit" class="flex-button flex-right">Submit</button>
+          </fieldset>
+        </form>
       </div>
     </div>
 
     <div class="confirm toggle primary-color">
-      <div class="confirm-form flex-v">
+      <div class="confirm-form flex-v secondary-color">
         <div class="confirm-message toggle show">Are you sure?</div>
         <div id="confirm-custom" class="confirm-message toggle">Custom confirmation?</div>
-        <div class="confirm-footer flex-right">
+        <div class="flex-bottom flex-right">
           <button type="button" id="confirm-no">Cancel</button>
           <button type="button" id="confirm-yes">Confirm</button>
         </div>
