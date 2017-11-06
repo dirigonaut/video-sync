@@ -1,37 +1,28 @@
-<div class="panel-header secondary-color">Token Management</div>
+<div class="panel-header secondary-color">User Tokens</div>
 <hr>
-<form>
-  <fieldset class="form flex-v secondary-color">
-    <div class="flex-v flex-element">
-      <label for="token-count">Create:</label>
-      <div class="flex-h flex-center flex-element">
-        <span class="icon-min flaticon-locked"></span>
-        <input type="text" id="token-count" class="flex-element" value="5">
-        <span class="icon-min flaticon-plus"></span>
-      </div>
-    </div>
-    <hr>
-    <div class="flex-v flex-element">
-      <div class="flex-h flex-center flex-element">
-        <span class="icon-min flaticon-locked"></span>
-        <div class="flex-element"></div>
-        <span class="icon-min flaticon-error"></span>
-      </div>
-    </div>
-    <div class="flex-h flex-element">
+<div id="token-body" class="secondary-color">
+  <label for="token-count">Create:</label>
+  <form id="token-form" class="flex-h flex-center flex-element">
+    <a href="#">
+      <span id="token-permissions" class="icon-min flaticon-locked"></span>
+    </a>
+    <input type="text" name="token-count" class="flex-element" value="5">
+    <a href="#" id="token-create">
+      <span class="icon-min flaticon-plus"></span>
+    </a>
+  </form>
+  <hr>
+  <form id="token-manage" class="flex-h flex-element">
+    <a href="#" onclick="$(document).trigger('token-level', event.currentTarget);">
       <span class="icon-min flaticon-locked"></span>
-      <input type="text" class="flex-element" value="token info" /readonly>
-      <span class="icon-min flaticon-error"></span>
-    </div>
+    </a>
     <div class="flex-h flex-element">
-      <span class="icon-min flaticon-locked"></span>
-      <input type="text" class="flex-element" value="token info" /readonly>
-      <span class="icon-min flaticon-error"></span>
+      <a href="#">
+        <span id="token-copy" class="icon-min flaticon-photo-camera-1"></span>
+      </a>
     </div>
-    <div class="flex-h flex-element">
-      <span class="icon-min flaticon-locked"></span>
-      <input type="text" class="flex-element" value="token info" /readonly>
+    <a href="#" onclick="$(document).trigger('token-delete', event.currentTarget);">
       <span class="icon-min flaticon-error"></span>
-    </div>
-  </fieldset>
-</form>
+    </a>
+  </form>
+</div>
