@@ -64,7 +64,9 @@ module.exports = {
 
   //Confirmation
   CONFIRM:        'system-confirm',
-  
-  //Errors
-  INPUTERROR:     'error-input',
+
+  //CLIENTLOGGING
+  SERVERLOG:      'system-logging',
+  NOTIFICATION:   'system-notification',
+  PROGRESS:       'system-progress',
 };

@@ -33,6 +33,13 @@ body {
   font-style:normal;
 }
 
+.panel-sub-panel {
+  min-height:25%;
+  max-height:75%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 .media {
   position:relative;
   float:left;
@@ -281,6 +288,68 @@ body {
 
 .secondary-color {
   background-color:darkgrey;
+}
+
+.alternate-color:nth-child(odd) {
+  background-color:dimgrey;
+}
+
+.alternate-color:nth-child(even) {
+  background-color:darkgrey;
+}
+
+.clear-spacers {
+  padding:0px;
+  margin:0px;
+  border:0px;
+}
+
+/* Tables */
+table {
+  display:flex;
+  overflow-y:auto;
+  overflow-x: hidden;
+  table-layout:fixed;
+  height:300px;
+}
+
+tbody {
+  display:flex;
+  flex-direction:row;
+  flex-wrap:wrap;
+  border-collapse: collapse;
+}
+
+table tr td {
+  word-break:break-all;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  white-space: normal;
+  float: left;
+}
+
+table tr {
+  width:100%;
+}
+
+table tr td:nth-child(odd) {
+  float: left;
+}
+
+table tr td:nth-child(even) {
+  float: right;
+}
+
+table tr:nth-child(odd) {
+  background-color:dimgrey;
+}
+
+table tr:nth-child(even) {
+  background-color:darkgrey;
+}
+
+textarea {
+  resize: none;
 }
 
 /* CSS Animations */

@@ -59,15 +59,15 @@ CredentialManager.prototype.generateTokens = Promise.coroutine(function* (count,
 
 CredentialManager.prototype.deleteTokens = Promise.coroutine(function* (keys) {
   var entries = yield getUserData(CredentialManager.Enum.User.CLIENT);
-  var removed = [];
 
   for(let i = 0; i < keys.length; ++i) {
-    if(entries && entries[keys[i]]) {
-      if(entries[keys[i]].id) {
-        redisSocket.disconnect(entries[keys[i]].id);
+    var key = String(keys[i]).trim();
+    if(entries && entries[key]) {
+      if(entries[key].id) {
+        redisSocket.disconnect(entries[key].id);
       }
 
-      delete entries[keys[i]];
+      delete entries[key];
     }
   }
 

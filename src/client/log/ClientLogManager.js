@@ -18,10 +18,14 @@ ClientLogManager.prototype.getLog = function(id) {
   return logs[id];
 };
 
+ClientLogManager.prototype.setLevel = function(id, level) {
+  return logs[id].level = level;
+};
+
 module.exports = ClientLogManager;
 
 ClientLogManager.Enum = {};
-ClientLogManager.Enum.Logs = { FACTORY: 'factory', GENERAL: 'general', SOCKET: 'socket', VIDEO: 'video'};
+ClientLogManager.Enum.Logs = { FACTORY: 'factory', GENERAL: 'general', SOCKET: 'socket', VIDEO: 'video' };
 ClientLogManager.Enum.Levels = { ui: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
 
 var buildUILogger = function(label, level, enableConsoleLogging, callback) {
@@ -61,10 +65,6 @@ function log(level, message, meta) {
 
   if(meta) {
     logMessage.meta = JSON.stringify(meta, null, 2);
-  }
-
-  if(ClientLogManager.Enum.Levels[level] === ClientLogManager.Enum.Levels.ui) {
-    this.uiLog(logMessage);
   }
 
   if(!this.silent && ClientLogManager.Enum.Levels[level] <= ClientLogManager.Enum.Levels[this.level]) {

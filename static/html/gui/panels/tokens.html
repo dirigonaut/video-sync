@@ -4,7 +4,7 @@
   <label for="token-count">Create:</label>
   <form id="token-form" class="flex-h flex-center flex-element">
     <a href="#">
-      <span id="token-permissions" class="icon-min flaticon-locked"></span>
+      <span id="token-permissions" class="icon-min flaticon-locked lock"></span>
     </a>
     <input type="text" name="token-count" class="flex-element" value="5">
     <a href="#" id="token-create">
@@ -12,6 +12,7 @@
     </a>
   </form>
   <hr>
+  <label for="token-count">Update:</label>
   <form id="token-manage" class="flex-h flex-element">
     <a href="#" onclick="$(document).trigger('token-level', event.currentTarget);">
       <span class="icon-min flaticon-locked"></span>

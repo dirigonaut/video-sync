@@ -57,8 +57,8 @@ MediaController.prototype.setForceBuffer = function(forceBuffer) {
   }
 };
 
-MediaController.prototype.setActiveMetaData = function(key, videoIndex, audioIndex, subtitleIndex) {
-  var metaInfo = metaManager.buildMetaInfo(key, videoIndex, audioIndex, subtitleIndex);
+MediaController.prototype.setActiveMetaData = function(key, videoIndex, audioIndex) {
+  var metaInfo = metaManager.buildMetaInfo(key, videoIndex, audioIndex);
   metaManager.setActiveMetaData(metaInfo);
 };
 

@@ -59,6 +59,7 @@ function setupClient() {
       encode:   factory.createEncodeFactory(),
       schema:   factory.createSchemaFactory(),
       keys:     factory.createKeys(),
+      logMan:   factory.createClientLogManager(),
       log:      log,
     };
 
