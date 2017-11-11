@@ -105,11 +105,11 @@ function initGui(client, isAdmin) {
 
         for(var token in tokens) {
           $(`<form class="flex-h flex-element">
-            <a href="#" onclick="$(document).trigger('token-level', event.currentTarget);"">
+            <a href="#" onclick="$(document).trigger('token-level', event.currentTarget);">
               <span class="icon-min ${tokens[token].level === 'controls' ? 'flaticon-locked-3' : 'flaticon-locked'}"></span>
             </a>
             <input type="text" class="flex-element ${tokens[token].handle ? 'toggle' : 'toggle show'}" value="${token}" /readonly>
-            <input type="text" class="flex-element ${tokens[token].handle ? 'toggle show' : 'toggle'}" value="${tokens[token].handle}" /readonly>
+            <input type="text" class="flex-element handle ${tokens[token].handle ? 'toggle show' : 'toggle'}" value="${tokens[token].handle}" /readonly>
             <a href="#" onclick="$(document).trigger('token-delete', event.currentTarget);">
               <span class="icon-min flaticon-error"></span>
             </a>
@@ -120,34 +120,26 @@ function initGui(client, isAdmin) {
 
     client.formData.on(client.formData.Enums.FORMS.TOKENS, loadTokens);
 
-    $('#token-permissions').click(function(e) {
-      var element = e.currentTarget;
-      if($(element).hasClass('flaticon-locked-3')) {
-        $(element).removeClass('flaticon-locked-3');
-        $(element).addClass('flaticon-locked');
-      } else if($(element).hasClass('flaticon-locked')) {
-        $(element).removeClass('flaticon-locked');
-        $(element).addClass('flaticon-locked-3');
-      }
+    $('.lock').click(function(e) {
+      $(document).trigger('lock-element', e.currentTarget);
     });
 
     $('#token-create').click(function() {
       client.log.info("Create Tokens.");
-      var values = serializeForm('token-form');
+      var values = serializeForm('token-form', 'input');
       values.push($('#token-permissions').hasClass('flaticon-locked-3'));
 
       client.socket.request(client.keys.CREATETOKENS, client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PAIR, values));
     });
 
     $(document).on('token-delete', function(e, element) {
+      var ids = '';
+
       var removeForms = function(form) {
         $($(form).children()).each((index, el) => {
-          if($(el).is("input")) {
-            var id = $(el).val();
-
+          if($(el).is("input") && !$(el).hasClass("handle")) {
+            ids = ids ? `${ids}, ${$(el).val()}` : $(el).val();
             $(form).remove();
-            client.socket.request(client.keys.DELETETOKENS,
-              client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [id]));
           } else if ($(el).is("div")) {
             var removeAlltokens = function(confirm) {
               if(confirm) {
@@ -156,13 +148,16 @@ function initGui(client, isAdmin) {
                     removeForms(element);
                   }
                 });
+
+                client.socket.request(client.keys.DELETETOKENS,
+                  client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [ids]));
               }
             }
 
             triggerConfirmation(removeAlltokens, "Are you sure you wish to delete all the tokens?");
           }
         });
-      }
+      };
 
       removeForms($(element).parent()[0]);
     });
@@ -241,140 +236,153 @@ function initGui(client, isAdmin) {
     });
 
     var loadFileInfo = function(metaData) {
-      $('#toggles').append(toggle).empty();
-      $('#file-info-panels').children('div').each(function(i, element) {
-        if(element.id) {
-          $(element).remove();
+      $('#encoding-meta').children().each((index, el) => {
+        if($(el)[0].id === "encoding-tabs") {
+          $($(el).children()).each(function(index, child) {
+            if($($(child)[0]).is("a")) {
+              $(child).remove();
+            }
+          });
+        } else {
+          $(el).remove();
         }
       });
 
-      if(metaData && typeof metaData.data !== 'undefined') {
-        for(var i = 0; i < metaData.data.stream.length; ++i) {
-          var toggle  = `<li role="presentation" ${i === 0 ? 'class="active"' : ''}><a href="#stream-${i}" aria-controls="stream-${i}" role="pill" data-toggle="pill">Stream-${i}</a></li>`
-          var panel   = `<div role="tabpanel" class="tab-pane ${i === 0 ? 'active' : ''}" id="stream-${i}">
-                          <textArea type="text" class="form-control" rows=8 placeholder="fileInfo">${metaData.data.stream[i]}</textarea></div>`;
+      $('#subtitle-track').empty();
 
-          $('#file-info-panels').append(panel);
-          $('#toggles').append(toggle);
+      if(metaData && typeof metaData.data !== 'undefined') {
+        var trackIndexes = '';;
+
+        for(var i = metaData.data.stream.length - 1; i > -1; --i) {
+          $(`<div id='stream-${i}' class="panel-sub-panel flex-element ${i === 0 ? 'toggle show' : 'toggle'}">
+            ${prettifyMeta(JSON.stringify(metaData.data.stream[i]))}
+          </div>`).appendTo('#encoding-meta');
+
+          $(`<a href="#" onclick="$(document).trigger('encode-meta-toggle', ${i})";>
+              <span id='stream-${i}-icon' class='icon-min flex-icon flex-right flaticon-file'></span>
+            </a>`).appendTo('#encoding-tabs');
+
+          trackIndexes = `<option value="${i}">` + trackIndexes;
         }
+
+        $(trackIndexes).appendTo('#subtitle-track');
       }
     };
 
+    var prettifyMeta = function(meta) {
+      meta = meta.replace(/(\[STREAM\]|\[\\STREAM\]|\{|\}|")*/g, '');
+      var metaArray = meta.split(',');
+      var html = '<table><tbody>';
+
+      for(let i = 0; i < metaArray.length; ++i) {
+        var value = metaArray[i].trim();
+
+        if(value) {
+          var splitRow = value.split(/\s/)
+          html += `<tr><td>${splitRow[0]}</td><td>${splitRow[1]}</td></tr>`
+        }
+      }
+
+      html+="</tbody></table>";
+      return html;
+    }
+
+    $(document).on('encode-meta-toggle', function(event, index) {
+      $('[id^=stream-]').each((i, el) => {
+        $(el).removeClass("show");
+      });
+
+      $(`#stream-${index}`).toggleClass("show");
+    });
+
     client.socket.setEvent(client.keys.META, loadFileInfo);
 
-    $('#createVideo').click(function createVideo() {
-      var quality = $('#video-quality').val();
-      var input = $('#encode-input').val();
-      var output = $('#encode-output').val();
+    $('#encode-input-form a').click(function(e) {
+      var values = serializeForm('encode-input-form', 'input');
+      var type;
 
-      var template = client.encode.getTemplate(client.encode.Enums.CODEC.WEBM, client.encode.Enums.TYPES.VIDEO);
-      template = client.encode.setKeyValue('i', `${input}`, template);
-      template = client.encode.setKeyValue('s', quality, template);
-      template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.Enums.CODEC.WEBM}`, template);
+      $($(e.currentTarget).parent()).children().each((index, ele) => {
+        if($(ele).is("label")) {
+          type = $(ele).html().toUpperCase().match(/^\w*/g)[0];
+        }
+      });
+
+      var template = client.encode.getTemplate(client.encode.Enums.CODEC.WEBM, type);
+      template = client.encode.setKeyValue('i', `${values[0]}`, template);
+
+      if(type === client.encode.Enums.TYPES.VIDEO) {
+        template = client.encode.setKeyValue('s', values[2], template);
+        template = client.encode.setOutput(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[2]}.${client.encode.Enums.CODEC.WEBM}`, template);
+      } else if(type === client.encode.Enums.TYPES.AUDIO) {
+        template = client.encode.setKeyValue('b:a', values[3], template);
+        template = client.encode.setOutput(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[3]}.${client.encode.Enums.CODEC.WEBM}`, template);
+      } else if(type === client.encode.Enums.TYPES.SUBTITLE) {
+        template = client.encode.setKeyValue('i', `${values[0]} ${values[4] ? `-map 0:${values[4]}` : ''}`, template);
+        template = client.encode.setOutput(`${values[1]}${client.encode.getNameFromPath(values[0])}.vtt`, template);
+      }
 
       if(template) {
-        $('#encode-list tr:last').after(`<tr><td>${client.encode.Enums.TYPES.VIDEO}</td><td contenteditable="true">${template}</td><td>
-        <button type="button" class="close toggle-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
+        $(`<div class="flex-h alternate-color">
+          <textarea type="text" class="flex-element clear-spacers">${template}</textarea>
+          <a href="#" onclick="$(document).trigger('encode-command-delete', event.currentTarget);">
+            <span class="icon-min flaticon-error flex-right clear-spacers"></span>
+          </a></div>`).appendTo(`#${type.toLowerCase()}-commands`);
       }
 
       generateManifest();
     });
 
-    $('#createAudio').click(function createAudio() {
-      var quality = $('#audio-quality').val();
-      var input = $('#encode-input').val();
-      var output = $('#encode-output').val();
-
-      var template = client.encode.getTemplate(client.encode.Enums.CODEC.WEBM, client.encode.Enums.TYPES.AUDIO);
-      template = client.encode.setKeyValue('i', `${input}`, template);
-      template = client.encode.setKeyValue('b:a', quality, template);
-      template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.Enums.CODEC.WEBM}`, template);
-
-      if(template) {
-        $('#encode-list tr:last').after(`<tr><td>${client.encode.Enums.TYPES.AUDIO}</td><td contenteditable="true">${template}</td><td>
-        <button type="button" class="close toggle-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
-      }
-
-      generateManifest();
-    });
-
-    $('#createSubtitle').click(function createSubtitle() {
-      var streamId = $('#subtitle-track').val();
-      var input = $('#encode-input').val();
-      var output = $('#encode-output').val();
-      var isNum = /^\d+$/.test(streamId);
-
-      var template = client.encode.getTemplate(client.encode.Enums.CODEC.WEBM, client.encode.Enums.TYPES.SUBTITLE);
-      template = client.encode.setKeyValue('i', `${input}${isNum ? ' -map 0:' + streamId : ''}`, template);
-      template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}.vtt`, template);
-
-      if(template) {
-        $('#encode-list tr:last').after(`<tr><td>${client.encode.Enums.TYPES.SUBTITLE}</td><td contenteditable="true">${template}</td><td>
-        <button type="button" class="close toggle-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
-      }
-
-      generateManifest();
-    });
-
-    $('#encode-list').on("click", "button", function(e) {
-      var command = $($(e.currentTarget).parent()).parent();
-      command.remove();
+    $(document).on('encode-command-delete', function(e, element) {
+      $($(element).parent()).remove();
       generateManifest();
     });
 
     var generateManifest = function() {
-      var input  = $('#encode-input').val();
-      var output = $('#encode-output').val();
-      var list = [];
-
-      if(!$('#row_locked').is(":checked")) {
-        $('#encode-list tr').each(function(i, tr) {
-          var command = {};
-          $('td', tr).each(function(i, td) {
-            var cell = $(td).text();
-            if(i === 0 && cell === client.encode.Enums.TYPES.MANIFEST) {
-              command.type = cell;
-              tr.remove();
-            } else if(i === 0 && cell) {
-              command.type = cell;
-            } else if(i === 1 && cell) {
-              command.input = cell;
-            }
-          });
-
-          if(typeof command.input !== 'undefined' && command.type !== client.encode.Enums.TYPES.MANIFEST &&
-            command.type !== client.encode.Enums.TYPES.SUBTITLE) {
-            list.push(command);
-          }
-        });
-
-        if(list.length > 0) {
-          var template = client.encode.createManifest(input, output, list, client.encode.Enums.CODEC.WEBM);
-
-          if(template) {
-            $('#encode-list tr:last').after(`<tr><td>${client.encode.Enums.TYPES.MANIFEST}</td><td contenteditable="true">${template}</td><td>
-            <input type="checkbox" id="row_locked" name="locked"></td></tr>`);
-          }
-        }
-      }
-    }
-
-    $('#submitEncoding').click(function(e) {
-      var output = $('#encode-output').val();
+      var values = serializeForm('encode-input-form', 'input');
       var commands = [];
 
-      $('#encode-list tr').each(function(i, tr) {
-        $('td', tr).each(function(i, td) {
-          var cell = $(td).text();
-          if(i === 1 && cell) {
-            commands.push({input: cell, encoder: client.encode.Enums.ENCODER.FFMPEG});
-          }
-        });
+      serializeForm('encode-command-form #video-commands', 'textarea')
+      .forEach((value, index, array) => {
+        commands.push({ type: client.encode.Enums.TYPES.VIDEO, input: value});
+      });
+
+      serializeForm('encode-command-form #audio-commands', 'textarea')
+      .forEach((value, index, array) => {
+        commands.push({ type: client.encode.Enums.TYPES.AUDIO, input: value});
+      });
+
+      var template = client.encode.createManifest(values[0], values[1], commands, client.encode.Enums.CODEC.WEBM);
+
+      var locked = $('#manifest-commands div a span');
+      locked = locked && locked.length > 0 ? locked = $(locked[0]).hasClass('flaticon-locked') : false;
+
+      if(!locked) {
+        $(`#manifest-commands`).empty();
+
+        if(template && commands && commands.length > 0) {
+          $(`<div class="flex-h alternate-color">
+            <textarea type="text" class="flex-element clear-spacers">${template}</textarea>
+            <a href="#" onclick="$(document).trigger('lock-element', $('#manifest-commands div a span')[0]);">
+              <span class="icon-min ${!locked ? 'flaticon-locked-3' : 'flaticon-locked'} flex-right clear-spacers lock"></span>
+            </a></div>`).appendTo(`#manifest-commands`);
+        }
+      }
+
+      $(document).trigger('textarea-grow');
+    }
+
+    $('#submit-encoding').click(function(e) {
+      var values = serializeForm('encode-input-form', 'input');
+      var commands = [];
+
+      serializeForm('encode-command-form', 'textarea')
+      .forEach((value, index, array) => {
+        commands.push({ input: value, encoder: client.encode.Enums.ENCODER.FFMPEG });
       });
 
       var request = {};
       request.encodings = commands;
-      request.directory = output;
+      request.directory = values[1];
 
       client.socket.request('video-encode', request);
     });
@@ -403,110 +411,125 @@ function initGui(client, isAdmin) {
   });
 
   //Log Events ------------------------------------------------------------------
-  client.socket.setEvent(client.keys.EVENTRESP, client.log.info);
-  client.socket.setEvent(client.keys.PINGRESP, client.log.info);
-  client.socket.setEvent(client.keys.LOGRESP, client.log.info);
-  client.socket.setEvent(client.keys.INPUTERROR, client.log.error);
+  var logLevels = function() {
+    var logs = client.logMan.Enums.LOGS;
+    var levels = client.logMan.Enums.LEVELS;
+    var cookieLevels = cookie.getCookie('log-levels');
 
-  //Video Events -----------------------------------------------------------------
-  $('#options-video').on("change", function (e) {
-    client.log.info($(e.currentTarget.children.select).val());
-    var trackInfo = client.media.getTrackInfo();
-    var selectedTrack = trackInfo.get('webm');
+    for(let key in logs) {
+      var level = cookieLevels && cookieLevels[key] ? cookieLevels[key] : undefined;
 
-    var vQuality = $(e.currentTarget.children.select).val();
-    var aQuality = $($('#track-audio').children()[0]).val();
+      $(`<div class="flex-h flex-element alternate-color">
+        <label>${logs[key]}:</label>
+        <form id="log-${logs[key]}" class="flex-right">
+          <input name="${logs[key]}" type="radio" ${level && level.includes("error") ? 'checked' : ''} value="${levels.error}">
+          <input name="${logs[key]}" type="radio" ${level && level.includes("warn") ? 'checked' : ''} value="${levels.warn}">
+          <input name="${logs[key]}" type="radio" ${level && !level.includes("info") ? '' : 'checked'} value="${levels.info}">
+          <input name="${logs[key]}" type="radio" ${level && level.includes("verbose") ? 'checked' : ''} value="${levels.verbose}">
+          <input name="${logs[key]}" type="radio" ${level && level.includes("debug") ? 'checked' : ''} value="${levels.debug}">
+          <input name="${logs[key]}" type="radio" ${level && level.includes("silly") ? 'checked' : ''} value="${levels.silly}">
+        </form>
+      </div>`).appendTo(`#log-levels`);
+    }
 
-    client.media.setActiveMetaData('webm', vQuality, aQuality, null);
-  });
+    $('#log-levels input').on('change', function(e) {
+      var id = $(e.currentTarget).attr('name');
+      var value = $(e.currentTarget).val();
+      value = Object.keys(client.logMan.Enums.LEVELS)[value];
+      client.logMan.setLevel(id, value);
+    });
+  }();
 
-  $('#options-audio').on("change", function (e) {
-    client.log.info($(e.currentTarget.children.select).val());
-    var trackInfo = client.media.getTrackInfo();
-    var selectedTrack = trackInfo.get('webm');
+  $(document).on('delete-logs', function(e, element) {
+    var parent = $(element).parent();
+    $(parent).remove();
 
-    var vQuality = $($('#track-video').children()[0]).val();
-    var aQuality = $(e.currentTarget.children.select).val();
-
-    client.media.setActiveMetaData('webm', vQuality, aQuality, null);
-  });
-
-  $('#options-subtitle').on("change", function (e) {
-    client.log.info($(e.currentTarget.children.select).val());
-    var selected = $(e.currentTarget.children.select).val();
-
-    var videoElement = $('video')[0];
-    for(var i = 0; i < videoElement.textTracks.length; ++i) {
-      if(videoElement.textTracks[i].label === selected) {
-        videoElement.textTracks[i].mode = 'showing';
-      } else if(videoElement.textTracks[i].mode !== "disabled") {
-        videoElement.textTracks[i].mode = 'hidden';
-      }
+    if($(parent).attr('id') === 'notifications') {
+      $(parent).removeClass('show')
     }
   });
 
-  $('#options-buffer').on("change", function (e) {
+  var logging = function(message) {
+    $(`<div class="flex-h alternate-color">
+      <div type="text" class="flex-element clear-spacers">${message}</div>
+      <a href="#" onclick="$(document).trigger('delete-logs', event.currentTarget);">
+        <span class="icon-min flaticon-error flex-right clear-spacers"></span>
+      </a></div>`).appendTo(`#log-body`);
+  };
+
+  var notification = function(message) {
+    $(`#notification`).empty();
+    $(`<div class="flex-h secondary-color flex-center">
+      <div>${message}</div>
+      <a href="#" onclick="$(document).trigger('delete-logs', event.currentTarget);">
+        <span class="icon-min flaticon-error flex-right clear-spacers"></span>
+      </a></div>`).appendTo(`#notification`);
+
+    $(`#notification`).toggleClass('show');
+    logging(message);
+  };
+
+  var progress = function(id, message) {
+
+  };
+
+  client.socket.setEvent(client.keys.SERVERLOG, logging);
+  client.socket.setEvent(client.keys.NOTIFICATION, notification);
+  client.socket.setEvent(client.keys.PROGRESS, progress);
+
+  //Video Overlay----------------------------------------------------------------
+  $('#options-form select').on("change", function (e) {
+    var values = serializeForm('options-form', 'select');
+    var video = $('#video');
+
+    if(video.textTracks) {
+      for(var i = 0; i < video.textTracks.length; ++i) {
+        if(video.textTracks[i].label === values[2]) {
+          video.textTracks[i].mode = 'showing';
+        } else if(video.textTracks[i].mode !== "disabled") {
+          video.textTracks[i].mode = 'hidden';
+        }
+      }
+    }
+
+    client.media.setActiveMetaData('webm', values[0], values[1]);
+  });
+
+  $('#buffer-options').on("change", function (e) {
     var value = $(e.currentTarget.children[0]).val();
     var value = Math.trunc(value / 10);
     $(e.currentTarget.children[0]).val(value * 10);
     client.media.setBufferAhead(value);
   });
 
-  $('#options-sync').on("change", function (e) {
+  $('#sync-options').on("change", function (e) {
+
   });
 
   client.media.on('meta-data-loaded', function(trackInfo) {
     client.log.info('meta-data-loaded');
-
-    var typeHtml = `<select name="select">`;
-    var videoHtml = `<select name="select">`;
-    var audioHtml = `<select name="select">`;
-    var subtitleHtml = `<select name="select">`;
-
     var active = trackInfo.get('active');
     trackInfo.delete('active');
 
-    var buildTrackHtml = function(tracks, type, activeIndex) {
-      html = "";
-      for(var i in tracks) {
-        if(active.type === type && tracks[i].index === activeIndex) {
-          html += `<option value="${tracks[i].index}" selected>${tracks[i].quality}</option>`;
-        } else {
-          html += `<option value="${tracks[i].index}">${tracks[i].quality}</option>`;
+    var webm = trackInfo ? trackInfo.get('webm') : undefined;
+    for(let tracks in webm) {
+      var options = '';
+
+      for(let j = 0; j < webm[tracks].length; ++j) {
+        options = `<option value="${webm[tracks][j].index}">
+          ${webm[tracks][j].quality}</option>`;
+
+        if(tracks === 'video') {
+          $(options).appendTo('#video-track-list');
+        } else if(tracks === 'audio') {
+          $(options).appendTo('#audio-track-list');
         }
       }
-      return html;
-    };
-
-    for(var track of trackInfo) {
-      var type = track[0];
-      if(active !== null && active.type === type) {
-        typeHtml += `<option value="${type}" selected>${type}</option>`;
-      } else {
-        typeHtml += `<option value="${type}">${type}</option>`;
-      }
     }
-
-    if(active !== null && active !== undefined) {
-      videoHtml += buildTrackHtml(track[1].video, type, active.video);
-      audioHtml += buildTrackHtml(track[1].audio, type, active.audio);
-    }
-
-    subtitleHtml += `<option value="None" selected>None</option>`;
-
-    typeHtml += `</select">`;
-    videoHtml += `</select>`;
-    audioHtml += `</select>`;
-    subtitleHtml += `</select>`;
-
-    $('#meta-types').html(typeHtml);
-    $('#track-video').html(videoHtml);
-    $('#track-audio').html(audioHtml);
-    $('#track-subs').html(subtitleHtml);
   });
 
   client.media.on('subtitle-loaded', function() {
-    var subtitleHtml = `<select name="select"> <option value="None" selected>None</option>`;
+    var subtitleHtml = `<select name="select"> <option value="None" selected>None</option> <option value="woot" >test</option>`;
 
     var videoElement = $('video')[0];
     for(var i = 0; i < videoElement.textTracks.length; ++i) {
@@ -520,9 +543,9 @@ function initGui(client, isAdmin) {
   });
 
   //Utilities --------------------------------------------------------------------
-  var serializeForm = function(element) {
+  var serializeForm = function(element, type) {
     var values = [];
-    $($(`#${element}`).serializeArray()).each((index, element) => {
+    $(`form#${element} ${type}`).each((index, element) => {
       values.push(element.value)
     });
 
@@ -658,6 +681,7 @@ function initGui(client, isAdmin) {
     $(`.media`).attr('style', `width: ${width2}px`);
     $(`.panel`).attr('style', `width: ${width1}px;min-width:25%;padding:1%;`);
     $(`.path-dropdown`).attr('style', `width: ${width2}px`);
+    $(document).trigger('textarea-grow');
   };
 
   var changeDropDown = function() {
@@ -737,6 +761,23 @@ function initGui(client, isAdmin) {
     }
 
     updateOverlays();
+  });
+
+  $(document).on('lock-element', function(e, element) {
+    if($(element).hasClass('flaticon-locked-3')) {
+      $(element).removeClass('flaticon-locked-3');
+      $(element).addClass('flaticon-locked');
+    } else if($(element).hasClass('flaticon-locked')) {
+      $(element).removeClass('flaticon-locked');
+      $(element).addClass('flaticon-locked-3');
+    }
+  });
+
+  $(document).on('textarea-grow', function(e) {
+    $('textarea').each((index, ele) => {
+      $(ele).height(1);
+      $(ele).height(1 + $(ele).prop('scrollHeight'));
+    });
   });
 
   if(isAdmin) {

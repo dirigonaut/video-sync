@@ -47,11 +47,7 @@
             <a href="#" id="path-loaded"> <span class="icon flaticon-play-button-1"></span></a>
           </div>
 
-          <div class="path-notification primary-color">
-            <div class="flex-h secondary-color flex-center">
-              <div>test---------------------asdf asdf asdf asdf asdf asdf asdf asdfasdf asdf asdf asdf asdfasdfasdf as</div>
-              <span class="icon-min flaticon-error"></span>
-            </div>
+          <div id="notification" class="path-notification primary-color">
           </div>
 
           <div class="side flex-v">
@@ -122,24 +118,28 @@
             <form id="options-form">
               <fieldset class="form flex-v secondary-color">
                 <div class="flex-h flex-element">
-                  <label for="token-count">Video:</label>
-                  <input type="text" class="flex-right flex-element-part" value="5">
+                  <label for="video-track-options">Video:</label>
+                  <select id="video-track-list" name="video-track-options" class="flex-right flex-element-part">
+                  </select>
                 </div>
                 <div class="flex-h flex-element">
-                  <label for="token-count">Audio:</label>
-                  <input type="text" class="flex-right flex-element-part" value="5">
+                  <label for="audio-track-options">Audio:</label>
+                  <select id="audio-track-list" name="audio-track-options" class="flex-right flex-element-part">
+                  </select>
                 </div>
                 <div class="flex-h flex-element">
-                  <label for="token-count">Subtitle:</label>
-                  <input type="text" class="flex-right flex-element-part" value="5">
+                  <label for="subtitle-track-options">Subtitle:</label>
+                  <select id="subtitle-track-list" name="subtitle-track-options" class="flex-right flex-element-part">
+                    <option value="None" selected>None</option>
+                  </select>
                 </div>
                 <div class="flex-h flex-element">
-                  <label for="token-count">Buffer:</label>
-                  <input type="range" class="flex-right flex-element-part" value=20>
+                  <label for="buffer-options">Buffer:</label>
+                  <input type="range" id="buffer-options" name="buffer-options" class="flex-right flex-element-part" value=30>
                 </div>
                 <div class="flex-h flex-element">
-                  <label for="token-count">Sync:</label>
-                  <input type="text" class="flex-right flex-element-part" value="5">
+                  <label for="sync-options">Sync:</label>
+                  <input type="range" id="sync-options" name="sync-options" class="flex-right flex-element-part" value=0>
                 </div>
               </fieldset>
             </form>

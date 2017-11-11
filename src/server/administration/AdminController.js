@@ -43,6 +43,7 @@ AdminController.prototype.attachSocket = function(socket) {
 
         log.debug(eventKeys.MEDIAREADY);
         yield redisSocket.broadcast.call(this, eventKeys.MEDIAREADY);
+        yield redisSocket.broadcast.call(this, eventKeys.NOTIFICATION, "Media is loaded");
       } else {
         log.socket(`${dir} is not found.`);
       }

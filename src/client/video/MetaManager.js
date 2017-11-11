@@ -107,13 +107,11 @@ MetaManager.prototype.getTrackInfo = function() {
     if(meta[1] === activeMetaData) {
       var trackInfo = meta[1].getActiveTrackInfo();
       activeKeys = {};
-      activeKeys.type = meta[0];
       activeKeys.video = trackInfo && trackInfo.get(MetaManager.Enum.Types.VIDEO) ? trackInfo.get(MetaManager.Enum.Types.VIDEO).getTrackIndex() : undefined;
       activeKeys.audio = trackInfo && trackInfo.get(MetaManager.Enum.Types.AUDIO) ? trackInfo.get(MetaManager.Enum.Types.AUDIO).getTrackIndex() : undefined;
-      activeKeys.subtitle = undefined;
     }
 
-    var trackSet = {'video' : videoTracks, 'audio': audioTracks};
+    var trackSet = { 'video' : videoTracks, 'audio': audioTracks };
     tracks.set(meta[0], trackSet);
   }
 
@@ -121,12 +119,11 @@ MetaManager.prototype.getTrackInfo = function() {
   return tracks;
 };
 
-MetaManager.prototype.buildMetaInfo = function(key, video, audio, subtitle) {
+MetaManager.prototype.buildMetaInfo = function(key, video, audio) {
   return {
     key: key,
     video: video,
-    audio: audio,
-    subtitle: subtitle,
+    audio: audio
   };
 };
 

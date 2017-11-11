@@ -29,7 +29,7 @@ Sanitizer.prototype.sanitize = function(data, schema, required, socket) {
 		request = sanitizeSchema.call(this, data, schema, required);
 	} catch(err) {
 		log.error(err);
-		socket.emit(eventKeys.INPUTERROR, [data, err.toString()]);
+		socket.emit(eventKeys.SERVERLOG, [data, err.toString()]);
 	}
 
 	return request;
