@@ -5,7 +5,7 @@ const Crypto  = require('crypto');
 const webm_manifest = "webm_dash_manifest";
 const mp4_manifest = "-frag-rap";
 
-var command, encoding, processes, current, log;
+var command, encoding, processes, current, credentials, redisSocket, eventKeys, log;
 
 function EncoderManager() { }
 
@@ -16,7 +16,11 @@ EncoderManager.prototype.initialize = function() {
 		encoding				= false;
 		processes 			= [];
 
+		credentials 		= this.factory.createCredentialManager();
+		redisSocket 		= this.factory.createRedisSocket();
 		command			    = this.factory.createCommand();
+
+		eventKeys       = this.factory.createKeys();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
 
@@ -71,20 +75,30 @@ EncoderManager.prototype.encode = function(operations) {
 		promise = new Promise.resolve(function() { return 'Queued encoding processes.'; });
 	}
 
-	this.emit('encodingList', format(processes.slice()));
+	this.getEncodings();
 	return promise;
 };
 
+EncoderManager.prototype.getEncodings = function() {
+	var allProcesses = processes.slice();
+	allProcesses.unshift(current);
+
+	this.emit('encodingList', format(allProcesses));
+};
+
 EncoderManager.prototype.cancelEncode = function(id) {
-	if(proccess.get(id)) {
-		proccess.delete(id);
-	} else if(current && current[0] === id) {
+	var deleted;
+	processes.forEach((value, index, array) => {
+		if(value.includes(id)) {
+			deleted = array.splice(index, 1);
+		}
+	});
+
+	if(!deleted && current && current[0] === id) {
 		if(current[1].cancel) {
 			current[1].cancel();
 		}
 	}
-
-	return format(processes.slice());
 };
 
 module.exports = EncoderManager;
@@ -109,26 +123,40 @@ function processedEvent() {
 
 function attachEvents(encodeProcess) {
 	encodeProcess.on('start', function() {
-		log.debug('Server: Start encoding: ' + new Date().getTime());
-		log.socket('Server: Start encoding at : ' + new Date().getTime());
+		log.debug('Server: Start encoding: ' + new Date().toTimeString());
+		uiLog(current[0], 'info', 'Server: Start encoding');
 	}).on('data', function(percent) {
-		log.socket('data', percent);
+		uiLog(current[0], 'info', percent);
 	}).on('exit', function(exitCode) {
 		if(!exitCode) {
-			log.info('Server: file has been converted succesfully: ' + new Date().getTime());
-			log.socket('Server: file has been converted succesfully: ' + new Date().getTime());
+			log.info('Server: Succesfully converted file.' + new Date().toTimeString());
+			uiLog(current[0], 'info', 'Server: File has been converted succesfully.');
 		} else {
-			log.info(`Server: failed with error code: ${exitCode}, ` + new Date().getTime());
-			log.socket(`Server: failed with error code: ${exitCode}, ` + new Date().getTime());
+			log.info(`Server: failed with error code: ${exitCode}, ` + new Date().toTimeString());
+			uiLog(current[0], 'error', `Server: Failed with error code: ${exitCode}`);
 		}
 
 		removeEvents(encodeProcess);
 		this.emit('processed', encodeProcess);
 	}.bind(this)).on('error', function(err) {
-		log.error('There was an error encoding: ', err);
-		log.socket('There was an error encoding: ', err);
+		log.info(`Server: failed with error: , ` + new Date().toTimeString(), err);
+		uiLog(current[0], 'error', `Server: Failed with error: ${err.toString}`);
 	}.bind(this));
 }
+
+var uiLog = Promise.coroutine(function* (id, level, data) {
+	var admin = yield credentials.getAdmin();
+	var payload = {
+		time: new Date().toTimeString(),
+		level: level,
+		label: id,
+		data: data
+	};
+
+	if(admin) {
+		redisSocket.ping.call(EncoderManager.prototype, admin.id, eventKeys.ENCODELOG, payload);
+	}
+});
 
 function format(entries) {
 	var formatted = [];

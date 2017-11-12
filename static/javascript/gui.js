@@ -383,9 +383,12 @@ function initGui(client, isAdmin) {
       generateManifest();
     });
 
-    $(document).on('encode-command-delete', function(e, element) {
+    $(document).on('encode-command-delete', function(e, element, skipGen) {
       $($(element).parent()).remove();
-      generateManifest();
+
+      if(!skipGen) {
+        generateManifest();
+      }
     });
 
     var generateManifest = function() {
@@ -413,9 +416,14 @@ function initGui(client, isAdmin) {
         if(template && commands && commands.length > 0) {
           $(`<div class="flex-h alternate-color">
             <textarea type="text" class="flex-element clear-spacers">${template}</textarea>
-            <a href="#" onclick="$(document).trigger('lock-element', $('#manifest-commands div a span')[0]);">
-              <span class="icon-min ${!locked ? 'flaticon-locked-3' : 'flaticon-locked'} flex-right clear-spacers lock"></span>
-            </a></div>`).appendTo(`#manifest-commands`);
+            <div class="flex-v">
+              <a href="#" onclick="$(document).trigger('lock-element', $('#manifest-commands div a span')[0]);">
+                <span class="icon-min ${!locked ? 'flaticon-locked-3' : 'flaticon-locked'} flex-right clear-spacers lock"></span>
+              </a>
+              <a href="#" onclick="$(document).trigger('encode-command-delete', [$(event.currentTarget).parent(), true]);">
+                <span class="icon-min flaticon-error flex-right clear-spacers"></span>
+              </a>
+            </div></div>`).appendTo(`#manifest-commands`);
         }
       }
 
@@ -500,9 +508,9 @@ function initGui(client, isAdmin) {
     });
   }();
 
-  $(document).on('log-delete', function(e, element) {
+  var logDelete = function(e, element, key) {
     if(element === 'all') {
-      $('#log-body').empty();
+      $(`#${key}`).empty();
     } else {
       var parent = $(element).parent();
       $(parent).remove();
@@ -510,6 +518,16 @@ function initGui(client, isAdmin) {
       if($(parent).attr('id') === 'notifications') {
         $(parent).removeClass('show')
       }
+    }
+  };
+
+  $(document).on('log-delete', logDelete);
+  $(document).on('encode-delete', function(e, ele, id) {
+    if($(`#encode-complete-${id}`).val() == true) {
+      logDelete(ele);
+    } else {
+      client.socket.request(client.keys.CANCELENCODE,
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STRING, [id]));
     }
   });
 
@@ -520,7 +538,7 @@ function initGui(client, isAdmin) {
       </div>
       <a href="#" onclick="$(document).trigger('log-delete', event.currentTarget);">
         <span class="icon-min flaticon-error flex-right clear-spacers"></span>
-      </a></div>`).prependTo(`#log-body`);
+      </a></div>`).prependTo(`#log-body-server`);
   };
 
   var notifyInterval;
@@ -557,11 +575,53 @@ function initGui(client, isAdmin) {
   };
 
   var progress = function(message) {
+    if(message.label) {
+      $(`<div class="flex-element clear-spacers force-text alternate-color">
+          <label>${message && message.time ? message.time : ''}:</label>
+          <p class="clear-spacers">${message && message.data ? message.data : message}</p>
+        </div>`).prependTo(`#encoding-body-${message.label}`);
+
+      if(message.data.includes('Server: Succesfully') || message.data.includes('Server: Failed')) {
+        $(`#encode-complete-${message.label}`).val('true');
+      }
+    }
   };
+
+  var loadEncodings = function(encodings) {
+    encodings.data.forEach((value, index) => {
+      if(!$(`#encoding-${value[0]}`).length) {
+        $(`<div id="encoding-${value[0]}" class="flex-v alternate-color">
+          <div class="flex-h">
+            <div type="text" class="flex-element clear-spacers force-text" onclick="$('#encoding-body-${value[0]}').toggleClass('show')">
+              ${value[1] && Array.isArray(value[1]) ? value[1].pop() : value[1]}
+            </div>
+            <input id='encode-complete-${value[0]}' type='hidden' value='false'>
+            <a href="#" onclick="$(document).trigger('encode-delete', [$(event.currentTarget).parent(), '${value[0]}']);">
+              <span class="icon-min flaticon-error flex-right clear-spacers"></span>
+            </a>
+          </div>
+          <div id="encoding-body-${value[0]}" class="flex-element flex-v toggle"></div>
+          </div>`).appendTo(`#log-body-encode`);
+      }
+    });
+  };
+
+  $('[id^=log-toggle-]').click(function(e) {
+    $('[id^=log-tab-]').each((i, ele) => {
+      var id = $(e.currentTarget).attr('id').split('-')[2];
+
+      if($(ele).attr('id').includes(id)) {
+        $(ele).addClass("show");
+      } else {
+        $(ele).removeClass("show");
+      }
+    });
+  });
 
   client.socket.setEvent(client.keys.SERVERLOG, logging);
   client.socket.setEvent(client.keys.NOTIFICATION, notification);
-  client.socket.setEvent(client.keys.PROGRESS, progress);
+  client.socket.setEvent(client.keys.ENCODELOG, progress);
+  client.socket.setEvent(client.keys.ENCODINGS, loadEncodings);
 
   //Video Overlay----------------------------------------------------------------
   $('#options-form select').on("change", function (e) {

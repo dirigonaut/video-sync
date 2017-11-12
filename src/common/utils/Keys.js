@@ -46,9 +46,10 @@ module.exports = {
   //Server
   ENCODE:         'video-encode',
   CANCELENCODE:   'video-cancel-encode',
+  GETENCODE:      'video-get-encode',
   GETMETA:        'video-get-meta',
   //Client
-  ENCODINGS:      'video-encodins',
+  ENCODINGS:      'video-encodings',
   ENCODED:        'video-encoded',
   META:           'video-meta',
 
@@ -72,5 +73,5 @@ module.exports = {
   //CLIENTLOGGING
   SERVERLOG:      'system-logging',
   NOTIFICATION:   'system-notification',
-  PROGRESS:       'system-progress',
+  ENCODELOG:      'system-encoding',
 };
