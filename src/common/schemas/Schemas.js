@@ -37,9 +37,7 @@ var Schemas = {
 
   idResponse: { schema: { id: undefined, data: undefined } },
 
-  chatResponse: { schema: { from: undefined, data: undefined } },
-
-  logResponse: { schema: { time: undefined, level: undefined, label: undefined, text: undefined, meta: undefined } },
+  logResponse: { schema: { time: undefined, level: undefined, label: undefined, data: undefined, meta: undefined } },
 
   videoResponse: { schema: { typeId: undefined, name: undefined, data: undefined, index: undefined } },
 

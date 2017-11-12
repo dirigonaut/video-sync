@@ -2,11 +2,21 @@
 <hr>
 <div class="flex-element secondary-color">
   <label>Log Levels:</label>
+  <div class="flex-right">
+    <lable>quiet ---------- verbose<label>
+  </div>
   <div id="log-levels" class="flex-v flex-element">
   </div>
   <hr>
-  <label>Log Messages:</label>
-  <div id="log-body" class="flex-v">
+  <div>
+    <label>Server Logs:</label>
+    <div class="flex-right">
+      <a href="#" onclick="$(document).trigger('log-delete', 'all');">
+        <span class="icon-min flaticon-error"></span>
+      </a>
+    </div>
+  </div>
+  <div id="log-body" class="flex-v flex-element">
   </div>
   <hr>
   <div class="flex-h">

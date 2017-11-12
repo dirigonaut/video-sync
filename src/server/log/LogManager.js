@@ -4,7 +4,7 @@ const Path       = require('path');
 const Winston    = require('winston');
 const Fs         = require('fs');
 
-var config, schemaFactory, log;
+var config, eventKeys, schemaFactory, log;
 
 const LOG_LEVEL = "debug";
 const TYPE      = Cluster.isMaster ? "masterProcess" : process.env.processType;
@@ -15,6 +15,7 @@ function LogManager() { }
 LogManager.prototype.initialize = function() {
   if(typeof LogManager.prototype.protoInit === 'undefined') {
     config          = this.factory.createConfig();
+    eventKeys       = this.factory.createKeys();
 
     if(config.isInit()) {
       LogManager.prototype.protoInit = true;
@@ -99,7 +100,7 @@ function createFormatter(label) {
         if(id) {
           var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
             [logMessage.time, 'server', logMessage.label, logMessage.text, logMessage.meta]);
-          redisSocket.ping.call(this, id, 'chat-log-resp', response);
+          redisSocket.ping.call(this, id, eventKeys.SERVERLOG, response);
         }
       });
     }

@@ -35,7 +35,50 @@ function initGui(client, isAdmin) {
 
   function updateProgressBar(e) {
     $('.control-time-slider').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
+    $('#control-duration').val(toFormatted($("#video")[0].duration));
+
+    if(!$('#control-current').is(':focus')) {
+      $('#control-current').val(toFormatted($("#video")[0].currentTime));
+    }
   }
+
+  var toFormatted = function(data) {
+    if(typeof data === 'number') {
+      var seconds = data.toFixed(0);
+      var hour = Math.floor(seconds / 3600);
+      var min = Math.floor((seconds - (hour * 3600)) / 60);
+      sec = seconds % 60;
+
+      return `${hour < 10 ? '0' + hour : hour}:${min < 10 ? '0' + min : min}:${sec < 10 ? '0' + sec : sec}`;
+    }
+  };
+
+  var toSeconds = function(timestamp) {
+    var timeArray = timestamp.split(':').reverse();
+    var seconds = 0;
+
+    for(var i in timeArray) {
+      var temp = parseInt(timeArray[i], 10) * Math.pow(60, i);
+      if(temp === temp) {
+        seconds += temp;
+      } else {
+        seconds = NaN;
+        break;
+      }
+    }
+
+    return seconds;
+  };
+
+  $('#control-current').on('change', function(e) {
+    var time = toSeconds($(e.currentTarget).val());
+
+    if(time === time) {
+      client.log.info(`Requesting ${client.keys.REQSEEK} at ${time}`);
+      client.socket.request(client.keys.REQSEEK,
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STATE, [time]));
+    }
+  });
 
   $('.control-time-slider').on('mouseup', function() {
     var percent = parseInt($('.control-time-slider').val());
@@ -104,6 +147,7 @@ function initGui(client, isAdmin) {
         });
 
         for(var token in tokens) {
+          console.log(token)
           $(`<form class="flex-h flex-element">
             <a href="#" onclick="$(document).trigger('token-level', event.currentTarget);">
               <span class="icon-min ${tokens[token].level === 'controls' ? 'flaticon-locked-3' : 'flaticon-locked'}"></span>
@@ -160,6 +204,10 @@ function initGui(client, isAdmin) {
       };
 
       removeForms($(element).parent()[0]);
+      if(ids) {
+        client.socket.request(client.keys.DELETETOKENS,
+          client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [ids]));
+      }
     });
 
     $(document).on('token-level', function(e, element) {
@@ -226,6 +274,8 @@ function initGui(client, isAdmin) {
       $(temp).remove();
     });
   }
+
+  client.socket.request(client.keys.GETTOKENS);
 
   //Encode Events ---------------------------------------------------------------
   function initEncode() {
@@ -440,28 +490,36 @@ function initGui(client, isAdmin) {
     });
   }();
 
-  $(document).on('delete-logs', function(e, element) {
-    var parent = $(element).parent();
-    $(parent).remove();
+  $(document).on('log-delete', function(e, element) {
+    if(element === 'all') {
+      $('#log-body').empty();
+    } else {
+      var parent = $(element).parent();
+      $(parent).remove();
 
-    if($(parent).attr('id') === 'notifications') {
-      $(parent).removeClass('show')
+      if($(parent).attr('id') === 'notifications') {
+        $(parent).removeClass('show')
+      }
     }
   });
 
   var logging = function(message) {
     $(`<div class="flex-h alternate-color">
-      <div type="text" class="flex-element clear-spacers">${message}</div>
-      <a href="#" onclick="$(document).trigger('delete-logs', event.currentTarget);">
+      <div type="text" class="flex-element clear-spacers force-text">
+        ${message && message.time ? message.time : ''} ${message && message.data ? message.data : message}
+      </div>
+      <a href="#" onclick="$(document).trigger('log-delete', event.currentTarget);">
         <span class="icon-min flaticon-error flex-right clear-spacers"></span>
-      </a></div>`).appendTo(`#log-body`);
+      </a></div>`).prependTo(`#log-body`);
   };
 
   var notification = function(message) {
     $(`#notification`).empty();
-    $(`<div class="flex-h secondary-color flex-center">
-      <div>${message}</div>
-      <a href="#" onclick="$(document).trigger('delete-logs', event.currentTarget);">
+    $(`<div class="flex-h secondary-color flex-middle">
+      <div>
+        ${message && message.time ? message.time : ''} ${message && message.data ? message.data : message}
+      </div>
+      <a href="#" onclick="$(document).trigger('log-delete', event.currentTarget);">
         <span class="icon-min flaticon-error flex-right clear-spacers"></span>
       </a></div>`).appendTo(`#notification`);
 
@@ -469,8 +527,7 @@ function initGui(client, isAdmin) {
     logging(message);
   };
 
-  var progress = function(id, message) {
-
+  var progress = function(message) {
   };
 
   client.socket.setEvent(client.keys.SERVERLOG, logging);
@@ -503,7 +560,20 @@ function initGui(client, isAdmin) {
   });
 
   $('#sync-options').on("change", function (e) {
+    var range = parseFloat($(e.currentTarget).val());
 
+    if(range === range) {
+      client.socket.request(client.keys.SETSYNCRULE,
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.NUMBER, [range]));
+    }
+  });
+
+  client.socket.setEvent(client.keys.SYNCRULE, function(range) {
+    client.log.info(client.keys.SYNCRULE, range);
+
+    if(typeof range === 'number' && range === range) {
+      $('#sync-options').val(range);
+    }
   });
 
   client.media.on('meta-data-loaded', function(trackInfo) {
@@ -542,7 +612,32 @@ function initGui(client, isAdmin) {
     $('#track-subtitle').html(subtitleHtml);
   });
 
-  //Utilities --------------------------------------------------------------------
+  //Sync Overlay ----------------------------------------------------------------
+  $('#sync-syncing').click(function(e) {
+    client.socket.request(client.keys.SYNCING);
+  });
+
+  var updateSyncInfo = function(data) {
+    if(data) {
+      if(data.foreGuard) {
+        $('#sync-first').html(`First: ~${(data.foreGuard).toFixed(0)}s`);
+      }
+
+      if(data.rearGuard) {
+        $('#sync-last').html(`Last: ~${(data.rearGuard).toFixed(0)}s`);
+      }
+
+      if(data.difference) {
+        $('#sync-diff').html(`Diff: ~${(data.difference).toFixed(2)}s`);
+      } else {
+        $('#sync-diff').html(`Diff: ~${0}s`);
+      }
+    }
+  };
+
+  client.socket.setEvent(client.keys.SYNCINFO, updateSyncInfo);
+
+  //Utilities -------------------------------------------------------------------
   var serializeForm = function(element, type) {
     var values = [];
     $(`form#${element} ${type}`).each((index, element) => {
@@ -551,6 +646,11 @@ function initGui(client, isAdmin) {
 
     return values;
   };
+
+  //Prevent form submitting by pressing Enter
+  $('form input').on('keypress', function(e) {
+    e.which === 13 ? e.preventDefault() : undefined;
+  });
 
   //CSS Animation ----------------------------------------------------------------
   var fadeOut, over;

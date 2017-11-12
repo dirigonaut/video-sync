@@ -35,11 +35,11 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
 
   if(basePath && basePath.length > 0) {
     var mediaStarted = yield media.getMediaStarted();
-    var ruleInfo = yield media.getMediaRule();
+    var rule = yield media.getMediaRule();
     var issuer = playerManager.getPlayer(id);
 
     if(issuer) {
-      var players = playRule.evaluate(issuer, playerManager.getPlayers(), mediaStarted, ruleInfo && typeof ruleInfo.range !== 'undefined' ? ruleInfo.range : 3);
+      var players = playRule.evaluate(issuer, playerManager.getPlayers(), mediaStarted, rule ? rule : 3);
 
       if(players) {
         var buffering = new Map();
@@ -60,6 +60,8 @@ StateEngine.prototype.play = Promise.coroutine(function* (id) {
           metricInterval !== 'undefined' ? clearInterval(metricInterval) : undefined;
           metricInterval = createMetricInterval.call(this);
         }
+
+        return true;
       }
     }
   }
@@ -191,6 +193,20 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
   return commands;
 });
 
+StateEngine.prototype.syncing = Promise.coroutine(function* (id) {
+  log.silly(`StateEngine.syncing ${id}`);
+  var basePath = yield media.getMediaPath();
+  var mediaStarted = yield media.getMediaStarted();
+
+  if(basePath && basePath.length > 0 && mediaStarted) {
+    var player = playerManager.getPlayer(id);
+
+    if(player) {
+      player.sync = player.Enums.SYNC.SYNCING;
+    }
+  }
+});
+
 module.exports = StateEngine;
 
 var canPlay = function(players, state) {
@@ -204,7 +220,7 @@ var canPlay = function(players, state) {
   var canPlayLogic = function(id) {
     log.debug(`StateEngine player canPlay.`, id);
     buffering.delete(id);
-
+eventKeys
     if(buffering.size === 0) {
       log.debug(`StateEngine players canplay:`, players);
       for(let player of players.entries()) {
@@ -224,11 +240,13 @@ var canPlay = function(players, state) {
 
 var createMetricInterval = function() {
   return setInterval(Promise.coroutine(function* () {
-    var metrics = yield media.getPlayerMetrics();
-    yield redisSocket.broadcast.apply(this, [eventKeys.PLAYERINFO, metrics]);
+    var triggered = yield syncRule.evaluate(playerManager.getPlayers());
 
-    if(syncRule.evaluate(playerManager.getPlayers()) === true) {
-      //yield redisSocket.broadcast.apply(this, [eventKeys.PAUSE]);
+    if(triggered) {
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
+        [new Date().toTimeString(), 'notify', 'state', `Auto Sync issued pause.`]);
+      yield redisSocket.broadcast.call(StateEngine.prototype, eventKeys.NOTIFICATION, response);
+      yield redisSocket.broadcast.call(this, eventKeys.PAUSE);
     }
-  }.bind(this)), 1000);
+  }.bind(this)), 500);
 };

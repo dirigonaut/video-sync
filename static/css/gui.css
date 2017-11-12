@@ -74,10 +74,16 @@ body {
 
 .path-notification {
   text-align: left;
-  padding:5px;
+  padding:.25%;
   margin-left:auto;
   margin-right:auto;
   background-color:inherit;
+}
+
+.path-notification:empty {
+  padding:0px;
+  margin-left:auto;
+  margin-right:auto;
 }
 
 .video {
@@ -243,8 +249,17 @@ body {
   margin-right: auto;
 }
 
+.flex-middle {
+  justify-content: center;
+  align-items: center;
+}
+
 .flex-bottom {
   margin-top:auto;
+}
+
+.flex-top {
+  margin-bottom:auto;
 }
 
 .flex-v {
@@ -304,6 +319,11 @@ body {
   border:0px;
 }
 
+.force-text {
+  word-break:break-all;
+  word-wrap: break-word;
+}
+
 /* Tables */
 table {
   display:flex;
@@ -324,7 +344,6 @@ table tr td {
   word-break:break-all;
   word-wrap: break-word;
   white-space: pre-wrap;
-  white-space: normal;
   float: left;
 }
 

@@ -43,11 +43,38 @@ AdminController.prototype.attachSocket = function(socket) {
 
         log.debug(eventKeys.MEDIAREADY);
         yield redisSocket.broadcast.call(this, eventKeys.MEDIAREADY);
-        yield redisSocket.broadcast.call(this, eventKeys.NOTIFICATION, "Media is loaded");
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
+          [new Date().toTimeString(), 'notify', 'media', `Media is loaded.`]);
+        yield redisSocket.broadcast.call(AdminController.prototype, eventKeys.NOTIFICATION, response);
       } else {
         log.socket(`${dir} is not found.`);
       }
     }
+  }));
+
+  socket.on(eventKeys.SETSYNCRULE, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.SETSYNCRULE);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.NUMBER);
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
+
+    if(request) {
+      media.setMediaRule(request.data)
+      .then(Promise.coroutine(function* () {
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
+          [new Date().toTimeString(), 'notify', 'media', `${request.data ? 'Auto Sync set to ' + request.data + 's.' : 'Auto Sync turned off.'}`]);
+
+        yield redisSocket.broadcast.call(AdminController.prototype, eventKeys.NOTIFICATION, response);
+      })).catch(function(error) {
+        log.socket(error);
+      });
+    }
+  }));
+
+  socket.on(eventKeys.GETSYNCRULE, Promise.coroutine(function* () {
+    log.debug(eventKeys.GETSYNCRULE);
+
+    var rule = yield media.setMediaRule(request.data);
+    socket.emit(eventKeys.SYNCRULE, rule);
   }));
 };
 
