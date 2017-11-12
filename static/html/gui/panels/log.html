@@ -8,15 +8,39 @@
   <div id="log-levels" class="flex-v flex-element">
   </div>
   <hr>
-  <div>
-    <label>Server Logs:</label>
-    <div class="flex-right">
-      <a href="#" onclick="$(document).trigger('log-delete', 'all');">
-        <span class="icon-min flaticon-error"></span>
-      </a>
+  <div id="log-types" class="flex-element">
+    <label>Log Type:</label>
+    <a href="#">
+      <span id='log-toggle-encode' class='icon-min flex-icon flex-right flaticon-video-player-1'></span>
+    </a>
+    <a href="#">
+      <span id='log-toggle-server' class='icon-min flex-icon flex-right flaticon-settings-3'></span>
+    </a>
+  </div>
+  <hr>
+  <div id='log-tab-server' class="toggle show">
+    <div>
+      <label>Server Logs:</label>
+      <div class="flex-right">
+        <a href="#" onclick="$(document).trigger('log-delete', ['all', 'log-server-body']);">
+          <span class="icon-min flaticon-error"></span>
+        </a>
+      </div>
+    </div>
+    <div id="log-body-server" class="flex-v flex-element log-body">
     </div>
   </div>
-  <div id="log-body" class="flex-v flex-element">
+  <div id='log-tab-encode' class="toggle">
+    <div>
+      <label>Encode Logs:</label>
+      <div class="flex-right">
+        <a href="#" onclick="$(document).trigger('log-delete', ['all', 'log-encode-body']);">
+          <span class="icon-min flaticon-error"></span>
+        </a>
+      </div>
+    </div>
+    <div id="log-body-encode" class="flex-v flex-element log-body">
+    </div>
   </div>
   <hr>
   <div class="flex-h">

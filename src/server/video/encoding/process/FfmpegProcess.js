@@ -50,7 +50,12 @@ FfmpegProcess.prototype.execute = function() {
 };
 
 FfmpegProcess.prototype.cancel = function() {
-  this.ffmpeg.exit(1);
+  try {
+    this.ffmpeg.kill();
+  } catch(e) {
+    log.error(e);
+    log.socket(e);
+  }
 };
 
 module.exports = FfmpegProcess;

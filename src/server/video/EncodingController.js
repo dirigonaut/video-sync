@@ -23,7 +23,8 @@ EncodingController.prototype.initialize = function() {
 
     encoderManager.on('encodingList', function(results) {
       credentials.getAdmin().then(function(admin) {
-        redisSocket.ping.apply(this, [admin.id, eventKeys.ENCODINGS, results]);
+        results = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [results]);
+        redisSocket.ping.apply(EncodingController.prototype, [admin.id, eventKeys.ENCODINGS, results]);
       });
     });
   }
@@ -56,9 +57,17 @@ EncodingController.prototype.attachSocket = function(socket) {
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
-      var results = encoderManager.cancel(request.data);
-      socket.emit(eventKeys.ENCODINGS, results);
+      socket.emit(eventKeys.CONFIRM, `Are you sure you wish to cancel encoding: ${request.data}?`, function(confirm) {
+        if(confirm === true) {
+          encoderManager.cancelEncode(request.data);
+        }
+      });
     }
+  }));
+
+  socket.on(eventKeys.GETENCODE, Promise.coroutine(function* () {
+    log.debug(eventKeys.GETENCODE, data);
+    encoderManager.getEncodings();
   }));
 
   socket.on(eventKeys.GETMETA, Promise.coroutine(function* (data) {
