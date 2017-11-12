@@ -17,7 +17,7 @@ function setupClient() {
       factory             = factoryManager.getFactory();
 
       var logManager  = factory.createClientLogManager();
-      logManager.addUILogging(guiLog());
+      logManager.addUILogging();
       log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
 
       clientSocket = factory.createClientSocket();
@@ -29,7 +29,7 @@ function setupClient() {
         $(document).trigger('initializeConnection', creds);
       } else {
         $('.login').show();
-      }      
+      }
     });
   };
 

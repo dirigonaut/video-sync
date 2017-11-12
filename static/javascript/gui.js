@@ -274,9 +274,9 @@ function initGui(client, isAdmin) {
       document.execCommand("copy");
       $(temp).remove();
     });
-  }
 
-  client.socket.request(client.keys.GETTOKENS);
+    client.socket.request(client.keys.GETTOKENS);
+  }
 
   //Encode Events ---------------------------------------------------------------
   function initEncode() {
@@ -440,6 +440,15 @@ function initGui(client, isAdmin) {
   }
 
   //Side Events -----------------------------------------------------------------
+  if(isAdmin) {
+    $(`<div id="side-tokens" class="flex-icon">
+      <a href="#"><span class="icon flaticon-play-button-1"></span></a>
+    </div>
+    <div id="side-encode" class="flex-icon">
+      <a href="#"><span class="icon flaticon-play-button-1"></span></a>
+    </div>`).prependTo('#side');
+  }
+
   $('.side .flex-icon').click(function(e) {
     var id = e.currentTarget.id.split('-')[1];
     if(!$(`.panel`).hasClass('show')) {
@@ -514,17 +523,36 @@ function initGui(client, isAdmin) {
       </a></div>`).prependTo(`#log-body`);
   };
 
+  var notifyInterval;
   var notification = function(message) {
-    $(`#notification`).empty();
+    if(notifyInterval) {
+      window.clearInterval(notifyInterval);
+      $(`#notification`).empty();
+    }
+
     $(`<div class="flex-h secondary-color flex-middle">
       <div>
         ${message && message.time ? message.time : ''} ${message && message.data ? message.data : message}
       </div>
+      <input id='notify-timer' type='hidden' value='10'>
       <a href="#" onclick="$(document).trigger('log-delete', event.currentTarget);">
         <span class="icon-min flaticon-error flex-right clear-spacers"></span>
       </a></div>`).appendTo(`#notification`);
 
-    $(`#notification`).toggleClass('show');
+    var selfDestruct = function() {
+      var countDown = $('#notify-timer').val();
+      countDown = parseInt(countDown);
+      --countDown;
+
+      if(countDown < 1) {
+        $(`#notification`).empty();
+        window.clearInterval(notifyInterval);
+      } else {
+        $('#notify-timer').val(countDown);
+      }
+    }
+
+    notifyInterval = window.setInterval(selfDestruct, 1000);
     logging(message);
   };
 
@@ -560,22 +588,26 @@ function initGui(client, isAdmin) {
     client.media.setBufferAhead(value);
   });
 
-  $('#sync-options').on("change", function (e) {
-    var range = parseFloat($(e.currentTarget).val());
+  if(isAdmin) {
+    $('#sync-options').on("change", function (e) {
+      var range = parseFloat($(e.currentTarget).val());
 
-    if(range === range) {
-      client.socket.request(client.keys.SETSYNCRULE,
-        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.NUMBER, [range]));
-    }
-  });
+      if(range === range) {
+        client.socket.request(client.keys.SETSYNCRULE,
+          client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.NUMBER, [range]));
+      }
+    });
 
-  client.socket.setEvent(client.keys.SYNCRULE, function(range) {
-    client.log.info(client.keys.SYNCRULE, range);
+    client.socket.setEvent(client.keys.SYNCRULE, function(range) {
+      client.log.info(client.keys.SYNCRULE, range);
 
-    if(typeof range === 'number' && range === range) {
-      $('#sync-options').val(range);
-    }
-  });
+      if(typeof range === 'number' && range === range) {
+        $('#sync-options').val(range);
+      }
+    });
+  } else {
+    $('#sync-options').parent().remove();
+  }
 
   client.media.on('meta-data-loaded', function(trackInfo) {
     client.log.info('meta-data-loaded');
@@ -719,10 +751,16 @@ function initGui(client, isAdmin) {
     changeOverlayPosition('control-button-sync', 'control-sync', 'media');
   });
 
-  $('#path-input').click(function(e) {
-    toggleOverlays('path-dropdown');
-    changeDropDown();
-  });
+  if(isAdmin) {
+    $('#path-input').click(function(e) {
+      toggleOverlays('path-dropdown');
+      changeDropDown();
+    });
+
+    $('.path-dropdown .flex-h .flex-element').click(function(e) {
+      $('#path-input').val($(e.currentTarget).text());
+    });
+  }
 
   $('.video').click(function(e) {
     toggleOverlays();
@@ -736,10 +774,6 @@ function initGui(client, isAdmin) {
         $(element).removeClass('show');
       }
     });
-  });
-
-  $('.path-dropdown .flex-h .flex-element').click(function(e) {
-    $('#path-input').val($(e.currentTarget).text());
   });
 
   $('#shutdown-button').click(function(e) {
@@ -885,6 +919,10 @@ function initGui(client, isAdmin) {
     initMediaPath();
     initToken();
     initEncode();
+  } else {
+    $('.isAdmin').each((index, ele) => {
+      $(ele).removeClass('show');
+    });
   }
 
   client.log.ui("Gui initialized");
