@@ -2,7 +2,10 @@ module.exports = {
   //AdminController
   //Server
   SETMEDIA:       'admin-set-media',
+  SETSYNCRULE:    'admin-set-sync',
+  GETSYNCRULE:    'admin-get-sync',
   //Client
+  SYNCRULE:       'admin-sync-rule',
   MEDIAREADY:     'admin-media-ready',
 
   //Socket Connection Events
@@ -18,7 +21,8 @@ module.exports = {
   //Client
   CREATETOKENS:   'gen-tokens',
   DELETETOKENS:   'delete-tokens',
-  SETTOKENLEVEL:   'set-level',
+  SETTOKENLEVEL:  'set-level',
+  GETTOKENS:      'get-tokens',
   AUTHENTICATED:  'authenticated',
 
   //StateController
@@ -28,10 +32,10 @@ module.exports = {
   REQPAUSE:       'state-req-pause',
   REQSEEK:        'state-req-seek',
   SYNC:           'state-sync',
+  SYNCING:        'state-syncing',
   PING:           'state-ping',
-  CHANGESYNC:     'state-change-sync',
   UPDATEINIT:     'state-update-init',
-  PLAYERINFO:     'state-metrics',
+  SYNCINFO:       'state-metrics',
   //Client
   INIT:           'state-init',
   PLAY:           'state-play',

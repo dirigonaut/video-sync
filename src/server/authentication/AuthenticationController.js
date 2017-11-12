@@ -60,6 +60,11 @@ AuthenticationController.prototype.attachIO = function (io) {
       if(mediaPath && mediaPath.length > 0) {
         socket.emit(eventKeys.MEDIAREADY);
       }
+
+      var handle = yield credentials.getHandle(socket);
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
+        [new Date().toTimeString(), 'notify', 'auth', `${handle} joined.`]);
+      yield redisSocket.broadcast.call(AuthenticationController.prototype, eventKeys.NOTIFICATION, response);
     }));
 
     socket.on(eventKeys.DISCONNECT, Promise.coroutine(function* () {
@@ -68,11 +73,16 @@ AuthenticationController.prototype.attachIO = function (io) {
       if(socket && socket.id) {
         var adminId = yield credentials.getAdmin();
         var includes = yield credentials.includes(socket.id);
+        var handle = yield credentials.getHandle(socket);
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
+          [new Date().toTimeString(), 'notify', 'auth', `${handle} left.`]);
 
         if(adminId === socket.id) {
           credentials.removeAdmin(socket);
+          redisSocket.broadcast.call(AuthenticationController.prototype, eventKeys.NOTIFICATION, response);
         } else if(includes) {
           var tokens = yield credentials.resetToken(socket.id);
+          redisSocket.broadcast.call(AuthenticationController.prototype, eventKeys.NOTIFICATION, response);
 
           if(adminId) {
             redisSocket.ping.call(this, adminId, eventKeys.TOKENS, tokens);

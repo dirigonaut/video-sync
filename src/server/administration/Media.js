@@ -54,9 +54,13 @@ Media.prototype.getMediaRule = function() {
   return getMediaData.call(this, Media.Enum.Keys.RULE);
 };
 
-Media.prototype.setMediaRule = function(active, range) {
+Media.prototype.setMediaRule = function(range) {
   log.silly("Media.setMediaSyncRule");
-  return setMediaData(Media.Enum.Keys.RULE, { 'active': active, 'range': range });
+  if(typeof range === 'number') {
+    return setMediaData(Media.Enum.Keys.RULE, range);
+  } else {
+    return Promise.reject(`${range} is not a valid value for auto sync.`);
+  }
 };
 
 Media.prototype.getPlayerMetrics = function() {

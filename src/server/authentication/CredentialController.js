@@ -33,6 +33,12 @@ CredentialController.prototype.attachSocket = function(socket) {
     }
   }.bind(this)));
 
+  socket.on(eventKeys.GETTOKENS, Promise.coroutine(function*() {
+    var tokens = yield credentials.getTokens();
+    var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [tokens]);
+    socket.emit(eventKeys.TOKENS, response);
+  }.bind(this)));
+
   socket.on(eventKeys.SETTOKENLEVEL, Promise.coroutine(function*(data) {
     var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);

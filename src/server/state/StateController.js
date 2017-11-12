@@ -31,10 +31,12 @@ StateController.prototype.attachSocket = function(socket) {
 
     if(access === credentials.Enums.LEVEL.CONTROLS) {
       var triggered = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.PLAY, [socket.id]]);
-      
+
       if(triggered === true) {
-        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.CHATRESPONSE, [socket.id, 'issued play.']);
-        yield redisSocket.broadcast.call(StateController.prototype, eventKeys.EVENTRESP, response);
+        var handle = yield credentials.getHandle(socket);
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
+          [new Date().toTimeString(), 'notify', 'state', `${handle} issued play.`]);
+        yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
       }
     }
   }));
@@ -50,8 +52,10 @@ StateController.prototype.attachSocket = function(socket) {
           yield redisSocket.ping.apply(StateController.prototype, commands[i]);
         }
 
-        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.CHATRESPONSE, [socket.id, 'issued pause.']);
-        yield redisSocket.broadcast.call(StateController.prototype, eventKeys.EVENTRESP, response);
+        var handle = yield credentials.getHandle(socket);
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
+          [new Date().toTimeString(), 'notify', 'state', `${handle} issued pause.`]);
+        yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
       }
     }
   }));
@@ -72,8 +76,10 @@ StateController.prototype.attachSocket = function(socket) {
             yield redisSocket.ping.apply(StateController.prototype, commands[i]);
           }
 
-          var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.CHATRESPONSE, [socket.id, `issued seek to ${request.timestamp}.`]);
-          yield redisSocket.broadcast.call(StateController.prototype, eventKeys.EVENTRESP, response);
+          var handle = yield credentials.getHandle(socket);
+          var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
+            [new Date().toTimeString(), 'notify', 'state', `${handle} issued seek to ${request.timestamp}.`]);
+          yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
         }
       }
     }
@@ -88,10 +94,17 @@ StateController.prototype.attachSocket = function(socket) {
         log.debug(`state-sync sync`, commands[i]);
         yield redisSocket.ping.apply(StateController.prototype, commands[i]);
       }
-
-      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.CHATRESPONSE, [socket.id, 'issued sync.']);
-      yield redisSocket.broadcast.call(StateController.prototype, eventKeys.EVENTRESP, response);
     }
+  }));
+
+  socket.on(eventKeys.SYNCING, Promise.coroutine(function* () {
+    log.debug(eventKeys.SYNCING);
+    yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.SYNCING, [socket.id]]);
+
+    var handle = yield credentials.getHandle(socket);
+    var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
+      [new Date().toTimeString(), 'notify', 'state', `${handle} is syncing.`]);
+    yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
   }));
 
   socket.on(eventKeys.PING, Promise.coroutine(function* (data, acknowledge) {
