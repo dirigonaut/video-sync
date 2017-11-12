@@ -147,7 +147,6 @@ function initGui(client, isAdmin) {
         });
 
         for(var token in tokens) {
-          console.log(token)
           $(`<form class="flex-h flex-element">
             <a href="#" onclick="$(document).trigger('token-level', event.currentTarget);">
               <span class="icon-min ${tokens[token].level === 'controls' ? 'flaticon-locked-3' : 'flaticon-locked'}"></span>
@@ -159,6 +158,8 @@ function initGui(client, isAdmin) {
             </a>
           </form>`).appendTo('#token-body');
         }
+      } else {
+        client.log.error(`${tokens} is not a valid list of tokens.`);
       }
     };
 

@@ -23,7 +23,7 @@ EncodingController.prototype.initialize = function() {
 
     encoderManager.on('encodingList', function(results) {
       credentials.getAdmin().then(function(admin) {
-        redisSocket.ping.apply(this, [admin, eventKeys.ENCODINGS, results]);
+        redisSocket.ping.apply(this, [admin.id, eventKeys.ENCODINGS, results]);
       });
     });
   }

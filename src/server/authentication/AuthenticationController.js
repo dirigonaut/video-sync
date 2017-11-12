@@ -37,20 +37,25 @@ AuthenticationController.prototype.attachIO = function (io) {
       token = undefined;
     }
 
-    var isAdmin = yield isAdministrator.call(this, socket);
-    var isUser;
+    var schema  = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
+    var request = sanitizer.sanitize(token, schema, [schema.Enum.DATA]);
 
-    if(!isAdmin) {
-      isUser = yield isValidUser.call(this, socket, token);
+    if(!(request instanceof Error)) {
+      var isAdmin = yield isAdministrator.call(this, socket, request);
+      var isUser;
+
+      if(!isAdmin) {
+        isUser = yield isValidUser.call(this, socket, request);
+      }
     }
 
     return isAdmin || isUser ? next(log.info(`${socket.id} has been authenticated.`))
-                    : next(new Error(`${JSON.stringify(token)} has failed authentication.`));
+                    : next(new Error(`${JSON.stringify(token)} has failed authentication with error: ${request.toString()}`));
   }.bind(this)));
 
   io.on('connection', Promise.coroutine(function* (socket, data) {
     log.socket(`Socket has connected: ${socket.id} ip: ${socket.handshake.address}`);
-    let isAdmin = yield credentials.isAdmin(socket);
+    let isAdmin = credentials.isAdmin(socket);
 
     socket.emit(eventKeys.AUTHENTICATED, isAdmin, Promise.coroutine(function* () {
       log.info(`Socket: ${socket.id} has acknowledged the handshake.`);
@@ -71,21 +76,23 @@ AuthenticationController.prototype.attachIO = function (io) {
       log.info(eventKeys.DISCONNECT, socket.id);
 
       if(socket && socket.id) {
-        var adminId = yield credentials.getAdmin();
+        var admin = yield credentials.getAdmin();
         var includes = yield credentials.includes(socket.id);
         var handle = yield credentials.getHandle(socket);
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
           [new Date().toTimeString(), 'notify', 'auth', `${handle} left.`]);
 
-        if(adminId === socket.id) {
+        if(admin && admin.id === socket.id) {
           credentials.removeAdmin(socket);
           redisSocket.broadcast.call(AuthenticationController.prototype, eventKeys.NOTIFICATION, response);
         } else if(includes) {
           var tokens = yield credentials.resetToken(socket.id);
+          var tokenResp = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [tokens]);
+
           redisSocket.broadcast.call(AuthenticationController.prototype, eventKeys.NOTIFICATION, response);
 
-          if(adminId) {
-            redisSocket.ping.call(this, adminId, eventKeys.TOKENS, tokens);
+          if(admin && admin.id) {
+            redisSocket.ping.call(this, admin.id, eventKeys.TOKENS, tokenResp);
           }
         }
 
@@ -109,10 +116,12 @@ AuthenticationController.prototype.attachIO = function (io) {
 
 module.exports = AuthenticationController;
 
-var isAdministrator = Promise.coroutine(function* (socket) {
-  var isAdmin = yield credentials.isAdmin(socket);
+var isAdministrator = Promise.coroutine(function* (socket, request) {
+  var isAdmin = credentials.isAdmin(socket, request);
 
   if(isAdmin) {
+    yield credentials.setAdmin(socket, request);
+
     var adminController       = this.factory.createAdminController();
     var credentialController  = this.factory.createCredentialController();
     var encodingContoller     = this.factory.createEncodingController();
@@ -127,18 +136,14 @@ var isAdministrator = Promise.coroutine(function* (socket) {
   return isAdmin;
 });
 
-var isValidUser = Promise.coroutine(function* (socket, data) {
-  var schema  = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
-  var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
+var isValidUser = Promise.coroutine(function* (socket, request) {
+  var isAuth = yield credentials.authenticateToken(socket.id, request.id, request.data);
 
-  if(request) {
-    var isAuth = yield credentials.authenticateToken(socket.id, request.id, request.data);
-
-    if(isAuth) {
-      userAuthorized.call(this, socket);
-    }
-    return isAuth;
+  if(isAuth) {
+    userAuthorized.call(this, socket);
   }
+
+  return isAuth;
 });
 
 var userAuthorized = function(socket) {

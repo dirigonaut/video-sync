@@ -22,8 +22,14 @@ function setupClient() {
 
       clientSocket = factory.createClientSocket();
 
-      initClientLogin(factory.createSchemaFactory(), factory.createKeys());
-      $(document).trigger('initializeConnection', getCreds());
+      initializeLogin(factory.createSchemaFactory(), factory.createKeys());
+      var creds = getCreds();
+
+      if(creds) {
+        $(document).trigger('initializeConnection', creds);
+      } else {
+        $('.login').show();
+      }      
     });
   };
 
@@ -46,6 +52,7 @@ function setupClient() {
       cookie.deleteCookie('creds');
       $('#login-token').val('');
       $('.login').show();
+      loginError(error);
     });
   });
 
@@ -89,10 +96,15 @@ function setupClient() {
   var getCreds = function() {
     var creds = cookie.getCookie('creds');
     if(creds) {
-      creds = JSON.parse(creds);
-      $('#login-handle').val(creds.handle);
-      $('#login-token').val(creds.token);
-      return [creds];
+      try {
+        creds = JSON.parse(creds);
+        $('#login-handle').val(creds.handle);
+        $('#login-token').val(creds.token);
+        return [creds];
+      } catch (e) {
+        log.error(`${creds} is not valid json.`);
+        log.error(e);
+      }
     }
   };
 
