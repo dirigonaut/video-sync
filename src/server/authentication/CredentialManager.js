@@ -23,11 +23,21 @@ CredentialManager.prototype.initialize = function(force) {
   }
 };
 
-CredentialManager.prototype.isAdmin = Promise.coroutine(function* (socket) {
-  if(socket.handshake.address.includes('127.0.0.1')) {
-    yield setUserData(CredentialManager.Enum.User.ADMIN, socket.id);
-    return true;
+CredentialManager.prototype.isAdmin = function(socket) {
+  return socket.handshake.address.includes('127.0.0.1');
+};
+
+CredentialManager.prototype.setAdmin = Promise.coroutine(function* (socket, request) {
+  var entry = {
+    id: socket.id,
+    level: CredentialManager.Enum.Level.CONTROLS
+  };
+
+  if(typeof request.data !== 'undefined') {
+    entry.handle = request.data;
   }
+
+  yield setUserData(CredentialManager.Enum.User.ADMIN, entry);
 });
 
 CredentialManager.prototype.getAdmin = Promise.coroutine(function* () {
@@ -64,6 +74,10 @@ CredentialManager.prototype.deleteTokens = Promise.coroutine(function* (keys) {
     var key = String(keys[i]).trim();
     if(entries && entries[key]) {
       if(entries[key].id) {
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
+          [new Date().toTimeString(), 'notify', 'auth', `${entries[key].handle} has been kicked.`]);
+
+        redisSocket.broadcast.call(CredentialManager.prototype, eventKeys.NOTIFICATION, response);
         redisSocket.disconnect(entries[key].id);
       }
 
@@ -81,7 +95,7 @@ CredentialManager.prototype.getTokens = Promise.coroutine(function* () {
 });
 
 CredentialManager.prototype.getHandle = Promise.coroutine(function* (socket) {
-  var isAdmin = yield this.isAdmin(socket);
+  var isAdmin = this.isAdmin(socket);
 
   if(!isAdmin) {
     var id = socket.id;
@@ -93,7 +107,8 @@ CredentialManager.prototype.getHandle = Promise.coroutine(function* (socket) {
       }
     }
   } else {
-    return 'Admin';
+    var token = yield getUserData(CredentialManager.Enum.User.ADMIN);
+    return token.handle ? token.handle : 'Admin';
   }
 });
 
@@ -195,10 +210,10 @@ var getUserData = function(key) {
 };
 
 var sendUpdatedTokens = Promise.coroutine(function* (tokens) {
-  var adminId = yield this.getAdmin();
+  var admin = yield this.getAdmin();
   var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [tokens]);
 
-  if(adminId) {
-    redisSocket.ping.call(this, adminId, eventKeys.TOKENS, response);
+  if(admin && admin.id) {
+    redisSocket.ping.call(this, admin.id, eventKeys.TOKENS, response);
   }
 });

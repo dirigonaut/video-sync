@@ -18,7 +18,10 @@ FormData.prototype.initialize = function(init) {
 
     formList    = new Map();
     formEvents  = new Map();
-    formEvents.set(FormData.Enum.Forms.TOKENS, function(data) { setData.call(this, FormData.Enum.Forms.TOKENS, data) }.bind(this));
+    
+    formEvents.set(FormData.Enum.Forms.TOKENS, function(data) {
+      setData.call(this, FormData.Enum.Forms.TOKENS, data);
+    }.bind(this));
 
     setSocketEvents(formEvents);
   }

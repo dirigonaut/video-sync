@@ -1,4 +1,4 @@
-function initClientLogin(schemaFactory, keys) {
+function initializeLogin(schemaFactory, keys) {
   $('#login-submit').click(function() {
     var handle	= $('#login-handle').val();
     var token	  = $('#login-token').val();
@@ -10,3 +10,13 @@ function initClientLogin(schemaFactory, keys) {
     }
   });
 }
+
+var loginError = function(message) {
+  $(`#login-error`).empty();
+  $(`<div class="flex-h secondary-color flex-middle">
+    <label>Error:</label>
+    <div>${message && message.data ? message.data : message}</div>
+    <a href="#" onclick="$($(event.currentTarget).parent()).remove();">
+      <span class="icon-min flaticon-error flex-right clear-spacers"></span>
+    </a></div>`).appendTo(`#login-error`);
+};

@@ -96,11 +96,11 @@ function createFormatter(label) {
         redisSocket = this.factory.createRedisSocket();
       }
 
-      credentials.getAdmin().then(function(id) {
-        if(id) {
+      credentials.getAdmin().then(function(admin) {
+        if(admin && admin.id) {
           var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
             [logMessage.time, 'server', logMessage.label, logMessage.text, logMessage.meta]);
-          redisSocket.ping.call(this, id, eventKeys.SERVERLOG, response);
+          redisSocket.ping.call(this, admin.id, eventKeys.SERVERLOG, response);
         }
       });
     }
