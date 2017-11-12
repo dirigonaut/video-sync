@@ -154,8 +154,8 @@ CredentialManager.prototype.setTokenLevel = Promise.coroutine(function* (key, le
 CredentialManager.prototype.getTokenLevel = Promise.coroutine(function* (key) {
   var admin = yield this.getAdmin();
 
-  if(admin === key) {
-    return CredentialManager.Enum.Level.CONTROLS
+  if(admin.id === key) {
+    return admin.level;
   }
 
   var entries = yield this.getTokens();

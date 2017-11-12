@@ -11,7 +11,6 @@
     <script type="text/javascript" src="../resources/jquery-2.2.4.min.js"></script>
 
     <script type="text/javascript" src="../javascript/cookies.js"></script>
-    <script type="text/javascript" src="../javascript/log.js"></script>
     <script type="text/javascript" src="../resources/bundle.js"></script>
     <script type="text/javascript" src="../javascript/index.js"></script>
   </head>
@@ -20,11 +19,11 @@
       <div class="media fill-in show">
 
         <div class="path flex-h fade">
-          <div class="flex-icon">
+          <div class="flex-icon isAdmin show">
             <a href="#" id="path-button"> <span class="icon flaticon-play-button-1"></span></a>
           </div>
 
-          <form class="flex-h path-input primary-color">
+          <form class="flex-h path-input primary-color isAdmin show">
             <input type="text" id="path-input" class="flex-element secondary-color" value="/home/sabo-kun/repo/media/bunny_test/">
           </form>
 
@@ -43,19 +42,13 @@
             </div>
           </div>
 
-          <div class="flex-icon">
+          <div class="flex-icon isAdmin show">
             <a href="#" id="path-loaded"> <span class="icon flaticon-play-button-1"></span></a>
           </div>
 
           <div id="notification" class="path-notification flex-h primary-color"></div>
 
-          <div class="side flex-v">
-            <div id="side-tokens" class="flex-icon">
-              <a href="#"><span class="icon flaticon-play-button-1"></span></a>
-            </div>
-            <div id="side-encode" class="flex-icon">
-              <a href="#"><span class="icon flaticon-play-button-1"></span></a>
-            </div>
+          <div id="side" class="side flex-v">
             <div id="side-log" class="flex-icon">
               <a href="#"><span class="icon flaticon-play-button-1"></span></a>
             </div>
