@@ -523,8 +523,8 @@ function initGui(client, isAdmin) {
 
   $(document).on('log-delete', logDelete);
   $(document).on('encode-delete', function(e, ele, id) {
-    if($(`#encode-complete-${id}`).val() == true) {
-      logDelete(ele);
+    if($(`#encode-complete-${id}`).val() === 'true') {
+      logDelete(e, ele);
     } else {
       client.socket.request(client.keys.CANCELENCODE,
         client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STRING, [id]));
@@ -574,6 +574,8 @@ function initGui(client, isAdmin) {
     logging(message);
   };
 
+  var durRegex=/(Duration:\s)(\d{2,}:)+(\d{2,})(.\d{2,})/g;
+  var timeRegex=/(time=)(\d{2,}:)+(\d{2,})(.\d{2,})/g;
   var progress = function(message) {
     if(message.label) {
       $(`<div class="flex-element clear-spacers force-text alternate-color">
@@ -581,8 +583,22 @@ function initGui(client, isAdmin) {
           <p class="clear-spacers">${message && message.data ? message.data : message}</p>
         </div>`).prependTo(`#encoding-body-${message.label}`);
 
-      if(message.data.includes('Server: Succesfully') || message.data.includes('Server: Failed')) {
+      if(message.data.includes('Server: Succesfully')) {
+        $(`#time-${message.label}`).text('Finished');
         $(`#encode-complete-${message.label}`).val('true');
+      } else if (message.data.includes('Server: Failed')) {
+        $(`#time-${message.label}`).text('Failed');
+        $(`#encode-complete-${message.label}`).val('true');
+      }
+
+      var dur = durRegex.exec(message.data);
+      if(dur) {
+        $(`#duration-${message.label}`).text(dur[0].split(' ')[1]);
+      }
+
+      var time = timeRegex.exec(message.data);
+      if(time) {
+        $(`#time-${message.label}`).text(time[0].split('=')[1]);
       }
     }
   };
@@ -593,7 +609,11 @@ function initGui(client, isAdmin) {
         $(`<div id="encoding-${value[0]}" class="flex-v alternate-color">
           <div class="flex-h">
             <div type="text" class="flex-element clear-spacers force-text" onclick="$('#encoding-body-${value[0]}').toggleClass('show')">
-              ${value[1] && Array.isArray(value[1]) ? value[1].pop() : value[1]}
+              <p class="clear-spacers">${value[1] && Array.isArray(value[1]) ? value[1].pop() : value[1]}</p>
+              <div class="flex-h clear-spacers">
+                <div id="time-${value[0]}"></div>
+                <div id="duration-${value[0]}" class="flex-right"></div>
+              </div>
             </div>
             <input id='encode-complete-${value[0]}' type='hidden' value='false'>
             <a href="#" onclick="$(document).trigger('encode-delete', [$(event.currentTarget).parent(), '${value[0]}']);">
@@ -983,39 +1003,5 @@ function initGui(client, isAdmin) {
     $('.isAdmin').each((index, ele) => {
       $(ele).removeClass('show');
     });
-  }
-
-  client.log.ui("Gui initialized");
-  function jqueryReset() {
-    $(document).off('initializeMedia');
-    $(document).off('togglePanel');
-    $(document).off('shutdown');
-
-    $('#btnPlay').off();
-    $('#btnMute').off();
-    $('#seek-bar').off();
-    $("video").off();
-    $('#btnFullScreen').off();
-    $("#volume-bar").off();
-    $("#btnOptions").off();
-    $('#btnSessionMedia').off();
-    $('#token-create').off();
-    $('#tokenList').off();
-    $('#encode-input').off();
-    $('#createVideo').off();
-    $('#createAudio').off();
-    $('#createSubtitle').off();
-    $('#encode-list').off();
-    $('#submitEncoding').off();
-    $('#btnTokens').off();
-    $('#btnEncode').off();
-    $('#btnHelp').off();
-    $('#meta-types').off();
-    $('#track-video').off();
-    $('#track-audio').off();
-    $('#track-subtitle').off();
-    $('#buffer-ahead').off();
-    $('#force-buffer').off();
-    $('.container').off();
   }
 }

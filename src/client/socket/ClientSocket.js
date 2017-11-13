@@ -4,7 +4,7 @@ const Events  = require('events');
 
 const TIMEOUT = 5000;
 
-var socket, eventKeys, log;
+var socket, wrapper, eventKeys, log;
 
 function ClientSocket() { }
 
@@ -12,7 +12,11 @@ ClientSocket.prototype.initialize = function() {
 	if(typeof ClientSocket.prototype.protoInit === 'undefined') {
 		ClientSocket.prototype.protoInit 	= true;
 		ClientSocket.prototype.events 		=  Object.create(Events.prototype);
+
 		eventKeys = this.factory.createKeys();
+
+		wrapper		= Object.create(Wrapper.prototype);
+		wrapper.initialize();
 
 		var logManager = this.factory.createClientLogManager();
 		log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
@@ -28,6 +32,8 @@ ClientSocket.prototype.connectAsync = function(serverUrl, authToken) {
 			rejectUnauthorized: true,
 			query: { token: encodeURIComponent(authToken) }
 	  });
+
+		wrapper.setSocket(socket);
 
 		socket.on(eventKeys.DISCONNECT, function() {
 			log.info(`${ClientSocket.Enum.Events.DISCONNECT} from ${serverUrl}`);
@@ -95,26 +101,47 @@ ClientSocket.prototype.request = function(event, request) {
 };
 
 ClientSocket.prototype.setEvent = function(event, callback) {
-	if(socket) {
-		socket.on(event, callback);
-	} else {
-		log.warn(`Socket is undefined, and thus unable to set event: ${event}`);
-	}
+	wrapper.on(event, callback);
 };
 
 ClientSocket.prototype.removeEvent = function(event, callback) {
-	if(socket) {
-		if(callback) {
-			socket.off(event, callback);
-		} else {
-			socket.off(event);
-		}
-	} else {
-		log.warn(`socket is undefined, and thus unable to remove event: ${event}`);
-	}
+	wrapper.off(event, callback);
 };
 
 module.exports = ClientSocket;
 
-ClientSocket.Enum = {};
+ClientSocket.Enum = { };
 ClientSocket.Enum.Events = { DISCONNECT: 'socket-disconnect', RECONNECT: 'socket-reconnect', ERROR: 'socket-error'};
+
+function Wrapper() { }
+
+Wrapper.prototype.initialize = function() {
+	Object.setPrototypeOf(Wrapper.prototype, Events.prototype);
+	Wrapper.prototype.events = new Set();
+};
+
+Wrapper.prototype.setEvent = function(event, callback) {
+	this.on(event, callback);
+
+	if(!this.events.has(event)) {
+		this.socket.on(event, function() { this.emit(event, arguments); }.bind(this));
+		this.events.add(event);
+	}
+};
+
+Wrapper.prototype.removeEvent = function(event, callback) {
+	this.removeListener(event, callback);
+
+	if(this.listeners(event).length < 1) {
+		this.socket.off(event);
+		this.events.delete(event);
+	}
+};
+
+Wrapper.prototype.setSocket = function(socketToWrap) {
+	Wrapper.prototype.socket = socketToWrap;
+
+	this.events.forEach(function(value) {
+		this.socket.on(value, function() { this.emit(event, arguments); }.bind(this));
+	}.bind(this));
+};

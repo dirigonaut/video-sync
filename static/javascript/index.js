@@ -44,8 +44,10 @@ function setupClient() {
       loadExtraResources(results.isAdmin)
       .then(function(message) {
         log.ui(message);
-        factory.createFileBuffer(true);
-        initializeGui(results.isAdmin, results.acknowledge);
+        return initializeGui(results.isAdmin);
+      }).then(function(message) {
+        log.ui(message);
+        results.acknowledge();
       }).catch(log.error);
     }).catch(function(error) {
       log.error(error);
@@ -56,41 +58,51 @@ function setupClient() {
     });
   });
 
-  var initializeGui = function(isAdmin, acknowledge) {
-    $('.login').hide();
-
-    var client   = {
-      socket:   clientSocket,
-      formData: factory.createFormData(true),
-      media:    factory.createMediaController(true),
-      encode:   factory.createEncodeFactory(),
-      schema:   factory.createSchemaFactory(),
-      keys:     factory.createKeys(),
-      logMan:   factory.createClientLogManager(),
-      log:      log,
-    };
-
-    client.socket.events.on(client.socket.Enums.EVENTS.RECONNECT, function(response) {
-      if(client.media.isMediaInitialized()) {
-        $(document).trigger('initializeMedia');
-      }
-
-      log.info('Calling handshake');
-      var auth = parseAuth(response);
-      auth.acknowledge();
+  var isGuiInitialized;
+  var initializeGui = function(isAdmin) {
+    if(!isGuiInitialized) {
       $('.login').hide();
-    });
 
-    client.socket.events.on(client.socket.Enums.EVENTS.ERROR, function() {
-      if(client.media.isMediaInitialized()) {
-        $(document).trigger('initializeMedia', [true]);
-      }
-      $('.login').show();
-    });
+      //Init FileBuffer
+      factory.createFileBuffer(true);
 
-    initGui(client, isAdmin);
-    log.info('Calling handshake');
-    acknowledge();
+      var client   = {
+        socket:   clientSocket,
+        formData: factory.createFormData(true),
+        media:    factory.createMediaController(true),
+        encode:   factory.createEncodeFactory(),
+        schema:   factory.createSchemaFactory(),
+        keys:     factory.createKeys(),
+        logMan:   factory.createClientLogManager(),
+        log:      log,
+      };
+
+      client.socket.events.on(client.socket.Enums.EVENTS.RECONNECT, function(response) {
+        if(client.media.isMediaInitialized()) {
+          $(document).trigger('initializeMedia');
+        }
+
+        log.info('Calling handshake');
+        var auth = parseAuth(response);
+        auth.acknowledge();
+        $('.login').hide();
+      });
+
+      client.socket.events.on(client.socket.Enums.EVENTS.ERROR, function() {
+        if(client.media.isMediaInitialized()) {
+          $(document).trigger('initializeMedia', [true]);
+        }
+        $('.login').show();
+      });
+
+      initGui(client, isAdmin);
+      log.info('Calling handshake');
+
+      isGuiInitialized = true;
+      return Promise.resolve('Gui has been initialized.');
+    } else {
+      return Promise.resolve('Gui is already initialized.');
+    }
   };
 
   var getCreds = function() {
