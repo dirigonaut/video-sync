@@ -48,6 +48,7 @@ function setupClient() {
       }).then(function(message) {
         log.ui(message);
         results.acknowledge();
+        $('.login').hide();
       }).catch(log.error);
     }).catch(function(error) {
       log.error(error);
@@ -61,8 +62,6 @@ function setupClient() {
   var isGuiInitialized;
   var initializeGui = function(isAdmin) {
     if(!isGuiInitialized) {
-      $('.login').hide();
-
       //Init FileBuffer
       factory.createFileBuffer(true);
 
