@@ -33,8 +33,6 @@ ClientSocket.prototype.connectAsync = function(serverUrl, authToken) {
 			query: { token: encodeURIComponent(authToken) }
 	  });
 
-		wrapper.setSocket(socket);
-
 		socket.on(eventKeys.DISCONNECT, function() {
 			log.info(`${ClientSocket.Enum.Events.DISCONNECT} from ${serverUrl}`);
 			this.events.emit(ClientSocket.Enum.Events.DISCONNECT);
@@ -58,6 +56,7 @@ ClientSocket.prototype.connectAsync = function(serverUrl, authToken) {
 			}, TIMEOUT, `Connection attempt to server: ${serverUrl}, timed out.`);
 
 	    socket.once(eventKeys.AUTHENTICATED, function(isAdmin, callback) {
+				wrapper.setSocket(socket);
 				clearTimeout(rejectRequest);
 				resolve([callback, isAdmin]);
 			});
@@ -88,7 +87,7 @@ ClientSocket.prototype.requestAsync = function(requestId, responseId, request) {
 			});
 	  });
 	} else {
-		return Promise.reject(`Socket is not defined failing request: ${requestId}`);
+		return Promise.reject(`Socket is not connected failing request: ${requestId}`);
 	}
 };
 
@@ -101,11 +100,11 @@ ClientSocket.prototype.request = function(event, request) {
 };
 
 ClientSocket.prototype.setEvent = function(event, callback) {
-	wrapper.on(event, callback);
+	wrapper.setEvent(event, callback);
 };
 
 ClientSocket.prototype.removeEvent = function(event, callback) {
-	wrapper.off(event, callback);
+	wrapper.removeEvent(event, callback);
 };
 
 module.exports = ClientSocket;
@@ -121,16 +120,25 @@ Wrapper.prototype.initialize = function() {
 };
 
 Wrapper.prototype.setEvent = function(event, callback) {
-	this.on(event, callback);
+	this.on(event, function(args) {
+		callback.apply(null, args);
+	});
 
 	if(!this.events.has(event)) {
-		this.socket.on(event, function() { this.emit(event, arguments); }.bind(this));
+		this.socket.on(event, function() {
+			echo.call(this, event, arguments);
+		}.bind(this));
+
 		this.events.add(event);
 	}
 };
 
 Wrapper.prototype.removeEvent = function(event, callback) {
-	this.removeListener(event, callback);
+	if(typeof callback === 'function') {
+		this.removeListener(event, callback);
+	} else {
+		this.removeAllListeners(event);
+	}
 
 	if(this.listeners(event).length < 1) {
 		this.socket.off(event);
@@ -141,7 +149,14 @@ Wrapper.prototype.removeEvent = function(event, callback) {
 Wrapper.prototype.setSocket = function(socketToWrap) {
 	Wrapper.prototype.socket = socketToWrap;
 
-	this.events.forEach(function(value) {
-		this.socket.on(value, function() { this.emit(event, arguments); }.bind(this));
+	this.events.forEach(function(event) {
+		this.socket.on(event, function() {
+			echo.call(this, event, arguments);
+		}.bind(this));
 	}.bind(this));
+};
+
+var echo = function(event, parameters) {
+	var args = Array.from(parameters);
+	this.emit(event, args);
 };

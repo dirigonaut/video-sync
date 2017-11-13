@@ -12,6 +12,7 @@ function initGui(client, isAdmin) {
   });
 
   client.socket.setEvent(client.keys.MEDIAREADY, function() {
+    console.log(client.keys.MEDIAREADY)
     $(document).trigger('initializeMedia');
   });
 
