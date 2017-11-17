@@ -59,7 +59,7 @@ Config.prototype.getRedisConfigPath = function() {
 };
 
 Config.prototype.getCertificatePath = function() {
-  return typeof config.certificate !== 'undefined' ? this.getConfig().certificate : Path.join(APP_DATA, CERTIFICATE);
+  return typeof config.certificate.path !== 'undefined' ? this.getConfig().certificate.path : Path.join(APP_DATA, CERTIFICATE);
 };
 
 Config.prototype.getAppDataDir = function() {

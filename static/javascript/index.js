@@ -52,7 +52,7 @@ function setupClient() {
       }).catch(log.error);
     }).catch(function(error) {
       log.error(error);
-      cookie.deleteCookie('creds');
+      cookie.delete('creds');
       $('#login-token').val('');
       $('.login').show();
       loginError(error);
@@ -105,7 +105,7 @@ function setupClient() {
   };
 
   var getCreds = function() {
-    var creds = cookie.getCookie('creds');
+    var creds = cookie.get('creds');
     if(creds) {
       try {
         creds = JSON.parse(creds);

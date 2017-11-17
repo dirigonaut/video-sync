@@ -5,7 +5,7 @@ function initializeLogin(schemaFactory, keys) {
     var request = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.PAIR, [token, handle]);
 
     if(request) {
-      cookie.setCookie('creds', JSON.stringify(request), cookie.getExpiration(cookie.Enums.EXPIRES.DAY));
+      cookie.set('creds', JSON.stringify(request), cookie.getExpiration(cookie.Enums.EXPIRES.DAY));
       $(document).trigger('initializeConnection', [request]);
     }
   });

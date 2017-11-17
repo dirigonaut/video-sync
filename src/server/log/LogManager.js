@@ -59,6 +59,8 @@ var buildFileTransport = function(path, label, level, handleExceptions) {
     filename: path,
     level: level,
     lable: label,
+    maxsize: 10000000,
+    maxFiles: 3,
     handleExceptions: handleExceptions,
     humanReadableUnhandledException: true,
     json: false,
