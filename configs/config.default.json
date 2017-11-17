@@ -14,8 +14,27 @@
     "bin" : "ffmpeg"
   },
   "certificate" : {
-    "path" : "/usr/bin/redis-server"
-  },
+    "path" : "/usr/bin/redis-server",
+    "attributes" : [{
+        "name": "commonName",
+        "value": "example.org"
+      }, {
+        "name": "countryName",
+        "value": "US"
+      }, {
+        "shortName": "ST",
+        "value": "Virginia"
+      }, {
+        "name": "localityName",
+        "value": "Blacksburg"
+      }, {
+        "name": "organizationName",
+        "value": "Test"
+      }, {
+        "shortName": "OU",
+        "value": "Test"
+      }
+  ]},
   "log" : {
     "GENERAL": "debug",
     "ADMINISTRATION": "debug",

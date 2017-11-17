@@ -12,8 +12,8 @@ function ServerProcess() { }
 ServerProcess.prototype.initialize = function(force) {
   if(typeof ServerProcess.prototype.protoInit === 'undefined') {
     ServerProcess.prototype.protoInit = true;
-    logManager      = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);
+    logManager = this.factory.createLogManager();
+    log        = logManager.getLog(logManager.Enums.LOGS.GENERAL);
   }
 };
 
@@ -21,7 +21,7 @@ ServerProcess.prototype.start = Promise.coroutine(function* () {
   var config = this.factory.createConfig();
 
   log.info(`Trying to start ServerProcess on port ${config.getConfig().port} with process ${process.pid}`);
-  serverSubscriber   = this.factory.createServerSubscriber();
+  serverSubscriber = this.factory.createServerSubscriber();
 
   var publisher = this.factory.createRedisPublisher();
   publisher.initialize();

@@ -1,15 +1,15 @@
 function Cookie() { }
 
-Cookie.prototype.setCookie = function(key, value, expire) {
+Cookie.prototype.set = function(key, value, expire) {
   document.cookie = `${key}=${value};expires=${expire}`;
 };
 
-Cookie.prototype.getCookie = function(key) {
+Cookie.prototype.get = function(key) {
   var value = document.cookie.match(RegExp(`(?:^|;\\s*)${key}=([^;]*)`));
   return value && value.length > 1 ? value[1] : undefined;
 };
 
-Cookie.prototype.deleteCookie = function(key) {
+Cookie.prototype.delete = function(key) {
   var expire = new Date();
   document.cookie = `${key}=;expires=${expire.setHours(expire.getHours() - 24)}`;
 };

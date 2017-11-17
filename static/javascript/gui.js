@@ -12,7 +12,18 @@ function initGui(client, isAdmin) {
   });
 
   client.socket.setEvent(client.keys.MEDIAREADY, function() {
-    console.log(client.keys.MEDIAREADY)
+    var path = $('#path-input').val();
+    var paths = cookie.get('media-paths').split(',');
+
+    if(!paths) {
+      paths = [];
+    }
+
+    if(!paths.includes(path) && path !== '') {
+      paths.push(path);
+      cookie.set('media-paths', paths, cookie.getExpiration.YEAR);
+    }
+
     $(document).trigger('initializeMedia');
   });
 
@@ -135,7 +146,38 @@ function initGui(client, isAdmin) {
         client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PATH, [media]));
       $('#control-time-slider').val(0);
     });
+
+    $('#path-input').click(function() {
+      var paths = cookie.get('media-paths');
+
+      if(paths) {
+        paths = paths.split(',');
+        $('#path-dropdown').empty();
+
+        paths.forEach((value, index, array) => {
+          $(`<div class="flex-h flex-element underline invert ">
+            <div id='path-${index}' class="flex-element" onclick="$('#path-input').val('${value}')">${value}</div>
+            <a href="#" onclick="$(document).trigger('path-delete', $('#path-${index}'));">
+              <span class="icon-min flex-icon flaticon-error"></span>
+            </a>
+          </div>`).prependTo('#path-dropdown');
+        });
+      }
+    });
   }
+
+  $(document).on('path-delete', function(e, element) {
+    var paths = cookie.get('media-paths').split(',');
+
+    if(paths) {
+      var index = paths.indexOf($(element).text());
+      if(index !== -1) {
+        $(element).parent().remove();
+        paths.splice(index, 1);
+        cookie.set('media-paths', paths, cookie.getExpiration.YEAR);
+      }
+    }
+  });
 
   //Token Events ----------------------------------------------------------------
   function initToken() {
@@ -483,7 +525,7 @@ function initGui(client, isAdmin) {
   var logLevels = function() {
     var logs = client.logMan.Enums.LOGS;
     var levels = client.logMan.Enums.LEVELS;
-    var cookieLevels = cookie.getCookie('log-levels');
+    var cookieLevels = cookie.get('log-levels');
 
     for(let key in logs) {
       var level = cookieLevels && cookieLevels[key] ? cookieLevels[key] : undefined;
@@ -670,14 +712,15 @@ function initGui(client, isAdmin) {
   });
 
   if(isAdmin) {
-    $('#sync-options').on("change", function (e) {
-      var range = parseFloat($(e.currentTarget).val());
+    var changeSync = function (rawRange) {
+      var range = parseFloat(rawRange);
 
       if(range === range) {
+        cookie.set('sync-range', range, cookie.getExpiration.YEAR);
         client.socket.request(client.keys.SETSYNCRULE,
           client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.NUMBER, [range]));
       }
-    });
+    };
 
     client.socket.setEvent(client.keys.SYNCRULE, function(range) {
       client.log.info(client.keys.SYNCRULE, range);
@@ -686,6 +729,19 @@ function initGui(client, isAdmin) {
         $('#sync-options').val(range);
       }
     });
+
+    $('#sync-options').on("change", function(e) {
+      changeSync($(e.currentTarget).val());
+    });
+
+    let range = cookie.get('sync-range');
+    if(range && range !== '') {
+      $('#sync-options').val(range);
+    } else {
+      $('#sync-options').val(2.5);
+    }
+
+    changeSync($('#sync-options').val());
   } else {
     $('#sync-options').parent().remove();
   }
