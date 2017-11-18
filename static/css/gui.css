@@ -11,6 +11,8 @@ body {
   border: 0px;
   width:inherit;
   height:inherit;
+  color:white;
+  overflow:hidden;
 }
 
 .container {
@@ -44,32 +46,26 @@ body {
   position:relative;
   float:left;
   min-width:25%;
-  overflow:hidden;
 }
 
 .path {
   position:relative;
   height:5%;
   width:100%;
-  margin-top:.25%;
+  z-index:20;
 }
 
 .path-input {
   float:left;
   text-align:left;
-  width:70%;
+  width:60%;
   padding:.5%;
-  border:0px;
-  background-color:inherit;
 }
 
 .path-dropdown {
   position:fixed;
   width:75%;
-  margin-top:.25%;
   padding:.25%;
-  background-color:inherit;
-  z-index:20;
 }
 
 .path-notification {
@@ -77,7 +73,6 @@ body {
   padding:.25%;
   margin-left:auto;
   margin-right:auto;
-  background-color:inherit;
 }
 
 .path-notification:empty {
@@ -90,27 +85,29 @@ body {
   position:relative;
   float:left;
   width:100%;
-  height:89.5%;
+  height:90%;
+  z-index:1;
 }
 
 .video-element {
   width:100%;
   height:100%;
+  z-index:1;
 }
 
 .control {
   position:relative;
-  margin-bottom:.25%;
-  height:5%;
-  width:100%;
+  height:4.5%;
+  width:98%;
+  z-index:20;
 }
 
 .control-full {
   position: fixed;
-  margin-bottom:.25%;
+  width:98%;
+  left:1%;
   bottom: 0%;
-  height:5%;
-  width:100%;
+  height:4.5%;
   z-index: 2147483648;
 }
 
@@ -118,14 +115,13 @@ body {
   position:fixed;
   margin: .25%;
   padding: .25%;
-  background-color: inherit;
 }
 
 .control-sync {
-  position:fixed;
+  position: fixed;
+  min-width: 100px;
   margin: .25%;
   padding: .25%;
-  background-color: inherit;
 }
 
 .control-time {
@@ -135,37 +131,23 @@ body {
   padding:.25%;
   margin-left:auto;
   margin-right:auto;
-  background-color: inherit;
-}
-
-.control-time-spacer {
-  background-color:inherit;
-  width:5px;
-  margin:0px;
-  padding:0px;
-  border:0px;
 }
 
 .control-time-display {
-  background-color:inherit;
   text-align: center;
   float:left;
-  width:6%;
-  margin: 0px;
-  padding: 0px;
-  border:0px;
+  width:60px;
 }
 
 .control-time-slider {
   float:left;
-  width: 87%;
+  width: 100%;
 }
 
 .control-volume {
   position:fixed;
   margin:.25%;
   padding:.25%;
-  background-color:inherit;
 }
 
 .control-volume-slider {
@@ -175,8 +157,8 @@ body {
 }
 
 .side {
-  right:0px;
-  width:50px;
+  width:40px;
+  padding-bottom: 2.5px;
   z-index:20;
 }
 
@@ -193,16 +175,13 @@ body {
 .login-overlay {
   position:relative;
   top:25%;
-  left:25%;
-  width: 50%;
-  padding:.25%;
   background:rgba(255, 255, 255, 1);
 }
 
 .confirm {
   position:absolute;
   top:25%;
-  left:36.5%;
+  left:32%;
   height:10%;
   width:25%;
   padding:.5%;
@@ -215,41 +194,46 @@ body {
   width:100%;
 }
 
-/* Flex */
+/* Flex Elements */
 .flex-icon {
   text-align: center;
-  padding:.5%;
+  padding-left:2.5px;
+  padding-right:2.5px;
+  padding-top:5px;
 }
 
 .flex-button {
-  margin:.5%;
+  background-color: black;
+  color: white;
+  border-radius: 1em;
 }
 
 .flex-element {
-  background-color:inherit;
   width:100%;
   padding-top:.5%;
   padding-bottom:.5%;
+  border-radius: .5em;
 }
 
 .flex-element-part {
-  background-color:inherit;
   width:60%;
   padding-top:.5%;
   padding-bottom:.5%;
+  border-radius: .5em;
 }
 
 .flex-right {
   margin-left:auto;
   float:right;
+  align-items: right;
 }
 
-.flex-center {
+.flex-center-h {
   margin-left: auto;
   margin-right: auto;
 }
 
-.flex-middle {
+.flex-center-v {
   justify-content: center;
   align-items: center;
 }
@@ -278,39 +262,35 @@ body {
 .icon {
   font-size: 34px;
   font-style: normal;
-  -webkit-text-stroke: 2px white;
+}
+
+.icon.show {
+  font-size: 34px;
+  font-style: normal;
 }
 
 .icon-min {
-  font-size: 17px;
+  font-size: 20px;
   font-style: normal;
-  -webkit-text-stroke: 1px white;
+}
+
+.icon-min.show {
+  font-size: 20px;
+  font-style: normal;
 }
 
 .form {
   position:relative;
-  background-color:inherit;
-  border:none;
-}
-
-.underline {
-  border-bottom:1px solid grey;
+  border:none
 }
 
 .primary-color {
-  background-color:dimgrey;
-}
-
-.secondary-color {
-  background-color:darkgrey;
-}
-
-.alternate-color:nth-child(odd) {
-  background-color:dimgrey;
+  background-color:rgba(0, 0, 0, 0.75);
 }
 
 .alternate-color:nth-child(even) {
-  background-color:darkgrey;
+  color:black;
+  background-color:white;
 }
 
 .clear-spacers {
@@ -319,9 +299,136 @@ body {
   border:0px;
 }
 
+.padding {
+  padding:1%;
+}
+
 .force-text {
   word-break:break-all;
   word-wrap: break-word;
+}
+
+.input-style {
+  color:white;
+  background-color: black;
+  border-radius: 1em;
+  text-align: center;
+}
+
+.input-invert {
+  color:black;
+  background-color: white;
+  text-decoration: none;
+}
+
+.rounded-corners {
+  border-radius: 1em;
+}
+
+.rounded-corners-bottom-left {
+  border-bottom: solid 2px;
+  border-left: solid 2px;
+  border-bottom-left-radius: 1em;
+  border-color: white;
+}
+
+.borders {
+  border: solid 2px;
+  border-radius: 1em;
+  border-color: white;
+}
+
+.border-left {
+  border-left: solid 2px;
+  border-color: white;
+}
+
+/* CSS Animations */
+.slide-in {
+  right: -100%;
+  width: 0%;
+}
+
+.slide-in.show {
+  left: 0%;
+  width: 25%;
+  border-left:4px solid white;
+}
+
+.fill-in {
+  width:75%;
+}
+
+.fill-in.show {
+  width:100%;
+}
+
+.fade {
+  opacity: 0;
+  transition: opacity .50s ease;
+}
+
+.fade.show {
+  opacity: .75;
+}
+
+.toggle {
+  display:none;
+}
+
+.toggle.show {
+  display:inherit;
+}
+
+.is-admin {
+  opacity: 0;
+  z-index: -1;
+}
+
+.is-admin.show {
+  opacity: 1;
+  z-index: 20;
+}
+
+.invert {
+  filter: invert(0);
+}
+
+.invert.show {
+  filter: invert(100);
+}
+
+
+/* Elements */
+::-webkit-media-controls {
+  display:none !important;
+}
+
+a {
+  color:white;
+  text-decoration: none;
+}
+
+input, select {
+  color:white;
+  border: none;
+  border-bottom: solid 1px;
+  background-color: black;
+  text-decoration: none;
+  border-radius: 1em;
+  padding:1%;
+}
+
+textarea {
+  color:white;
+  background-color: black;
+  text-decoration: none;
+  padding:1%;
+  resize: none;
+}
+
+::cue {
+  background: transparent;
 }
 
 /* Tables */
@@ -359,85 +466,12 @@ table tr td:nth-child(even) {
   float: right;
 }
 
-table tr:nth-child(odd) {
-  background-color:dimgrey;
-}
-
 table tr:nth-child(even) {
-  background-color:darkgrey;
+  color:black;
+  background-color:white;
+  border-radius: .5em;
 }
 
 textarea {
   resize: none;
-}
-
-/* CSS Animations */
-.slide-in {
-  right: -100%;
-  width: 0%;
-}
-
-.slide-in.show {
-  left: 0%;
-  width: 25%;
-  border-left:4px solid grey;
-}
-
-.fill-in {
-  width:75%;
-}
-
-.fill-in.show {
-  width:100%;
-}
-
-.fade {
-  opacity: 0;
-  transition: opacity .50s ease;
-}
-
-.fade.show {
-  opacity: 1.0;
-}
-
-.toggle {
-  display:none;
-}
-
-.toggle.show {
-  display:inherit;
-}
-
-.invert {
-  background-color:inherit;
-  filter: invert(0%);
-}
-
-.invert.show {
-  background-color:inherit;
-  filter: invert(100%);
-}
-
-.isAdmin {
-  opacity: 0;
-  z-index: -1;
-}
-
-.isAdmin.show {
-  opacity: 1;
-  z-index: inherit;
-}
-
-/* Misc */
-::-webkit-media-controls {
-  display:none !important;
-}
-
-a {
-  color: white;
-  text-decoration:none
-}
-
-::cue {
-  background: transparent;
 }

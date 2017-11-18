@@ -13,11 +13,8 @@ function initGui(client, isAdmin) {
 
   client.socket.setEvent(client.keys.MEDIAREADY, function() {
     var path = $('#path-input').val();
-    var paths = cookie.get('media-paths').split(',');
-
-    if(!paths) {
-      paths = [];
-    }
+    var paths = cookie.get('media-paths');
+    paths = paths ? paths.split(',') : [];
 
     if(!paths.includes(path) && path !== '') {
       paths.push(path);
@@ -35,7 +32,7 @@ function initGui(client, isAdmin) {
   }
 
   //Controls Events -------------------------------------------------------------
-  $('#control-button-play').click(function() {
+  var togglePlay = function() {
     if ($('#video')[0].paused) {
       client.log.info(`Requesting ${client.keys.REQPLAY}`);
       client.socket.request(client.keys.REQPLAY);
@@ -43,7 +40,9 @@ function initGui(client, isAdmin) {
       client.log.info(`Requesting ${client.keys.REQPAUSE}`);
       client.socket.request(client.keys.REQPAUSE);
     }
-  });
+  };
+
+  $('#control-button-play').click(togglePlay);
 
   function updateProgressBar(e) {
     $('.control-time-slider').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
@@ -108,15 +107,19 @@ function initGui(client, isAdmin) {
     $("video").off("timeupdate", updateProgressBar);
   });
 
-  $('#control-button-full').click(function() {
+  $('#control-button-full').click(function(e) {
     if(document.fullScreen || document.webkitIsFullScreen) {
       $('video')[0].webkitExitFullscreen();
       $('.control-full').addClass("control");
       $('.control-full').removeClass("control-full");
+      $('.flaticon-hide').addClass('flaticon-perspective')
+      $('.flaticon-perspective').removeClass('flaticon-hide');
     } else {
       $('video')[0].webkitRequestFullScreen();
       $('.control').addClass("control-full");
       $('.control').removeClass("control");
+      $('.flaticon-perspective').addClass('flaticon-hide')
+      $('.flaticon-hide').removeClass('flaticon-perspective');
     }
   });
 
@@ -135,6 +138,7 @@ function initGui(client, isAdmin) {
   $(".control-volume-slider").on("input change", function (e) {
     var range = parseInt($(".control-volume-slider").val()) * .01;
     $('#video')[0].volume = range;
+    $('#volume-level').text(Math.floor(range * 100));
   });
 
   //Media Path Events -----------------------------------------------------------
@@ -148,6 +152,7 @@ function initGui(client, isAdmin) {
     });
 
     $('#path-input').click(function() {
+      $('.invert').off();
       var paths = cookie.get('media-paths');
 
       if(paths) {
@@ -155,12 +160,22 @@ function initGui(client, isAdmin) {
         $('#path-dropdown').empty();
 
         paths.forEach((value, index, array) => {
-          $(`<div class="flex-h flex-element underline invert ">
+          $(`<div class="flex-h flex-element primary-color invert">
             <div id='path-${index}' class="flex-element" onclick="$('#path-input').val('${value}')">${value}</div>
             <a href="#" onclick="$(document).trigger('path-delete', $('#path-${index}'));">
               <span class="icon-min flex-icon flaticon-error"></span>
             </a>
           </div>`).prependTo('#path-dropdown');
+        });
+
+        $('.invert').hover(function(e) {
+          $('.invert').each((index, element) => {
+            if(e.currentTarget == element) {
+              $(element).toggleClass('show');
+            } else {
+              $(element).removeClass('show');
+            }
+          });
         });
       }
     });
@@ -189,17 +204,19 @@ function initGui(client, isAdmin) {
           }
         });
 
+        var i = 0;
         for(var token in tokens) {
-          $(`<form class="flex-h flex-element">
-            <a href="#" onclick="$(document).trigger('token-level', event.currentTarget);">
-              <span class="icon-min ${tokens[token].level === 'controls' ? 'flaticon-locked-3' : 'flaticon-locked'}"></span>
+          $(`<form class="flex-h flex-element alternate-color">
+            <a href="#" class='flex-icon' onclick="$(document).trigger('token-level', event.currentTarget);">
+              <span class="${i % 2 ? 'icon-min' : 'icon-min show'} ${tokens[token].level === 'controls' ? 'flaticon-locked-6' : 'flaticon-unlocked-2'}"></span>
             </a>
-            <input type="text" class="flex-element ${tokens[token].handle ? 'toggle' : 'toggle show'}" value="${token}" /readonly>
-            <input type="text" class="flex-element handle ${tokens[token].handle ? 'toggle show' : 'toggle'}" value="${tokens[token].handle}" /readonly>
+            <input type="text" class="flex-element ${tokens[token].handle ? 'toggle' : 'toggle show'} ${i % 2 ? '' : 'input-invert'}" value="${token}" /readonly>
+            <input type="text" class="flex-element handle ${tokens[token].handle ? 'toggle show' : 'toggle'} ${i % 2 ? '' : 'input-invert'}" value="${tokens[token].handle}" /readonly>
             <a href="#" onclick="$(document).trigger('token-delete', event.currentTarget);">
-              <span class="icon-min flaticon-error"></span>
+              <span class="flex-icon ${i % 2 ? 'icon-min' : 'icon-min show'} flaticon-error"></span>
             </a>
           </form>`).appendTo('#token-body');
+          ++i;
         }
       } else {
         client.log.error(`${tokens} is not a valid list of tokens.`);
@@ -215,7 +232,7 @@ function initGui(client, isAdmin) {
     $('#token-create').click(function() {
       client.log.info("Create Tokens.");
       var values = serializeForm('token-form', 'input');
-      values.push($('#token-permissions').hasClass('flaticon-locked-3'));
+      values.push($('#token-permissions').hasClass('flaticon-locked-6'));
 
       client.socket.request(client.keys.CREATETOKENS, client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PAIR, values));
     });
@@ -267,14 +284,14 @@ function initGui(client, isAdmin) {
           } else if($(el).is("a")) {
             var child = $(el).children()[0];
 
-            if(!level && child && $(child).hasClass('flaticon-locked-3')) {
+            if(!level && child && $(child).hasClass('flaticon-locked-6')) {
               level = 'none';
-              $(child).removeClass('flaticon-locked-3');
-              $(child).addClass('flaticon-locked');
-            } else if(!level && child && $(child).hasClass('flaticon-locked')) {
+              $(child).removeClass('flaticon-locked-6');
+              $(child).addClass('flaticon-unlocked-2');
+            } else if(!level && child && $(child).hasClass('flaticon-unlocked-2')) {
               level = 'controls';
-              $(child).removeClass('flaticon-locked');
-              $(child).addClass('flaticon-locked-3');
+              $(child).removeClass('flaticon-unlocked-2');
+              $(child).addClass('flaticon-locked-6');
             }
           } else if ($(el).is("div")) {
             $('#token-body form').each((index, element) => {
@@ -319,6 +336,18 @@ function initGui(client, isAdmin) {
     });
 
     client.socket.request(client.keys.GETTOKENS);
+
+    $('#token-permissions').click(function(e) {
+      var ele = $(e.currentTarget);
+
+      if(ele.hasClass('flaticon-unlocked-2')) {
+        $(ele).removeClass('flaticon-unlocked-2');
+        $(ele).addClass('flaticon-locked-6');
+      } else {
+        $(ele).removeClass('flaticon-locked-6');
+        $(ele).addClass('flaticon-unlocked-2');
+      }
+    });
   }
 
   //Encode Events ---------------------------------------------------------------
@@ -345,7 +374,7 @@ function initGui(client, isAdmin) {
       $('#subtitle-track').empty();
 
       if(metaData && typeof metaData.data !== 'undefined') {
-        var trackIndexes = '';;
+        var trackIndexes = '';
 
         for(var i = metaData.data.stream.length - 1; i > -1; --i) {
           $(`<div id='stream-${i}' class="panel-sub-panel flex-element ${i === 0 ? 'toggle show' : 'toggle'}">
@@ -416,10 +445,11 @@ function initGui(client, isAdmin) {
       }
 
       if(template) {
-        $(`<div class="flex-h alternate-color">
-          <textarea type="text" class="flex-element clear-spacers">${template}</textarea>
+        var odd = $(`#${type.toLowerCase()}-commands`).children().length % 2;
+        $(`<div class="flex-h ${odd ? 'input-invert' : ''} rounded-corners">
+          <textarea type="text" class="flex-element ${odd ? 'input-invert' : ''} clear-spacers">${template}</textarea>
           <a href="#" onclick="$(document).trigger('encode-command-delete', event.currentTarget);">
-            <span class="icon-min flaticon-error flex-right clear-spacers"></span>
+            <span class="flex-icon icon-min ${odd ? 'icon-min show' : 'icon-min'} flaticon-error flex-right"></span>
           </a></div>`).appendTo(`#${type.toLowerCase()}-commands`);
       }
 
@@ -451,17 +481,17 @@ function initGui(client, isAdmin) {
       var template = client.encode.createManifest(values[0], values[1], commands, client.encode.Enums.CODEC.WEBM);
 
       var locked = $('#manifest-commands div a span');
-      locked = locked && locked.length > 0 ? locked = $(locked[0]).hasClass('flaticon-locked') : false;
+      locked = locked && locked.length > 0 ? locked = $(locked[0]).hasClass('flaticon-locked-6') : false;
 
       if(!locked) {
         $(`#manifest-commands`).empty();
 
         if(template && commands && commands.length > 0) {
-          $(`<div class="flex-h alternate-color">
+          $(`<div class="flex-h">
             <textarea type="text" class="flex-element clear-spacers">${template}</textarea>
             <div class="flex-v">
               <a href="#" onclick="$(document).trigger('lock-element', $('#manifest-commands div a span')[0]);">
-                <span class="icon-min ${!locked ? 'flaticon-locked-3' : 'flaticon-locked'} flex-right clear-spacers lock"></span>
+                <span class="icon-min ${!locked ? 'flaticon-unlocked-2' : 'flaticon-locked-6'} flex-right clear-spacers lock"></span>
               </a>
               <a href="#" onclick="$(document).trigger('encode-command-delete', [$(event.currentTarget).parent(), true]);">
                 <span class="icon-min flaticon-error flex-right clear-spacers"></span>
@@ -492,11 +522,11 @@ function initGui(client, isAdmin) {
 
   //Side Events -----------------------------------------------------------------
   if(isAdmin) {
-    $(`<div id="side-tokens" class="flex-icon">
-      <a href="#"><span class="icon flaticon-play-button-1"></span></a>
+    $(`<div id="side-tokens" class="flex-icon primary-color flex-center-v border-left">
+      <a href="#"><span class="icon flaticon-user-3"></span></a>
     </div>
-    <div id="side-encode" class="flex-icon">
-      <a href="#"><span class="icon flaticon-play-button-1"></span></a>
+    <div id="side-encode" class="flex-icon primary-color flex-center-v border-left">
+      <a href="#"><span class="icon flaticon-compose"></span></a>
     </div>`).prependTo('#side');
   }
 
@@ -574,14 +604,16 @@ function initGui(client, isAdmin) {
     }
   });
 
+  var loggingOdd = 0;
   var logging = function(message) {
-    $(`<div class="flex-h alternate-color">
+    $(`<div class="flex-h ${loggingOdd % 2 ? '' : 'input-invert'} flex-element">
       <div type="text" class="flex-element clear-spacers force-text">
         ${message && message.time ? message.time : ''} ${message && message.data ? message.data : message}
       </div>
       <a href="#" onclick="$(document).trigger('log-delete', event.currentTarget);">
-        <span class="icon-min flaticon-error flex-right clear-spacers"></span>
+        <span class="flex-icon ${loggingOdd % 2 ? 'icon-min' : 'icon-min show'} flaticon-error flex-right"></span>
       </a></div>`).prependTo(`#log-body-server`);
+      ++loggingOdd;
   };
 
   var notifyInterval;
@@ -591,8 +623,8 @@ function initGui(client, isAdmin) {
       $(`#notification`).empty();
     }
 
-    $(`<div class="flex-h secondary-color flex-middle">
-      <div>
+    $(`<div class="flex-h flex-center-v padding rounded-corners borders">
+      <div class="padding">
         ${message && message.time ? message.time : ''} ${message && message.data ? message.data : message}
       </div>
       <input id='notify-timer' type='hidden' value='10'>
@@ -621,7 +653,7 @@ function initGui(client, isAdmin) {
   var timeRegex=/(time=)(\d{2,}:)+(\d{2,})(.\d{2,})/g;
   var progress = function(message) {
     if(message.label) {
-      $(`<div class="flex-element clear-spacers force-text alternate-color">
+      $(`<div class="flex-h flex-element force-text alternate-color">
           <label>${message && message.time ? message.time : ''}:</label>
           <p class="clear-spacers">${message && message.data ? message.data : message}</p>
         </div>`).prependTo(`#encoding-body-${message.label}`);
@@ -653,7 +685,7 @@ function initGui(client, isAdmin) {
           <div class="flex-h">
             <div type="text" class="flex-element clear-spacers force-text" onclick="$('#encoding-body-${value[0]}').toggleClass('show')">
               <p class="clear-spacers">${value[1] && Array.isArray(value[1]) ? value[1].pop() : value[1]}</p>
-              <div class="flex-h clear-spacers">
+              <div class="flex-h">
                 <div id="time-${value[0]}"></div>
                 <div id="duration-${value[0]}" class="flex-right"></div>
               </div>
@@ -748,6 +780,8 @@ function initGui(client, isAdmin) {
 
   client.media.on('meta-data-loaded', function(trackInfo) {
     client.log.info('meta-data-loaded');
+    $('#video-track-list').empty();
+    $('#audio-track-list').empty();
     var active = trackInfo.get('active');
     trackInfo.delete('active');
 
@@ -790,17 +824,17 @@ function initGui(client, isAdmin) {
   var updateSyncInfo = function(data) {
     if(data) {
       if(data.foreGuard) {
-        $('#sync-first').html(`First: ~${(data.foreGuard).toFixed(0)}s`);
+        $('#sync-first').html(`~${(data.foreGuard).toFixed(0)}s`);
       }
 
       if(data.rearGuard) {
-        $('#sync-last').html(`Last: ~${(data.rearGuard).toFixed(0)}s`);
+        $('#sync-last').html(`~${(data.rearGuard).toFixed(0)}s`);
       }
 
       if(data.difference) {
-        $('#sync-diff').html(`Diff: ~${(data.difference).toFixed(2)}s`);
+        $('#sync-diff').html(`~${(data.difference).toFixed(2)}s`);
       } else {
-        $('#sync-diff').html(`Diff: ~${0}s`);
+        $('#sync-diff').html(`~0s`);
       }
     }
   };
@@ -820,6 +854,17 @@ function initGui(client, isAdmin) {
   //Prevent form submitting by pressing Enter
   $('form input').on('keypress', function(e) {
     e.which === 13 ? e.preventDefault() : undefined;
+  });
+
+  $(document).on('keyup', function(e) {
+    e.which === 32 ? togglePlay() : undefined;
+
+    if(e.which === 27) {
+      $('.control-full').addClass("control");
+      $('.control-full').removeClass("control-full");
+      $('.flaticon-hide').addClass('flaticon-perspective')
+      $('.flaticon-perspective').removeClass('flaticon-hide');
+    }
   });
 
   //CSS Animation ----------------------------------------------------------------
@@ -897,20 +942,12 @@ function initGui(client, isAdmin) {
     $('.path-dropdown .flex-h .flex-element').click(function(e) {
       $('#path-input').val($(e.currentTarget).text());
     });
+  } else {
+    $('#log-types').remove();
   }
 
   $('.video').click(function(e) {
     toggleOverlays();
-  });
-
-  $('.invert').hover(function(e) {
-    $('.invert').each((index, element) => {
-      if(e.currentTarget == element) {
-        $(element).toggleClass('show');
-      } else {
-        $(element).removeClass('show');
-      }
-    });
   });
 
   $('#shutdown-button').click(function(e) {
@@ -957,7 +994,7 @@ function initGui(client, isAdmin) {
   };
 
   var changeDropDown = function() {
-    var width = $(`#path-input`).outerWidth();
+    var width = $(`#path-input`).width();
     var height = $(`.path`).height() + $(`.path`).offset().top;
     $(`.path-dropdown`).attr('style', `width: ${width}px;left:${$(`#path-input`).offset().left}px;top:${height}px;`);
   };
@@ -1036,12 +1073,12 @@ function initGui(client, isAdmin) {
   });
 
   $(document).on('lock-element', function(e, element) {
-    if($(element).hasClass('flaticon-locked-3')) {
-      $(element).removeClass('flaticon-locked-3');
-      $(element).addClass('flaticon-locked');
-    } else if($(element).hasClass('flaticon-locked')) {
-      $(element).removeClass('flaticon-locked');
-      $(element).addClass('flaticon-locked-3');
+    if($(element).hasClass('flaticon-locked-6')) {
+      $(element).removeClass('flaticon-locked-6');
+      $(element).addClass('flaticon-unlocked-2');
+    } else if($(element).hasClass('flaticon-unlocked-2')) {
+      $(element).removeClass('flaticon-unlocked-2');
+      $(element).addClass('flaticon-locked-6');
     }
   });
 
@@ -1057,7 +1094,7 @@ function initGui(client, isAdmin) {
     initToken();
     initEncode();
   } else {
-    $('.isAdmin').each((index, ele) => {
+    $('.is-admin').each((index, ele) => {
       $(ele).removeClass('show');
     });
   }
