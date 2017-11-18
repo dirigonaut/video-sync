@@ -43,8 +43,8 @@ Proxy.prototype.spawnWorker = function(index) {
 
 	workers[index].on('exit', function(code, signal) {
 		log.info('respawning worker', index);
-		spawnWorker(index);
-	});
+		this.spawnWorker(index);
+	}.bind(this));
 
   this.emit('server-started', workers[index], index);
 };

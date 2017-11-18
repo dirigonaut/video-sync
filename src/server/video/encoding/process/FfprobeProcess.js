@@ -8,7 +8,7 @@ const REGEXP_SPLIT = '[\\/[A-Z]*]([a-z\\s\\S]*?)[\\/[A-Z]*]';
 const REGEX_FIND_HEADERS = '[[A-Z]*]';
 const REGEX_REMOVE_HEADERS = '\\[\\/*[A-Z]*\\]';
 
-var log;
+var config, log;
 
 function FfprobeProcess() { }
 
@@ -16,6 +16,7 @@ FfprobeProcess.prototype.initialize = function() {
   if(typeof FfprobeProcess.prototype.protoInit === 'undefined') {
     FfprobeProcess.prototype.protoInit = true;
     Object.setPrototypeOf(FfprobeProcess.prototype, Events.prototype);
+    config          = this.factory.createConfig();
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
@@ -31,7 +32,8 @@ FfprobeProcess.prototype.execute = function() {
     throw new Error('FfprobeProcess this.command is not set.');
   }
 
-  var ffprobe = Spawn('ffprobe', this.command);
+  var ffmpegPath = config.getConfig() ? config.getConfig().ffmpegPath : undefined;
+  var ffprobe = Spawn(ffmpegPath ? ffmpegPath + 'ffprobe' : 'ffprobe', this.command);
   log.info(`Spawned child pid: ${ffprobe.pid}`, this.command);
 
   var defaultEvents = ['message', 'error', 'exit', 'close', 'disconnect'];

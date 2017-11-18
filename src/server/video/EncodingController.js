@@ -57,7 +57,7 @@ EncodingController.prototype.attachSocket = function(socket) {
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
-      socket.emit(eventKeys.CONFIRM, `Are you sure you wish to cancel encoding: ${request.data}?`, function(confirm) {
+      socket.emit(eventKeys.CONFIRM, `Are you sure you wish to cancel encoding id: ${request.data}?`, function(confirm) {
         if(confirm === true) {
           encoderManager.cancelEncode(request.data);
         }
