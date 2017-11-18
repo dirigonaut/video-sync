@@ -24,7 +24,6 @@ body {
 
 .panel {
   position: relative;
-  overflow-x: hidden;
   float: right;
   width: 25%;
 }
@@ -45,7 +44,7 @@ body {
 .media {
   position:relative;
   float:left;
-  min-width:25%;
+  min-width:30%;
 }
 
 .path {
@@ -90,16 +89,16 @@ body {
 }
 
 .video-element {
-  width:100%;
-  height:100%;
-  z-index:1;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
 
 .control {
-  position:relative;
-  height:4.5%;
-  width:98%;
-  z-index:20;
+  position: relative;
+  height: 4.5%;
+  width: 98%;
+  z-index: 20;
 }
 
 .control-full {
@@ -127,7 +126,7 @@ body {
 .control-time {
   float:left;
   text-align: center;
-  width:90%;
+  width:87.5%;
   padding:.25%;
   margin-left:auto;
   margin-right:auto;
@@ -157,7 +156,7 @@ body {
 }
 
 .side {
-  width:40px;
+  width:45px;
   padding-bottom: 2.5px;
   z-index:20;
 }
@@ -260,11 +259,15 @@ body {
 
 /* Styling */
 .icon {
+  margin: 5px;
+  margin-left: 2.5px;
+  margin-right: 2.5px;
   font-size: 34px;
   font-style: normal;
 }
 
 .icon.show {
+  color:black;
   font-size: 34px;
   font-style: normal;
 }
@@ -275,8 +278,13 @@ body {
 }
 
 .icon-min.show {
+  color:black;
   font-size: 20px;
   font-style: normal;
+}
+
+.icon-margin {
+  margin:auto;
 }
 
 .form {
@@ -427,7 +435,8 @@ textarea {
   resize: none;
 }
 
-::cue {
+video::cue {
+  text-shadow: 1px 1px 2px black, -1px -1px 2px black;
   background: transparent;
 }
 

@@ -109,7 +109,13 @@ function processedEvent() {
 			var encodeProcess = processes.shift();
 			current = encodeProcess;
 			attachEvents.call(this, encodeProcess[1]);
-			yield encodeProcess[1].execute().catch(log.error);
+			yield encodeProcess[1].execute().catch(function(error) {
+				log.socket(error);
+				log.error(error);
+
+				uiLog(current[0], 'error', `Server: Failed with error: ${err.toString}`);
+				this.emit('processed');
+			}.bind(this));
 		} else {
 			this.emit('finished', 'All files encoded.');
 			encoding = false;

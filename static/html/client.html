@@ -48,13 +48,13 @@
         </div>
 
         <div class="control flex-h flex-center-h primary-color fade rounded-corners borders">
-          <div class="flex-icon">
+          <div class="icon-margin">
             <a href="#" id="control-button-play"><span class="icon flaticon-play-button-1"></span></a>
           </div>
 
           <div class="control-time flex-h">
             <form class="form flex-element flex-h flex-center-v">
-              <input type="range" class="control-time-slider" value=0 />
+              <input type="range" class="control-time-slider clear-spacers" value=0 />
               <div class="flex-h">
                 <input id="control-current" type="text" class="control-time-display clear-spacers" value=00:00:00 >/
                 <input id="control-duration" type="text" class="control-time-display clear-spacers" value=00:00:00 readonly>
@@ -62,7 +62,7 @@
             </form>
           </div>
 
-          <div class="flex-icon flex-center-v">
+          <div class="icon-margin">
             <a href="#" id="control-button-volume"> <span class="icon flaticon-speaker"></span></a>
           </div>
 
@@ -73,7 +73,7 @@
             </form>
           </div>
 
-          <div class="flex-icon">
+          <div class="icon-margin">
             <a href="#" id="control-button-sync"><span class="icon flaticon-stopwatch-2"></span></a>
           </div>
 
@@ -101,8 +101,8 @@
             </form>
           </div>
 
-          <div class="flex-icon">
-            <a href="#" id="control-button-options"> <span class="icon flaticon-settings-7"></span></a>
+          <div class="icon-margin">
+            <a href="#" id="control-button-options"> <span class="icon flaticon-settings-9"></span></a>
           </div>
 
           <div id="control-options" class="control-options flex-v primary-color rounded-corners borders toggle">
@@ -136,8 +136,8 @@
             </form>
           </div>
 
-          <div class="flex-icon">
-            <a href="#" id="control-button-full"> <span class="icon flaticon-perspective"></span></a>
+          <div class="icon-margin">
+            <a href="#" id="control-button-full"> <span class="icon flaticon-plus"></span></a>
           </div>
         </div>
       </div>
@@ -171,9 +171,9 @@
     </div>
 
     <div class="confirm primary-color rounded-corners borders toggle">
-      <div class="confirm-form flex-v ">
+      <div class="confirm-form flex-v">
         <div class="confirm-message toggle show">Are you sure?</div>
-        <div id="confirm-custom" class="confirm-message toggle">Custom confirmation?</div>
+        <div id="confirm-custom" class="confirm-message toggle force-text">Custom confirmation?</div>
         <div class="flex-bottom flex-right">
           <button type="button" id="confirm-no" class="flex-button">Cancel</button>
           <button type="button" id="confirm-yes" class="flex-button">Confirm</button>
