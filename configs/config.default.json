@@ -14,7 +14,7 @@
     "bin" : "ffmpeg"
   },
   "certificate" : {
-    "path" : "/usr/bin/redis-server",
+    "path" : "/path/to/cert",
     "attributes" : [{
         "name": "commonName",
         "value": "example.org"
@@ -39,7 +39,6 @@
     "GENERAL": "debug",
     "ADMINISTRATION": "debug",
     "AUTHENTICATION": "debug",
-    "CHAT": "debug",
     "DATABASE": "debug",
     "LOG": "debug",
     "VIDEO": "debug",

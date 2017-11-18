@@ -18,31 +18,28 @@
     <div class="container">
       <div class="media fill-in show">
 
-        <div class="path flex-h fade">
-          <div class="flex-icon isAdmin show">
-            <a href="#" id="path-button"> <span class="icon flaticon-play-button-1"></span></a>
+        <div class="path flex-h primary-color fade">
+          <div class="flex-icon is-admin show flex-left">
+            <a href="#" id="path-button"> <span class="icon flaticon-compact-disc"></span></a>
           </div>
 
-          <form class="flex-h path-input primary-color isAdmin show">
-            <input type="text" id="path-input" class="flex-element secondary-color" value="/home/sabo-kun/repo/media/bunny_test/">
+          <form class="flex-h path-input flex-left is-admin show">
+            <input type="text" id="path-input" class="flex-element rounded-corners borders" value="/home/sabo-kun/repo/media/bunny_test/">
           </form>
 
-          <div id="path-dropdown" class="path-dropdown flex-v toggle primary-color">
+          <div id="path-dropdown" class="path-dropdown flex-v primary-color ounded-corners borders toggle">
           </div>
 
-          <div class="flex-icon isAdmin show">
-            <a href="#" id="path-loaded"> <span class="icon flaticon-play-button-1"></span></a>
-          </div>
-
-          <div id="notification" class="path-notification flex-h primary-color"></div>
+          <div id="notification" class="path-notification flex-h"></div>
 
           <div id="side" class="side flex-v">
-            <div id="side-log" class="flex-icon">
-              <a href="#"><span class="icon flaticon-play-button-1"></span></a>
+            <div id="side-log" class="flex-icon primary-color flex-center-v border-left">
+              <a href="#"><span class="icon flaticon-menu-1"></span></a>
             </div>
-            <div id="side-documentation" class="flex-icon">
-              <a href="#"><span class="icon flaticon-play-button-1"></span></a>
+            <div id="side-documentation" class="flex-icon primary-color flex-center-v border-left">
+              <a href="#"><span class="icon flaticon-worldwide"></span></a>
             </div>
+            <div class="flex-icon primary-color flex-center-v rounded-corners-bottom-left"></div>
           </div>
         </div>
 
@@ -50,56 +47,67 @@
           <video id="video" class="video-element"></video>
         </div>
 
-        <div class="control flex-h fade">
+        <div class="control flex-h flex-center-h primary-color fade rounded-corners borders">
           <div class="flex-icon">
             <a href="#" id="control-button-play"><span class="icon flaticon-play-button-1"></span></a>
           </div>
 
-          <div class="control-time flex-h primary-color">
-            <form class="form flex-element flex-h secondary-color">
+          <div class="control-time flex-h">
+            <form class="form flex-element flex-h flex-center-v">
               <input type="range" class="control-time-slider" value=0 />
-              <input id="control-current" type="text" class="control-time-display" value=00:00:00 >
-              <input type="text" class="control-time-spacer" value=/ readonly>
-              <input id="control-duration" type="text" class="control-time-display" value=00:00:00 readonly>
+              <div class="flex-h">
+                <input id="control-current" type="text" class="control-time-display clear-spacers" value=00:00:00 >/
+                <input id="control-duration" type="text" class="control-time-display clear-spacers" value=00:00:00 readonly>
+              </div>
             </form>
           </div>
 
-          <div class="flex-icon">
-            <a href="#" id="control-button-volume"> <span class="icon flaticon-play-button-1"></span></a>
+          <div class="flex-icon flex-center-v">
+            <a href="#" id="control-button-volume"> <span class="icon flaticon-speaker"></span></a>
           </div>
 
-          <div id="control-volume" class="control-volume toggle primary-color">
-            <form class="form secondary-color">
+          <div id="control-volume" class="control-volume toggle primary-color rounded-corners borders">
+            <form class="form flex-v flex-center-v">
               <input type="range" id="volume-bar" class="control-volume-slider" value="50">
+              <div id="volume-level" class="flex-element flex-center-v input-style">50</div>
             </form>
           </div>
 
           <div class="flex-icon">
-            <a href="#" id="control-button-sync"><span class="icon flaticon-play-button-1"></span></a>
+            <a href="#" id="control-button-sync"><span class="icon flaticon-stopwatch-2"></span></a>
           </div>
 
-          <div id="control-sync" class="control-sync toggle primary-color">
-            <form id="sync-form" class="flex-h secondary-color">
-              <div class="flex-v">
-                <label id="sync-first" class="flex-middle flex-bottom flex-top">First:0</label>
-                <label id="sync-last" class="flex-middle flex-bottom flex-top">Last:0</label>
-                <label id="sync-diff" class="flex-middle flex-bottom flex-top">Diff:0</label>
-              </div>
-              <div class="flex-top flex-bottom flex-right">
-                <a href="#" id="sync-syncing">
-                  <span class="icon flex-icon flaticon-cloud-computing-3"></span>
-                </a>
-              </div>
+          <div id="control-sync" class="control-sync flex-v primary-color rounded-corners borders toggle">
+            <form id="sync-form">
+              <fieldset class="form flex-v">
+                <div class="flex-element flex-h">
+                  <div class="flex-left">First: </div>
+                  <div id="sync-first" class="flex-element-part flex-right input-style"> 0</div>
+                </div>
+                <div class="flex-element flex-h">
+                  <div class="flex-left">Last: </div>
+                  <div id="sync-last" class="flex-element-part flex-right input-style"> 0</div>
+                </div>
+                <div class="flex-element flex-h">
+                  <div class="flex-left">Diff: </div>
+                  <div id="sync-diff" class="flex-element-part flex-right flex-center-v input-style"> 0</div>
+                </div>
+                <div class="flex-element flex-v flex-center-v">
+                  <a href="#" id="sync-syncing">
+                    <span class="icon flex-icon flaticon-repeat-1"></span>
+                  </a>
+                </div>
+              </fieldset>
             </form>
           </div>
 
           <div class="flex-icon">
-            <a href="#" id="control-button-options"> <span class="icon flaticon-play-button-1"></span></a>
+            <a href="#" id="control-button-options"> <span class="icon flaticon-settings-7"></span></a>
           </div>
 
-          <div id="control-options" class="control-options flex-v toggle primary-color">
+          <div id="control-options" class="control-options flex-v primary-color rounded-corners borders toggle">
             <form id="options-form">
-              <fieldset class="form flex-v secondary-color">
+              <fieldset class="form flex-v">
                 <div class="flex-h flex-element">
                   <label for="video-track-options">Video:</label>
                   <select id="video-track-list" name="video-track-options" class="flex-right flex-element-part">
@@ -129,7 +137,7 @@
           </div>
 
           <div class="flex-icon">
-            <a href="#" id="control-button-full"> <span class="icon flaticon-play-button-1"></span></a>
+            <a href="#" id="control-button-full"> <span class="icon flaticon-perspective"></span></a>
           </div>
         </div>
       </div>
@@ -139,37 +147,36 @@
         <div id="panel-encode" class="toggle"></div>
         <div id="panel-log" class="toggle"></div>
         <div id="panel-documentation" class="toggle">
-          <div class="panel-header secondary-color">Documentation</div>
+          <div class="panel-header ">Documentation</div>
           <hr>
-          <div id="documenation-body" class="flex-element secondary-color"></div>
+          <div id="documenation-body" class="flex-element "></div>
         </div>
       </div>
     </div>
 
     <div class="login toggle">
-      <div class="login-overlay flex-v primary-color">
-        <div class="flex-center">Video-Sync</div>
+      <div class="login-overlay flex-v flex-element-part flex-center-h primary-color rounded-corners borders">
+        <div class="flex-center-h">Video-Sync</div>
         <form id="login-form">
-          <fieldset class="form flex-v secondary-color">
-            <div id="login-error" class="flex-element">
-            </div>
+          <fieldset class="form flex-v flex-element-part flex-center-h">
+            <div id="login-error" class="flex-element"></div>
             <label for="login-handle">Handle:</label>
             <input type="text" name="handle" id="login-handle" class="flex-element" placeholder="John Smith"/>
             <label for="login-token">Token:</label>
             <input type="text" name="token" id="login-token" class="flex-element" placeholder="Token"/>
-            <button type="button" id="login-submit" class="flex-button flex-right">Submit</button>
+            <button type="button" id="login-submit" class="flex-button flex-right ">Submit</button>
           </fieldset>
         </form>
       </div>
     </div>
 
-    <div class="confirm toggle primary-color">
-      <div class="confirm-form flex-v secondary-color">
+    <div class="confirm primary-color rounded-corners borders toggle">
+      <div class="confirm-form flex-v ">
         <div class="confirm-message toggle show">Are you sure?</div>
         <div id="confirm-custom" class="confirm-message toggle">Custom confirmation?</div>
         <div class="flex-bottom flex-right">
-          <button type="button" id="confirm-no">Cancel</button>
-          <button type="button" id="confirm-yes">Confirm</button>
+          <button type="button" id="confirm-no" class="flex-button">Cancel</button>
+          <button type="button" id="confirm-yes" class="flex-button">Confirm</button>
         </div>
       </div>
     </div>

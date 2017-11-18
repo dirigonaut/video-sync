@@ -52,7 +52,7 @@ module.exports = LogManager;
 LogManager.Enum = {};
 LogManager.Enum.Levels  = { socket: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
 LogManager.Enum.Logs    = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
-                        CHAT: 'chat', DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};
+                        DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};
 
 var buildFileTransport = function(path, label, level, handleExceptions) {
   var fileTransport = new (Winston.transports.File) ({

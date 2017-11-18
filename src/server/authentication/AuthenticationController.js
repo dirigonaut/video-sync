@@ -49,8 +49,15 @@ AuthenticationController.prototype.attachIO = function (io) {
       }
     }
 
+    var error;
+    if(request instanceof Error) {
+      error = request.toString();
+    } else if(!isAdmin && !isUser) {
+      error = "Submitted token is not valid or is already in use.";
+    }
+
     return isAdmin || isUser ? next(log.info(`${socket.id} has been authenticated.`))
-                    : next(new Error(`${JSON.stringify(token)} has failed authentication with error: ${request.toString()}`));
+                    : next(new Error(`${JSON.stringify(token)} has failed authentication with error: ${error}`));
   }.bind(this)));
 
   io.on('connection', Promise.coroutine(function* (socket, data) {

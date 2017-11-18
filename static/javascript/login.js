@@ -13,7 +13,7 @@ function initializeLogin(schemaFactory, keys) {
 
 var loginError = function(message) {
   $(`#login-error`).empty();
-  $(`<div class="flex-h secondary-color flex-middle">
+  $(`<div class="flex-h  flex-center-v">
     <label>Error:</label>
     <div>${message && message.data ? message.data : message}</div>
     <a href="#" onclick="$($(event.currentTarget).parent()).remove();">

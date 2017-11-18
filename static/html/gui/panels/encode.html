@@ -1,14 +1,14 @@
-<div class="panel-header secondary-color">Video/Audio Encoding</div>
+<div class="panel-header ">Video/Audio Encoding</div>
 <hr>
 <form id="encode-input-form">
-  <fieldset class="form flex-v secondary-color">
+  <fieldset class="form flex-v ">
     <div class="flex-v flex-element">
       <label for="encode-input">Input File:</label>
-      <input type="text" class="secondary-color" id="encode-input" value="/home/sabo-kun/repo/media/bunny.mov"/>
+      <input type="text" class="" id="encode-input" value="/home/sabo-kun/repo/media/bunny.mov"/>
     </div>
     <div class="flex-v flex-element">
       <label for="encode-output">Output Dir:</label>
-      <input type="text" class="secondary-color" id="enode-output" placeholder="/dir/to/save/encoded/video/to/">
+      <input type="text" class="" id="enode-output" placeholder="/dir/to/save/encoded/video/to/">
     </div>
     <hr>
     <div id="encoding-meta" class="flex-v flex-element">
@@ -20,7 +20,7 @@
     <div class="flex-h flex-element">
       <label for="encode-video">Video Quality:</label>
       <input type="text" id="encode-video" list="video-quality" class="flex-right flex-element-part" value="1280x720">
-      <a href="#"><span class="icon-min flaticon-plus"></span></a>
+      <a href="#"><span class="flex-icon icon-min flaticon-plus"></span></a>
       <datalist id="video-quality">
         <option value="854x480">
         <option value="1280x720">
@@ -30,7 +30,7 @@
     <div class="flex-h flex-element">
       <label for="encode-audio">Audio Quality:</label>
       <input type="text" id="encode-audio" list="audio-quality" class="flex-right flex-element-part" value="256k">
-      <a href="#"><span class="icon-min flaticon-plus"></span></a>
+      <a href="#"><span class="flex-icon icon-min flaticon-plus"></span></a>
       <datalist id="audio-quality">
         <option value="128k">
         <option value="256k">
@@ -40,7 +40,7 @@
     <div class="flex-h flex-element">
       <label for="token-subtitle">Subtitle Track:</label>
       <input type="text" id="encode-subtitle" list="subtitle-track" class="flex-right flex-element-part">
-      <a href="#"><span class="icon-min flaticon-plus"></span></a>
+      <a href="#"><span class="flex-icon icon-min flaticon-plus"></span></a>
       <datalist id="subtitle-track">
       </datalist>
     </div>
@@ -48,7 +48,7 @@
   </fieldset>
 </form>
 <form id='encode-command-form'>
-  <fieldset class="form flex-v secondary-color">
+  <fieldset class="form flex-v ">
     <div id="encode-comands">
       <label>Video Commands:</label>
       <div id="video-commands" class="flex-v"></div>
@@ -64,7 +64,7 @@
       <hr>
     </div>
     <div class="flex-h">
-      <button type="button" class="btn btn-default" data-dismiss="modal" id="submit-encoding">Encode</button>
+      <button type="button" class="flex-button" data-dismiss="modal" id="submit-encoding">Encode</button>
     </div>
   </fieldset>
 </form>
