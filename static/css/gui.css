@@ -26,6 +26,8 @@ body {
   position: relative;
   float: right;
   width: 25%;
+  overflow-y:auto;
+  overflow-x:hidden;
 }
 
 .panel-header {
@@ -37,8 +39,6 @@ body {
 .panel-sub-panel {
   min-height:25%;
   max-height:75%;
-  overflow-x: hidden;
-  overflow-y: auto;
 }
 
 .media {

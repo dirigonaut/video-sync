@@ -72,13 +72,11 @@ EncodingController.prototype.attachSocket = function(socket) {
 
   socket.on(eventKeys.GETMETA, Promise.coroutine(function* (data) {
     log.debug(eventKeys.GETMETA, data);
-    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.SPECIAL);
-    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
-    if(request) {
+    if(data.encodings) {
       var command = this.factory.createCommand();
       var ffprobe = this.factory.createFfprobeProcess();
-      ffprobe.setCommand(command.parse(request.data));
+      ffprobe.setCommand(command.parse(data.encodings));
 
       var metaData = yield ffprobe.execute().catch(function(err) {
         log.error(err);
