@@ -113,7 +113,7 @@ function processedEvent() {
 				log.socket(error);
 				log.error(error);
 
-				uiLog(current[0], 'error', `Server: Failed with error: ${err.toString}`);
+				uiLog(current[0], 'error', `Server: Failed with error:`, error);
 				this.emit('processed');
 			}.bind(this));
 		} else {
@@ -146,7 +146,7 @@ function attachEvents(encodeProcess) {
 		this.emit('processed', encodeProcess);
 	}.bind(this)).on('error', function(err) {
 		log.info(`Server: Failed with error: , ` + new Date().toTimeString(), err);
-		uiLog(current[0], 'error', `Server: Failed with error: ${err.toString}`);
+		uiLog(current[0], 'error', `Server: Failed with error:`, err);
 	}.bind(this));
 }
 

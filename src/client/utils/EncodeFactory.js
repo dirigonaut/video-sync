@@ -25,7 +25,7 @@ EncodeFactory.prototype.setKeyValue = function(key, newValue, str) {
 };
 
 EncodeFactory.prototype.setOutput = function(path, str) {
-  return `${str} ${path}`;
+  return `${str} ${encodeURI(path)}`;
 };
 
 EncodeFactory.prototype.getOutput = function(str) {
@@ -68,7 +68,7 @@ EncodeFactory.prototype.createManifest = function(input, output, commands, codec
   template = this.setKeyValue('y', `${inputs.trim()}`, template);
   template = this.setKeyValue('c', maps, template);
   template = this.setKeyValue('adaptation_sets', `"${vSet} ${aSet}"`, template);
-  template = this.setOutput(`${output}${this.getNameFromPath(input)}_${codec}.mpd`, template);
+  template = this.setOutput(encodeURI(`${output}${this.getNameFromPath(input)}_${codec}.mpd`), template);
 
   return template;
 };

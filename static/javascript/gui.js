@@ -116,6 +116,7 @@ function initGui(client, isAdmin) {
       $('.flaticon-plus').removeClass('flaticon-minus');
       toggleOverlays();
     } else {
+      $(document).trigger('togglePanel', [true]);
       $('video')[0].webkitRequestFullScreen();
       $('.control').addClass("control-full");
       $('.control').removeClass("control");
@@ -360,9 +361,13 @@ function initGui(client, isAdmin) {
   //Encode Events ---------------------------------------------------------------
   function initEncode() {
     $('#encode-input').on("focusout", function() {
-      var input = $('#encode-input').val();
+      var input = encodeURI($('#encode-input').val());
       var inspect = ` -show_streams ${input}`;
-      client.socket.request(client.keys.GETMETA, client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [inspect]));
+
+      var request = {};
+      request.encodings = inspect;
+
+      client.socket.request(client.keys.GETMETA, request);
     });
 
     var loadFileInfo = function(metaData) {
@@ -444,7 +449,7 @@ function initGui(client, isAdmin) {
       });
 
       var template = client.encode.getTemplate(client.encode.Enums.CODEC.WEBM, type);
-      template = client.encode.setKeyValue('i', `${values[0]}`, template);
+      template = client.encode.setKeyValue('i', `${encodeURI(values[0])}`, template);
 
       if(type === client.encode.Enums.TYPES.VIDEO) {
         template = client.encode.setKeyValue('s', values[2], template);
@@ -453,7 +458,7 @@ function initGui(client, isAdmin) {
         template = client.encode.setKeyValue('b:a', values[3], template);
         template = client.encode.setOutput(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[3]}.${client.encode.Enums.CODEC.WEBM}`, template);
       } else if(type === client.encode.Enums.TYPES.SUBTITLE) {
-        template = client.encode.setKeyValue('i', `${values[0]} ${values[4] ? `-map 0:${values[4]}` : ''}`, template);
+        template = client.encode.setKeyValue('i', `${encodeURI(values[0])} ${values[4] ? `-map 0:${values[4]}` : ''}`, template);
         template = client.encode.setOutput(`${values[1]}${client.encode.getNameFromPath(values[0])}.vtt`, template);
       }
 
@@ -529,7 +534,6 @@ function initGui(client, isAdmin) {
       request.encodings = commands;
       request.directory = values[1];
 
-      console.log(request);
       client.socket.request('video-encode', request);
     });
   }
@@ -991,14 +995,12 @@ function initGui(client, isAdmin) {
       var top = parentOff.top > (screen.height/2) ? parentOff.top - parentPos.top - height :
         parentOff.top + parentPos.top + parentHie;
 
-      if(!(document.fullScreen || document.webkitIsFullScreen)) {
-        if(container) {
-          var containerWid = $(`.${container}`).outerWidth(true);
-          var containerHie = $(`.${container}`).outerHeight(true);
+      if(container) {
+        var containerWid = $(`.${container}`).outerWidth(true);
+        var containerHie = $(`.${container}`).outerHeight(true);
 
-          if(parentPos.left + width/2 > containerWid) {
-            left = containerWid - width;
-          }
+        if(parentPos.left + width/2 > containerWid) {
+          left = containerWid - width;
         }
       }
 
@@ -1081,13 +1083,27 @@ function initGui(client, isAdmin) {
     triggerConfirmation(callback, message);
   });
 
-  $(document).on('togglePanel', function() {
+  $(document).on('togglePanel', function(e, force) {
     $('.panel').removeAttr("style");
     $('.media').removeAttr("style");
     $('.side').removeAttr("style");
 
-    $('.panel').toggleClass('show');
-    $('.media').toggleClass('show');
+    if(force) {
+      $('.panel').removeClass('show');
+      $('.media').addClass('show');
+
+      $('.side .flex-icon').each((index, element) => {
+        var elementId = element.id.split('-')[1];
+        if(elementId) {
+          $(`#panel-${elementId}`).removeClass('show');
+        }
+      });
+
+      updateOverlays();
+    } else {
+      $('.panel').toggleClass('show');
+      $('.media').toggleClass('show');
+    }
 
     if($('.panel').hasClass('show')) {
       $(`.panel`).attr('style', `padding:1%;`);
