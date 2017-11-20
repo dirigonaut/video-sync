@@ -19,4 +19,4 @@ b.bundle().pipe(fs.createWriteStream(path.join(__dirname, '../static/resources/b
 var readMe = fs.readFileSync(path.join(__dirname, '../README.md'), 'utf-8');
 var markdownReadMe = marked(readMe);
 
-fs.writeFileSync(path.join(__dirname,'../static/html/info/documentation.html'), markdownReadMe);
+fs.writeFileSync(path.join(__dirname,'../static/html/documentation.html'), markdownReadMe);
