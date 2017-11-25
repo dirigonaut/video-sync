@@ -28,7 +28,9 @@ RedisServer.prototype.start = function(bin, config) {
         if(data.includes('Server started')) {
           data = data.replace(/[-./'/`_|\\]*/g, '');
           data = data.replace(/\s{2,}/g, '');
-        } else if(data.includes('ready to accept connections')) {
+        }
+
+        if(data.includes('ready to accept connections')) {
           resolve();
         }
 
