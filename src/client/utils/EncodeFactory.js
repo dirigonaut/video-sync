@@ -1,5 +1,5 @@
 const TEMPLATES = {
-  WEBM_VIDEO_TEMPLATE:    `-y -i arg -c:v libvpx-vp9 -s arg -keyint_min 150 -g 150 -b:v 0 -crf 42 -threads 8 -speed 2 -tile-columns 6 -frame-parallel 1 -an -sn -f webm -dash 1`,
+  WEBM_VIDEO_TEMPLATE:    `-y -i arg -c:v libvpx -s arg -keyint_min 150 -g 150 -b:v 1500k -crf 42 -threads 4 -speed 2 -tile-columns 4 -frame-parallel 1 -an -sn -f webm -dash 1`,
   WEBM_AUDIO_TEMPLATE:    `-y -i arg -vn -sn -c:a libopus -b:a arg -f webm -dash 1`,
   WEBM_SUBTITLE_TEMPLATE: `-y -txt_format text -i arg`,
   WEBM_MANIFEST_TEMPLATE: `-y arg -c copy -f webm_dash_manifest -adaptation_sets "id=0,streams=arg id=1,streams=arg"`,
@@ -52,19 +52,19 @@ EncodeFactory.prototype.createManifest = function(input, output, commands, codec
   var inputs = "";
 
   for(let i = 0; i < commands.length; ++i) {
-    if(commands[i].type === this.TypeEnum.VIDEO) {
+    if(commands[i].type === EncodeFactory.Enum.Types.VIDEO) {
       vSet = `${vSet.length > 0 ? vSet : Snippets.SETSVIDEO}${vSet.length > 0 ? "," + i : i}`;
-      inputs = `${inputs} ${Snippets.MANIFEST.trim()} -i ${this.getOutput(commands[i].input).trim()}`
+      inputs = `${inputs} ${Snippets.MANIFEST.trim()} ${this.getOutput(commands[i].input).trim()}`
       maps = `${maps.trim()} ${Snippets.MAP.trim()} ${i}`
 
-    } else if(commands[i].type === this.TypeEnum.AUDIO) {
+    } else if(commands[i].type === EncodeFactory.Enum.Types.AUDIO) {
       aSet = `${aSet.length > 0 ? aSet : Snippets.SETSAUDIO}${aSet.length > 0 ? "," + i : i}`;
-      inputs = `${inputs} ${Snippets.MANIFEST.trim()} -i ${this.getOutput(commands[i].input).trim()}`
+      inputs = `${inputs} ${Snippets.MANIFEST.trim()} ${this.getOutput(commands[i].input).trim()}`
       maps = `${maps.trim()} ${Snippets.MAP.trim()} ${i}`
     }
   }
 
-  var template = this.getTemplate(codec, this.TypeEnum.MANIFEST);
+  var template = this.getTemplate(codec, EncodeFactory.Enum.Types.MANIFEST);
   template = this.setKeyValue('y', `${inputs.trim()}`, template);
   template = this.setKeyValue('c', maps, template);
   template = this.setKeyValue('adaptation_sets', `"${vSet} ${aSet}"`, template);
@@ -73,8 +73,9 @@ EncodeFactory.prototype.createManifest = function(input, output, commands, codec
   return template;
 };
 
-EncodeFactory.prototype.TypeEnum  = { VIDEO : 'VIDEO', AUDIO : 'AUDIO', SUBTITLE: 'SUBTITLE', MANIFEST: 'MANIFEST' };
-EncodeFactory.prototype.CodecEnum = { WEBM : 'webm', MP4 : 'mp4' };
-EncodeFactory.prototype.EncoderEnum = { FFMPEG : 'ffmpeg', MP4BOX : 'mp4box' };
-
 module.exports = EncodeFactory;
+
+EncodeFactory.Enum          = { };
+EncodeFactory.Enum.Types    = { VIDEO: 'VIDEO', AUDIO: 'AUDIO', SUBTITLE: 'SUBTITLE', MANIFEST: 'MANIFEST' };
+EncodeFactory.Enum.Codec    = { WEBM: 'webm', MP4: 'mp4' };
+EncodeFactory.Enum.Encoder  = { FFMPEG : 'ffmpeg'};

@@ -6,18 +6,16 @@ var config, proxyServer, workers, log;
 
 function Proxy() { }
 
-Proxy.prototype.initialize = function(force) {
+Proxy.prototype.initialize = function() {
   if(typeof Proxy.prototype.protoInit === 'undefined') {
     Proxy.prototype.protoInit = true;
-    config          = this.factory.createConfig();
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.GENERAL);
-  }
-
-  if(force === undefined ? typeof Proxy.prototype.stateInit === 'undefined' : force) {
-    Proxy.prototype.stateInit = true;
     Object.setPrototypeOf(Proxy.prototype, Events.prototype);
-    workers = [];
+
+    config          = this.factory.createConfig();
+    workers         = [];
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);
   }
 };
 
@@ -36,24 +34,24 @@ Proxy.prototype.setOnConnect = function(numProcesses) {
   // Create the outside facing server listening on our port.
   proxyServer = Net.createServer({ pauseOnConnect: true }, function(connection) {
     var worker = workers[getWorkerIndex(connection.remoteAddress, numProcesses)];
-    worker.send('sticky-session:connection', connection);
+    worker.send('sticky-media:connection', connection);
   });
 };
 
 Proxy.prototype.spawnWorker = function(index) {
-	workers[index] = Cluster.fork({processType: 'serverProcess'});
+	workers[index] = Cluster.fork({processType: 'serverProcess', index: index});
 
 	workers[index].on('exit', function(code, signal) {
 		log.info('respawning worker', index);
-		spawnWorker(index);
-	});
+		this.spawnWorker(index);
+	}.bind(this));
 
   this.emit('server-started', workers[index], index);
 };
 
 Proxy.prototype.forwardWorker = function(server) {
   process.on('message', function(message, connection) {
-    if (message !== 'sticky-session:connection') {
+    if (message !== 'sticky-media:connection') {
       return;
     }
 

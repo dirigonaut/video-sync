@@ -2,11 +2,11 @@ var log;
 
 function Manifest() { }
 
-Manifest.prototype.initialize = function(force) {
+Manifest.prototype.initialize = function() {
 	if(typeof Manifest.prototype.protoInit === 'undefined') {
     Manifest.prototype.protoInit = true;
     var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.ENCODING);
+    log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
   }
 };
 

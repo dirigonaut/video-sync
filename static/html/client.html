@@ -5,138 +5,181 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="stylesheet" type="text/css" href="../resources/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="../resources/video-js/video-js.css">
     <link rel="stylesheet" type="text/css" href="../css/gui.css">
+    <link rel="stylesheet" type="text/css" href="../css/icons/flaticon.css">
 
     <script type="text/javascript" src="../resources/jquery-2.2.4.min.js"></script>
-    <script type="text/javascript" src="../resources/video-js/video.js"></script>
+
     <script type="text/javascript" src="../javascript/cookies.js"></script>
     <script type="text/javascript" src="../resources/bundle.js"></script>
-    <script type="text/javascript" src="../resources/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../javascript/index.js"></script>
   </head>
   <body>
     <div class="container">
-      <div id="media-container" class="media-container">
-        <div id="location-container" class="file-bar flex-h fadein">
-        </div>
-        <video id="video" class="video-holder"></video>
-        <div id="side-container" class="side-bar fadein">
-          <div class="icon-v">
-            <a href="#" id="btnLogin"><span class="glyphicon glyphicon-thumbnail glyphicon-user"></span></a>
+      <div class="media fill-in show">
+
+        <div class="path flex-h primary-color fade">
+          <div class="flex-icon is-admin show flex-left">
+            <a href="#" id="path-button"> <span class="icon flaticon-compact-disc"></span></a>
           </div>
-          <div class="icon-v">
-            <a href="#" id="btnHelp"><span class="glyphicon glyphicon-thumbnail glyphicon-question-sign"></span></a>
+
+          <form class="flex-h path-input flex-left is-admin show">
+            <input type="text" id="path-input" class="flex-element rounded-corners borders" placeholder="/path/to/movie/dir/">
+          </form>
+
+          <div id="path-dropdown" class="path-dropdown flex-v primary-color ounded-corners borders toggle">
+          </div>
+
+          <div id="notification" class="path-notification flex-h"></div>
+
+          <div id="side" class="side flex-v">
+            <div id="side-log" class="flex-icon primary-color flex-center-v border-left">
+              <a href="#"><span class="icon flaticon-menu-1"></span></a>
+            </div>
+            <div id="side-documentation" class="flex-icon primary-color flex-center-v border-left">
+              <a href="#"><span class="icon flaticon-worldwide"></span></a>
+            </div>
+            <div class="flex-icon primary-color flex-center-v rounded-corners-bottom-left"></div>
           </div>
         </div>
-        <div id="control-container" class="control-bar flex-h fadein">
+
+        <div class="video">
+          <video id="video" class="video-element"></video>
+        </div>
+
+        <div class="control flex-h flex-center-h primary-color fade rounded-corners borders">
+          <div class="icon-margin">
+            <a href="#" id="control-button-play"><span class="icon flaticon-play-button-1"></span></a>
+          </div>
+
+          <div class="control-time flex-h">
+            <form class="form flex-element flex-h flex-center-v">
+              <input type="range" class="control-time-slider clear-spacers" value=0 />
+              <div class="flex-h">
+                <input id="control-current" type="text" class="control-time-display clear-spacers" value=00:00:00 >/
+                <input id="control-duration" type="text" class="control-time-display clear-spacers" value=00:00:00 readonly>
+              </div>
+            </form>
+          </div>
+
+          <div class="icon-margin">
+            <a href="#" id="control-button-volume"> <span class="icon flaticon-speaker"></span></a>
+          </div>
+
+          <div id="control-volume" class="control-volume toggle primary-color rounded-corners borders">
+            <form class="form flex-v flex-center-v">
+              <input type="range" id="volume-bar" class="control-volume-slider" value="50">
+              <div id="volume-level" class="flex-element flex-center-v input-style">50</div>
+            </form>
+          </div>
+
+          <div class="icon-margin">
+            <a href="#" id="control-button-sync"><span class="icon flaticon-stopwatch-2"></span></a>
+          </div>
+
+          <div id="control-sync" class="control-sync flex-v primary-color rounded-corners borders toggle">
+            <form id="sync-form">
+              <fieldset class="form flex-v">
+                <div class="flex-element flex-h">
+                  <div class="flex-left">First: </div>
+                  <div id="sync-first" class="flex-element-part flex-right input-style"> 0</div>
+                </div>
+                <div class="flex-element flex-h">
+                  <div class="flex-left">Last: </div>
+                  <div id="sync-last" class="flex-element-part flex-right input-style"> 0</div>
+                </div>
+                <div class="flex-element flex-h">
+                  <div class="flex-left">Diff: </div>
+                  <div id="sync-diff" class="flex-element-part flex-right flex-center-v input-style"> 0</div>
+                </div>
+                <div class="flex-element flex-v flex-center-v">
+                  <a href="#" id="sync-syncing">
+                    <span class="icon flex-icon flaticon-repeat-1"></span>
+                  </a>
+                </div>
+              </fieldset>
+            </form>
+          </div>
+
+          <div class="icon-margin">
+            <a href="#" id="control-button-options"> <span class="icon flaticon-settings-9"></span></a>
+          </div>
+
+          <div id="control-options" class="control-options flex-v primary-color rounded-corners borders toggle">
+            <form id="options-form">
+              <fieldset class="form flex-v">
+                <div class="flex-h flex-element">
+                  <label for="video-track-options">Video:</label>
+                  <select id="video-track-list" name="video-track-options" class="flex-right flex-element-part">
+                  </select>
+                </div>
+                <div class="flex-h flex-element">
+                  <label for="audio-track-options">Audio:</label>
+                  <select id="audio-track-list" name="audio-track-options" class="flex-right flex-element-part">
+                  </select>
+                </div>
+                <div class="flex-h flex-element">
+                  <label for="subtitle-track-options">Subtitle:</label>
+                  <select id="subtitle-track-list" name="subtitle-track-options" class="flex-right flex-element-part">
+                    <option value="None" selected>None</option>
+                  </select>
+                </div>
+                <div class="flex-h flex-element">
+                  <label for="buffer-options">Buffer:</label>
+                  <input type="range" id="buffer-options" name="buffer-options" class="flex-right flex-element-part" value=30>
+                </div>
+                <div class="flex-h flex-element">
+                  <label for="sync-options">Sync:</label>
+                  <input type="text" id="sync-options" name="sync-options" class="flex-right flex-element-part">
+                </div>
+              </fieldset>
+            </form>
+          </div>
+
+          <div class="icon-margin">
+            <a href="#" id="control-button-full"> <span class="icon flaticon-plus"></span></a>
+          </div>
         </div>
       </div>
-      <div id="chat-container" class="chat-container">
+
+      <div class="panel slide-in primary-color">
+        <div id="panel-tokens" class="toggle"></div>
+        <div id="panel-encode" class="toggle"></div>
+        <div id="panel-log" class="toggle"></div>
+        <div id="panel-documentation" class="toggle">
+          <div class="panel-header ">Documentation</div>
+          <hr>
+          <div id="documenation-body" class="flex-element "></div>
+        </div>
       </div>
-      <div id="loginOverlay"></div>
-      <div id="sessionOverlay"></div>
-      <div id="smtpOverlay"></div>
-      <div id="encodeOverlay"></div>
-      <div id="helpOverlay"></div>
     </div>
-    <script type="text/javascript" src="../resources/jquery-2.2.4.min.js"></script>
-    <script type="text/javascript" src="../resources/video-js/video.js"></script>
-    <script type="text/javascript" src="../resources/bootstrap/js/bootstrap.min.js"></script>
-    <script>
-      var client;
-      var cookie = Object.create(Cookie.prototype);
 
-      $(document).ready(function() {
-        window.URL = window.URL || window.webkitURL;
-        window.MediaSource = window.MediaSource || window.WebKitMediaSource
+    <div class="login toggle">
+      <div class="login-overlay flex-v flex-element-part flex-center-h primary-color rounded-corners borders">
+        <div class="flex-center-h">Video-Sync</div>
+        <form id="login-form">
+          <fieldset class="form flex-v flex-element-part flex-center-h">
+            <div id="login-error" class="flex-element"></div>
+            <label for="login-handle">Handle:</label>
+            <input type="text" name="handle" id="login-handle" class="flex-element" placeholder="John Smith"/>
+            <label for="login-token">Token:</label>
+            <input type="text" name="token" id="login-token" class="flex-element" placeholder="Token"/>
+            <button type="button" id="login-submit" class="flex-button flex-right ">Submit</button>
+          </fieldset>
+        </form>
+      </div>
+    </div>
 
-        $("#control-container").load("menu/controls.html");
-        $("#chat-container").load("menu/chat.html");
-        $("#helpOverlay").load("menu/overlays/help.html");
-        $("#loginOverlay").load("menu/overlays/login.html", function() {
-          $('#loginModal').modal('show');
-        });
+    <div class="confirm primary-color rounded-corners borders toggle">
+      <div class="confirm-form flex-v">
+        <div class="confirm-message toggle show">Are you sure?</div>
+        <div id="confirm-custom" class="confirm-message toggle force-text">Custom confirmation?</div>
+        <div class="flex-bottom flex-right">
+          <button type="button" id="confirm-no" class="flex-button">Cancel</button>
+          <button type="button" id="confirm-yes" class="flex-button">Confirm</button>
+        </div>
+      </div>
+    </div>
 
-        $.getScript("../javascript/clientLog.js", function() {
-          client = Object.create(Client.prototype);
-
-          $.getScript("../javascript/clientLogin.js", function() {
-            var factory = client.getFactory();
-
-            var logManager = factory.createClientLogManager();
-            logManager.addUILogging(guiLog());
-            var log = logManager.getLog(logManager.LogEnum.GENERAL);
-            log.ui('Added UI logging.');
-
-            var socket = factory.createClientSocket();
-            var autoLogin = initClientLogin(socket, factory.createSchemaFactory(), factory.createKeys());
-
-            client.initialize(window.location.host).then(function(results) {
-              var setupGUI = function() {
-                var factory     = client.getFactory();
-                var logManager  = factory.createClientLogManager();
-
-                var container = {
-                  socket:   socket,
-                  chatUtil: factory.createChatUtil(),
-                  formData: factory.createFormData(),
-                  media:    factory.createMediaController(),
-                  encode:   factory.createEncodeFactory(),
-                  schema:   factory.createSchemaFactory(),
-                  keys:     factory.createKeys(),
-                  log:      logManager.getLog(logManager.LogEnum.GENERAL),
-                };
-
-                //Reload media
-                socket.setEvent(container.keys.MEDIAREADY, function() {
-                  var domElements = {
-                    mediaSource: new MediaSource(),
-                    window: window,
-                    document: document,
-                    videoElement: document.getElementById('video')
-                  };
-
-                  client.startMedia(container.media, domElements);
-                });
-
-                results.acknowledge();
-
-                //The init function of gui.js
-                initGUI(container, results.isAdmin);
-              };
-
-
-              var loadUI = function() {
-                $('#loginModal').modal('hide');
-                $('#btnLogin').parent().remove();
-
-                setupGUI();
-              };
-
-              if(results.isAdmin) {
-                var count = 0;
-                var counter = function() {
-                  count += 1;
-                  if(count >= 5) {
-                    $.getScript("../javascript/gui.js", loadUI);
-                  }
-                }
-
-                $("#side-container").load("menu/side.html", counter);
-                $("#sessionOverlay").load("menu/overlays/session.html", counter);
-                $("#smtpOverlay").load("menu/overlays/smtp.html", counter);
-                $("#encodeOverlay").load("menu/overlays/encode.html", counter);
-                $("#location-container").load("menu/location.html", counter);
-              } else {
-                $.getScript("../javascript/gui.js", loadUI);
-              }
-            });
-
-            autoLogin();
-          });
-        });
-      });
-    </script>
   </body>
 </html>

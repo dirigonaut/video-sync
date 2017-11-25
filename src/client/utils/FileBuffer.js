@@ -1,5 +1,5 @@
 const Promise  = require('bluebird');
-const Events    = require('events');
+const Events   = require('events');
 
 const TIMEOUT  = 6000;
 
@@ -7,27 +7,20 @@ var fileRequests, buffers, trigger, socket, schemaFactory, eventKeys, log;
 
 function FileBuffer() { }
 
-FileBuffer.prototype.initialize = function(force) {
-  if(typeof FileBuffer.prototype.protoInit === 'undefined') {
+FileBuffer.prototype.initialize = function(init) {
+  if(typeof FileBuffer.prototype.protoInit === 'undefined' || typeof init !== 'undefined' ? init : false) {
     FileBuffer.prototype.protoInit = true;
-    var logManager  = this.factory.createClientLogManager();
-		log             = logManager.getLog(logManager.LogEnum.GENERAL);
-
     eventKeys       = this.factory.createKeys();
     schemaFactory   = this.factory.createSchemaFactory();
-  }
-
-  if(force === undefined ? typeof FileBuffer.prototype.stateInit === 'undefined' : force) {
-    FileBuffer.prototype.stateInit = true;
     socket          = this.factory.createClientSocket();
-
-    removeTriggerEvents();
-    removeSocketEvents();
-    setSocketEvents();
-
     fileRequests    = new Map();
     buffers         = new Map();
-    trigger         = new Events();
+
+    trigger = new Events();
+    setSocketEvents();
+
+    var logManager  = this.factory.createClientLogManager();
+		log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);
   }
 };
 
@@ -40,7 +33,7 @@ FileBuffer.prototype.requestFilesAsync = function(key) {
 
   fileRequests.set(requestInfo.requestId, requestInfo);
 
-  var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STRING, [requestInfo.requestId]);
+  var request = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.STRING, [requestInfo.requestId]);
   socket.request(key, request);
 
   return new Promise(function(resolve, reject) {
@@ -56,6 +49,10 @@ FileBuffer.prototype.requestFilesAsync = function(key) {
       resolve(data);
     });
   });
+};
+
+FileBuffer.prototype.clean = function() {
+  removeSocketEvents();
 };
 
 module.exports = FileBuffer;
@@ -139,13 +136,4 @@ function removeSocketEvents() {
   socket.removeEvent(eventKeys.FILESEGMENT);
   socket.removeEvent(eventKeys.FILEEND);
   socket.removeEvent(eventKeys.NOFILES);
-}
-
-function removeTriggerEvents() {
-  if(trigger) {
-    var allEvents = trigger.eventNames();
-    for(var i = 0; i < allEvents.length; ++i) {
-      trigger.removeAllListeners(allEvents[i]);
-    }
-  }
 }

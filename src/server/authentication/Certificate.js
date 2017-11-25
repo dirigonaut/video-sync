@@ -17,12 +17,12 @@ Certificate.prototype.initialize = function(force) {
     config          = this.factory.createConfig();
 
     var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.AUTHENTICATION);  
+    log             = logManager.getLog(logManager.Enums.LOGS.AUTHENTICATION);
   }
 };
 
 Certificate.prototype.getCertificates = Promise.coroutine(function* () {
-  log.debug("Certificate.prototype.getCertificates");
+  log.debug("Certificate.getCertificates");
   var cert = yield Fs.readFileAsync(config.getCertificatePath())
   .catch(function(err) {
     log.error(err);
@@ -31,7 +31,8 @@ Certificate.prototype.getCertificates = Promise.coroutine(function* () {
 
   if(typeof cert === 'undefind' || !cert) {
     log.info("There are no SSL Certificates, signing new ones.");
-    cert = yield generate(getAttributes());
+    var attributes = config.getConfig().certificate ? config.getConfig().certificate.attributes : '';
+    cert = yield generate(attributes);
   } else {
     log.info("Loading SSL Certificates.");
     cert = JSON.parse(cert);
@@ -49,7 +50,7 @@ Certificate.prototype.getCertificates = Promise.coroutine(function* () {
 module.exports = Certificate;
 
 var generate = function(attrs) {
-  log.debug("Certificate.prototype._generate");
+  log.debug("Certificate._generate");
   var pki = Forge.pki;
 
   var keypair = pki.rsa.generateKeyPair(2048);
@@ -67,7 +68,7 @@ var generate = function(attrs) {
   cert.setIssuer(attrs);
 
   // the actual certificate signing
-  cert.sign(keypair.privateKey);
+  cert.sign(keypair.privateKey, Forge.md.sha512.create());
 
   // now convert the Forge certificate to PEM format
   var pem = {
@@ -77,30 +78,6 @@ var generate = function(attrs) {
   };
 
   return save.call(this, pem);
-};
-
-var getAttributes = function() {
-  var attrs = [{
-    name: 'commonName',
-    value: 'example.org'
-  }, {
-    name: 'countryName',
-    value: 'US'
-  }, {
-    shortName: 'ST',
-    value: 'Virginia'
-  }, {
-    name: 'localityName',
-    value: 'Blacksburg'
-  }, {
-    name: 'organizationName',
-    value: 'Test'
-  }, {
-    shortName: 'OU',
-    value: 'Test'
-  }];
-
-  return attrs;
 };
 
 var save = function (certs) {

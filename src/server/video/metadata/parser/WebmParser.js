@@ -6,12 +6,12 @@ var log;
 
 function WebmParser() { }
 
-WebmParser.prototype.initialize = function(force) {
+WebmParser.prototype.initialize = function() {
 	if(typeof WebmParser.prototype.protoInit === 'undefined') {
     WebmParser.prototype.protoInit = true;
 		Object.setPrototypeOf(WebmParser.prototype, Events.prototype);
     var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.ENCODING);
+    log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
   }
 };
 
@@ -35,30 +35,32 @@ WebmParser.prototype.queuedDecode = function(metaRequests) {
 	}.bind(this));
 
   for(var i in metaRequests) {
-    this.readAndDecode(metaRequests[i].readConfig, metaRequests[i].manifest, counter);
+    readAndDecode(metaRequests[i].path, metaRequests[i].onData, metaRequests[i].manifest, counter);
   }
 };
 
+module.exports = WebmParser;
+
 //Adjust to take requests with manifest file included
-WebmParser.prototype.readAndDecode = function(readConfig, manifest, counter) {
+var readAndDecode = function(path, onData, manifest, counter) {
   log.debug("WebmParser.readAndDecode");
-  var readStream  = Fs.createReadStream(readConfig.path, readConfig.options);
+  var readStream  = Fs.createReadStream(path);
   var decoder     = new Ebml.Decoder();
 
   readStream.on('data', function(data) {
     decoder.write(data);
   });
+
   readStream.on('error', function(e) {
 		this.emit("WebmParser.readAndDecode, Server: Error: " + e)
   });
+
   readStream.on('end', function() {
     log.info("WebmParser.readAndDecode, Server: Finished reading stream");
     counter.emit('processed');
   });
 
   decoder.on('data', function(data) {
-    readConfig.callback(manifest, data);
+    onData(manifest, data);
   });
 };
-
-module.exports = WebmParser;

@@ -1,7 +1,7 @@
 const Promise = require('bluebird');
 const Redis   = require('redis');
 
-var adapter, database, playerManager, subscriber, stateEngine, log;
+var adapter, playerManager, subscriber, stateEngine, log;
 
 function StateSubscriber() { };
 
@@ -9,20 +9,17 @@ StateSubscriber.prototype.initialize = function(force) {
   if(typeof StateSubscriber.prototype.protoInit === 'undefined') {
     StateSubscriber.prototype.protoInit = true;
     var config      = this.factory.createConfig();
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.GENERAL);
-  }
 
-  if(force === undefined ? typeof StateSubscriber.prototype.stateInit === 'undefined' : force) {
-    StateSubscriber.prototype.stateInit = true;
     playerManager   = this.factory.createPlayerManager();
     adapter         = this.factory.createRedisAdapter();
     subscriber      = Redis.createClient(config.getConfig().redis);
     stateEngine     = this.factory.createStateEngine();
-    database        = this.factory.createNeDatabase();
 
     stateEngine.initialize();
     attachEvents();
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);
   }
 };
 
@@ -33,7 +30,7 @@ StateSubscriber.prototype.cleanUp = Promise.coroutine(function* () {
     yield subscriber.unsubscribeAsync("database");
     yield subscriber.unsubscribeAsync("state");
     yield subscriber.unsubscribeAsync("player");
-    yield subscriber.unsubscribeAsync("session");
+    yield subscriber.unsubscribeAsync("media");
 
     log.info('sub unref');
     subscriber.unref();
@@ -51,14 +48,10 @@ module.exports = StateSubscriber;
 
 function attachEvents() {
   subscriber.on("message", Promise.coroutine(function* (channel, message) {
-    if(channel === "database") {
-      yield adapter.callFunction(database, message);
-    } else if(channel === "state") {
+    if(channel === "state") {
       yield adapter.callFunction(stateEngine, message);
     } else if(channel === "player") {
       yield adapter.callFunction(playerManager, message);
-    } else if(channel === "session"){
-      yield adapter.callFunction(session, message);
     }
   }));
 
@@ -78,8 +71,6 @@ function attachEvents() {
     log.error(err);
   });
 
-  subscriber.subscribe("database");
   subscriber.subscribe("state");
   subscriber.subscribe("player");
-  subscriber.subscribe("session");
 }

@@ -1,23 +1,20 @@
-const Os    = require('os');
-const Path  = require('path');
-
 function FileSystemUtils() { }
 
 FileSystemUtils.prototype.splitPath = function(path) {
-  var parsed_path = path.split("/");
+  var parsedPath = path.split("/");
 
-  if(parsed_path.length <= 1) {
-    parsed_path = path.split("\\");
+  if(parsedPath.length <= 1) {
+    parsedPath = path.split("\\");
   }
 
-  return parsed_path;
+  return parsedPath;
 };
 
 FileSystemUtils.prototype.splitNameFromPath = function(path) {
   var splitPath = this.splitPath(path);
 
-  var parsed_file = splitPath[splitPath.length - 1].split(".");
-  return parsed_file[0];
+  var parsedPath = splitPath[splitPath.length - 1].split(".");
+  return parsedPath[0];
 };
 
 FileSystemUtils.prototype.splitDirFromPath = function(path) {
@@ -28,12 +25,8 @@ FileSystemUtils.prototype.splitDirFromPath = function(path) {
 FileSystemUtils.prototype.splitExtensionFromPath = function(path) {
   var splitPath = this.splitPath(path);
 
-  var parsed_file = splitPath[splitPath.length - 1].split(".");
-  return parsed_file[1];
-};
-
-FileSystemUtils.prototype.isPath = function(path) {
-  return path !== Path.basename(path);
+  var parsedPath = splitPath[splitPath.length - 1].split(".");
+  return parsedPath[1];
 };
 
 FileSystemUtils.prototype.ensureEOL = function(string) {
@@ -43,9 +36,5 @@ FileSystemUtils.prototype.ensureEOL = function(string) {
   }
   return string;
 }
-
-FileSystemUtils.prototype.getEOL = function() {
-  return Os.EOL;
-};
 
 module.exports = FileSystemUtils;

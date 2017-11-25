@@ -9,13 +9,12 @@ Video.prototype.initialize = function(force) {
   if(typeof Video.prototype.protoInit === 'undefined') {
     Video.prototype.protoInit = true;
     Object.setPrototypeOf(Video.prototype, Events.prototype);
-
-    var logManager = this.factory.createClientLogManager();
-    log = logManager.getLog(logManager.LogEnum.VIDEO);
-
     eventKeys       = this.factory.createKeys();
     schemaFactory   = this.factory.createSchemaFactory();
     socket          = this.factory.createClientSocket();
+
+    var logManager = this.factory.createClientLogManager();
+    log = logManager.getLog(logManager.Enums.LOGS.VIDEO);
   }
 };
 
@@ -47,12 +46,12 @@ Video.prototype.setup = function(element, window, mediaSource) {
     sourceEvents = [];
 
     if(metaData && metaData.activeMeta) {
-      if(metaData.activeMeta.get(metaManager.Enum.VIDEO)) {
-        sourceEvents[metaManager.Enum.VIDEO] = setVideoSourceEvents.call(this, metaManager.Enum.VIDEO);
+      if(metaData.activeMeta.get(metaManager.Enums.TYPES.VIDEO)) {
+        sourceEvents[metaManager.Enums.TYPES.VIDEO] = setVideoSourceEvents.call(this, metaManager.Enums.TYPES.VIDEO);
       }
 
-      if(metaData.activeMeta.get(metaManager.Enum.AUDIO)) {
-        sourceEvents[metaManager.Enum.AUDIO] = setVideoSourceEvents.call(this, metaManager.Enum.AUDIO);
+      if(metaData.activeMeta.get(metaManager.Enums.TYPES.AUDIO)) {
+        sourceEvents[metaManager.Enums.TYPES.AUDIO] = setVideoSourceEvents.call(this, metaManager.Enums.TYPES.AUDIO);
       }
     } else {
       throw new Error('Video.setup: metaData.activeMeta is not defined.');
@@ -60,7 +59,7 @@ Video.prototype.setup = function(element, window, mediaSource) {
 
     setSocketEvents();
 
-    return new Promise.resolve(onReset(eventId, metaManager));
+    return new Promise.resolve(onReset.call(this, eventId, metaManager));
   } else {
     throw new Error('Video.setup: element is not defined.');
   }
@@ -118,7 +117,7 @@ function setSocketEvents() {
       play();
     }
 
-    videoElement.currentTime = command.time;
+    videoElement.currentTime = parseFloat(command.time);
     videoPing();
 
     if(timeout) {
@@ -127,7 +126,7 @@ function setSocketEvents() {
 
     timeout = setTimeout(function() {
       if(videoElement.readyState < 2) {
-        videoElement.currentTime = command.time;
+        videoElement.currentTime = parseFloat(command.time);
       }
     }, 2500);
   });
@@ -168,16 +167,17 @@ function onReset(eventId, metaManager) {
     videoElement.removeEventListener('timeupdate', videoPing, false);
     clearInterval(eventId);
 
-    if(sourceEvents[metaManager.Enum.VIDEO].length > 0) {
-      removeVideoSourceEvents(metaManager.Enum.VIDEO);
+    if(sourceEvents[metaManager.Enums.TYPES.VIDEO].length > 0) {
+      removeVideoSourceEvents(metaManager.Enums.TYPES.VIDEO);
     }
 
-    if(sourceEvents[metaManager.Enum.AUDIO].length > 0) {
-      removeVideoSourceEvents(metaManager.Enum.AUDIO);
+    if(sourceEvents[metaManager.Enums.TYPES.AUDIO].length > 0) {
+      removeVideoSourceEvents(metaManager.Enums.TYPES.AUDIO);
     }
 
     removeSocketEvents();
-  };
+  }.bind(this);
+
   return reset;
 }
 
@@ -205,7 +205,7 @@ function onSeek(typeId) {
 }
 
 function videoPing() {
-  var request = schemaFactory.createPopulatedSchema(schemaFactory.Enum.STATE,
+  var request = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.STATE,
     [videoElement.currentTime, !videoElement.paused, videoElement.readyState >= 2]);
   socket.request(eventKeys.PING, request);
 }

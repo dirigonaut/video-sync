@@ -1,70 +1,58 @@
 const Promise  = require('bluebird');
+const Events   = require('events');
 
-var sessionList, smtpList, socket, eventKeys, log;
+var formEvents, formList, socket, eventKeys, log;
 
 function FormData() { }
 
-FormData.prototype.initialize = function(force) {
-  if(typeof FormData.prototype.protoInit === 'undefined') {
+FormData.prototype.initialize = function(init) {
+  if(typeof FormData.prototype.protoInit === 'undefined' && typeof init !== 'undefined' ? init : false) {
     FormData.prototype.protoInit = true;
-    eventKeys       = this.factory.createKeys();
+    Object.setPrototypeOf(FormData.prototype, Events.prototype);
+
+    socket    = this.factory.createClientSocket();
+    eventKeys = this.factory.createKeys();
 
     var logManager  = this.factory.createClientLogManager();
-		log             = logManager.getLog(logManager.LogEnum.GENERAL);
-  }
+		log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);
 
-  if(force === undefined ? typeof FormData.prototype.stateInit === 'undefined' : force) {
-    FormData.prototype.stateInit = true;
-    socket      = this.factory.createClientSocket();
-    sessionList = [];
-    smtpList    = [];
+    formList    = new Map();
+    formEvents  = new Map();
+    
+    formEvents.set(FormData.Enum.Forms.TOKENS, function(data) {
+      setData.call(this, FormData.Enum.Forms.TOKENS, data);
+    }.bind(this));
 
-    removeSocketEvents();
-    setSocketEvents();
+    setSocketEvents(formEvents);
   }
 };
 
-FormData.prototype.requestFormData = Promise.coroutine(function* () {
-  log.debug("FormData.initializeData");
-  yield socket.requestAsync(eventKeys.READSMTP, eventKeys.SMTP);
-  yield socket.requestAsync(eventKeys.READSESSIONS, eventKeys.SESSION);
-});
-
-FormData.prototype.getSessionList = function() {
-  return sessionList;
+FormData.prototype.getFormData = function(key) {
+  return formList.get(key);
 };
 
-FormData.prototype.getSmtpList = function() {
-  return smtpList;
+FormData.prototype.clean = function() {
+  removeSocketEvents(formEvents);
 };
 
 module.exports = FormData;
 
-function setSocketEvents() {
+FormData.Enum = {};
+FormData.Enum.Forms = { TOKENS: 'tokens' };
+
+function setSocketEvents(events) {
   log.debug("FormData.setSocketEvents");
-  socket.setEvent(eventKeys.SMTP, dbSmtps);
-  socket.setEvent(eventKeys.SESSION, dbSessions);
-  socket.setEvent(eventKeys.DBREFRESH, dbRefresh);
+  socket.setEvent(eventKeys.TOKENS, events.get(FormData.Enum.Forms.TOKENS));
 }
 
-function removeSocketEvents() {
-  socket.removeEvent(eventKeys.SMTP, dbSmtps);
-  socket.removeEvent(eventKeys.SESSION, dbSessions);
-  socket.removeEvent(eventKeys.DBREFRESH, dbRefresh);
+function removeSocketEvents(events) {
+  if(events) {
+    socket.removeEvent(eventKeys.TOKENS, events.get(FormData.Enum.Forms.TOKENS));
+  }
 }
 
-function dbSmtps(response){
-  log.debug('FormData.dbSmtps');
-  smtpList = response.data;
-};
-
-function dbSessions(response) {
-  log.debug('FormData.dbSessions');
-  sessionList = response.data;
-};
-
-function dbRefresh() {
-  log.debug("FormData.dbRefresh");
-  socket.request(eventKeys.READSMTP);
-  socket.request(eventKeys.READSESSIONS);
+function setData(key, response) {
+  log.debug(`FormData.setData ${key}`, response);
+  formList.set(key, response.data);
+  this.emit(key, response.data);
 }

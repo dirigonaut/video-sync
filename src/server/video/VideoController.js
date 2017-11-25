@@ -1,10 +1,10 @@
 const Promise = require('bluebird');
 
-var cache, session, fileIO, encoderManager, fileSystemUtils, schemaFactory, sanitizer, eventKeys, log;
+var cache, media, fileIO, encoderManager, fileSystemUtils, schemaFactory, sanitizer, eventKeys, log;
 
 function VideoController() { }
 
-VideoController.prototype.initialize = function(force) {
+VideoController.prototype.initialize = function() {
   if(typeof VideoController.prototype.protoInit === 'undefined') {
     VideoController.prototype.protoInit = true;
     fileSystemUtils = this.factory.createFileSystemUtils();
@@ -12,16 +12,13 @@ VideoController.prototype.initialize = function(force) {
     sanitizer       = this.factory.createSanitizer();
     eventKeys       = this.factory.createKeys();
 
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.VIDEO);
-  }
-
-  if(force === undefined ? typeof VideoController.prototype.stateInit === 'undefined' : force) {
-    VideoController.prototype.stateInit = true;
     fileIO          = this.factory.createFileIO();
     encoderManager  = this.factory.createEncoderManager();
     cache           = this.factory.createCache();
-    session         = this.factory.createSession();
+    media           = this.factory.createMedia();
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.VIDEO);
   }
 };
 
@@ -30,7 +27,7 @@ VideoController.prototype.attachSocket = function(socket) {
 
   socket.on(eventKeys.FILES, Promise.coroutine(function* (data) {
     log.debug(eventKeys.FILES, data);
-    var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.STRING);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
@@ -40,7 +37,7 @@ VideoController.prototype.attachSocket = function(socket) {
 
   socket.on(eventKeys.SUBTITLES, Promise.coroutine(function* (data) {
     log.debug(eventKeys.SUBTITLES, data);
-    var schema = schemaFactory.createDefinition(schemaFactory.Enum.STRING);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.STRING);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
@@ -50,11 +47,11 @@ VideoController.prototype.attachSocket = function(socket) {
 
   socket.on(eventKeys.SEGMENT, Promise.coroutine(function* (data) {
     log.debug(eventKeys.SEGMENT, data);
-    var schema = schemaFactory.createDefinition(schemaFactory.Enum.VIDEO);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.VIDEO);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
-      var basePath = yield session.getMediaPath();
+      var basePath = yield media.getMediaPath();
       if(basePath) {
         var sendResponse = function(segment) {
           log.info(`Returning segment ${segment.name} of size ${segment.data ? segment.data.byteLength : null}`);
@@ -70,7 +67,7 @@ VideoController.prototype.attachSocket = function(socket) {
 module.exports = VideoController;
 
 var getFiles = Promise.coroutine(function* (socket, request, fileType) {
-  var basePath = yield session.getMediaPath();
+  var basePath = yield media.getMediaPath();
 
   if(basePath) {
     var files = yield fileIO.readDirAsync(basePath, fileType);
@@ -81,23 +78,23 @@ var getFiles = Promise.coroutine(function* (socket, request, fileType) {
         var splitName = files[i].split(".")[0].split("_");
         header.type = splitName[splitName.length - 1];
 
-        let result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [request.data, header]);
+        let result = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.IDRESPONSE, [request.data, header]);
         socket.emit(eventKeys.FILEREGISTER, result, function(bufferId) {
-          var readConfig = fileIO.createStreamConfig(`${fileSystemUtils.ensureEOL(basePath)}${files[i]}`, function(bufferData) {
-            var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [bufferId, bufferData]);
+          var onData = function(bufferData) {
+            var result = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.IDRESPONSE, [bufferId, bufferData]);
             socket.emit(eventKeys.FILESEGMENT, result);
-          });
+          };
 
-          readConfig.onFinish = function() {
-            var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [bufferId, null]);
+          var onFinish = function() {
+            var result = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.IDRESPONSE, [bufferId, null]);
             socket.emit(eventKeys.FILEEND, result);
           };
 
-          fileIO.read(readConfig);
+          fileIO.read(`${fileSystemUtils.ensureEOL(basePath)}${files[i]}`, {}, onData, onFinish);
         });
       }
     } else {
-      var result = schemaFactory.createPopulatedSchema(schemaFactory.Enum.IDRESPONSE, [request.data, '']);
+      var result = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.IDRESPONSE, [request.data, '']);
       socket.emit(eventKeys.NOFILES, result);
     }
   }

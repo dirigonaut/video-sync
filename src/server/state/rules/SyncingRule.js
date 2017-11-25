@@ -1,25 +1,24 @@
-var player, log;
+var log;
 
 function SyncingRule() { }
 
 SyncingRule.prototype.initialize = function(force) {
   if(typeof SyncingRule.prototype.protoInit === 'undefined') {
     SyncingRule.prototype.protoInit = true;
-    player          = this.factory.createPlayer();
     var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.STATE);
+    log             = logManager.getLog(logManager.Enums.LOGS.STATE);
   }
 };
 
 SyncingRule.prototype.evaluate = function(issuer, others) {
   log.info("SyncingRule.evaluate", issuer);
-  if(issuer.sync === player.Sync.SYNCING) {
+  if(issuer.sync === issuer.Enums.SYNC.SYNCING) {
     var leader;
 
-    for(var i = 0; i < others.length; ++i) {
-      if(others[i].sync === player.Sync.SYNCED) {
-        if(!leader || others[i].timestamp > leader.timestamp) {
-          leader = others[i];
+    for(var player of others.values()) {
+      if(player.sync === player.Enums.SYNC.SYNCED) {
+        if(leader === undefined || player.timestamp > leader.timestamp) {
+          leader = player;
         }
       }
     }

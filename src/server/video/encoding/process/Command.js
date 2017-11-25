@@ -1,4 +1,4 @@
-const REGEX = /"[\w,.-=:\s]*"|[^-\s][\S]*|-[\w:-]*/g;
+const REGEX = /"([^"]|\\")*"|([^-\s][\S]*)|(-[\w:-]*)/g;
 
 function Command() { };
 
@@ -9,12 +9,14 @@ Command.prototype.parse = function(str) {
 
   for(var itter = regex.exec(str); itter; itter = regex.exec(str)) {
     lastIndex = regex.lastIndex;
-    args.push(itter[0].replace(/\"/g, ''));
+    var value = decodeURI(itter[0]);
+    args.push(value);
   }
 
   var output = str.substring(lastIndex, str.length).trim();
+  output = decodeURI(output);
   if(output.length > 0) {
-    args.push(output.replace(/\"/g, ''));
+    args.push(output);
   }
 
   return args;

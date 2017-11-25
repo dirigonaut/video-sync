@@ -1,0 +1,47 @@
+<div class="panel-header ">System Logs</div>
+<hr>
+<div class="flex-element ">
+  <label>Log Levels:</label>
+  <div class="flex-right">
+    <lable>quiet ---------- verbose<label>
+  </div>
+  <div id="log-levels" class="flex-v flex-element">
+  </div>
+  <hr>
+  <div id="log-types" class="flex-element">
+    <label>Log Type:</label>
+    <a href="#">
+      <span id='log-toggle-encode' class='flex-icon icon-min flex-icon flex-right flaticon-compose'></span>
+    </a>
+    <a href="#">
+      <span id='log-toggle-server' class='flex-icon icon-min flex-icon flex-right flaticon-menu-1'></span>
+    </a>
+  </div>
+  <br>
+  <hr>
+  <div id='log-tab-server' class="toggle show">
+    <div>
+      <label>Server Logs:</label>
+      <div class="flex-right">
+        <a href="#" onclick="$(document).trigger('log-delete', ['all', 'log-body-server']);">
+          <span class="flex-icon icon-min flaticon-error"></span>
+        </a>
+      </div>
+    </div>
+    <div id="log-body-server" class="flex-v flex-element log-body">
+    </div>
+  </div>
+  <div id='log-tab-encode' class="toggle">
+    <div>
+      <label>Encode Logs:</label>
+      <div class="flex-right">
+      </div>
+    </div>
+    <div id="log-body-encode" class="flex-v flex-element log-body">
+    </div>
+  </div>
+  <hr>
+  <div class="flex-h">
+    <button type="button" id="shutdown-button" class="flex-button">Shutdown</button>
+  </div>
+</div>

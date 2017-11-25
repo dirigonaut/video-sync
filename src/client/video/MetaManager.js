@@ -10,13 +10,10 @@ MetaManager.prototype.initialize = function(force) {
   if(typeof MetaManager.prototype.protoInit === 'undefined') {
     MetaManager.prototype.protoInit = true;
     var logManager  = this.factory.createClientLogManager();
-    log             = logManager.getLog(logManager.LogEnum.VIDEO);
+    log             = logManager.getLog(logManager.Enums.LOGS.VIDEO);
     schemaFactory   = this.factory.createSchemaFactory();
     eventKeys       = this.factory.createKeys();
-  }
 
-  if(force === undefined ? typeof MetaManager.prototype.stateInit === 'undefined' : force) {
-    MetaManager.prototype.stateInit = true;
     socket        = this.factory.createClientSocket();
   }
 };
@@ -62,11 +59,11 @@ MetaManager.prototype.setActiveMetaData = function(metaInfo) {
   var metaData = metaDataList.get(metaInfo.key);
 
   if(metaInfo.video) {
-    metaData.setTrackQuality(this.Enum.VIDEO, metaInfo.video);
+    metaData.setTrackQuality(MetaManager.Enum.Types.VIDEO, metaInfo.video);
   }
 
   if(metaInfo.audio) {
-    metaData.setTrackQuality(this.Enum.AUDIO, metaInfo.audio);
+    metaData.setTrackQuality(MetaManager.Enum.Types.AUDIO, metaInfo.audio);
   }
 
   if(activeMetaData !== metaData) {
@@ -110,13 +107,11 @@ MetaManager.prototype.getTrackInfo = function() {
     if(meta[1] === activeMetaData) {
       var trackInfo = meta[1].getActiveTrackInfo();
       activeKeys = {};
-      activeKeys.type = meta[0];
-      activeKeys.video = trackInfo && trackInfo.get(this.Enum.VIDEO) ? trackInfo.get(this.Enum.VIDEO).getTrackIndex() : undefined;
-      activeKeys.audio = trackInfo && trackInfo.get(this.Enum.AUDIO) ? trackInfo.get(this.Enum.AUDIO).getTrackIndex() : undefined;
-      activeKeys.subtitle = undefined;
+      activeKeys.video = trackInfo && trackInfo.get(MetaManager.Enum.Types.VIDEO) ? trackInfo.get(MetaManager.Enum.Types.VIDEO).getTrackIndex() : undefined;
+      activeKeys.audio = trackInfo && trackInfo.get(MetaManager.Enum.Types.AUDIO) ? trackInfo.get(MetaManager.Enum.Types.AUDIO).getTrackIndex() : undefined;
     }
 
-    var trackSet = {'video' : videoTracks, 'audio': audioTracks};
+    var trackSet = { 'video' : videoTracks, 'audio': audioTracks };
     tracks.set(meta[0], trackSet);
   }
 
@@ -124,15 +119,15 @@ MetaManager.prototype.getTrackInfo = function() {
   return tracks;
 };
 
-MetaManager.prototype.buildMetaInfo = function(key, video, audio, subtitle) {
+MetaManager.prototype.buildMetaInfo = function(key, video, audio) {
   return {
     key: key,
     video: video,
-    audio: audio,
-    subtitle: subtitle,
+    audio: audio
   };
 };
 
-MetaManager.prototype.Enum = { "VIDEO" : 0, "AUDIO" : 1 };
-
 module.exports = MetaManager;
+
+MetaManager.Enum = { };
+MetaManager.Enum.Types = { VIDEO: 0, AUDIO: 1 };

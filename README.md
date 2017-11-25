@@ -1,5 +1,5 @@
 # Video-Sync
-
+---
 ### Table of Contents
 ---
 1. [What am I](#what-am-i)

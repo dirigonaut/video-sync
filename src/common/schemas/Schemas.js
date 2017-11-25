@@ -20,25 +20,9 @@ var Schemas = {
     definition: { data: 'bool',
     Enum: { DATA: 'data' } } },
 
-  login: { schema: { handle: undefined, address: undefined, token: undefined },
-    definition: { handle: 'string', address: 'email', token: 'string',
-    Enum: { HANDLE: 'handle', ADDRESS: 'address', TOKEN: 'token' } } },
-
-  command: { schema: { command: undefined, param: undefined },
-    definition: { command: 'command', param: 'special',
-    Enum: { COMMAND: 'command', PARAM: 'param' } } },
-
-  smtp: { schema: { _id: undefined, smtpType: undefined, smtpHost: undefined, smtpAddress: undefined, smtpPassword: undefined },
-    definition: { _id: 'string', smtpType: 'string', smtpHost: 'string', smtpAddress: 'email', smtpPassword: 'string',
-    Enum: { ID: '_id', SMTPTYPE: 'smtpType', SMTPHOST: 'smtpHost', SMTPADDRESS: 'smtpAddress', SMTPPASSWORD: 'smtpPassword' } } },
-
-  mailOptions: { schema: { sender: undefined, to: undefined, subject: undefined, text: undefined },
-    definition: { sender: 'email', to: 'special', subject: 'special', text: 'special',
-    Enum: { SENDER: 'sender', TO: 'to', SUBJECT: 'subject', TEXT: 'text' } } },
-
-  session: { schema: { _id: undefined, title: undefined, smtp: undefined, invitees: undefined, mailOptions: undefined },
-    definition: { _id: 'string', title: 'special', smtp: 'email', invitees: 'email', mailOptions: 'schema',
-    Enum: { ID: '_id', TITLE: 'title', SMTP: 'smtp', INVITEES: 'invitees', MAILOPTIONS: 'mailOptions' } } },
+  pair: { schema: { id: undefined, data: undefined },
+    definition: { id: 'string', data: 'special',
+    Enum: { ID: 'id', DATA: 'data' } } },
 
   state: { schema: { timestamp: undefined, state: undefined, buffered: undefined },
     definition: { timestamp: 'number', state: 'bool', buffered: 'bool',
@@ -53,9 +37,7 @@ var Schemas = {
 
   idResponse: { schema: { id: undefined, data: undefined } },
 
-  chatResponse: { schema: { from: undefined, data: undefined } },
-
-  logResponse: { schema: { time: undefined, level: undefined, label: undefined, text: undefined, meta: undefined } },
+  logResponse: { schema: { time: undefined, level: undefined, label: undefined, data: undefined, meta: undefined } },
 
   videoResponse: { schema: { typeId: undefined, name: undefined, data: undefined, index: undefined } },
 

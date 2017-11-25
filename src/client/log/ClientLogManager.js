@@ -2,23 +2,15 @@ const Util = require('util');
 
 var logs;
 
-function ClientLogManager() {
-}
+function ClientLogManager() { }
 
-ClientLogManager.prototype.initialize = function(force) {
-  if(typeof ClientLogManager.prototype.protoInit === 'undefined') {
-    ClientLogManager.prototype.protoInit = true;
-    ClientLogManager.prototype.LogEnum = ClientLogManager.LogEnum;
-  }
-};
-
-ClientLogManager.prototype.addUILogging = function(callback) {
+ClientLogManager.prototype.addUILogging = function() {
   logs = [];
 
-  var keys = Object.keys(ClientLogManager.LogEnum);
+  var keys = Object.keys(ClientLogManager.Enum.Logs);
   for(var i of keys) {
-    var logger = buildUILogger(ClientLogManager.LogEnum[i], 'debug', false, callback);
-    logs[ClientLogManager.LogEnum[i]] = logger;
+    var logger = buildUILogger(ClientLogManager.Enum.Logs[i], 'debug');
+    logs[ClientLogManager.Enum.Logs[i]] = logger;
   }
 };
 
@@ -26,28 +18,34 @@ ClientLogManager.prototype.getLog = function(id) {
   return logs[id];
 };
 
+ClientLogManager.prototype.setLevel = function(id, level) {
+  return logs[id].level = level;
+};
+
 module.exports = ClientLogManager;
 
-ClientLogManager.LogEnum = { FACTORY: 'factory', GENERAL: 'general', SOCKET: 'socket', VIDEO: 'video'};
-ClientLogManager.LogLevel = { ui: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
+ClientLogManager.Enum = {};
+ClientLogManager.Enum.Logs = { FACTORY: 'factory', GENERAL: 'general', SOCKET: 'socket', VIDEO: 'video' };
+ClientLogManager.Enum.Levels = { ui: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
 
-var buildUILogger = function(label, level, enableConsoleLogging, callback) {
-  var uiLogger = {
-    level: level,
-    label: label,
-    silent: enableConsoleLogging,
-    uiLog: callback,
-    log: log
-  };
+var buildUILogger = function(label, level) {
+  var UiLogger = function() { };
+  var uiLogger = Object.create(UiLogger.prototype);
 
-  var keys = Object.keys(ClientLogManager.LogLevel);
+  var keys = Object.keys(ClientLogManager.Enum.Levels);
   for(let i of keys) {
-    uiLogger[i] = function(message, meta) {
-       uiLogger.log.call(uiLogger, i, message, meta);
+    UiLogger.prototype[i] = function(message, meta) {
+      log.call(uiLogger, i, message, meta);
     }
   }
 
-  return Object.create(uiLogger);
+  uiLogger = Object.assign(uiLogger, {
+    level: level,
+    label: label,
+    log: log
+  });
+
+  return uiLogger;
 };
 
 function log(level, message, meta) {
@@ -58,15 +56,16 @@ function log(level, message, meta) {
     text: message ? message : ''
   };
 
+  if(logMessage.text instanceof Object) {
+    logMessage.meta = JSON.stringify(logMessage.text, null, 2);
+    logMessage.text = null;
+  }
+
   if(meta) {
-    logMessage.meta = Util.inspect(meta, { showHidden: false, depth: 1 });
+    logMessage.meta = JSON.stringify(meta, null, 2);
   }
 
-  if(ClientLogManager.LogLevel[level] === ClientLogManager.LogLevel.ui) {
-    this.uiLog(logMessage);
-  }
-
-  if(!this.silent && ClientLogManager.LogLevel[level] <= ClientLogManager.LogLevel[this.level]) {
+  if(ClientLogManager.Enum.Levels[level] <= ClientLogManager.Enum.Levels[this.level]) {
     var logLevel = typeof console[level] !== 'undefined' ? level : 'trace';
     console[logLevel](logMessage);
   }

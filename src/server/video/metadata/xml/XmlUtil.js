@@ -1,20 +1,15 @@
 const DOMParser  = require('xmldom').DOMParser;
-const XmlFactory = require('./XmlFactory');
 
 var xmlFactory, log;
 
 function XmlUtil() { }
 
-XmlUtil.prototype.initialize = function(force) {
+XmlUtil.prototype.initialize = function() {
 	if(typeof XmlUtil.prototype.protoInit === 'undefined') {
     XmlUtil.prototype.protoInit = true;
+		xmlFactory 			= this.factory.createXmlFactory();
     var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.ENCODING);
-  }
-
-  if(force === undefined ? typeof XmlUtil.prototype.stateInit === 'undefined' : force) {
-    XmlUtil.prototype.stateInit = true;
-    xmlFactory = this.factory.createXmlFactory();
+    log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
   }
 };
 
