@@ -14,7 +14,7 @@ SchemaFactory.prototype.initialize = function () {
     }
 
     if(Object.keys(legend).length > 0) {
-      SchemaFactory.prototype.Enum = legend;
+      SchemaFactory.prototype.Enums.SCHEMAS = legend;
     }
   }
 };

@@ -1,7 +1,8 @@
-const NUMBER = '^((?=.)((\\d*)(\\.(\\d+))?))$';
-const ALPHANUMERIC = '([^\\u0000-\\u007F]|\\w|\\s)+';
-const SPECIAL	= '([^\\u0000-\\u007F]|[?!&:;@.,/\\-\\\'\\\"\\s\\w\\\\])+';
-const EMAIL = '[\\w._-]+@[\\w]+\\.[\\w]+';
+const Path 					= require('path');
+
+const NUMBER 				= '^((?=.)((\\d*)(\\.(\\d+))?))$';
+const ALPHANUMERIC 	= '([^\\u0000-\\u007F]|\\w|\\s)+';
+const SPECIAL				= '([^\\u0000-\\u007F]|[?!&:;@.,/\\-\\\'\\\"\\s\\w\\\\])+';
 
 var fileSystemUtils, schemaFactory, eventKeys, log;
 
@@ -12,11 +13,11 @@ Sanitizer.prototype.initialize = function(force) {
     Sanitizer.prototype.protoInit = true;
 		eventKeys       = this.factory.createKeys();
 
-		var logManager  = this.factory.createLogManager();
-		log             = logManager.getLog(logManager.LogEnum.GENERAL);
-
 		fileSystemUtils = this.factory.createFileSystemUtils();
-		schemaFactory = this.factory.createSchemaFactory();
+		schemaFactory 	= this.factory.createSchemaFactory();
+
+		var logManager  = this.factory.createLogManager();
+		log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);
   }
 };
 
@@ -27,13 +28,21 @@ Sanitizer.prototype.sanitize = function(data, schema, required, socket) {
 		request = sanitizeSchema.call(this, data, schema, required);
 	} catch(err) {
 		log.error(err);
-		socket.emit(eventKeys.INPUTERROR, [data, err.toString()]);
+
+		if(socket) {
+			socket.emit(eventKeys.SERVERLOG, [data, err.toString()]);
+		} else {
+			return err;
+		}
 	}
 
 	return request;
 };
 
 module.exports = Sanitizer;
+
+Sanitizer.Enum = {};
+Sanitizer.Enum.CharacterSets = { SPECIAL : 'A-Za-z0-9?!&:;@.,_/\\-\\\'\\\"\\s\\\\', ALPHANUMERIC : 'A-Za-z_0-9\\s', NUMBER: '0-9(.)0-9' };
 
 function sanitizeSchema(object, schema, required) {
 	var entries = Object.entries(object);
@@ -74,7 +83,7 @@ function handleInputs(key, input, schema) {
 	if(clean) {
 		return clean;
 	} else {
-		throw new Error(`Input ${key} should be a(n) ${schema[key]} instead of a ${input}`);
+		throw new Error(`Input ${key} contains illegal characters. This field only allows: ${Sanitizer.Enum.CharacterSets[schema[key].toUpperCase()]}`);
 	}
 }
 
@@ -92,10 +101,10 @@ function checkInput(key, input, schema) {
 			clean = typeof input === 'boolean';
 			break;
 		case 'path':
-			clean = fileSystemUtils.isPath(input);
+			clean = input !== Path.basename(input);
 			break;
 		case 'special':
-			clean = validate(input, new RegExp(SPECIAL), true);
+			clean = validate(input, new RegExp(SPECIAL), true) || typeof input === 'boolean';
 			break;
 	  case 'email':
 			clean = validate(input, new RegExp(EMAIL), true);
@@ -106,7 +115,7 @@ function checkInput(key, input, schema) {
 			clean &= validate(command, new RegExp(ALPHANUMERIC), false);
 			break;
 		case 'schema':
-			var nestedSchema = schemaFactory.createDefinition(schemaFactory.Enum[key.toUpperCase()]);
+			var nestedSchema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.SCHEMA[key.toUpperCase()]);
 			clean = this.sanitize(input, nestedSchema, Object.values(nestedSchema.Enum));
 			break;
 	  default:

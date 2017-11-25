@@ -7,7 +7,39 @@
     "port" : 6379,
     "password" : null
   },
-  "redisStartUp" : {
-    "bin" : "/usr/bin/redis-server"
+  "redisPath" : "/usr/bin/redis-server",
+  "ffmpegPath" : "/usr/bin/",
+  "certificate" : {
+    "path" : "/path/to/cert",
+    "attributes" : [{
+        "name": "commonName",
+        "value": "example.org"
+      }, {
+        "name": "countryName",
+        "value": "US"
+      }, {
+        "shortName": "ST",
+        "value": "Virginia"
+      }, {
+        "name": "localityName",
+        "value": "Blacksburg"
+      }, {
+        "name": "organizationName",
+        "value": "Test"
+      }, {
+        "shortName": "OU",
+        "value": "Test"
+      }
+  ]},
+  "log" : {
+    "GENERAL": "debug",
+    "ADMINISTRATION": "debug",
+    "AUTHENTICATION": "debug",
+    "DATABASE": "debug",
+    "LOG": "debug",
+    "VIDEO": "debug",
+    "ENCODING": "debug",
+    "STATE": "debug",
+    "UTILS": "debug"
   }
 }

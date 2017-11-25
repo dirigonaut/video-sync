@@ -1,674 +1,834 @@
-function initGUI(client, isAdmin) {
-  //Control Bar Events ----------------------------------------------------------
-  function updateProgressBar(e) {
-    $('#seek-bar').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
+function initGui(client, isAdmin) {
+  //Setup -----------------------------------------------------------------------
+  $(document).on('initializeMedia', function(e, reset) {
+    var domElements = {
+      mediaSource:  new MediaSource(),
+      window:       window,
+      document:     document,
+      videoElement: document.getElementById('video')
+    };
+
+    client.media.initializeMedia(domElements, reset);
+  });
+
+  client.socket.setEvent(client.keys.MEDIAREADY, function() {
+    var path = $('#path-input').val();
+    var paths = cookie.get('media-paths');
+    paths = paths ? paths.split(',') : [];
+
+    if(!paths.includes(path) && path !== '') {
+      paths.push(path);
+      cookie.set('media-paths', paths, cookie.getExpiration.YEAR);
+    }
+
+    $(document).trigger('initializeMedia');
+  });
+
+  if(isAdmin) {
+    $(document).on('shutdown', function(e) {
+      client.log.info('Reqesting server shutdown.');
+      client.socket.request(client.keys.SHUTDOWN);
+    });
   }
 
-  $('#btnPlay').click(function() {
+  //Controls Events -------------------------------------------------------------
+  var togglePlay = function() {
     if ($('#video')[0].paused) {
+      client.log.info(`Requesting ${client.keys.REQPLAY}`);
       client.socket.request(client.keys.REQPLAY);
     } else {
+      client.log.info(`Requesting ${client.keys.REQPAUSE}`);
       client.socket.request(client.keys.REQPAUSE);
     }
-  });
+  };
 
-  $('#btnMute').click(function() {
-    if ($('#video')[0].muted) {
-      $('.glyphicon-volume-off').attr('class', 'glyphicon glyphicon-thumbnail glyphicon-volume-up');
-      $("video").prop('muted', false);
-    } else {
-      $('.glyphicon-volume-up').attr('class', 'glyphicon glyphicon-thumbnail glyphicon-volume-off');
-      $("video").prop('muted', true);
+  $('#control-button-play').click(togglePlay);
+
+  function updateProgressBar(e) {
+    $('.control-time-slider').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
+    $('#control-duration').val(toFormatted($("#video")[0].duration));
+
+    if(!$('#control-current').is(':focus')) {
+      $('#control-current').val(toFormatted($("#video")[0].currentTime));
+    }
+  }
+
+  var toFormatted = function(data) {
+    if(typeof data === 'number') {
+      var seconds = data.toFixed(0);
+      var hour = Math.floor(seconds / 3600);
+      var min = Math.floor((seconds - (hour * 3600)) / 60);
+      sec = seconds % 60;
+
+      return `${hour < 10 ? '0' + hour : hour}:${min < 10 ? '0' + min : min}:${sec < 10 ? '0' + sec : sec}`;
+    }
+  };
+
+  var toSeconds = function(timestamp) {
+    var timeArray = timestamp.split(':').reverse();
+    var seconds = 0;
+
+    for(var i in timeArray) {
+      var temp = parseInt(timeArray[i], 10) * Math.pow(60, i);
+      if(temp === temp) {
+        seconds += temp;
+      } else {
+        seconds = NaN;
+        break;
+      }
+    }
+
+    return seconds;
+  };
+
+  $('#control-current').on('change', function(e) {
+    var time = toSeconds($(e.currentTarget).val());
+
+    if(time === time) {
+      client.log.info(`Requesting ${client.keys.REQSEEK} at ${time}`);
+      client.socket.request(client.keys.REQSEEK,
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STATE, [time]));
     }
   });
 
-  $('#seek-bar').on('mouseup', function() {
-    var percent = parseInt($('#seek-bar').val());
+  $('.control-time-slider').on('mouseup', function() {
+    var percent = parseInt($('.control-time-slider').val());
     var length  = $('#video')[0].duration;
     var time = Math.round(length * (percent / 100));
 
+    client.log.info(`Requesting ${client.keys.REQSEEK} at ${time}`);
     client.socket.request(client.keys.REQSEEK,
-      client.schema.createPopulatedSchema(client.schema.Enum.STATE, [time]));
+      client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STATE, [time]));
 
     $("video").on("timeupdate", updateProgressBar);
   });
 
-  $('#seek-bar').on('mousedown', function() {
+  $('.control-time-slider').on('mousedown', function() {
     $("video").off("timeupdate", updateProgressBar);
   });
 
-  $('#btnFullScreen').click(function() {
-    var video = $('#video')[0];
-
+  $('#control-button-full').click(function(e) {
     if(document.fullScreen || document.webkitIsFullScreen) {
-      video.webkitExitFullScreen();
-      $('.control-bar-fullscreen').addClass("control-bar");
-      $('.control-bar-fullscreen').removeClass("control-bar-fullscreen");
+      $('video')[0].webkitExitFullscreen();
+      $('.control-full').addClass("control");
+      $('.control-full').removeClass("control-full");
+      $('.flaticon-minus').addClass('flaticon-plus')
+      $('.flaticon-plus').removeClass('flaticon-minus');
+      toggleOverlays();
     } else {
-      video.webkitRequestFullScreen();
-      $('.control-bar').addClass("control-bar-fullscreen");
-      $('.control-bar').removeClass("control-bar");
+      $(document).trigger('togglePanel', [true]);
+      $('video')[0].webkitRequestFullScreen();
+      $('.control').addClass("control-full");
+      $('.control').removeClass("control");
+      $('.flaticon-plus').addClass('flaticon-minus')
+      $('.flaticon-minus').removeClass('flaticon-plus');
+      toggleOverlays();
     }
   });
 
-  $("video").on("pause", function (e) {
-    $('.glyphicon-pause').attr('class', 'glyphicon glyphicon-thumbnail glyphicon-play');
+  $('#video').on("pause", function (e) {
+    $('.flaticon-pause-1').addClass('flaticon-play-button-1');
+    $('.flaticon-pause-1').removeClass('flaticon-pause-1');
   });
 
-  $("video").on("play", function (e) {
-    $('.glyphicon-play').attr('class', 'glyphicon glyphicon-thumbnail glyphicon-pause');
+  $('#video').on("play", function (e) {
+    $('.flaticon-play-button-1').addClass('flaticon-pause-1');
+    $('.flaticon-play-button-1').removeClass('flaticon-play-button-1');
   });
 
-  $("video").on("timeupdate", updateProgressBar);
+  $('video').on("timeupdate", updateProgressBar);
 
-  $("#volume-bar").on("input change", function (e) {
-    var range = parseInt($('#volume-bar').val()) * .01;
+  $(".control-volume-slider").on("input change", function (e) {
+    var range = parseInt($(".control-volume-slider").val()) * .01;
     $('#video')[0].volume = range;
+    $('#volume-level').text(Math.floor(range * 100));
   });
 
-  $("#btnOptions").on("click", function (e) {
-    if($(".pop-over").css('display') === 'none') {
-      $(".pop-over").show();
-    } else {
-      $(".pop-over").hide();
-    }
-  });
-
-  //Location Events --------------------------------------------------------------
-  $('#btnSessionMedia').click(function() {
-    client.log.info("Load new video.");
-    var media = $('#locationBar').val();
-    client.socket.request(client.keys.SETMEDIA,
-      client.schema.createPopulatedSchema(client.schema.Enum.PATH, [media]));
-    $('#seek-bar').val(0);
-  });
-
-  //Session Events --------------------------------------------------------------
-  $('#createSession').click(function createSession() {
-    var sender  = $('#sessionAddress').val();
-    var to      = $('#sessionInvitees').val();
-    var subject = $('#sessionSubject').val();
-    var text    = $('#sessionText').val();
-
-    var mailOptions = client.schema.createPopulatedSchema(client.schema.Enum.MAILOPTIONS, [sender, to, subject, text]);
-
-    var id        = $('#sessionId').val();
-    var title     = $('#sessionTitle').val();
-    var address   = $('#sessionAddress').val();
-    var invitees  = ($('#sessionInvitees').val()).split(",");
-
-    for(var i = 0; i < invitees.length; ++i) {
-      invitees[i] = invitees[i].trim();
-    }
-
-    if(!id) {
-      client.socket.request(client.keys.CREATESESSION,
-        client.schema.createPopulatedSchema(client.schema.Enum.SESSION, [undefined, title, address, invitees, mailOptions]));
-    } else {
-      client.socket.request(client.keys.UPDATESESSION,
-        client.schema.createPopulatedSchema(client.schema.Enum.SESSION, [id, title, address, invitees, mailOptions]));
-    }
-  });
-
-  $('#readSessions').click(function readSessions() {
-    client.socket.request(client.keys.READSESSIONS);
-  });
-
-  $('#setSession').click(function setSession() {
-    var id = $('#sessionId').val();
-    client.socket.request(client.keys.LOADSESSION,
-      client.schema.createPopulatedSchema(client.schema.Enum.STRING, [id]));
-  });
-
-  $('#sendInvitation').click(function readSessions() {
-    client.socket.request(client.keys.INVITE);
-  })
-
-  $('#sessionList').on("click", "tr", function(e) {
-      var id = e.currentTarget.children[0].outerText;
-      var sessions = client.formData.getSessionList();
-      var session;
-
-      if(id == "Session") {
-        $("#sessionId").val("");
-        $("#sessionTitle").val("");
-        $("#sessionAddress").val("");
-        $("#sessionInvitees").val("");
-        $("#sessionSubject").val("");
-        $("#sessionText").val("");
-        $("#createSession").html("Create");
-      } else {
-        for(var i in sessions) {
-          if(sessions[i]._id === id) {
-            session = sessions[i];
-            break;
-          }
-        }
-      }
-
-      if(session) {
-        $("#sessionId").val(session._id);
-        $("#sessionTitle").val(session.title);
-        $("#sessionAddress").val(session.smtp);
-        $("#sessionInvitees").val(session.invitees);
-        $("#sessionSubject").val(session.mailOptions.subject);
-        $("#sessionText").val(session.mailOptions.text);
-        $("#createSession").html("Save");
-      }
-  });
-
-  $('#sessionList').on("click", "button", function(e) {
-    var session = $($(e.currentTarget).parent()).parent();
-    var id = session[0].children[0].outerText;
-
-    session.remove();
-
-    client.socket.request(client.keys.DELETESESSION,
-      client.schema.createPopulatedSchema(client.schema.Enum.STRING, [id]));
-  });
-
-  //Smtp Events -----------------------------------------------------------------
-  $('#createSmtp').click(function createSmtp() {
-    var id        = $('#smtpId').val();
-    var type      = $('#smtpType').val();
-    var host      = $('#smtpHost').val();
-    var address   = $('#smtpAddress').val();
-    var password  = $('#smtpPassword').val();
-
-    if(!id) {
-      client.socket.request(client.keys.CREATESMTP,
-        client.schema.createPopulatedSchema(client.schema.Enum.SMTP, [undefined, type, host, address, password]));
-    } else {
-      client.socket.request(client.keys.UPDATESMTP,
-        client.schema.createPopulatedSchema(client.schema.Enum.SMTP, [id, type, host, address, password]));
-    }
-  });
-
-  $('#readSmtps').click(function readSmtps() {
-    client.socket.request("db-read-smtps");
-  });
-
-  $('#smtpList').on("click", "tr", function(e) {
-      var id = e.currentTarget.children[0].outerText;
-      var smtps = client.formData.getSmtpList();
-      var smtp;
-
-      if(id == "Smtp") {
-        $("#smtpId").val("");
-        $("#smtpType").val("");
-        $("#smtpHost").val("");
-        $("#smtpAddress").val("");
-        $("#smtpPassword").val("");
-        $("#createSmtp").html("Create");
-      } else {
-        for(var i in smtps) {
-          if(smtps[i]._id === id) {
-            smtp = smtps[i];
-            break;
-          }
-        }
-      }
-
-      if(smtp) {
-        $("#smtpId").val(smtp._id);
-        $("#smtpType").val(smtp.smtpType);
-        $("#smtpHost").val(smtp.smtpHost);
-        $("#smtpAddress").val(smtp.smtpAddress);
-        $("#smtpPassword").val(smtp.smtpPassword);
-        $("#createSmtp").html("Save");
-      }
-  });
-
-  $('#smtpList').on("click", "button", function(e) {
-    var smtp = $($(e.currentTarget).parent()).parent();
-    var id = smtp[0].children[0].outerText;
-
-    smtp.remove();
-
-    client.socket.request(client.keys.DELETESMTP,
-      client.schema.createPopulatedSchema(client.schema.Enum.STRING, [id]));
-  });
-
-  //Encode Events ---------------------------------------------------------------
-  $('#encode-input').on("focusout", function requestFileInfo() {
-    var input = $('#encode-input').val();
-    var inspect = ` -show_streams ${input}`;
-    client.socket.request(client.keys.GETMETA, client.schema.createPopulatedSchema(client.schema.Enum.SPECIAL, [inspect]));
-  });
-
-  var loadFileInfo = function(metaData) {
-    $('#toggles').append(toggle).empty();
-    $('#file-info-panels').children('div').each(function(i, element) {
-      if(element.id) {
-        $(element).remove();
-      }
+  //Media Path Events -----------------------------------------------------------
+  function initMediaPath() {
+    $('#path-button').click(function() {
+      client.log.info("Load new video.");
+      var media = $('#path-input').val();
+      client.socket.request(client.keys.SETMEDIA,
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PATH, [media]));
+      $('#control-time-slider').val(0);
     });
 
-    if(metaData && typeof metaData.data !== 'undefined') {
-      for(var i = 0; i < metaData.data.stream.length; ++i) {
-        var toggle  = `<li role="presentation" ${i === 0 ? 'class="active"' : ''}><a href="#stream-${i}" aria-controls="stream-${i}" role="pill" data-toggle="pill">Stream-${i}</a></li>`
-        var panel   = `<div role="tabpanel" class="tab-pane ${i === 0 ? 'active' : ''}" id="stream-${i}">
-                        <textArea type="text" class="form-control" rows=8 placeholder="fileInfo">${metaData.data.stream[i]}</textarea></div>`;
+    $('#path-input').click(function() {
+      var paths = cookie.get('media-paths');
 
-        $('#file-info-panels').append(panel);
-        $('#toggles').append(toggle);
+      if(paths) {
+        paths = paths.split(',');
+        $('#path-dropdown').empty();
+
+        paths.forEach((value, index, array) => {
+          $(`<div class="flex-h flex-element primary-color invert">
+            <div id='path-${index}' class="flex-element" onclick="$('#path-input').val('${value}')">${value}</div>
+            <a href="#" onclick="$(document).trigger('path-delete', $('#path-${index}'));">
+              <span class="icon-min flex-icon flaticon-error"></span>
+            </a>
+          </div>`).prependTo('#path-dropdown');
+        });
+
+        $('.path-dropdown div').off();
+        $('.path-dropdown div').click(function(e) {
+          toggleOverlays();
+        });
+
+        $('.path-dropdown .invert').off();
+        $('.path-dropdown .invert').hover(function(e) {
+          $('.path-dropdown .invert').each((index, element) => {
+            if(e.currentTarget == element) {
+              $(element).toggleClass('show');
+            } else {
+              $(element).removeClass('show');
+            }
+          });
+        });
+      }
+    });
+  }
+
+  $(document).on('path-delete', function(e, element) {
+    var paths = cookie.get('media-paths').split(',');
+
+    if(paths) {
+      var index = paths.indexOf($(element).text());
+      if(index !== -1) {
+        $(element).parent().remove();
+        paths.splice(index, 1);
+        cookie.set('media-paths', paths, cookie.getExpiration.YEAR);
       }
     }
-  };
-
-  client.socket.setEvent(client.keys.META, loadFileInfo);
-
-  $('#createVideo').click(function createVideo() {
-    var quality = $('#video-quality').val();
-    var input = $('#encode-input').val();
-    var output = $('#encode-output').val();
-
-    var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.VIDEO);
-    template = client.encode.setKeyValue('i', `${input}`, template);
-    template = client.encode.setKeyValue('s', quality, template);
-    template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.CodecEnum.WEBM}`, template);
-
-    if(template) {
-      $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.VIDEO}</td><td contenteditable="true">${template}</td><td>
-      <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
-    }
-
-    generateManifest();
   });
 
-  $('#createAudio').click(function createAudio() {
-    var quality = $('#audio-quality').val();
-    var input = $('#encode-input').val();
-    var output = $('#encode-output').val();
-
-    var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.AUDIO);
-    template = client.encode.setKeyValue('i', `${input}`, template);
-    template = client.encode.setKeyValue('b:a', quality, template);
-    template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}_${quality}.${client.encode.CodecEnum.WEBM}`, template);
-
-    if(template) {
-      $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.AUDIO}</td><td contenteditable="true">${template}</td><td>
-      <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
-    }
-
-    generateManifest();
-  });
-
-  $('#createSubtitle').click(function createSubtitle() {
-    var streamId = $('#subtitle-track').val();
-    var input = $('#encode-input').val();
-    var output = $('#encode-output').val();
-    var isNum = /^\d+$/.test(streamId);
-
-    var template = client.encode.getTemplate(client.encode.CodecEnum.WEBM, client.encode.TypeEnum.SUBTITLE);
-    template = client.encode.setKeyValue('i', `${input}${isNum ? ' -map 0:' + streamId : ''}`, template);
-    template = client.encode.setOutput(`${output}${client.encode.getNameFromPath(input)}.vtt`, template);
-
-    if(template) {
-      $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.SUBTITLE}</td><td contenteditable="true">${template}</td><td>
-      <button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>`);
-    }
-
-    generateManifest();
-  });
-
-  $('#encode-list').on("click", "button", function(e) {
-    var command = $($(e.currentTarget).parent()).parent();
-    command.remove();
-    generateManifest();
-  });
-
-  var generateManifest = function() {
-    var input  = $('#encode-input').val();
-    var output = $('#encode-output').val();
-    var list = [];
-
-    if(!$('#row_locked').is(":checked")) {
-      $('#encode-list tr').each(function(i, tr) {
-        var command = {};
-        $('td', tr).each(function(i, td) {
-          var cell = $(td).text();
-          if(i === 0 && cell === client.encode.TypeEnum.MANIFEST) {
-            command.type = cell;
-            tr.remove();
-          } else if(i === 0 && cell) {
-            command.type = cell;
-          } else if(i === 1 && cell) {
-            command.input = cell;
+  //Token Events ----------------------------------------------------------------
+  function initToken() {
+    var loadTokens = function(tokens) {
+      if(tokens) {
+        $($('#token-body').find('form')).each((index, element) => {
+          if(!$(element)[0].id) {
+            $(element).remove();
           }
         });
 
-        if(typeof command.input !== 'undefined' && command.type !== client.encode.TypeEnum.MANIFEST &&
-          command.type !== client.encode.TypeEnum.SUBTITLE) {
-          list.push(command);
+        var i = 0;
+        for(var token in tokens) {
+          $(`<form class="flex-h flex-element alternate-color">
+            <a href="#" class='flex-icon' onclick="$(document).trigger('token-level', event.currentTarget);">
+              <span class="${i % 2 ? 'icon-min' : 'icon-min show'} ${tokens[token].level === 'controls' ? 'flaticon-unlocked-2' : 'flaticon-locked-6'}"></span>
+            </a>
+            <input type="text" class="flex-element ${tokens[token].handle ? 'toggle' : 'toggle show'} ${i % 2 ? '' : 'input-invert'}" value="${token}" /readonly>
+            <input type="text" class="flex-element handle ${tokens[token].handle ? 'toggle show' : 'toggle'} ${i % 2 ? '' : 'input-invert'}" value="${tokens[token].handle}" /readonly>
+            <a href="#" onclick="$(document).trigger('token-delete', event.currentTarget);">
+              <span class="flex-icon ${i % 2 ? 'icon-min' : 'icon-min show'} flaticon-error"></span>
+            </a>
+          </form>`).appendTo('#token-body');
+          ++i;
         }
-      });
-
-      if(list.length > 0) {
-        var template = client.encode.createManifest(input, output, list, client.encode.CodecEnum.WEBM);
-
-        if(template) {
-          $('#encode-list tr:last').after(`<tr><td>${client.encode.TypeEnum.MANIFEST}</td><td contenteditable="true">${template}</td><td>
-          <input type="checkbox" id="row_locked" name="locked"></td></tr>`);
-        }
+      } else {
+        client.log.error(`${tokens} is not a valid list of tokens.`);
       }
-    }
-  }
+    };
 
-  $('#submitEncoding').click(function submitEncoding() {
-    var output = $('#encode-output').val();
-    var commands = [];
+    client.formData.on(client.formData.Enums.FORMS.TOKENS, loadTokens);
 
-    $('#encode-list tr').each(function(i, tr) {
-      $('td', tr).each(function(i, td) {
-        var cell = $(td).text();
-        if(i === 1 && cell) {
-          commands.push({input: cell, encoder: client.encode.EncoderEnum.FFMPEG});
-        }
-      });
+    $('.lock').click(function(e) {
+      //$(document).trigger('lock-element', e.currentTarget);
     });
 
-    var request = {};
-    request.encodings = commands;
-    request.directory = output;
+    $('#token-create').click(function() {
+      client.log.info("Create Tokens.");
+      var values = serializeForm('token-form', 'input');
+      values.push($('#token-permissions').hasClass('flaticon-unlocked-2'));
 
-    client.socket.request('video-encode', request);
-  });
+      client.socket.request(client.keys.CREATETOKENS, client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PAIR, values));
+    });
 
-  //Side Events -----------------------------------------------------------------
-  $('#btnSession').click(function() {
-    loadSessions();
+    $(document).on('token-delete', function(e, element) {
+      var ids = '';
 
-    $('#sessionModal').modal('show');
-    $('#sessionModal').on('shown', function() {
-      $("#sessionId").focus();
-    })
-  });
+      var removeForms = function(form) {
+        $($(form).children()).each((index, el) => {
+          if($(el).is("input") && !$(el).hasClass("handle")) {
+            ids = ids ? `${ids}, ${$(el).val()}` : $(el).val();
+            $(form).remove();
+          } else if ($(el).is("div")) {
+            var removeAlltokens = function(confirm) {
+              if(confirm) {
+                $('#token-body form').each((index, element) => {
+                  if(!$(element).attr('id')) {
+                    removeForms(element);
+                  }
+                });
 
-  var loadSessions = function() {
-    var sessions = client.formData.getSessionList();
+                client.socket.request(client.keys.DELETETOKENS,
+                  client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [ids]));
+              }
+            }
 
-    if(sessions.length > 0) {
-      if($("#sessionId").val() == '') {
-        var session = sessions[0];
+            triggerConfirmation(removeAlltokens, "Are you sure you wish to delete all the tokens?");
+          }
+        });
+      };
 
-        if(session) {
-          $("#sessionId").val(session._id);
-          $("#sessionTitle").val(session.title);
-          $("#sessionAddress").val(session.smtp);
-          $("#sessionInvitees").val(session.invitees);
-          $("#sessionSubject").val(session.mailOptions.subject);
-          $("#sessionText").val(session.mailOptions.text);
+      removeForms($(element).parent()[0]);
+      if(ids) {
+        client.socket.request(client.keys.DELETETOKENS,
+          client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [ids]));
+      }
+    });
+
+    $(document).on('token-level', function(e, element) {
+      var updateForms = function(form, override) {
+        var level = override;
+
+        $($(form).children()).each((index, el) => {
+          if($(el).is("input")) {
+            var id = $(el).val();
+
+            client.socket.request(client.keys.SETTOKENLEVEL,
+              client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PAIR, [id, level]));
+          } else if($(el).is("a")) {
+            var child = $(el).children()[0];
+
+            if(!level && child && $(child).hasClass('flaticon-locked-6')) {
+              level = 'controls';
+              $(child).removeClass('flaticon-locked-6');
+              $(child).addClass('flaticon-unlocked-2');
+            } else if(!level && child && $(child).hasClass('flaticon-unlocked-2')) {
+              level = 'none';
+              $(child).removeClass('flaticon-unlocked-2');
+              $(child).addClass('flaticon-locked-6');
+            }
+          } else if ($(el).is("div")) {
+            $('#token-body form').each((index, element) => {
+              if(!$(element).attr('id')) {
+                updateForms(element, level);
+              }
+            });
+          }
+        });
+      }
+
+      updateForms($(element).parent()[0]);
+    });
+
+    $('#token-copy').click(function(e) {
+      var temp = $("<input>");
+      $("body").append(temp);
+
+      $('#token-body form').each((index, element) => {
+        if(!$(element).attr('id')) {
+          var id;
+
+          $($(element).children()).each((index, el) => {
+            if($(el).is("input")) {
+              if(!id) {
+                id = $(el).val();
+              } else if($(el).val() !== 'undefined') {
+                id = undefined;
+              }
+            }
+          });
+
+          if(id) {
+            $(temp).val($(temp).val() ? `${$(temp).val()}, ${id}` : `${id}` );
+          }
+        }
+      });
+
+      $(temp).select()
+      document.execCommand("copy");
+      $(temp).remove();
+    });
+
+    client.socket.request(client.keys.GETTOKENS);
+
+    $('#token-permissions').click(function(e) {
+      var ele = $(e.currentTarget);
+
+      if(ele.hasClass('flaticon-unlocked-2')) {
+        $(ele).removeClass('flaticon-unlocked-2');
+        $(ele).addClass('flaticon-locked-6');
+      } else {
+        $(ele).removeClass('flaticon-locked-6');
+        $(ele).addClass('flaticon-unlocked-2');
+      }
+    });
+  }
+
+  //Encode Events ---------------------------------------------------------------
+  function initEncode() {
+    $('#encode-input').on("focusout", function() {
+      var input = encodeURI($('#encode-input').val());
+      var inspect = ` -show_streams ${input}`;
+
+      var request = {};
+      request.encodings = inspect;
+
+      client.socket.request(client.keys.GETMETA, request);
+    });
+
+    var loadFileInfo = function(metaData) {
+      $('#encoding-meta').children().each((index, el) => {
+        if($(el)[0].id === "encoding-tabs") {
+          $($(el).children()).each(function(index, child) {
+            if($($(child)[0]).is("a")) {
+              $(child).remove();
+            }
+          });
+        } else {
+          $(el).remove();
+        }
+      });
+
+      $('#subtitle-track').empty();
+
+      if(metaData && typeof metaData.data !== 'undefined') {
+        var trackIndexes = '';
+
+        for(var i = metaData.data.stream.length - 1; i > -1; --i) {
+          $(`<div id='stream-${i}' class="panel-sub-panel flex-element ${i === 0 ? 'toggle show' : 'toggle'}">
+            ${prettifyMeta(JSON.stringify(metaData.data.stream[i]))}
+          </div>`).appendTo('#encoding-meta');
+
+          $(`<a href="#" onclick="$(document).trigger('encode-meta-toggle', ${i})";>
+              <span id='stream-icon-${i}' class='icon-min flex-icon flex-right ${ i === 0 ? "flaticon-file-2" : "flaticon-file-1" }'></span>
+            </a>`).appendTo('#encoding-tabs');
+
+          trackIndexes = `<option value="${i}">` + trackIndexes;
+        }
+
+        $(trackIndexes).appendTo('#subtitle-track');
+      }
+    };
+
+    var prettifyMeta = function(meta) {
+      meta = meta.replace(/(\[STREAM\]|\[\\STREAM\]|\{|\}|")*/g, '');
+      var metaArray = meta.split(',');
+      var html = '<table><tbody>';
+
+      for(let i = 0; i < metaArray.length; ++i) {
+        var value = metaArray[i].trim();
+
+        if(value) {
+          var splitRow = value.split(/\s/)
+          html += `<tr><td>${splitRow[0]}</td><td>${splitRow[1]}</td></tr>`
         }
       }
 
-      $('#sessionList tbody tr:not(:first)').remove();
+      html+="</tbody></table>";
+      return html;
+    }
 
+    $(document).on('encode-meta-toggle', function(event, index) {
+      $('[id^=stream-]').each((i, el) => {
+        $(el).removeClass("show");
 
-      for(var i in sessions) {
-        $('#sessionList tr:last').after('<tr><td style="display:none;">' + sessions[i]._id + '</td><td>' + sessions[i].title +
-        '<button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>');
+        if($(`#stream-icon-${i}`).hasClass('flaticon-file-2')) {
+          $(`#stream-icon-${i}`).removeClass('flaticon-file-2');
+          $(`#stream-icon-${i}`).addClass('flaticon-file-1');
+        }
+      });
+
+      $(`#stream-${index}`).toggleClass("show");
+      $(`#stream-icon-${index}`).addClass('flaticon-file-2');
+    });
+
+    client.socket.setEvent(client.keys.META, loadFileInfo);
+
+    $('#encode-input-form a').click(function(e) {
+      var values = serializeForm('encode-input-form', 'input');
+      var type;
+
+      $($(e.currentTarget).parent()).children().each((index, ele) => {
+        if($(ele).is("label")) {
+          type = $(ele).html().toUpperCase().match(/^\w*/g)[0];
+        }
+      });
+
+      var template = client.encode.getTemplate(client.encode.Enums.CODEC.WEBM, type);
+      template = client.encode.setKeyValue('i', `${values[0]}`, template);
+
+      if(type === client.encode.Enums.TYPES.VIDEO) {
+        template = client.encode.setKeyValue('s', values[2], template);
+        template = client.encode.setOutput(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[2]}.${client.encode.Enums.CODEC.WEBM}`, template);
+      } else if(type === client.encode.Enums.TYPES.AUDIO) {
+        template = client.encode.setKeyValue('b:a', values[3], template);
+        template = client.encode.setOutput(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[3]}.${client.encode.Enums.CODEC.WEBM}`, template);
+      } else if(type === client.encode.Enums.TYPES.SUBTITLE) {
+        template = client.encode.setKeyValue('i', `${values[0]} ${values[4] ? `-map 0:${values[4]}` : ''}`, template);
+        template = client.encode.setOutput(`${values[1]}${client.encode.getNameFromPath(values[0])}.vtt`, template);
+      }
+
+      if(template) {
+        var odd = $(`#${type.toLowerCase()}-commands`).children().length % 2;
+        $(`<div class="flex-h ${odd ? 'input-invert' : ''} rounded-corners">
+          <textarea type="text" class="flex-element ${odd ? 'input-invert' : ''} clear-spacers">${template}</textarea>
+          <a href="#" onclick="$(document).trigger('encode-command-delete', event.currentTarget);">
+            <span class="flex-icon icon-min ${odd ? 'icon-min show' : 'icon-min'} flaticon-error flex-right"></span>
+          </a></div>`).appendTo(`#${type.toLowerCase()}-commands`);
+      }
+
+      generateManifest();
+    });
+
+    $(document).on('encode-command-delete', function(e, element, skipGen) {
+      $($(element).parent()).remove();
+
+      if(!skipGen) {
+        generateManifest();
+      }
+    });
+
+    var generateManifest = function() {
+      var values = serializeForm('encode-input-form', 'input');
+      var commands = [];
+
+      serializeForm('encode-command-form #video-commands', 'textarea')
+      .forEach((value, index, array) => {
+        commands.push({ type: client.encode.Enums.TYPES.VIDEO, input: value});
+      });
+
+      serializeForm('encode-command-form #audio-commands', 'textarea')
+      .forEach((value, index, array) => {
+        commands.push({ type: client.encode.Enums.TYPES.AUDIO, input: value});
+      });
+
+      var template = client.encode.createManifest(values[0], values[1], commands, client.encode.Enums.CODEC.WEBM);
+
+      var locked = $('#manifest-commands div a span');
+      locked = locked && locked.length > 0 ? locked = $(locked[0]).hasClass('flaticon-locked-6') : false;
+
+      if(!locked) {
+        $(`#manifest-commands`).empty();
+
+        if(template && commands && commands.length > 0) {
+          $(`<div class="flex-h">
+            <textarea type="text" class="flex-element clear-spacers">${template}</textarea>
+            <div class="flex-v">
+              <a href="#" onclick="$(document).trigger('lock-element', $('#manifest-commands div a span')[0]);">
+                <span class="icon-min ${!locked ? 'flaticon-unlocked-2' : 'flaticon-locked-6'} flex-right clear-spacers lock"></span>
+              </a>
+              <a href="#" onclick="$(document).trigger('encode-command-delete', [$(event.currentTarget).parent(), true]);">
+                <span class="icon-min flaticon-error flex-right clear-spacers"></span>
+              </a>
+            </div></div>`).appendTo(`#manifest-commands`);
+        }
+      }
+
+      $(document).trigger('textarea-grow');
+    }
+
+    $('#submit-encoding').click(function(e) {
+      var values = serializeForm('encode-input-form', 'input');
+      var commands = [];
+
+      serializeForm('encode-command-form', 'textarea')
+      .forEach((value, index, array) => {
+        commands.push({ input: value, encoder: client.encode.Enums.ENCODER.FFMPEG });
+      });
+
+      var request = {};
+      request.encodings = commands;
+      request.directory = values[1];
+
+      client.socket.request('video-encode', request);
+    });
+  }
+
+  //Side Events -----------------------------------------------------------------
+  if(isAdmin) {
+    $(`<div id="side-tokens" class="flex-icon primary-color flex-center-v border-left">
+      <a href="#"><span class="icon flaticon-user-3"></span></a>
+    </div>
+    <div id="side-encode" class="flex-icon primary-color flex-center-v border-left">
+      <a href="#"><span class="icon flaticon-compose"></span></a>
+    </div>`).prependTo('#side');
+  }
+
+  $('.side .flex-icon').click(function(e) {
+    var id = e.currentTarget.id.split('-')[1];
+    if(!$(`.panel`).hasClass('show')) {
+      $(document).trigger('togglePanel');
+    }
+
+    $('.side .flex-icon').each((index, element) => {
+      var elementId = element.id.split('-')[1];
+
+      if(id == elementId) {
+        if($(`#panel-${elementId}`).hasClass('show')) {
+          $(document).trigger('togglePanel');
+        }
+
+        $(`#panel-${elementId}`).toggleClass('show');
+      } else {
+        $(`#panel-${elementId}`).removeClass('show');
+      }
+    });
+  });
+
+  //Log Events ------------------------------------------------------------------
+  var logLevels = function() {
+    var logs = client.logMan.Enums.LOGS;
+    var levels = client.logMan.Enums.LEVELS;
+    var cookieLevels = cookie.get('log-levels');
+
+    for(let key in logs) {
+      var level = cookieLevels && cookieLevels[key] ? cookieLevels[key] : undefined;
+
+      $(`<div class="flex-h flex-element alternate-color">
+        <label>${logs[key]}:</label>
+        <form id="log-${logs[key]}" class="flex-right">
+          <input name="${logs[key]}" type="radio" ${level && level.includes("error") ? 'checked' : ''} value="${levels.error}">
+          <input name="${logs[key]}" type="radio" ${level && level.includes("warn") ? 'checked' : ''} value="${levels.warn}">
+          <input name="${logs[key]}" type="radio" ${level && !level.includes("info") ? '' : 'checked'} value="${levels.info}">
+          <input name="${logs[key]}" type="radio" ${level && level.includes("verbose") ? 'checked' : ''} value="${levels.verbose}">
+          <input name="${logs[key]}" type="radio" ${level && level.includes("debug") ? 'checked' : ''} value="${levels.debug}">
+          <input name="${logs[key]}" type="radio" ${level && level.includes("silly") ? 'checked' : ''} value="${levels.silly}">
+        </form>
+      </div>`).appendTo(`#log-levels`);
+    }
+
+    $('#log-levels input').on('change', function(e) {
+      var id = $(e.currentTarget).attr('name');
+      var value = $(e.currentTarget).val();
+      value = Object.keys(client.logMan.Enums.LEVELS)[value];
+      client.logMan.setLevel(id, value);
+    });
+  }();
+
+  var logDelete = function(e, element, key) {
+    if(element === 'all') {
+      $(`#${key}`).empty();
+    } else {
+      var parent = $(element).parent();
+      $(parent).remove();
+
+      if($(parent).attr('id') === 'notifications') {
+        $(parent).removeClass('show')
       }
     }
   };
 
-  client.socket.setEvent(client.keys.SESSION, loadSessions);
+  $(document).on('log-delete', logDelete);
 
-  $('#btnSmtp').click(function() {
-    loadSmtps();
+  $(document).on('encode-delete', function(e, ele, id) {
+    if($(`#encode-complete-${id}`).val() === 'true') {
+      logDelete(e, ele);
+    } else {
+      client.socket.request(client.keys.CANCELENCODE,
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STRING, [id]));
+    }
+  });
 
-    $('#smtpModal').modal('show');
-    $('#smtpModal').on('shown', function() {
-      $("#smtpType").focus();
+  var loggingOdd = 0;
+  var logging = function(message) {
+    $(`<div class="flex-h ${loggingOdd % 2 ? '' : 'input-invert'} flex-element">
+      <div type="text" class="flex-element clear-spacers force-text">
+        ${message && message.time ? message.time : ''} ${message && message.data ? message.data : message}
+      </div>
+      <a href="#" onclick="$(document).trigger('log-delete', event.currentTarget);">
+        <span class="flex-icon ${loggingOdd % 2 ? 'icon-min' : 'icon-min show'} flaticon-error flex-right"></span>
+      </a></div>`).prependTo(`#log-body-server`);
+      loggingOdd = (loggingOdd + 1) % 2;
+  };
+
+  var notifyInterval;
+  var notification = function(message) {
+    if(notifyInterval) {
+      window.clearInterval(notifyInterval);
+      $(`#notification`).empty();
+    }
+
+    $(`<div class="flex-h flex-center-v padding rounded-corners borders">
+      <div class="padding">
+        ${message && message.time ? message.time : ''} ${message && message.data ? message.data : message}
+      </div>
+      <input id='notify-timer' type='hidden' value='10'>
+      <a href="#" onclick="$(document).trigger('log-delete', event.currentTarget);">
+        <span class="icon-min flaticon-error flex-right clear-spacers"></span>
+      </a></div>`).appendTo(`#notification`);
+
+    var selfDestruct = function() {
+      var countDown = $('#notify-timer').val();
+      countDown = parseInt(countDown);
+      --countDown;
+
+      if(countDown < 1) {
+        $(`#notification`).empty();
+        window.clearInterval(notifyInterval);
+      } else {
+        $('#notify-timer').val(countDown);
+      }
+    }
+
+    notifyInterval = window.setInterval(selfDestruct, 1000);
+    logging(message);
+  };
+
+  var durRegex=/(Duration:\s)(\d{2,}:)+(\d{2,})(.\d{2,})/g;
+  var timeRegex=/(time=)(\d{2,}:)+(\d{2,})(.\d{2,})/g;
+  var progressOdd = 0;
+  var progress = function(message) {
+    if(message.label) {
+      $(`<div class="flex-h flex-element flex-center-v rounded-corners ${progressOdd % 2 ? '' : 'input-invert'}">
+          <label>${message && message.time ? message.time.split(' ')[0] : ''}</label>
+          <p class="clear-spacers force-text">${message && message.data ? message.data : message}</p>
+        </div>`).prependTo(`#encoding-body-${message.label}`);
+
+      if(message.data.includes('Server: Succesfully')) {
+        $(`#time-${message.label}`).text('Finished');
+        $(`#encode-complete-${message.label}`).val('true');
+      } else if (message.data.includes('Server: Failed')) {
+        $(`#time-${message.label}`).text('Failed');
+        $(`#encode-complete-${message.label}`).val('true');
+      }
+
+      var dur = durRegex.exec(message.data);
+      if(dur) {
+        $(`#duration-${message.label}`).text(dur[0].split(' ')[1]);
+      }
+
+      var time = timeRegex.exec(message.data);
+      if(time) {
+        $(`#time-${message.label}`).text(time[0].split('=')[1]);
+      }
+
+      progressOdd = (progressOdd + 1) % 2;
+    }
+  };
+
+  var encodingsOdd = 0;
+  var loadEncodings = function(encodings) {
+    encodings.data.forEach((value, index) => {
+      if(!$(`#encoding-${value[0]}`).length) {
+        $(`<div id="encoding-${value[0]}" class="flex-v alternate-color padding rounded-corners">
+          <div class="flex-h">
+            <div type="text" class="flex-element clear-spacers force-text" onclick="$('#encoding-body-${value[0]}').toggleClass('show')">
+              <p class="clear-spacers">${value[1] && Array.isArray(value[1]) ? value[1].pop() : value[1]}</p>
+              <div class="flex-h">
+                <div id="time-${value[0]}"></div>
+                <div id="duration-${value[0]}" class="flex-right"></div>
+              </div>
+            </div>
+            <input id='encode-complete-${value[0]}' type='hidden' value='false'>
+            <a href="#" onclick="$(document).trigger('encode-delete', [$(event.currentTarget).parent(), '${value[0]}']);">
+              <span class="icon-min flaticon-error flex-right clear-spacers ${encodingsOdd % 2 ? 'show' : ''}"></span>
+            </a>
+          </div>
+          <div id="encoding-body-${value[0]}" class="flex-element flex-v toggle"></div>
+        </div>`).appendTo(`#log-body-encode`);
+        encodingsOdd = (encodingsOdd + 1) % 2;
+      }
+    });
+  };
+
+  $('[id^=log-toggle-]').click(function(e) {
+    $('[id^=log-tab-]').each((i, ele) => {
+      var id = $(e.currentTarget).attr('id').split('-')[2];
+
+      if($(ele).attr('id').includes(id)) {
+        $(ele).addClass("show");
+      } else {
+        $(ele).removeClass("show");
+      }
     });
   });
 
-  var loadSmtps = function() {
-    var smtps = client.formData.getSmtpList();
+  client.socket.setEvent(client.keys.SERVERLOG, logging);
+  client.socket.setEvent(client.keys.NOTIFICATION, notification);
+  client.socket.setEvent(client.keys.ENCODELOG, progress);
+  client.socket.setEvent(client.keys.ENCODINGS, loadEncodings);
 
-    if(smtps.length > 0) {
-      if($("#smtpId").val() == '') {
-        var smtp = smtps[0];
+  //Video Overlay----------------------------------------------------------------
+  $('#options-form select').on("change", function (e) {
+    client.log.info($(e.currentTarget.children.select).val());
+    var values = serializeForm('options-form', 'select');
+    var video = $('video')[0];
 
-        if(smtp) {
-          $("#smtpId").val(smtp._id);
-          $("#smtpType").val(smtp.type);
-          $("#smtpHost").val(smtp.smtpHost);
-          $("#smtpAddress").val(smtp.smtpAddress);
-          $("#smtpPassword").val(smtp.smtpPassword);
+    if(video.textTracks) {
+      for(var i = 0; i < video.textTracks.length; ++i) {
+        if(video.textTracks[i].label === values[2]) {
+          video.textTracks[i].mode = 'showing';
+        } else if(video.textTracks[i].mode !== "disabled") {
+          video.textTracks[i].mode = 'hidden';
         }
       }
-
-      $('#smtpList tbody tr:not(:first)').remove();
-
-      for(var i in smtps) {
-        $('#smtpList tr:last').after('<tr><td style="display:none;">' + smtps[i]._id + '</td><td>' + smtps[i].smtpAddress +
-        '<button type="button" class="close overlay-icon-right" aria-label="Close"><span aria-hidden="true">&times;</span></button></td></tr>');
-      }
     }
-  }
 
-  client.socket.setEvent(client.keys.SMTP, loadSmtps);
-
-  $('#btnEncode').click(function() {
-    $('#encodeModal').modal('show');
-    $('#encodeModal').on('shown', function() {
-      $("#encodeInput").focus();
-    });
+    client.media.setActiveMetaData('webm', values[0], values[1]);
   });
 
-  $('#btnHelp').click(function() {
-    $('#helpModal').modal('show');
-  });
-
-  //Chat Events ------------------------------------------------------------------
-  function sendChat() {
-    var value = $('#chatMessage').val();
-    $('#chatMessage').val("");
-    client.chatUtil.send(value);
-  }
-
-  function autoScroll(id) {
-    if($(id).hasClass("auto-scroll")) {
-      $(id).scrollTop($(id)[0].scrollHeight);
-    }
-  }
-
-  $('#sendChat').click(sendChat);
-
-  $('#chatMessage').keydown(function(event) {
-    var keyId = event.keyCode || event.which;
-
-    if (keyId === 13) {
-      event.preventDefault();
-      sendChat();
-    }
-  });
-
-  var chatScrollTimeOut;
-  $('#chatManuscript').on('scroll', function() {
-    if(!chatScrollTimeOut) {
-      chatScrollTimeOut = setTimeout(function(){
-        clearTimeout(chatScrollTimeOut);
-        chatScrollTimeOut = undefined;
-
-        var element = $('#chatManuscript');
-        var totalHeight = element.scrollTop() + element.innerHeight();
-        if(totalHeight === element[0].scrollHeight) {
-          element.addClass("auto-scroll");
-        } else {
-          element.removeClass("auto-scroll");
-        }
-      }, 250);
-    }
-  });
-
-  var logScrollTimeOut;
-  $('#logManuscript').on('scroll', function() {
-    if(!logScrollTimeOut) {
-      logScrollTimeOut = setTimeout(function(){
-        clearTimeout(logScrollTimeOut);
-        logScrollTimeOut = undefined;
-
-        var element = $('#logManuscript');
-        var totalHeight = element.scrollTop() + element.innerHeight();
-        if(totalHeight === element[0].scrollHeight) {
-          element.addClass("auto-scroll");
-        } else {
-          element.removeClass("auto-scroll");
-        }
-      }, 250);
-    }
-  });
-
-  function systemMessage(message) {
-    $('#chatManuscript').append(`<p><span class="chat-message" title="System" style="color:gray; font-weight: bold;">
-      ${new Date().toTimeString().split(" ")[0]} System: </span>${client.chatUtil.getUserHandle(message.from)} ${message.data}</p>`);
-    autoScroll('#chatManuscript');
-  }
-
-  function chatMessage(message) {
-    $('#chatManuscript').append(`<p><span class="chat-message" title="${message.from}" style="color:blue; font-weight: bold;">
-      ${new Date().toTimeString().split(" ")[0]} ${client.chatUtil.getUserHandle(message.from)}: </span>${message.data}</p>`);
-    autoScroll('#chatManuscript');
-  }
-
-  function logMessage(message) {
-    client.log.info(message.text);
-    $('#logManuscript').append(`<p><span class="chat-message" title="${message.label}" style="color:blue; font-weight: bold;">
-      ${message.time} ${message.level}: </span>${message.text} ${message.meta !== undefined ? message.meta : ""}</p>`);
-      autoScroll('#logManuscript');
-  }
-
-  client.socket.setEvent(client.keys.BROADCASTRESP, chatMessage);
-  client.socket.setEvent(client.keys.EVENTRESP, systemMessage);
-  client.socket.setEvent(client.keys.PINGRESP, systemMessage);
-  client.socket.setEvent(client.keys.LOGRESP, logMessage);
-  client.socket.setEvent(client.keys.INPUTERROR, console.error);
-
-  //Video Events -----------------------------------------------------------------
-  $('#meta-types').on("change", function (e) {
-    client.log.info($(e.currentTarget.children.select).val());
-    var trackInfo = client.media.getTrackInfo();
-
-    client.log.info(trackInfo);
-    var typeId = $(e.currentTarget.children.select).val();
-    var selectedTrack = trackInfo.get(typeId);
-
-    client.log.info(selectedTrack);
-    var vQuality = selectedTrack.video[0].index;
-    var aQuality = selectedTrack.audio[0].index;
-  });
-
-  $('#track-video').on("change", function (e) {
-    client.log.info($(e.currentTarget.children.select).val());
-    var trackInfo = client.media.getTrackInfo();
-
-    var typeId = $($('#meta-types').children()[0]).val();
-    var selectedTrack = trackInfo.get(typeId);
-
-    var vQuality = $(e.currentTarget.children.select).val();
-    var aQuality = $($('#track-audio').children()[0]).val();
-
-    client.media.setActiveMetaData(typeId, vQuality, aQuality, null);
-  });
-
-  $('#track-audio').on("change", function (e) {
-    client.log.info($(e.currentTarget.children.select).val());
-    var trackInfo = client.media.getTrackInfo();
-
-    var typeId = $($('#meta-types').children()[0]).val();
-    var selectedTrack = trackInfo.get(typeId);
-
-    var vQuality = $($('#track-video').children()[0]).val();
-    var aQuality = $(e.currentTarget.children.select).val();
-
-    client.media.setActiveMetaData(typeId, vQuality, aQuality, null);
-  });
-
-  $('#track-subtitle').on("change", function (e) {
-    client.log.info($(e.currentTarget.children.select).val());
-    var selected = $(e.currentTarget.children.select).val();
-
-    var videoElement = $('video')[0];
-    for(var i = 0; i < videoElement.textTracks.length; ++i) {
-      if(videoElement.textTracks[i].label === selected) {
-        videoElement.textTracks[i].mode = 'showing';
-      } else if(videoElement.textTracks[i].mode !== "disabled") {
-        videoElement.textTracks[i].mode = 'hidden';
-      }
-    }
-  });
-
-  $('#buffer-ahead').on("change", function (e) {
+  $('#buffer-options').on("change", function (e) {
     var value = $(e.currentTarget.children[0]).val();
     var value = Math.trunc(value / 10);
     $(e.currentTarget.children[0]).val(value * 10);
     client.media.setBufferAhead(value);
   });
 
-  $('#force-buffer').on("change", function (e) {
-    var value = $(e.currentTarget.children[0]).is(':checked');
-    client.media.setForceBuffer(value);
-  });
+  if(isAdmin) {
+    var changeSync = function (rawRange) {
+      var range = parseFloat(rawRange);
 
-  $('#synchronize').on("change", function (e) {
-    var request = client.schema.createPopulatedSchema(client.schema.Enum.BOOL, [$('#synchronize').find('input')[0].checked]);
-    client.socket.request(client.keys.CHANGESYNC, request);
-  });
+      if(range === range) {
+        cookie.set('sync-range', range, cookie.getExpiration.YEAR);
+        client.socket.request(client.keys.SETSYNCRULE,
+          client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.NUMBER, [range]));
+      }
+    };
+
+    client.socket.setEvent(client.keys.SYNCRULE, function(range) {
+      client.log.info(client.keys.SYNCRULE, range);
+
+      if(typeof range === 'number' && range === range) {
+        $('#sync-options').val(range);
+      }
+    });
+
+    $('#sync-options').on("change", function(e) {
+      changeSync($(e.currentTarget).val());
+    });
+
+    let range = cookie.get('sync-range');
+    if(range && range !== '') {
+      $('#sync-options').val(range);
+    } else {
+      $('#sync-options').val(2.5);
+    }
+
+    changeSync($('#sync-options').val());
+  } else {
+    $('#sync-options').parent().remove();
+  }
 
   client.media.on('meta-data-loaded', function(trackInfo) {
     client.log.info('meta-data-loaded');
-
-    var typeHtml = `<select name="select">`;
-    var videoHtml = `<select name="select">`;
-    var audioHtml = `<select name="select">`;
-    var subtitleHtml = `<select name="select">`;
-
+    $('#video-track-list').empty();
+    $('#audio-track-list').empty();
     var active = trackInfo.get('active');
     trackInfo.delete('active');
 
-    var buildTrackHtml = function(tracks, type, activeIndex) {
-      html = "";
-      for(var i in tracks) {
-        if(active.type === type && tracks[i].index === activeIndex) {
-          html += `<option value="${tracks[i].index}" selected>${tracks[i].quality}</option>`;
-        } else {
-          html += `<option value="${tracks[i].index}">${tracks[i].quality}</option>`;
+    var webm = trackInfo ? trackInfo.get('webm') : undefined;
+    for(let tracks in webm) {
+      var options = '';
+
+      for(let j = 0; j < webm[tracks].length; ++j) {
+        options = `<option value="${webm[tracks][j].index}">
+          ${webm[tracks][j].quality}</option>`;
+
+        if(tracks === 'video') {
+          $(options).appendTo('#video-track-list');
+        } else if(tracks === 'audio') {
+          $(options).appendTo('#audio-track-list');
         }
       }
-      return html;
-    };
-
-    for(var track of trackInfo) {
-      var type = track[0];
-      if(active !== null && active.type === type) {
-        typeHtml += `<option value="${type}" selected>${type}</option>`;
-      } else {
-        typeHtml += `<option value="${type}">${type}</option>`;
-      }
     }
-
-    if(active !== null && active !== undefined) {
-      videoHtml += buildTrackHtml(track[1].video, type, active.video);
-      audioHtml += buildTrackHtml(track[1].audio, type, active.audio);
-    }
-
-    subtitleHtml += `<option value="None" selected>None</option>`;
-
-    typeHtml += `</select">`;
-    videoHtml += `</select>`;
-    audioHtml += `</select>`;
-    subtitleHtml += `</select>`;
-
-    $('#meta-types').html(typeHtml);
-    $('#track-video').html(videoHtml);
-    $('#track-audio').html(audioHtml);
-    $('#track-subs').html(subtitleHtml);
   });
 
   client.media.on('subtitle-loaded', function() {
-    var subtitleHtml = `<select name="select"> <option value="None" selected>None</option>`;
+    var subtitleHtml = `<option value="None" selected>None</option>`;
 
     var videoElement = $('video')[0];
     for(var i = 0; i < videoElement.textTracks.length; ++i) {
@@ -677,37 +837,305 @@ function initGUI(client, isAdmin) {
       }
     }
 
-    subtitleHtml += `</select>`;
-    $('#track-subtitle').html(subtitleHtml);
+    $('#subtitle-track-list').empty();
+    $(subtitleHtml).appendTo('#subtitle-track-list');
   });
 
-  //CSS Animation ----------------------------------------------------------------
-  var opaque = false;
+  //Sync Overlay ----------------------------------------------------------------
+  $('#sync-syncing').click(function(e) {
+    client.socket.request(client.keys.SYNCING);
+  });
 
-  $('.container').mousemove(function(e) {
-    if(!opaque) {
-      opaque = true;
-      showUI();
-      inactive();
+  var updateSyncInfo = function(data) {
+    if(data) {
+      if(data.foreGuard) {
+        $('#sync-first').html(`~${(data.foreGuard).toFixed(0)}s`);
+      }
+
+      if(data.rearGuard) {
+        $('#sync-last').html(`~${(data.rearGuard).toFixed(0)}s`);
+      }
+
+      if(data.difference) {
+        $('#sync-diff').html(`~${(data.difference).toFixed(2)}s`);
+      } else {
+        $('#sync-diff').html(`~0s`);
+      }
+    }
+  };
+
+  client.socket.setEvent(client.keys.SYNCINFO, updateSyncInfo);
+
+  //Utilities -------------------------------------------------------------------
+  var serializeForm = function(element, type) {
+    var values = [];
+    $(`form#${element} ${type}`).each((index, element) => {
+      values.push(element.value)
+    });
+
+    return values;
+  };
+
+  //Prevent form submitting by pressing Enter
+  $('form input').on('keypress', function(e) {
+    e.which === 13 ? e.preventDefault() : undefined;
+  });
+
+  $(document).on('keyup', function(e) {
+    e.which === 32 ? togglePlay() : undefined;
+
+    if(e.which === 27) {
+      $('.control-full').addClass("control");
+      $('.control-full').removeClass("control-full");
+      $('.flaticon-minus').addClass('flaticon-plus')
+      $('.flaticon-plus').removeClass('flaticon-minus');
+      toggleOverlays();
     }
   });
 
-  function inactive() {
-      setTimeout(function() {
-        opaque = false;
-        hideUI();
+  //CSS Animation ----------------------------------------------------------------
+  var fadeOut, over;
+  $('.container').on('mousemove', function(e) {
+    if(!$('.fade').hasClass('show')) {
+      $('.fade').toggleClass('show');
+    }
+
+    clearTimeout(fadeOut);
+    if(!over) {
+      fadeOut = setTimeout(() => {
+        $('.fade').toggleClass('show');
       }, 6000);
+    }
+  });
+
+  $('.fade').on('mouseover', function(e) {
+    over = true;
+    clearTimeout(fadeOut);
+  });
+
+  $('.fade').on('mouseout', function(e) {
+    over = false;
+  });
+
+  $('.panel').mousedown(function(e) {
+    $(document).off('mousemove');
+    var border = parseInt($('.panel').css('borderLeftWidth'));
+
+    if(e.offsetX <= border && $(e.target).hasClass('panel')) {
+      e.originalEvent.preventDefault();
+      $(document).on('mousemove', function(e) {
+        changePanelWidth(e.pageX);
+        updateOverlays();
+      });
+    }
+  });
+
+  client.socket.events.on(client.socket.Enums.EVENTS.ERROR, function() {
+    toggleOverlays();
+    $('.fade').removeClass('show');
+  });
+
+  $(document).mouseup(function(e) {
+    $(document).off('mousemove');
+  });
+
+  $(window).resize(function() {
+    updateOverlays();
+  });
+
+  $('#control-button-options').click(function(e) {
+    toggleOverlays('control-options');
+    changeOverlayPosition('control-button-options', 'control-options', 'media');
+  });
+
+  $('#control-button-volume').click(function(e) {
+    toggleOverlays('control-volume');
+    changeOverlayPosition('control-button-volume', 'control-volume', 'media');
+  });
+
+  $('#control-button-sync').click(function(e) {
+    toggleOverlays('control-sync');
+    changeOverlayPosition('control-button-sync', 'control-sync', 'media');
+  });
+
+  if(isAdmin) {
+    $('#path-input').click(function(e) {
+      toggleOverlays('path-dropdown');
+      changeDropDown();
+    });
+
+    $('.path-dropdown .flex-h .flex-element').click(function(e) {
+      $('#path-input').val($(e.currentTarget).text());
+    });
+  } else {
+    $('#log-types').remove();
+    $('#shutdown-button').remove();
   }
 
-  function hideUI() {
-    $('.fadein').addClass("fadeout");
-    $('.fadein').removeClass("fadein");
-  }
+  $('.video').click(function(e) {
+    toggleOverlays();
+  });
 
-  function showUI() {
-    $('.fadeout').addClass("fadein");
-    $('.fadeout').removeClass("fadeout");
-  }
+  $('#shutdown-button').click(function(e) {
+    $(document).trigger('shutdown');
+  });
 
-  client.log.ui("Gui initialized");
+  var changeOverlayPosition = function(parent, child, container) {
+    if($(`.${child}`).hasClass('show')) {
+      var parentPos = $(`#${parent}`).position();
+      var parentOff = $(`#${parent}`).offset();
+      var parentWid = $(`#${parent}`).outerWidth(true);
+      var parentHie = $(`#${parent}`).outerHeight(true);
+
+      var position  = $(`#${child}`).position();
+      var width     = $(`#${child}`).outerWidth(true);
+      var height    = $(`#${child}`).outerHeight(true);
+
+      var left = parentOff.left - (width/2) + (parentWid/2);
+      var top = parentOff.top > (screen.height/2) ? parentOff.top - parentPos.top - height :
+        parentOff.top + parentPos.top + parentHie;
+
+      if(container) {
+        var containerWid = $(`.${container}`).outerWidth(true);
+        var containerHie = $(`.${container}`).outerHeight(true);
+
+        if(parentPos.left + width/2 > containerWid) {
+          left = containerWid - width;
+        }
+      }
+
+      $(`#${child}`).attr('style', `left:${left}px;top:${top}px`);
+    }
+  };
+
+  var changePanelWidth = function(x) {
+    var wWith =  $(window).width();
+    var width1 = Math.max(Math.min(wWith - x, wWith), 0);
+    var width2 = Math.max(Math.min(x, wWith), 0);
+
+    $(`.media`).attr('style', `width: ${width2}px`);
+    $(`.panel`).attr('style', `width: ${width1}px;min-width:25%;padding:1%;`);
+    $(`.path-dropdown`).attr('style', `width: ${width2}px`);
+    $(document).trigger('textarea-grow');
+  };
+
+  var changeDropDown = function() {
+    var width = $(`#path-input`).width();
+    var height = $(`.path`).height() + $(`.path`).offset().top;
+    $(`.path-dropdown`).attr('style', `width: ${width}px;left:${$(`#path-input`).offset().left}px;top:${height}px;`);
+  };
+
+  var changeSidePosition = function() {
+    if($('.panel').hasClass('show')) {
+      var left = $('.panel').position().left - $('.side').width();
+      $('.side').attr('style', `left:${left}px;`);
+    }
+  };
+
+  var updateOverlays = function() {
+    changeSidePosition();
+    changeOverlayPosition('control-button-volume', 'control-volume', 'media');
+    changeOverlayPosition('control-button-options', 'control-options', 'media');
+    changeOverlayPosition('control-button-sync', 'control-sync', 'media');
+    changeDropDown();
+  };
+
+  var toggleOverlays = function(overlay) {
+    var overlays = ['control-options', 'control-volume',
+                      'control-sync', 'path-dropdown'];
+
+    for(let x = 0; x < overlays.length; ++x) {
+      if(overlay === overlays[x]) {
+        $(`#${overlay}`).toggleClass('show');
+      } else {
+        $(`#${overlays[x]}`).removeClass('show');
+      }
+    }
+  };
+
+  var triggerConfirmation = function(confirm, custom) {
+    $("#confirm-no").trigger("click");
+    $("#confirm-no").off();
+    $("#confirm-yes").off();
+
+    $('#confirm-no').one('click', function(e) {
+      $('.confirm').removeClass('show');
+      confirm(false);
+    });
+
+    $('#confirm-yes').one('click', function(e) {
+      $('.confirm').removeClass('show');
+      confirm(true);
+    });
+
+    if(custom) {
+      $('.confirm-message').removeClass('show');
+      $('#confirm-custom').html(custom);
+      $('#confirm-custom').toggleClass('show');
+    } else {
+      $('.confirm-message').toggleClass('show');
+    }
+
+    $('.confirm').toggleClass('show');
+  };
+
+  client.socket.setEvent(client.keys.CONFIRM, function(message, callback) {
+    triggerConfirmation(callback, message);
+  });
+
+  $(document).on('togglePanel', function(e, force) {
+    $('.panel').removeAttr("style");
+    $('.media').removeAttr("style");
+    $('.side').removeAttr("style");
+
+    if(force) {
+      $('.panel').removeClass('show');
+      $('.media').addClass('show');
+
+      $('.side .flex-icon').each((index, element) => {
+        var elementId = element.id.split('-')[1];
+        if(elementId) {
+          $(`#panel-${elementId}`).removeClass('show');
+        }
+      });
+
+      updateOverlays();
+    } else {
+      $('.panel').toggleClass('show');
+      $('.media').toggleClass('show');
+    }
+
+    if($('.panel').hasClass('show')) {
+      $(`.panel`).attr('style', `padding:1%;`);
+    }
+
+    updateOverlays();
+  });
+
+  $(document).on('lock-element', function(e, element) {
+    if($(element).hasClass('flaticon-locked-6')) {
+      $(element).removeClass('flaticon-locked-6');
+      $(element).addClass('flaticon-unlocked-2');
+    } else if($(element).hasClass('flaticon-unlocked-2')) {
+      $(element).removeClass('flaticon-unlocked-2');
+      $(element).addClass('flaticon-locked-6');
+    }
+  });
+
+  $(document).on('textarea-grow', function(e) {
+    $('textarea').each((index, ele) => {
+      $(ele).height(1);
+      $(ele).height(1 + $(ele).prop('scrollHeight'));
+    });
+  });
+
+  if(isAdmin) {
+    initMediaPath();
+    initToken();
+    initEncode();
+  } else {
+    $('.is-admin').each((index, ele) => {
+      $(ele).removeClass('show');
+    });
+  }
 }

@@ -11,7 +11,7 @@ SourceBuffer.prototype.initialize = function(force) {
     Object.setPrototypeOf(SourceBuffer.prototype, Events.prototype);
 
     var logManager = this.factory.createClientLogManager();
-    log = logManager.getLog(logManager.LogEnum.VIDEO);
+    log = logManager.getLog(logManager.Enums.LOGS.VIDEO);
 
     schemaFactory   = this.factory.createSchemaFactory();
     socket          = this.factory.createClientSocket();
@@ -200,18 +200,15 @@ function onReset(video, mediaSource, events) {
     video.removeListener('get-init', events.init);
     video.removeListener('get-segment', events.getSegment);
 
-    this.sourceBuffer.removeEventListener('error', logBufferEntries.call(this));
-    this.sourceBuffer.removeEventListener('abort', log.error);
-    this.sourceBuffer.removeEventListener('update', events.ready);
-
     socket.removeEvent(eventKeys.SEGMENTCHUNK, events.onSegment);
     mediaSource.removeSourceBuffer(this.sourceBuffer);
   }.bind(this);
+
   return reset;
 }
 
 var requestVideoData = function(requestDetails) {
-  socket.request(eventKeys.SEGMENT, schemaFactory.createPopulatedSchema(schemaFactory.Enum.VIDEO, [this.type, requestDetails[0], requestDetails[1]]));
+  socket.request(eventKeys.SEGMENT, schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.VIDEO, [this.type, requestDetails[0], requestDetails[1]]));
 };
 
 var isTimeRangeBuffered = function(timestamp) {
@@ -235,7 +232,7 @@ var isTimeRangeBuffered = function(timestamp) {
 var logBufferEntries = function() {
   var logging = function(err) {
     log.error(err);
-    console.log(this.bufferLog);
+    log.debug(this.bufferLog);
   }.bind(this);
 
   return logging;

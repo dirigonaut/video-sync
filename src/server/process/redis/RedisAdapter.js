@@ -7,18 +7,15 @@ var publisher, client, log;
 
 function RedisAdapter() { }
 
-RedisAdapter.prototype.initialize = function(force) {
+RedisAdapter.prototype.initialize = function() {
   if(typeof RedisAdapter.prototype.protoInit === 'undefined') {
     RedisAdapter.prototype.protoInit = true;
     var config      = this.factory.createConfig();
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.GENERAL);
-  }
+    client          = Redis.createClient(config.getConfig().redis);
+    publisher       = this.factory.createRedisPublisher();
 
-  if(force === undefined ? typeof RedisAdapter.prototype.stateInit === 'undefined' : force) {
-    RedisAdapter.prototype.stateInit = true;
-    client      = Redis.createClient(config.getConfig().redis);
-    publisher   = this.factory.createRedisPublisher();
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);
   }
 };
 
@@ -41,7 +38,7 @@ RedisAdapter.prototype.callFunction = Promise.coroutine(function* (object, messa
           yield client.setAsync(key, JSON.stringify(response));
         }
 
-        yield client.publishAsync(publisher.RespEnum.RESPONSE, key);
+        yield client.publishAsync(publisher.Enums.RESP.RESPONSE, key);
       } else {
         log.debug(`No function found with name ${functionHandle}`);
       }

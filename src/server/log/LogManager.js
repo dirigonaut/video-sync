@@ -1,54 +1,46 @@
 const Promise    = require('bluebird');
 const Cluster    = require('cluster');
 const Path       = require('path');
-const Util       = require('util');
 const Winston    = require('winston');
+const Fs         = require('fs');
 
-var config, schemaFactory, log;
+var config, eventKeys, schemaFactory, log;
 
 const LOG_LEVEL = "debug";
 const TYPE      = Cluster.isMaster ? "masterProcess" : process.env.processType;
-const FILE_NAME = `${TYPE}_${process.pid}_logs.txt`;
-const EXCEPTION = `${TYPE}_${process.pid}_exception.txt`;
+const FILE_NAME = `${TYPE}-${process.env.index ? process.env.index : 0}.txt`;
 
 function LogManager() { }
 
-LogManager.prototype.initialize = function(force) {
-  if(force === undefined ? typeof LogManager.prototype.stateInit === 'undefined' : force) {
-    LogManager.prototype.stateInit = true;
-    config          = this.factory.createConfig(false);
-    schemaFactory   = this.factory.createSchemaFactory();
-  }
-
+LogManager.prototype.initialize = function() {
   if(typeof LogManager.prototype.protoInit === 'undefined') {
-    LogManager.prototype.protoInit = true;
-    var keys = Object.keys(LogManager.LogEnum);
-    log = Winston.loggers.get(LogManager.LogEnum.LOG);
-    LogManager.prototype.LogEnum = LogManager.LogEnum;
+    config          = this.factory.createConfig();
+    eventKeys       = this.factory.createKeys();
+
+    if(config.isInit()) {
+      LogManager.prototype.protoInit = true;
+      schemaFactory   = this.factory.createSchemaFactory();
+      log = Winston.loggers.get(LogManager.Enum.Logs.LOG);
+    }
   }
 };
 
 LogManager.prototype.addFileLogging = function() {
-  var keys = Object.keys(LogManager.LogEnum);
-  var logLevels = typeof config.getConfig().logLevels !== 'undefined' ? config.getConfig().logLevels : LevelEnum;
+  var keys = Object.keys(LogManager.Enum.Logs);
+  var logLevels = config.getConfig().log ? config.getConfig().log : undefined;
 
   for(var i in keys) {
     var fileTransport = buildFileTransport.call(this, Path.join(config.getLogDir(), FILE_NAME),
-                          LogManager.LogEnum[keys[i]], logLevels[keys[i]], false);
-    var container     = Winston.loggers.get(LogManager.LogEnum[keys[i]]);
+                          LogManager.Enum.Logs[keys[i]], logLevels ? logLevels[keys[i]] : LogManager.Enum.Logs.error, true);
+    var container     = Winston.loggers.get(LogManager.Enum.Logs[keys[i]]);
+
+    fileTransport.exitOnError = false;
 
     container.configure({
-      levels: LogManager.Levels,
+      levels: LogManager.Enum.Levels,
       transports: [fileTransport]
     });
   }
-
-  var exceptionTransport = buildFileTransport(Path.join(config.getLogDir(), EXCEPTION), 'exception', 'error', true);
-  Winston.loggers.add(EXCEPTION, { transports: [exceptionTransport] });
-  Winston.loggers.get(EXCEPTION).exitOnError = false;
-
-  log.debug('LogManager.addFileLogging');
-  log.info('Attached file logging.');
 };
 
 LogManager.prototype.getLog = function(id) {
@@ -57,18 +49,18 @@ LogManager.prototype.getLog = function(id) {
 
 module.exports = LogManager;
 
-LogManager.Levels   = { socket: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
-LogManager.LogEnum  = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
-                        CHAT: 'chat', DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};
-
-var LevelEnum       = { GENERAL: 'debug', ADMINISTRATION: 'debug', AUTHENTICATION: 'debug',
-                        CHAT: 'debug', DATABASE: 'debug', LOG: 'debug', VIDEO: 'debug', ENCODING: 'debug', STATE: 'debug', UTILS: "debug"};
+LogManager.Enum = {};
+LogManager.Enum.Levels  = { socket: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
+LogManager.Enum.Logs    = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
+                        DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};
 
 var buildFileTransport = function(path, label, level, handleExceptions) {
   var fileTransport = new (Winston.transports.File) ({
     filename: path,
     level: level,
     lable: label,
+    maxsize: 10000000,
+    maxFiles: 3,
     handleExceptions: handleExceptions,
     humanReadableUnhandledException: true,
     json: false,
@@ -82,7 +74,7 @@ var buildFileTransport = function(path, label, level, handleExceptions) {
 };
 
 function createFormatter(label) {
-  var session, redisSocket;
+  var credentials, redisSocket;
 
   return function(options) {
     var logMessage = {
@@ -93,24 +85,24 @@ function createFormatter(label) {
     };
 
     if(options.meta && Object.keys(options.meta).length) {
-      logMessage.meta = Util.inspect(options.meta, { showHidden: false, depth: 2 });
+      logMessage.meta = JSON.stringify(options.meta, null, 2);
     }
 
     var json = JSON.stringify(logMessage);
-    if(LogManager.Levels[options.level] === LogManager.Levels.socket) {
-      if(!session) {
-        session = this.factory.createSession();
+    if(LogManager.Enum.Levels[options.level] === LogManager.Enum.Levels.socket) {
+      if(!credentials) {
+        credentials = this.factory.createCredentialManager();
       }
 
       if(!redisSocket) {
         redisSocket = this.factory.createRedisSocket();
       }
 
-      session.getAdmin().then(function(ids) {
-        if(ids) {
-          var response = schemaFactory.createPopulatedSchema(schemaFactory.Enum.LOGRESPONSE,
+      credentials.getAdmin().then(function(admin) {
+        if(admin && admin.id) {
+          var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
             [logMessage.time, 'server', logMessage.label, logMessage.text, logMessage.meta]);
-          redisSocket.ping(ids, 'chat-log-resp', response);
+          redisSocket.ping.call(this, admin.id, eventKeys.SERVERLOG, response);
         }
       });
     }

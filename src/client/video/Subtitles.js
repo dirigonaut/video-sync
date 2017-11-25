@@ -10,10 +10,9 @@ Subtitles.prototype.initialize = function(force) {
     Subtitles.prototype.protoInit = true;
     Object.setPrototypeOf(Subtitles.prototype, Events.prototype);
 
-    var logManager = this.factory.createClientLogManager();
-    log = logManager.getLog(logManager.LogEnum.VIDEO);
-
     eventKeys      = this.factory.createKeys();
+    var logManager = this.factory.createClientLogManager();
+    log = logManager.getLog(logManager.Enums.LOGS.VIDEO);
   }
 };
 
@@ -25,7 +24,7 @@ Subtitles.prototype.setup = function(videoElement) {
 
   video.addEventListener("loadedmetadata", onLoad);
 
-  return new Promise.resolve(onReset(videoElement, onLoad));
+  return new Promise.resolve(onReset.call(this, videoElement, onLoad));
 };
 
 module.exports = Subtitles;
@@ -58,10 +57,10 @@ var onReset = function(videoElement, onLoad) {
     }
 
     videoElement.removeEventListener('loadedmetadata', onLoad);
-  };
+  }.bind(this);
 
   return reset;
-}
+};
 
 var initTrack = function(videoElement, name, file) {
   var track;

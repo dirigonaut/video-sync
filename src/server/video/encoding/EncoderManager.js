@@ -1,28 +1,29 @@
 const Promise = require('bluebird');
 const Events  = require('events');
-const Util 	  = require('util');
+const Crypto  = require('crypto');
 
 const webm_manifest = "webm_dash_manifest";
 const mp4_manifest = "-frag-rap";
 
-var command, encoding, processes, log;
+var command, encoding, processes, current, credentials, redisSocket, eventKeys, log;
 
 function EncoderManager() { }
 
-EncoderManager.prototype.initialize = function(force) {
+EncoderManager.prototype.initialize = function() {
 	if(typeof EncoderManager.prototype.protoInit === 'undefined') {
     EncoderManager.prototype.protoInit = true;
-		command			    = this.factory.createCommand();
-    var logManager  = this.factory.createLogManager();
-    log             = logManager.getLog(logManager.LogEnum.ENCODING);
-  }
-
-	if(force === undefined ? typeof EncoderManager.prototype.stateInit === 'undefined' : force) {
-    EncoderManager.prototype.stateInit = true;
 		Object.setPrototypeOf(EncoderManager.prototype, Events.prototype);
 		encoding				= false;
 		processes 			= [];
-		
+
+		credentials 		= this.factory.createCredentialManager();
+		redisSocket 		= this.factory.createRedisSocket();
+		command			    = this.factory.createCommand();
+
+		eventKeys       = this.factory.createKeys();
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
+
 		processedEvent.call(this);
   }
 };
@@ -35,19 +36,13 @@ EncoderManager.prototype.buildProcess = function(data) {
 				log.debug("Found ffmpeg encoding", data[i]);
 				var ffmpeg = this.factory.createFfmpegProcess();
 				ffmpeg.setCommand(command.parse(data[i].input));
-				processes.push(ffmpeg);
+				processes.push([Crypto.randomBytes(24).toString('hex'), ffmpeg]);
 
 				if(data[i].input.includes(webm_manifest)) {
 					var webm = this.factory.createWebmMetaProcess();
 					webm.setCommand(ffmpeg.command[ffmpeg.command.length - 1]);
-					processes.push(webm);
+					processes.push([Crypto.randomBytes(24).toString('hex'), webm]);
 				}
-			break;
-			case "mp4Box" :
-				log.silly("Found mp4Box encoding", data[i]);
-				var mp4Box = this.factory.createMp4BoxProcess();
-				mp4Box.setCommand(command.parse(data[i].input));
-				processes.push(mp4Box);
 			break;
 			default:
 				throw new Error(`EncoderManager: ${command.codec} is not supported process.`);
@@ -80,7 +75,30 @@ EncoderManager.prototype.encode = function(operations) {
 		promise = new Promise.resolve(function() { return 'Queued encoding processes.'; });
 	}
 
+	this.getEncodings();
 	return promise;
+};
+
+EncoderManager.prototype.getEncodings = function() {
+	var allProcesses = processes.slice();
+	allProcesses.unshift(current);
+
+	this.emit('encodingList', format(allProcesses));
+};
+
+EncoderManager.prototype.cancelEncode = function(id) {
+	var deleted;
+	processes.forEach((value, index, array) => {
+		if(value.includes(id)) {
+			deleted = array.splice(index, 1);
+		}
+	});
+
+	if(!deleted && current && current[0] === id) {
+		if(current[1].cancel) {
+			current[1].cancel();
+		}
+	}
 };
 
 module.exports = EncoderManager;
@@ -89,8 +107,15 @@ function processedEvent() {
 	this.on('processed', Promise.coroutine(function* (oldProcess) {
 		if(processes.length > 0) {
 			var encodeProcess = processes.shift();
-			attachEvents.call(this, encodeProcess);
-			yield encodeProcess.execute().catch(log.error);
+			current = encodeProcess;
+			attachEvents.call(this, encodeProcess[1]);
+			yield encodeProcess[1].execute().catch(function(error) {
+				log.socket(error);
+				log.error(error);
+
+				uiLog(current[0], 'error', `Server: Failed with error:`, error);
+				this.emit('processed');
+			}.bind(this));
 		} else {
 			this.emit('finished', 'All files encoded.');
 			encoding = false;
@@ -104,25 +129,48 @@ function processedEvent() {
 
 function attachEvents(encodeProcess) {
 	encodeProcess.on('start', function() {
-		log.debug('Server: Start encoding: ' + new Date().getTime());
-		log.socket('Server: Start encoding at : ' + new Date().getTime());
+		log.debug('Server: Start encoding: ' + new Date().toTimeString());
+		uiLog(current[0], 'info', 'Server: Start encoding');
 	}).on('data', function(percent) {
-		log.socket('data', percent);
+		uiLog(current[0], 'info', percent);
 	}).on('exit', function(exitCode) {
 		if(!exitCode) {
-			log.info('Server: file has been converted succesfully: ' + new Date().getTime());
-			log.socket('Server: file has been converted succesfully: ' + new Date().getTime());
+			log.info('Server: Succesfully converted file.' + new Date().toTimeString());
+			uiLog(current[0], 'info', 'Server: Succesfully converted file.');
 		} else {
-			log.info(`Server: failed with error code: ${exitCode}, ` + new Date().getTime());
-			log.socket(`Server: failed with error code: ${exitCode}, ` + new Date().getTime());
+			log.info(`Server: Encoding returned error code: ${exitCode}, ` + new Date().toTimeString());
+			uiLog(current[0], 'error', `Server: Encoding returned error code: ${exitCode}`);
 		}
 
 		removeEvents(encodeProcess);
 		this.emit('processed', encodeProcess);
 	}.bind(this)).on('error', function(err) {
-		log.error('There was an error encoding: ', err);
-		log.socket('There was an error encoding: ', err);
+		log.info(`Server: Encoding emitted error: , ` + new Date().toTimeString(), err);
+		uiLog(current[0], 'error', `Server: Encoding emitted error:`, err);
 	}.bind(this));
+}
+
+var uiLog = Promise.coroutine(function* (id, level, data) {
+	var admin = yield credentials.getAdmin();
+	var payload = {
+		time: new Date().toTimeString(),
+		level: level,
+		label: id,
+		data: data
+	};
+
+	if(admin) {
+		redisSocket.ping.call(EncoderManager.prototype, admin.id, eventKeys.ENCODELOG, payload);
+	}
+});
+
+function format(entries) {
+	var formatted = [];
+	entries.forEach((data) => {
+		formatted.push([data[0], data[1].getCommand()]);
+	});
+
+	return formatted;
 }
 
 function removeEvents(encodeProcess) {

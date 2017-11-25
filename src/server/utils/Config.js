@@ -22,13 +22,13 @@ var fileIO, config;
 
 function Config() { }
 
-Config.prototype.initialize = function(force) {
-  if(force === undefined ? typeof Config.prototype.stateInit === 'undefined' : force) {
-    //Must happen first otherwise infinite recursion happens
-    Config.prototype.stateInit = true;
+Config.prototype.initialize = function(init) {
+  if(init && typeof Config.prototype.protoInit === 'undefined') {
+    Config.prototype.protoInit = true;
     Object.setPrototypeOf(Config.prototype, Events.prototype);
 
-    fileIO = this.factory.createFileIO();
+    fileIO = this.factory.createFileIO(false);
+
     setupAppDataDir().then(Promise.coroutine(function* () {
       config = yield loadConfig();
 
@@ -46,6 +46,10 @@ Config.prototype.initialize = function(force) {
   }
 };
 
+Config.prototype.isInit = function() {
+  return config ? true : false;
+};
+
 Config.prototype.getConfig = function() {
   return config;
 };
@@ -55,7 +59,7 @@ Config.prototype.getRedisConfigPath = function() {
 };
 
 Config.prototype.getCertificatePath = function() {
-  return Path.join(APP_DATA, CERTIFICATE);
+  return typeof config.certificate.path !== 'undefined' ? this.getConfig().certificate.path : Path.join(APP_DATA, CERTIFICATE);
 };
 
 Config.prototype.getAppDataDir = function() {
