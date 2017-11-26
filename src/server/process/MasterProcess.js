@@ -1,7 +1,7 @@
 const Promise = require('bluebird');
 const Cluster = require('cluster');
 
-var redisServer, serverProcess, stateProcess, proxy, log;
+var redisServer, serverProcess, stateProcess, proxy, config, log;
 
 process.on('uncaughtException', function (err) {
   if(log) {
@@ -16,6 +16,7 @@ function MasterProcess() { }
 MasterProcess.prototype.initialize = function(force) {
   if(typeof MasterProcess.prototype.protoInit === 'undefined') {
     MasterProcess.prototype.protoInit = true;
+    config          = this.factory.createConfig();
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);
   }
@@ -58,7 +59,7 @@ var startMaster = Promise.coroutine(function* () {
   });
 
   redisServer = this.factory.createRedisServer();
-  yield redisServer.start();
+  yield redisServer.start(config.getConfig().redisPath, config.getRedisConfigPath());
 
   var stateWorker = Cluster.fork({processType: 'stateProcess'});
 
@@ -77,6 +78,7 @@ var startMaster = Promise.coroutine(function* () {
 });
 
 var startState = function() {
+  log.info(`Launching state Process: ${process.pid}`);
   stateProcess = this.factory.createStateProcess();
   stateProcess.start();
 

@@ -138,15 +138,15 @@ function attachEvents(encodeProcess) {
 			log.info('Server: Succesfully converted file.' + new Date().toTimeString());
 			uiLog(current[0], 'info', 'Server: Succesfully converted file.');
 		} else {
-			log.info(`Server: failed with error code: ${exitCode}, ` + new Date().toTimeString());
-			uiLog(current[0], 'error', `Server: Failed with error code: ${exitCode}`);
+			log.info(`Server: Encoding returned error code: ${exitCode}, ` + new Date().toTimeString());
+			uiLog(current[0], 'error', `Server: Encoding returned error code: ${exitCode}`);
 		}
 
 		removeEvents(encodeProcess);
 		this.emit('processed', encodeProcess);
 	}.bind(this)).on('error', function(err) {
-		log.info(`Server: Failed with error: , ` + new Date().toTimeString(), err);
-		uiLog(current[0], 'error', `Server: Failed with error:`, err);
+		log.info(`Server: Encoding emitted error: , ` + new Date().toTimeString(), err);
+		uiLog(current[0], 'error', `Server: Encoding emitted error:`, err);
 	}.bind(this));
 }
 

@@ -6,9 +6,7 @@
     "host" : "127.0.0.1",
     "port" : 6379
   },
-  "redisPath" : {
-    "bin" : "C:\\Redis\\redis-server.exe"
-  },
+  "redisPath" :  "C:\\Redis\\redis-server.exe",
   "certificate" : {
     "attributes" : [{
         "name": "commonName",

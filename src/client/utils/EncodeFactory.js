@@ -1,5 +1,5 @@
 const TEMPLATES = {
-  WEBM_VIDEO_TEMPLATE:    `-y -i arg -c:v libvpx-vp9 -s arg -keyint_min 150 -g 150 -b:v 0 -crf 42 -threads 8 -speed 2 -tile-columns 6 -frame-parallel 1 -an -sn -f webm -dash 1`,
+  WEBM_VIDEO_TEMPLATE:    `-y -i arg -c:v libvpx -s arg -keyint_min 150 -g 150 -b:v 1500k -crf 42 -threads 4 -speed 2 -tile-columns 4 -frame-parallel 1 -an -sn -f webm -dash 1`,
   WEBM_AUDIO_TEMPLATE:    `-y -i arg -vn -sn -c:a libopus -b:a arg -f webm -dash 1`,
   WEBM_SUBTITLE_TEMPLATE: `-y -txt_format text -i arg`,
   WEBM_MANIFEST_TEMPLATE: `-y arg -c copy -f webm_dash_manifest -adaptation_sets "id=0,streams=arg id=1,streams=arg"`,
@@ -25,7 +25,7 @@ EncodeFactory.prototype.setKeyValue = function(key, newValue, str) {
 };
 
 EncodeFactory.prototype.setOutput = function(path, str) {
-  return `${str} ${encodeURI(path)}`;
+  return `${str} ${path}`;
 };
 
 EncodeFactory.prototype.getOutput = function(str) {
@@ -54,12 +54,12 @@ EncodeFactory.prototype.createManifest = function(input, output, commands, codec
   for(let i = 0; i < commands.length; ++i) {
     if(commands[i].type === EncodeFactory.Enum.Types.VIDEO) {
       vSet = `${vSet.length > 0 ? vSet : Snippets.SETSVIDEO}${vSet.length > 0 ? "," + i : i}`;
-      inputs = `${inputs} ${Snippets.MANIFEST.trim()} -i ${this.getOutput(commands[i].input).trim()}`
+      inputs = `${inputs} ${Snippets.MANIFEST.trim()} ${this.getOutput(commands[i].input).trim()}`
       maps = `${maps.trim()} ${Snippets.MAP.trim()} ${i}`
 
     } else if(commands[i].type === EncodeFactory.Enum.Types.AUDIO) {
       aSet = `${aSet.length > 0 ? aSet : Snippets.SETSAUDIO}${aSet.length > 0 ? "," + i : i}`;
-      inputs = `${inputs} ${Snippets.MANIFEST.trim()} -i ${this.getOutput(commands[i].input).trim()}`
+      inputs = `${inputs} ${Snippets.MANIFEST.trim()} ${this.getOutput(commands[i].input).trim()}`
       maps = `${maps.trim()} ${Snippets.MAP.trim()} ${i}`
     }
   }
@@ -68,7 +68,7 @@ EncodeFactory.prototype.createManifest = function(input, output, commands, codec
   template = this.setKeyValue('y', `${inputs.trim()}`, template);
   template = this.setKeyValue('c', maps, template);
   template = this.setKeyValue('adaptation_sets', `"${vSet} ${aSet}"`, template);
-  template = this.setOutput(encodeURI(`${output}${this.getNameFromPath(input)}_${codec}.mpd`), template);
+  template = this.setOutput(`${output}${this.getNameFromPath(input)}_${codec}.mpd`, template);
 
   return template;
 };

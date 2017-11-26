@@ -449,7 +449,7 @@ function initGui(client, isAdmin) {
       });
 
       var template = client.encode.getTemplate(client.encode.Enums.CODEC.WEBM, type);
-      template = client.encode.setKeyValue('i', `${encodeURI(values[0])}`, template);
+      template = client.encode.setKeyValue('i', `${values[0]}`, template);
 
       if(type === client.encode.Enums.TYPES.VIDEO) {
         template = client.encode.setKeyValue('s', values[2], template);
@@ -458,7 +458,7 @@ function initGui(client, isAdmin) {
         template = client.encode.setKeyValue('b:a', values[3], template);
         template = client.encode.setOutput(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[3]}.${client.encode.Enums.CODEC.WEBM}`, template);
       } else if(type === client.encode.Enums.TYPES.SUBTITLE) {
-        template = client.encode.setKeyValue('i', `${encodeURI(values[0])} ${values[4] ? `-map 0:${values[4]}` : ''}`, template);
+        template = client.encode.setKeyValue('i', `${values[0]} ${values[4] ? `-map 0:${values[4]}` : ''}`, template);
         template = client.encode.setOutput(`${values[1]}${client.encode.getNameFromPath(values[0])}.vtt`, template);
       }
 
