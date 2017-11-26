@@ -68,7 +68,7 @@ var generate = function(attrs) {
   cert.setIssuer(attrs);
 
   // the actual certificate signing
-  cert.sign(keypair.privateKey, Forge.md.sha256.create());
+  cert.sign(keypair.privateKey, Forge.md.sha512.create());
 
   // now convert the Forge certificate to PEM format
   var pem = {
