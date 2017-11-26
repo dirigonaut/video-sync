@@ -20,7 +20,7 @@ ServerProcess.prototype.initialize = function(force) {
 ServerProcess.prototype.start = Promise.coroutine(function* () {
   var config = this.factory.createConfig();
 
-  log.info(`Trying to start ServerProcess on port ${config.getConfig().port} with process ${process.pid}`);
+  log.info(`Starting ServerProcess on process ${process.pid}`);
   serverSubscriber = this.factory.createServerSubscriber();
 
   var publisher = this.factory.createRedisPublisher();
@@ -29,7 +29,7 @@ ServerProcess.prototype.start = Promise.coroutine(function* () {
   var certificate = this.factory.createCertificate();
   var pem = yield certificate.getCertificates();
 
-  log.debug(`Certificates found initializing ${process.pid} ServerProcess`);
+  log.debug(`Certificates found, initializing ${process.pid} ServerProcess`);
   var options = {
     key: pem.privateKey,
     cert: pem.certificate,
@@ -50,7 +50,7 @@ ServerProcess.prototype.start = Promise.coroutine(function* () {
   var authController = this.factory.createAuthenticationController();
   authController.attachIO(io);
 
-  log.info(`ServerProcess ${process.pid} ready to forward.`);
+  log.info(`ServerProcess ${process.pid} ready.`);
 });
 
 ServerProcess.prototype.getServer = function() {
