@@ -163,7 +163,7 @@ function initGui(client, isAdmin) {
 
         paths.forEach((value, index, array) => {
           $(`<div class="flex-h flex-element primary-color invert">
-            <div id='path-${index}' class="flex-element" onclick="$('#path-input').val('${value}')">${value}</div>
+            <div id='path-${index}' class="flex-element" onclick="$('#path-input').val('${value.replace(/\\/g, '\\\\')}')">${value}</div>
             <a href="#" onclick="$(document).trigger('path-delete', $('#path-${index}'));">
               <span class="icon-min flex-icon flaticon-error"></span>
             </a>
@@ -234,7 +234,7 @@ function initGui(client, isAdmin) {
     client.formData.on(client.formData.Enums.FORMS.TOKENS, loadTokens);
 
     $('.lock').click(function(e) {
-      //$(document).trigger('lock-element', e.currentTarget);
+      $(document).trigger('lock-element', e.currentTarget);
     });
 
     $('#token-create').click(function() {
@@ -449,17 +449,17 @@ function initGui(client, isAdmin) {
       });
 
       var template = client.encode.getTemplate(client.encode.Enums.CODEC.WEBM, type);
-      template = client.encode.setKeyValue('i', `${values[0]}`, template);
+      template = client.encode.setKeyValue('i', encodeURI(`${values[0]}`), template);
 
       if(type === client.encode.Enums.TYPES.VIDEO) {
         template = client.encode.setKeyValue('s', values[2], template);
-        template = client.encode.setOutput(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[2]}.${client.encode.Enums.CODEC.WEBM}`, template);
+        template = client.encode.setOutput(encodeURI(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[2]}.${client.encode.Enums.CODEC.WEBM}`), template);
       } else if(type === client.encode.Enums.TYPES.AUDIO) {
         template = client.encode.setKeyValue('b:a', values[3], template);
-        template = client.encode.setOutput(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[3]}.${client.encode.Enums.CODEC.WEBM}`, template);
+        template = client.encode.setOutput(encodeURI(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[3]}.${client.encode.Enums.CODEC.WEBM}`), template);
       } else if(type === client.encode.Enums.TYPES.SUBTITLE) {
         template = client.encode.setKeyValue('i', `${values[0]} ${values[4] ? `-map 0:${values[4]}` : ''}`, template);
-        template = client.encode.setOutput(`${values[1]}${client.encode.getNameFromPath(values[0])}.vtt`, template);
+        template = client.encode.setOutput(encodeURI(`${values[1]}${client.encode.getNameFromPath(values[0])}.vtt`), template);
       }
 
       if(template) {
@@ -534,6 +534,7 @@ function initGui(client, isAdmin) {
       request.encodings = commands;
       request.directory = values[1];
 
+      client.log.info('video-encode', request);
       client.socket.request('video-encode', request);
     });
   }
