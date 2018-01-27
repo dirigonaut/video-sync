@@ -62,14 +62,4 @@ EnumUtil.prototype.createEnums = function(object) {
   return Enums;
 };
 
-EnumUtil.prototype.filterOut = function(object, filterOut) {
-  for(let property in object) {
-    if(filterOut.hasOwnProperty(property.toUpperCase())) {
-      delete object[property];
-    }
-  }
-
-  return object;
-};
-
 module.exports = EnumUtil;
