@@ -31,7 +31,7 @@ Proxy.prototype.setOnConnect = function(numProcesses) {
     return Number(s) % len;
   };
 
-  // Create the outside facing server listening on our port.
+  // Create the outside facing server listening on the port.
   proxyServer = Net.createServer({ pauseOnConnect: true }, function(connection) {
     var worker = workers[getWorkerIndex(connection.remoteAddress, numProcesses)];
     worker.send('sticky-media:connection', connection);

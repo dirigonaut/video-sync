@@ -220,7 +220,7 @@ var canPlay = function(players, state) {
   var canPlayLogic = function(id) {
     log.debug(`StateEngine player canPlay.`, id);
     buffering.delete(id);
-eventKeys
+
     if(buffering.size === 0) {
       log.debug(`StateEngine players canplay:`, players);
       for(let player of players.entries()) {
