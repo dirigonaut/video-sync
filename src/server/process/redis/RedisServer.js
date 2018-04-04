@@ -3,6 +3,8 @@ const Events  = require('events');
 
 const Spawn = require('child_process').spawn;
 
+const STARTED = 'ready to accept connections';
+
 var redisProcess, log;
 
 function RedisServer() { };
@@ -25,12 +27,12 @@ RedisServer.prototype.start = function(bin, config) {
       redisProcess.stdout.on('data', function(data) {
         data = data.toString('utf8');
 
-        if(data.includes('Server started')) {
+        if(data.toLowerCase().includes('server started')) {
           data = data.replace(/[-./'/`_|\\]*/g, '');
           data = data.replace(/\s{2,}/g, '');
         }
 
-        if(data.includes('ready to accept connections')) {
+        if(data.toLowerCase().includes(STARTED)) {
           resolve();
         }
 

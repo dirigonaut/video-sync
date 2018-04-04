@@ -3,6 +3,7 @@
   "version": "0.2.0",
   "main": "index.js",
   "scripts": {
+    "install": "sudo apt-get install redis-server ffmpeg -y && sudo systemctl disable redis && sudo npm install && npm run-script init",
     "init": "node develop/init.js",
     "start": "node index.js",
     "debug": "node develop/init.js && node --inspect=9999 index.js",

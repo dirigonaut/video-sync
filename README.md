@@ -35,6 +35,12 @@ Video-Sync, until I can come up with a swankier name, is an application for host
 4. Git
 5. Chrome
 
+```
+sudo apt-get install npm git -y
+sudo npm install -g n && n latest
+sudo npm run-script install
+```
+
 Download and install git if you do not already have it. Then clone this repository. If you are on Windows on a version less than 10 I would recommend getting Git Bash as it will use the same commands that linux does for installing the application environment.
 
 Install nodejs and run the following commands from within the directory where you downloaded the code repository.
