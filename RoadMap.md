@@ -1,0 +1,13 @@
+# ToDo:
+  - Remote admin log in
+    - Gen server key
+    - Validate server key
+    - Feature turned on/off via config
+  - Config file parameter validation
+  - Support dropping in signed cert
+  - Support FireFox fully
+  - Known Bugs:
+    - (UI)Fix exiting from full screen
+    - (Encoding)Ffmpeg is skipping the first couple seconds of a video on (some?) encodings
+    - (Redis)Throw proper error message on redis is already started scenario
+    - (Encoding)Fix parsing of file names so that they do not cut off after the first space

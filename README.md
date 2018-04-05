@@ -35,19 +35,19 @@ Video-Sync, until I can come up with a swankier name, is an application for host
 4. Git
 5. Chrome
 
-```
-sudo apt-get install npm git -y
-sudo npm install -g n && n latest
-sudo npm run-script install
-```
-
 Download and install git if you do not already have it. Then clone this repository. If you are on Windows on a version less than 10 I would recommend getting Git Bash as it will use the same commands that linux does for installing the application environment.
 
 Install nodejs and run the following commands from within the directory where you downloaded the code repository.
 
-```npm install npm@latest -g``` *Updates npm: may require elevated access to run*
+Ubuntu:
+```
+npm run-script install
+```
 
-```npm install``` *Installs the necessary dependencies*
+Windows:
+```
+npm install && npm run-script init
+```
 
 Install FFmpeg and add it to your path.
 
@@ -59,6 +59,7 @@ Finally you will need to forward the port that you configured in the configs on 
 
 Start:
 ```npm run-script start```
+
 Stop:
 ```Ctl-X in the same terminal```
 
@@ -73,18 +74,13 @@ Once the application has been setup it is time to watch a video. This step will 
 
   - Setup/Start App
     - Follow steps in [Setup](#setup)
+  - Log in:
+    - Info [Log in](#log-in)
   - Encode Media
     - Info [Encoding](#encoding)
     - Submit the commands to encode the media file
-  - Setup Email
-    - Info [Email](#email)
-    - Setup a email account with the application so you can send out invites and tokens
-  - Setup Session
-    - Info [Session](#session)
-    - Create and save a session entry with the above configured email and a list of invitees. Click the Load and then Send.
-  - Log in(Invited Client only):
-    - Info [Log in](#log-in)
-    - Submit the email and handle to get a token
+  - Invite Users
+    - tbd
   - Load Video
     - Info [Path bar](#path-bar)
     - Paste the absolute path to the media file directory and select the load button
@@ -106,86 +102,29 @@ On a play or seek event the server will not issue a resume command until it has 
 ---
   - Play/Pause: Issues play or pause to the player
   - Progress bar: Shows the current progress of the video as well as allows the seek action
-  - Audio: Mute or Unmute audio
-  - Volume: Adjust the volume of the player
+  - Audio: Adjust the volume of the player
+  - Synchronize:
+    - Resync:
   - Options:
-    - Type: Select the type of video codec(currently only webm is supported)
     - Video: Select the Video quality to watch
     - Audio: Select the Audio quality to watch
     - Subtitles: Select the Subtitles to display is available
     - Buffer: How far ahead to buffer the file
-    - Synchronize: Sync/Desync the client from the watchers swarm
-    - Force Buffer: Force the buffer to download a different track even if the data already has been downloaded at a different quality level
+    - Sync Time: Admin only
   - Fullscreen: Make the player fullscreen
 
 ### Log in
 ---
-The Log in prompt has three fields
+The Log in prompt has two fields
 
   - Handle: The users desired moniker
-  - Email: The email address the user received the invitation with
   - Token: A system generated token emailed to the users
 
-To get a token just submit your email and handle in the prompt. If you are a valid user then the system will generate a random password and email it to the email you entered. If you accidentally closed the prompt click the button of a person on the left side bar. Only one user can be logged in per email address at a time one.
-
-As a client logging in you might see a warning screen saying the site is not secured. This is due to the fact that the application uses a self signed certificate. To get to the site click through the warnings and allow the page to resolve.
 
 Allowed Characters per Field:
 
   - Handle: [String](#misc)
-  - Email: [Email](#misc)
   - Token: [String](#misc)
-
-### Session
----
-The session form can be reached by the admin only using the side bar on the left hand side of the screen and selecting the plus sign at the top of the list.
-
-The session form is for setting up a list of valid users and a valid email. The specified list of users will be entered into the system to be able to generate tokens and log in to the session. The email will be used to send invitations to the users in question as well as send them the system generated token to log in.
-
-Form:
-
-  - Title: Name of the session
-    - Input Type [Special](#misc)
-  - Email: The Email to invite users with setup in [Email](#email)
-    - Input Type: [Email](#misc)
-  - Invitees: The list of users emails to be invited
-    - Input Type: [Email](#misc) comma separated list
-  - Subject: The subject of the email
-    - Input Type [Special](#misc)
-  - Message: The message of the email. The link to the application will be appended to the end before it is sent.
-    - Input Type [Special](#misc)
-
-Buttons:
-
-  - Session '+':  Creates a new Session object.
-  - Entry(beneath Session): will select that email entry
-    - Entry 'x': will delete the entry
-  - Save: Save the session in question. If it does not exist create a new session. If the session already exists then update it with the new information.
-  - Load: The selected session will be loaded in to memory and activated.
-  - Send: Issue invites against he loaded session invitees.
-
-### Email
----
-The email form can be accessed by selecting the envelope icon on the left hand side bar. The email form is for registering an email account to the application. This email will be used to send invitations and tokens to the users specified in the active [Session](#Session).
-
-This feature has only been tested with gmail as of right now. To work with gmail the account in question will need to have 2 factor authentication setup. Once that is done you can now generate token passwords through your gmail account to use your email account which is what you will need to do in order to integrate the application with gmail.
-
-Form:
-
-  - Type: Ignore
-  - Host: The provider of your email
-    - ex: gmail [String](#misc)
-  - Address: The email address to invite users with
-    - ex: test@gmail.com [Email](#misc)
-  - Password: The password to give access to use the account
-
-Buttons:
-
-  - Smpt '+': Creates a new Smtp object
-  - Smtp Entry(beneath Smtp): will select that email entry
-    - Entry 'x': will delete the entry
-  - Save: Saves the entry to the backend
-  - Close: Closes the form.
 
 ### Encoding
 ---
@@ -323,6 +262,8 @@ Server side [Logs](#logs) are in the same dir structure as the configs.
 ### License
 ---
 Copyright 2018 Dirigonaut
+
+The MIT License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

@@ -30,7 +30,7 @@ FfmpegProcess.prototype.getCommand = function() {
 FfmpegProcess.prototype.execute = function() {
   var ffmpegPath = config.getConfig() ? config.getConfig().ffmpegPath : undefined;
 
-  this.ffmpeg = Spawn(ffmpegPath ? ffmpegPath + "ffmpeg" : "ffmpeg", this.command);
+  this.ffmpeg = Spawn(ffmpegPath ? ffmpegPath : "ffmpeg", this.command);
   log.info(`Spawned child pid: ${this.ffmpeg.pid}`, this.command);
 
   this.ffmpeg.on('exit', function(data) {

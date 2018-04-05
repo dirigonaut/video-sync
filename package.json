@@ -1,12 +1,13 @@
 {
-  "name": "video-sync",
+  "name": "Video-Sync",
   "version": "0.2.0",
   "main": "index.js",
   "scripts": {
-    "install": "sudo apt-get install redis-server ffmpeg -y && sudo systemctl disable redis && sudo npm install && npm run-script init",
+    "install": "sudo apt-get install redis-server ffmpeg -y && sudo systemctl disable redis-server && sudo npm install && npm run-script init",
     "init": "node develop/init.js",
     "start": "node index.js",
-    "debug": "node develop/init.js && node --inspect=9999 index.js",
+    "debug": "npm run-script init && node --inspect=9999 index.js",
+    "test": "echo testing tbd",
     "stats": "cloc --not-match-d resources --by-file ./src/ ./static/ index.js ./static/css/icons/",
     "update-deps": "npm outdated --depth=0 | grep -v Package | awk '{print $1}' | xargs -I% npm install %@latest --save"
   },
@@ -26,12 +27,12 @@
     "xml2js": "^0.4.17",
     "xmldom": "^0.1.27"
   },
-  "description": "This README would normally document whatever steps are necessary to get your application up and running.",
+  "description": "An application for synchronizing a media experience across multiple clients.",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@bitbucket.org/calkser/video-sync-2.0.git"
+    "url": "git+ssh://git@github.com:dirigonaut/video-sync.git"
   },
   "author": "Sabo",
-  "license": "ISC",
-  "homepage": "https://bitbucket.org/calkser/video-sync-2.0#readme"
+  "license": "The MIT License",
+  "homepage": "https://github.com/dirigonaut/video-sync.git#readme"
 }
