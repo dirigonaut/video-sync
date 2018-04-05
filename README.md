@@ -259,9 +259,14 @@ Are you getting a warning insecure site when loading the page? This is an error 
 Client side logs are in the developer console in the browser.
 Server side [Logs](#logs) are in the same dir structure as the configs.
 
-### License
+### Licensing
 ---
-Copyright 2018 Dirigonaut
+Attributions:
+- [Essential Set](https://www.flaticon.com/packs/essential-set-2) Icons designed by [Smashicons](https://www.flaticon.com/authors/smashicons) from Flaticon
+
+---
+
+Video-Sync Copyright 2018 Dirigonaut
 
 The MIT License
 
