@@ -32,8 +32,8 @@ FfprobeProcess.prototype.execute = function() {
     throw new Error('FfprobeProcess this.command is not set.');
   }
 
-  var ffmpegPath = config.getConfig() ? config.getConfig().ffmpegPath : undefined;
-  var ffprobe = Spawn(ffmpegPath ? ffmpegPath + 'ffprobe' : 'ffprobe', this.command);
+  var ffprobePath = config.getConfig() ? config.getConfig().ffprobePath : undefined;
+  var ffprobe = Spawn(ffprobePath ? ffprobePath: 'ffprobe', this.command);
   log.info(`Spawned child pid: ${ffprobe.pid}`, this.command);
 
   var defaultEvents = ['message', 'error', 'exit', 'close', 'disconnect'];

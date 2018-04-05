@@ -8,7 +8,8 @@
     "password" : null
   },
   "redisPath" : "/usr/bin/redis-server",
-  "ffmpegPath" : "/usr/bin/",
+  "ffmpegPath" : "ffmpeg",
+  "ffprobePath" : "ffprobe",
   "certificate" : {
     "path" : "/path/to/cert",
     "attributes" : [{
