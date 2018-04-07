@@ -1,5 +1,4 @@
 {
-  "host" : "",
   "port" : 8080,
   "static" : "static",
   "redis" : {
@@ -7,11 +6,11 @@
     "port" : 6379,
     "password" : null
   },
-  "redisPath" : "/usr/bin/redis-server",
+  "redisPath" : "redis-server",
   "ffmpegPath" : "ffmpeg",
   "ffprobePath" : "ffprobe",
   "certificate" : {
-    "path" : "/path/to/cert",
+    "path" : "~/.config/video-sync/certificate.pem",
     "attributes" : [{
         "name": "commonName",
         "value": "example.org"

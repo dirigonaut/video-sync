@@ -110,18 +110,18 @@ function initGui(client, isAdmin) {
   $('#control-button-full').click(function(e) {
     if(document.fullScreen || document.webkitIsFullScreen) {
       $('video')[0].webkitExitFullscreen();
-      $('.control-full').addClass("control");
-      $('.control-full').removeClass("control-full");
-      $('.flaticon-minus').addClass('flaticon-plus')
-      $('.flaticon-plus').removeClass('flaticon-minus');
+      //$('.control-full').addClass("control");
+      //$('.control-full').removeClass("control-full");
+      //$('.flaticon-minus').addClass('flaticon-plus')
+      //$('.flaticon-plus').removeClass('flaticon-minus');
       toggleOverlays();
     } else {
       $(document).trigger('togglePanel', [true]);
       $('video')[0].webkitRequestFullScreen();
-      $('.control').addClass("control-full");
-      $('.control').removeClass("control");
-      $('.flaticon-plus').addClass('flaticon-minus')
-      $('.flaticon-minus').removeClass('flaticon-plus');
+      //$('.control').addClass("control-full");
+      //$('.control').removeClass("control");
+      //$('.flaticon-plus').addClass('flaticon-minus')
+      //$('.flaticon-minus').removeClass('flaticon-plus');
       toggleOverlays();
     }
   });
@@ -884,10 +884,12 @@ function initGui(client, isAdmin) {
 
   $(document).on('keyup', function(e) {
     e.which === 32 ? togglePlay() : undefined;
+  });
 
-    if(e.which === 27) {
-      $('.control-full').addClass("control");
-      $('.control-full').removeClass("control-full");
+  $(document).on('webkitfullscreenchange', function(e) {
+    if(!document.webkitIsFullScreen) {
+      //$('.control-full').addClass("control");
+      //$('.control-full').removeClass("control-full");
       $('.flaticon-minus').addClass('flaticon-plus')
       $('.flaticon-plus').removeClass('flaticon-minus');
       toggleOverlays();

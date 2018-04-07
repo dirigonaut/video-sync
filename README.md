@@ -11,16 +11,13 @@ Note: page is under construction and needs to be updated after the most recent o
 4. [Synchronization Techniques](#synchronization-techniques)
 5. [Video Controls](#video-controls)
 6. [Log in](#log-in)
-7. [Session](#session)
-8. [Email](#email)
-9. [Encoding](#encoding)
-10. [Path bar](#path-bar)
-11. [Chat](#chat)
-12. [Logs](#logs)
-13. [Configs](#configs)
-14. [Misc](#misc)
-15. [Troubleshooting](#troubleshooting)
-16. [License](#license)
+7. [Encoding](#encoding)
+8. [Path bar](#path-bar)
+9. [Logs](#logs)
+10. [Configs](#configs)
+11. [Misc](#misc)
+12. [Troubleshooting](#troubleshooting)
+13. [License](#license)
 
 ### What am I
 ---
@@ -153,7 +150,7 @@ ou need to you can type in those fields and tweak the fields to have the desired
 
 The entries under this list will not update their values if they were changed above. Instead you will need to select the 'x' in the far right column to remove that entry and recreate it.
 
-You might also notice there is an entry that populates on its own called the 'MANIIFEST'. This is a metadata file that parses all encoded files to get their metadata. This is a required file for playing html5 compliant web videos. This field will auto update as new entries are added or removed. Though if you did encode media files outside the application then you can actually force the application to only generate the manifest. This is necessary as their is custom information that it will populate in the manifest file through outside processes.
+You might also notice there is an entry that populates on its own called the 'MANIFEST'. This is a metadata file that parses all encoded files to get their metadata. This is a required file for playing html5 compliant web videos. This field will auto update as new entries are added or removed. Though if you did encode media files outside the application then you can actually force the application to only generate the manifest. This is necessary as their is custom information that it will populate in the manifest file through outside processes.
 
 To force the application to only generate the metadata construct all the commands as you normally would. then instead of submitting them select the checkbox on the manifest entry. This action will lock the manifest and preventing it from updating. Delete all the entries by selecting the 'x' button on the right of each entry. he manifest will be left untouched. Now click submit and it will only generate the manifest file.
 
@@ -164,33 +161,6 @@ You can watch the progress of an encoding by either pulling up the developer con
 On the Admins client the path bar will be on the top of the screen. The button on the left is the load video button and the bar to the right is the absolute path to the directory structure that has the media files in it located on your system.
 
 If the video player gets in a non recoverable state selecting the load button will force a reload of the video for all connected clients. This should resolve any deadlocks allowing you to seek back to where you left off and continue.
-
-### Chat
----
-A general communication center that will show user messages as well as user actions that interact with the video. By default the general allowed characters in chat are [Special](#misc). If the first character of the string is a '/' then it is recognized as a command.
-
-Commands:
-
-  - Play: Resumes play on a video
-    - ex: /play
-  - Pause: Pauses a video
-    - ex: /pause
-  - Seek: Seeks to a position in the video
-    - ex: /seek hh:mm:ss
-  - Handle: Changes the visible handle of a user
-    - ex: /handle bob(input type [Special](#misc)
-  - Help: Shows help
-    - ex: /help
-
-Admin Commands:
-
-  - Invite: Invites a new user to the session
-    - ex: /invite test@gmail.com
-  - Kick: Kicks a user from the session
-    - ex: /kick playerId(can be found by hovering over their name in chat)
-  - Downgrade: Removes permissions for a player to issue video commands
-    - ex: /downgrade playerId(can be found by hovering over their name in chat)
-    - Entry 'x': will delete the entry
 
 ### Logs
 ---
@@ -217,7 +187,6 @@ Location:
 Example Config
 ```
 {
-  "host" : "xxx.xxx.xxx.xxx",
   "port" : 8080,
   "static" : "static",
   "redis" : {
@@ -225,9 +194,7 @@ Example Config
     "port" : 6379,
     "password" : null
   },
-  "redisStartUp" : {
-    "bin" : "/usr/bin/redis-server"
-  }
+  "redisPath" :  "C:\\Redis\\redis-server.exe",
 }
 ```
 
@@ -238,7 +205,7 @@ Config Definitions:
   - static: The base static file directory of that application.
   - redis: The specs of the redis server.
     - If you wish to change the info on redis you will need to also edit the redis.config
-  - redisStartUp(optional): Pass in the dir to redis instead of using a class path.
+  - redisPath(optional): Pass in the dir to redis instead of using a class path.
 
 In the same directory as the configs is the certificate for the applications https encryption. It will be auto generated if there is not already one there.
 
