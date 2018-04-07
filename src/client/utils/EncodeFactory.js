@@ -42,7 +42,8 @@ EncodeFactory.prototype.getOutput = function(str) {
 EncodeFactory.prototype.getNameFromPath = function(path) {
   var splitPath = path.split(/[/\\]+/);
   var splitType = splitPath[splitPath.length - 1].split('.');
-  return splitType[0];
+  splitType.pop();
+  return splitType.join('.');
 };
 
 EncodeFactory.prototype.createManifest = function(input, output, commands, codec) {

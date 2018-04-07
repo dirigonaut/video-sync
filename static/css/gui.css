@@ -408,7 +408,7 @@ body {
 
 
 /* Elements */
-::-webkit-media-controls {
+video::-webkit-media-controls {
   display:none !important;
 }
 

@@ -1,13 +1,10 @@
 {
-  "host" : "",
   "port" : 8080,
   "static" : "static",
   "redis" : {
     "host" : "127.0.0.1",
     "port" : 6379
   },
-  "redisPath" : "/usr/bin/redis-server",
-  "ffmpegPath" : "ffmpeg",
   "certificate" : {
     "attributes" : [{
         "name": "commonName",

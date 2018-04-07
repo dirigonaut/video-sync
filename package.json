@@ -8,7 +8,7 @@
     "start": "node index.js",
     "debug": "npm run-script init && node --inspect=9999 index.js",
     "test": "echo testing tbd",
-    "stats": "cloc --not-match-d resources --not-match-f documentation --not-match-f flaticon --by-file ./src/ ./static/ index.js",
+    "stats": "cloc --not-match-d '(icons)|(resources)' --not-match-f documentation --by-file ./src/ ./static/ index.js",
     "update-deps": "npm outdated --depth=0 | grep -v Package | awk '{print $1}' | xargs -I% npm install %@latest --save"
   },
   "dependencies": {
