@@ -3,7 +3,9 @@
     - Gen server key
     - Validate server key
     - Feature turned on/off via config
-  - Config file parameter validation
+    - Need base dir for this to work
+  - Config file parameter validation[Fixed]
+    - Test scenarios
   - Support dropping in signed cert
   - Support FireFox fully
   - Update Documentation
@@ -13,4 +15,4 @@
     - (Encoding)Ffmpeg is skipping the first couple seconds of a video on (some?) encodings
     - (Redis)Throw proper error message on redis is already started scenario
     - (Encoding)Fix parsing of file names so that they do not cut off after the first space[Fixed]
-      - Confirm that the files can be consumed on the front end with special characters and spaces
+      - Confirm that the files can be consumed on the front end with special characters and spaces[Fixed]

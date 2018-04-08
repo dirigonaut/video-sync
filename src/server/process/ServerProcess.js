@@ -44,7 +44,7 @@ ServerProcess.prototype.start = Promise.coroutine(function* () {
   var redisSocket = this.factory.createRedisSocket();
   redisSocket.setIO(io);
 
-  app.use(Express.static(config.getConfig().static));
+  app.use(Express.static(config.getConfig().videoSyncInfo.staticDir));
   server.listen(0);
 
   var authController = this.factory.createAuthenticationController();

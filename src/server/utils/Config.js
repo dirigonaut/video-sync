@@ -75,8 +75,12 @@ module.exports = Config;
 var loadConfig = Promise.coroutine(function* () {
   var binaryConfig = yield Fs.readFileAsync(Path.join(APP_DATA, CONFIG_NAME));
 
-  if(binaryConfig) {
-    config = JSON.parse(binaryConfig);
+  try {
+    if(binaryConfig) {
+      config = JSON.parse(binaryConfig);
+    }
+  } catch(e) {
+    throw new Error(`Json syntax error in config file:${Path.join(APP_DATA, CONFIG_NAME)}, error: ${e}`);
   }
 
   return config;

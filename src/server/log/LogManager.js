@@ -31,7 +31,7 @@ LogManager.prototype.addFileLogging = function() {
 
   for(var i in keys) {
     var fileTransport = buildFileTransport.call(this, Path.join(config.getLogDir(), FILE_NAME),
-                          LogManager.Enum.Logs[keys[i]], logLevels ? logLevels[keys[i]] : LogManager.Enum.Logs.error, true);
+                          LogManager.Enum.Logs[keys[i]], logLevels && logLevels[keys[i]] ? logLevels[keys[i]] : LogManager.Enum.Logs.error, true);
     var container     = Winston.loggers.get(LogManager.Enum.Logs[keys[i]]);
 
     fileTransport.exitOnError = false;

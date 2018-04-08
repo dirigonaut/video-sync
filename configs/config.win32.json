@@ -1,11 +1,17 @@
 {
-  "port" : 8080,
-  "static" : "static",
-  "redis" : {
+  "videoSyncInfo": {
+    "port" : 8080,
+    "staticDir" : "static",
+    "allowRemoteAdmin" : false,
+    "baseDir" : ""
+  },
+  "redisInfo" : {
     "host" : "127.0.0.1",
     "port" : 6379
   },
-  "redisPath" :  "C:\\Redis\\redis-server.exe",
+  "redis" : "C:\\Redis\\redis-server.exe",
+  "ffmpeg" : "ffmpeg",
+  "ffprobe" : "ffprobe",
   "certificate" : {
     "attributes" : [{
         "name": "commonName",

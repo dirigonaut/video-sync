@@ -1,14 +1,18 @@
 {
-  "port" : 8080,
-  "static" : "static",
-  "redis" : {
+  "videoSyncInfo": {
+    "port" : 8080,
+    "staticDir" : "static",
+    "allowRemoteAdmin" : false,
+    "baseDir" : ""
+  },
+  "redisInfo" : {
     "host" : "127.0.0.1",
     "port" : 6379,
     "password" : null
   },
-  "redisPath" : "redis-server",
-  "ffmpegPath" : "ffmpeg",
-  "ffprobePath" : "ffprobe",
+  "redis" : "redis-server",
+  "ffmpeg" : "ffmpeg",
+  "ffprobe" : "ffprobe",
   "certificate" : {
     "path" : "~/.config/video-sync/certificate.pem",
     "attributes" : [{
