@@ -75,8 +75,10 @@ var getFiles = Promise.coroutine(function* (socket, request, fileType) {
     if(files && files.length > 0) {
       for(let i = 0; i < files.length; ++i) {
         var header = { };
-        var splitName = files[i].split(".")[0].split("_");
-        header.type = splitName[splitName.length - 1];
+        var splitName = files[i].split('.');
+        splitName.pop();
+        splitName = splitName.join('.').split("_");
+        header.type = splitName.pop();
 
         let result = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.IDRESPONSE, [request.data, header]);
         socket.emit(eventKeys.FILEREGISTER, result, function(bufferId) {

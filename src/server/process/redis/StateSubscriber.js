@@ -12,7 +12,7 @@ StateSubscriber.prototype.initialize = function(force) {
 
     playerManager   = this.factory.createPlayerManager();
     adapter         = this.factory.createRedisAdapter();
-    subscriber      = Redis.createClient(config.getConfig().redis);
+    subscriber      = Redis.createClient(config.getConfig().redisInfo);
     stateEngine     = this.factory.createStateEngine();
 
     stateEngine.initialize();

@@ -23,8 +23,8 @@ Cache.prototype.initialize = function() {
     schemaFactory   = this.factory.createSchemaFactory();
 
     media           = this.factory.createMedia();
-    publisher       = Redis.createClient(config.getConfig().redis);
-    client          = Redis.createClient(config.getConfig().redis);
+    publisher       = Redis.createClient(config.getConfig().redisInfo);
+    client          = Redis.createClient(config.getConfig().redisInfo);
 
     setSubscriber.call(this);
 

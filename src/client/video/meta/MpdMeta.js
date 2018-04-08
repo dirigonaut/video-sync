@@ -45,6 +45,9 @@ MpdMeta.prototype.setTrackQuality = function(typeId, index) {
 MpdMeta.prototype.getInit = function(typeId) {
   log.debug('MpdMeta.getInit ' + typeId);
   var active = this.activeMeta.get(typeId);
+  console.log(this.metaData)
+  console.log(typeId)
+  console.log(active.trackIndex)
   var range = this.parserUtil.getInit(this.metaData, typeId, active.trackIndex).split("-");
   var segment = [range[0], range[1]];
   return this.addPath(typeId, active.trackIndex, segment);

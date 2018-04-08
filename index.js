@@ -12,6 +12,12 @@ var start = Promise.coroutine(function* () {
     config = yield config;
   }
 
+  var checkConfig = factory.createCheckConfig();
+  yield checkConfig.validateConfig().catch(function(error) {
+    console.error(error);
+    process.exit(1);
+  });
+
   var logManager = factory.createLogManager();
   logManager.addFileLogging();
 

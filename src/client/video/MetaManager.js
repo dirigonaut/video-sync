@@ -69,6 +69,8 @@ MetaManager.prototype.setActiveMetaData = function(metaInfo) {
   if(activeMetaData !== metaData) {
     activeMetaData = metaData;
   }
+
+  console.log(activeMetaData)
 };
 
 MetaManager.prototype.setBufferThreshold = function(threshold) {
@@ -93,9 +95,10 @@ MetaManager.prototype.getTrackInfo = function() {
 
     var rawTracks = meta[1].getTracks();
     for(var i in rawTracks) {
-      var trackNameSplit = rawTracks[i].url.split('.')[0].split('_');
-      var quality = trackNameSplit[trackNameSplit.length -1];
-      var track = { 'index' : rawTracks[i].index, 'quality' : quality};
+      var trackNameSplit = rawTracks[i].url.split('.');
+      trackNameSplit.pop();
+      trackNameSplit = trackNameSplit.join('.').split('_');
+      var track = { 'index' : rawTracks[i].index, 'quality' : trackNameSplit.pop()};
 
       if(rawTracks[i].type === 'video') {
         videoTracks.push(track);

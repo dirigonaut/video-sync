@@ -13,8 +13,10 @@ FileSystemUtils.prototype.splitPath = function(path) {
 FileSystemUtils.prototype.splitNameFromPath = function(path) {
   var splitPath = this.splitPath(path);
 
-  var parsedPath = splitPath[splitPath.length - 1].split(".");
-  return parsedPath[0];
+  var parsedPath = splitPath[splitPath.length - 1];
+  parsedPath = parsedPath.split('.');
+  parsedPath.pop();
+  return parsedPath.join('.');
 };
 
 FileSystemUtils.prototype.splitDirFromPath = function(path) {
@@ -24,9 +26,7 @@ FileSystemUtils.prototype.splitDirFromPath = function(path) {
 
 FileSystemUtils.prototype.splitExtensionFromPath = function(path) {
   var splitPath = this.splitPath(path);
-
-  var parsedPath = splitPath[splitPath.length - 1].split(".");
-  return parsedPath[1];
+  return splitPath[splitPath.length - 1].split('.').pop();
 };
 
 FileSystemUtils.prototype.ensureEOL = function(string) {
