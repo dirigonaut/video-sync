@@ -1,18 +1,21 @@
 # ToDo:
   - Remote admin log in
-    - Gen server key
-    - Validate server key
-    - Feature turned on/off via config
+    - Feature turned on/off via config[Done]
     - Need base dir for this to work
+      - Setup Server side[Done]
+      - Setup Client side
   - Config file parameter validation[Fixed]
     - Test scenarios
   - Support dropping in signed cert
   - Support FireFox fully
   - Update Documentation
+  - UI Updates:
+    - Move the power button to the side bar[Done]
+    - Add extra input options for video encoding.
   - Known Bugs:
     - (UI)Fix exiting from full screen[Fixed]
       - Chrome assigns max z-index to the fullscreen video and covers the whole screen so the progress bar cannot be clicked
     - (Encoding)Ffmpeg is skipping the first couple seconds of a video on (some?) encodings
-    - (Redis)Throw proper error message on redis is already started scenario
     - (Encoding)Fix parsing of file names so that they do not cut off after the first space[Fixed]
       - Confirm that the files can be consumed on the front end with special characters and spaces[Fixed]
+    - Server shutdown is not killing redis-server

@@ -8,7 +8,7 @@ function CheckConfig() { };
 CheckConfig.prototype.initialize = function() {
   if(typeof CheckConfig.prototype.protoInit === 'undefined') {
     CheckConfig.prototype.protoInit = true;
-    config          = this.factory.createConfig();
+    config = this.factory.createConfig();
   }
 };
 
@@ -78,9 +78,18 @@ var validateHostInfo = function() {
       throw new Error('The videoSyncInfo.staticDir is not in your config.');
     }
 
-    var remote = config.getConfig().videoSyncInfo.allowRemoteAdmin;
-    if(remote && typeof remote === 'boolean') {
-      throw new Error('The videoSyncInfo.allowRemoteAdmin needs to be a boolean value in your config.');
+    if(!config.getConfig().videoSyncInfo.staticDir) {
+      throw new Error('The videoSyncInfo.staticDir is not in your config.');
+    }
+
+    var encodedDir = config.getConfig().videoSyncInfo.encodedDir;
+    if(encodedDir && encodedDir === Path.basename(encodedDir)) {
+      throw new Error('The videoSyncInfo.encodedDir needs to be a path in your config.');
+    }
+
+    var rawDir = config.getConfig().videoSyncInfo.rawDir;
+    if(rawDir && rawDir === Path.basename(rawDir)) {
+      throw new Error('The videoSyncInfo.rawDir needs to be a path in your config.');
     }
 
     return new Promise.resolve();

@@ -1,9 +1,7 @@
 {
   "videoSyncInfo": {
     "port" : 8080,
-    "staticDir" : "static",
-    "allowRemoteAdmin" : false,
-    "baseDir" : ""
+    "staticDir" : "static"
   },
   "redisInfo" : {
     "host" : "127.0.0.1",

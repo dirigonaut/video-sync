@@ -547,27 +547,34 @@ function initGui(client, isAdmin) {
     <div id="side-encode" class="flex-icon primary-color flex-center-v border-left">
       <a href="#"><span class="icon flaticon-compose"></span></a>
     </div>`).prependTo('#side');
+
+    $(`<div id="side-shutdown" class="flex-icon primary-color flex-center-v border-left">
+      <a href="#"><span class="icon flaticon-power"></span></a>
+    </div>`).insertAfter('#side-documentation');
   }
 
   $('.side .flex-icon').click(function(e) {
     var id = e.currentTarget.id.split('-')[1];
-    if(!$(`.panel`).hasClass('show')) {
-      $(document).trigger('togglePanel');
-    }
 
-    $('.side .flex-icon').each((index, element) => {
-      var elementId = element.id.split('-')[1];
-
-      if(id == elementId) {
-        if($(`#panel-${elementId}`).hasClass('show')) {
-          $(document).trigger('togglePanel');
-        }
-
-        $(`#panel-${elementId}`).toggleClass('show');
-      } else {
-        $(`#panel-${elementId}`).removeClass('show');
+    if(id !== 'shutdown') {
+      if(!$(`.panel`).hasClass('show')) {
+        $(document).trigger('togglePanel');
       }
-    });
+
+      $('.side .flex-icon').each((index, element) => {
+        var elementId = element.id.split('-')[1];
+
+        if(id == elementId) {
+          if($(`#panel-${elementId}`).hasClass('show')) {
+            $(document).trigger('togglePanel');
+          }
+
+          $(`#panel-${elementId}`).toggleClass('show');
+        } else {
+          $(`#panel-${elementId}`).removeClass('show');
+        }
+      });
+    }
   });
 
   //Log Events ------------------------------------------------------------------
@@ -972,14 +979,13 @@ function initGui(client, isAdmin) {
     });
   } else {
     $('#log-types').remove();
-    $('#shutdown-button').remove();
   }
 
   $('.video').click(function(e) {
     toggleOverlays();
   });
 
-  $('#shutdown-button').click(function(e) {
+  $('#side-shutdown').click(function(e) {
     $(document).trigger('shutdown');
   });
 

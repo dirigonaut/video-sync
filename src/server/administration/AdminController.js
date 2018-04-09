@@ -1,6 +1,7 @@
+const Path    = require('path');
 const Promise = require('bluebird');
 
-var schemaFactory, sanitizer, redisSocket,
+var config, schemaFactory, sanitizer, redisSocket,
   publisher, media, fileIO, fileSystemUtils, playerManager, eventKeys, log;
 
 function AdminController() { }
@@ -8,6 +9,7 @@ function AdminController() { }
 AdminController.prototype.initialize = function (force) {
   if(typeof AdminController.prototype.protoInit === 'undefined') {
     AdminController.prototype.protoInit = true;
+    config          = this.factory.createConfig();
     schemaFactory   = this.factory.createSchemaFactory();
     sanitizer       = this.factory.createSanitizer();
     fileIO          = this.factory.createFileIO();
@@ -76,6 +78,38 @@ AdminController.prototype.attachSocket = function(socket) {
     var rule = yield media.setMediaRule(request.data);
     socket.emit(eventKeys.SYNCRULE, rule);
   }));
+
+  socket.on(eventKeys.GETFOLDERS, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.GETFOLDERS, data);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.STRING);
+    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
+
+    if(request) {
+      var folders = yield getFolders(socket, request);
+      socket.emit(eventKeys.FOLDERS, folders);
+    }
+  }));
 };
 
 module.exports = AdminController;
+
+var getFolders = Promise.coroutine(function* (socket, request) {
+  var basePath = yield config.getConfig().videoSyncInfo[request.data];
+  var folders = [];
+
+  if(basePath) {
+    var entries = yield fileIO.readDirAsync(basePath);
+
+    for(let i = 0; i < entries.length; ++i) {
+      var isDir = yield fileIO.isDir(Path.join(basePath, entries[i]));
+
+      if(isDir) {
+        folders.push(Path.join(basePath, entries[i]));
+      }
+    }
+  } else {
+    log.error(`Socket: ${socket.id} requested folders in dir variable: ${request.data}, which is not in the config.`);
+  }
+
+  return folders;
+});
