@@ -4,14 +4,14 @@ const Crypto  = require('crypto');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-var client, redisSocket, schemaFactory, eventKeys, log;
+var client, redisSocket, schemaFactory, eventKeys, config, log;
 
 function CredentialManager() { }
 
 CredentialManager.prototype.initialize = function(force) {
   if(typeof CredentialManager.prototype.protoInit === 'undefined') {
     CredentialManager.prototype.protoInit = true;
-    var config      = this.factory.createConfig();
+    config          = this.factory.createConfig();
     client          = Redis.createClient(config.getConfig().redisInfo);
 
     redisSocket     = this.factory.createRedisSocket();
@@ -23,19 +23,16 @@ CredentialManager.prototype.initialize = function(force) {
   }
 };
 
-CredentialManager.prototype.isAdmin = function(socket) {
-  return socket.handshake.address.includes('127.0.0.1');
+CredentialManager.prototype.isAdmin = function(socket, password) {
+  return socket.handshake.address.includes('127.0.0.1') || config.getConfig().videoSyncInfo.remoteAdminPass === password;
 };
 
 CredentialManager.prototype.setAdmin = Promise.coroutine(function* (socket, request) {
   var entry = {
     id: socket.id,
+    handle: request.data ? request.data : 'Admin',
     level: CredentialManager.Enum.Level.CONTROLS
   };
-
-  if(typeof request.data !== 'undefined') {
-    entry.handle = request.data;
-  }
 
   yield setUserData(CredentialManager.Enum.User.ADMIN, entry);
 });
@@ -45,10 +42,8 @@ CredentialManager.prototype.getAdmin = Promise.coroutine(function* () {
   return admin;
 });
 
-CredentialManager.prototype.removeAdmin = Promise.coroutine(function* (socket) {
-  if(socket.handshake.address.includes('127.0.0.1')) {
-    yield setUserData(CredentialManager.Enum.User.ADMIN, null);
-  }
+CredentialManager.prototype.removeAdmin = Promise.coroutine(function* () {
+  yield setUserData(CredentialManager.Enum.User.ADMIN, null);
 });
 
 CredentialManager.prototype.generateTokens = Promise.coroutine(function* (count, level) {
@@ -95,9 +90,9 @@ CredentialManager.prototype.getTokens = Promise.coroutine(function* () {
 });
 
 CredentialManager.prototype.getHandle = Promise.coroutine(function* (socket) {
-  var isAdmin = this.isAdmin(socket);
+  var admin = yield this.getAdmin();
 
-  if(!isAdmin) {
+  if(admin.id !== socket.id) {
     var id = socket.id;
     var tokens = yield getUserData(CredentialManager.Enum.User.CLIENT);
 

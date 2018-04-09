@@ -2,8 +2,9 @@
   "videoSyncInfo": {
     "port" : 8080,
     "staticDir" : "static",
-    "allowRemoteAdmin" : false,
-    "baseDir" : ""
+    "remoteAdminPass" : "password",
+    "encodedDir" : "~/repo/encoded/",
+    "rawDir" : "~/repo/media/"
   },
   "redisInfo" : {
     "host" : "127.0.0.1",

@@ -37,13 +37,14 @@ FileIO.prototype.read = function(path, options, onData, onFinish) {
 };
 
 FileIO.prototype.readDirAsync = Promise.coroutine(function* (path, extType) {
-  FileIO.prototype.protoInit ? log.debug('FileIO.readDirAsync ' + path + ' ' + extType) : undefined;
+  FileIO.prototype.protoInit ? log.debug('FileIO.readDirAsync ' + path + ' ' + extType)
+                             : console.log('FileIO.readDirAsync ' + path + ' ' + extType);
   var files = yield Fs.readdirAsync(path);
 
   var matchingFiles = [];
   if(typeof files !== 'undefined' && files) {
     for(let i = 0; i < files.length; ++i) {
-      if(Path.extname(files[i]).includes(extType)) {
+      if(!extType || Path.extname(files[i]).includes(extType)) {
         matchingFiles.push(files[i]);
       }
     }
@@ -52,8 +53,14 @@ FileIO.prototype.readDirAsync = Promise.coroutine(function* (path, extType) {
   return matchingFiles;
 });
 
+FileIO.prototype.isDir = Promise.coroutine(function* (path) {
+  var stats = yield Fs.statAsync(path);
+  return stats.isDirectory();
+});
+
 FileIO.prototype.ensureDirExistsAsync = function(path, mask) {
-  FileIO.prototype.protoInit ? log.debug('FileIO.ensureDirExistsAsync', path) : undefined;
+  FileIO.prototype.protoInit ? log.debug('FileIO.ensureDirExistsAsync', path)
+                             : console.log('FileIO.ensureDirExistsAsync', path);
   return Fs.mkdirAsync(path, mask)
   .catch(function(err) {
     if (err.code !== 'EEXIST') {

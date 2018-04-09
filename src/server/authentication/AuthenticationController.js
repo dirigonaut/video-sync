@@ -62,7 +62,8 @@ AuthenticationController.prototype.attachIO = function (io) {
 
   io.on('connection', Promise.coroutine(function* (socket, data) {
     log.socket(`Socket has connected: ${socket.id} ip: ${socket.handshake.address}`);
-    let isAdmin = credentials.isAdmin(socket);
+    var admin = yield credentials.getAdmin(socket);
+    let isAdmin = admin.id === socket.id;
 
     socket.emit(eventKeys.AUTHENTICATED, isAdmin, Promise.coroutine(function* () {
       log.info(`Socket: ${socket.id} has acknowledged the handshake.`);
@@ -124,7 +125,7 @@ AuthenticationController.prototype.attachIO = function (io) {
 module.exports = AuthenticationController;
 
 var isAdministrator = Promise.coroutine(function* (socket, request) {
-  var isAdmin = credentials.isAdmin(socket, request);
+  var isAdmin = credentials.isAdmin(socket, request ? request.id : undefined);
 
   if(isAdmin) {
     yield credentials.setAdmin(socket, request);
