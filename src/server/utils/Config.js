@@ -17,6 +17,8 @@ const CONFIG_DIR  = Path.join(ROOT_DIR, "configs");
 const APP_DATA    = Path.join(process.env.APPDATA || Path.join(process.env.HOME,
   (process.platform == 'darwin' ?  Path.join('Library', 'Preferences') : '.config')), 'video-sync');
 const LOG_DIR     = Path.join(APP_DATA, "logs");
+const ENCODE_DIR  = 'encodeDir';
+const MEDIA_DIR   = 'mediaDir';
 
 var fileIO, config;
 
@@ -68,6 +70,14 @@ Config.prototype.getAppDataDir = function() {
 
 Config.prototype.getLogDir = function() {
   return LOG_DIR;
+};
+
+Config.prototype.getEncodeDir = function() {
+  return ENCODE_DIR;
+};
+
+Config.prototype.getMediaDir = function() {
+  return MEDIA_DIR;
 };
 
 module.exports = Config;

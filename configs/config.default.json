@@ -3,8 +3,8 @@
     "port" : 8080,
     "staticDir" : "static",
     "remoteAdminPass" : "password",
-    "encodedDir" : "~/repo/encoded/",
-    "rawDir" : "~/repo/media/"
+    "encodeDir" : "~/repo/encode/",
+    "mediaDir" : "~/repo/media/"
   },
   "redisInfo" : {
     "host" : "127.0.0.1",

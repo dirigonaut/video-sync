@@ -155,11 +155,13 @@ function initGui(client, isAdmin) {
     });
 
     $('#path-input').click(function() {
+      $('#path-dropdown').empty();
       var paths = cookie.get('media-paths');
+      client.socket.request(client.keys.GETCONTENTS,
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STRING, ['mediaDir']));
 
       if(paths) {
-        paths = paths.split(',');
-        $('#path-dropdown').empty();
+        paths = paths ? paths.split(',') : [];
 
         paths.forEach((value, index, array) => {
           $(`<div class="flex-h flex-element primary-color invert">
@@ -188,6 +190,21 @@ function initGui(client, isAdmin) {
       }
     });
   }
+
+  var joinFolders = function(dirs) {
+    if(dirs) {
+      dirs.forEach((value, index, array) => {
+        $(`<div class="flex-h flex-element primary-color invert">
+          <div id='path-${index}' class="flex-element" onclick="$('#path-input').val('${value.replace(/\\/g, '\\\\')}')">${value}</div>
+          <a href="#" onclick="$(document).trigger('path-delete', $('#path-${index}'));">
+            <span class="icon-min flex-icon flaticon-error"></span>
+          </a>
+        </div>`).prependTo('#path-dropdown');
+      });
+    }
+  };
+
+  client.formData.on(client.formData.Enums.FORMS.MEDIA_DIRS, joinFolders);
 
   $(document).on('path-delete', function(e, element) {
     var paths = cookie.get('media-paths').split(',');
@@ -370,6 +387,12 @@ function initGui(client, isAdmin) {
       client.socket.request(client.keys.GETMETA, request);
     });
 
+    var joinFiles = function(files) {
+
+    };
+
+    client.formData.on(client.formData.Enums.FORMS.ENCODE_DIRS, joinFiles);
+
     var loadFileInfo = function(metaData) {
       $('#encoding-meta').children().each((index, el) => {
         if($(el)[0].id === "encoding-tabs") {
@@ -440,6 +463,7 @@ function initGui(client, isAdmin) {
 
     $('#encode-input-form a').click(function(e) {
       var values = serializeForm('encode-input-form', 'input');
+      values.splice(2, 0, serializeForm('encode-input-form', 'select').pop());
       var type;
 
       $($(e.currentTarget).parent()).children().each((index, ele) => {
@@ -452,13 +476,15 @@ function initGui(client, isAdmin) {
       template = client.encode.setKeyValue('i', encodeURI(`${values[0]}`), template);
 
       if(type === client.encode.Enums.TYPES.VIDEO) {
-        template = client.encode.setKeyValue('s', values[2], template);
-        template = client.encode.setOutput(encodeURI(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[2]}.${client.encode.Enums.CODEC.WEBM}`), template);
+        template = client.encode.setKeyValue('speed', values[2], template);
+        template = client.encode.setKeyValue('b:v', values[3], template);
+        template = client.encode.setKeyValue('s', values[4], template);
+        template = client.encode.setOutput(encodeURI(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[4]}.${client.encode.Enums.CODEC.WEBM}`), template);
       } else if(type === client.encode.Enums.TYPES.AUDIO) {
-        template = client.encode.setKeyValue('b:a', values[3], template);
-        template = client.encode.setOutput(encodeURI(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[3]}.${client.encode.Enums.CODEC.WEBM}`), template);
+        template = client.encode.setKeyValue('b:a', values[5], template);
+        template = client.encode.setOutput(encodeURI(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[5]}.${client.encode.Enums.CODEC.WEBM}`), template);
       } else if(type === client.encode.Enums.TYPES.SUBTITLE) {
-        template = client.encode.setKeyValue('i', `${values[0]} ${values[4] ? `-map 0:${values[4]}` : ''}`, template);
+        template = client.encode.setKeyValue('i', `${values[0]} ${values[6] ? `-map 0:${values[6]}` : ''}`, template);
         template = client.encode.setOutput(encodeURI(`${values[1]}${client.encode.getNameFromPath(values[0])}.vtt`), template);
       }
 
@@ -902,6 +928,10 @@ function initGui(client, isAdmin) {
       toggleOverlays();
     }
   });
+
+  var addBaseDirInfo = function(elementId) {
+
+  };
 
   //CSS Animation ----------------------------------------------------------------
   var fadeOut, over;

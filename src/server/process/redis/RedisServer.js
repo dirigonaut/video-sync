@@ -50,4 +50,8 @@ RedisServer.prototype.start = function(bin, config) {
   }
 };
 
+RedisServer.prototype.stop = function() {
+  redisProcess.kill();
+}
+
 module.exports = RedisServer;

@@ -79,23 +79,32 @@ AdminController.prototype.attachSocket = function(socket) {
     socket.emit(eventKeys.SYNCRULE, rule);
   }));
 
-  socket.on(eventKeys.GETFOLDERS, Promise.coroutine(function* (data) {
-    log.debug(eventKeys.GETFOLDERS, data);
+  socket.on(eventKeys.GETCONTENTS, Promise.coroutine(function* (data) {
+    log.debug(eventKeys.GETCONTENTS, data);
     var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.STRING);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
-      var folders = yield getFolders(socket, request);
-      socket.emit(eventKeys.FOLDERS, folders);
+      var dirPath = request.data;
+
+      if(dirPath === config.getMediaDir()) {
+        var contents = yield getFolderContents(socket, dirPath, 'dirs');
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [contents]);
+        socket.emit(eventKeys.MEDIADIR, response);
+      } else if(dirPath === config.getEncodeDir()) {
+        var contents = yield getFolderContents(socket, dirPath, 'files');
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [contents]);
+        socket.emit(eventKeys.ENCODEDIR, response);
+      }
     }
   }));
 };
 
 module.exports = AdminController;
 
-var getFolders = Promise.coroutine(function* (socket, request) {
-  var basePath = yield config.getConfig().videoSyncInfo[request.data];
-  var folders = [];
+var getFolderContents = Promise.coroutine(function* (socket, dirPath, filter) {
+  var basePath = config.getConfig().videoSyncInfo[dirPath];
+  var contents = [];
 
   if(basePath) {
     var entries = yield fileIO.readDirAsync(basePath);
@@ -103,13 +112,15 @@ var getFolders = Promise.coroutine(function* (socket, request) {
     for(let i = 0; i < entries.length; ++i) {
       var isDir = yield fileIO.isDir(Path.join(basePath, entries[i]));
 
-      if(isDir) {
-        folders.push(Path.join(basePath, entries[i]));
+      if(isDir && filter === 'dirs') {
+        contents.push(Path.join(basePath, entries[i]));
+      } else if(!isDir && filter === 'files') {
+        contents.push(Path.join(basePath, entries[i]));
       }
     }
   } else {
-    log.error(`Socket: ${socket.id} requested folders in dir variable: ${request.data}, which is not in the config.`);
+    log.warn(`Socket: ${socket.id} requested folders in dir variable: ${dirPath}, which is not in the config.`);
   }
 
-  return folders;
+  return contents;
 });
