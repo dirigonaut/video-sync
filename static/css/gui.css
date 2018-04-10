@@ -327,6 +327,7 @@ body {
   color:black;
   background-color: white;
   text-decoration: none;
+  border-bottom: solid 1px;
 }
 
 .rounded-corners {

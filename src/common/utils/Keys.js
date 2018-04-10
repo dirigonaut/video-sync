@@ -4,9 +4,10 @@ module.exports = {
   SETMEDIA:       'admin-set-media',
   SETSYNCRULE:    'admin-set-sync',
   GETSYNCRULE:    'admin-get-sync',
-  GETFOLDERS:     'admin-get-folders',
-  FOLDERS:        'admin-folders',
-  
+  GETCONTENTS:    'admin-get-contents',
+  MEDIADIR:       'admin-media-folders',
+  ENCODEDIR:      'admin-encode-files',
+
   //Client
   SYNCRULE:       'admin-sync-rule',
   MEDIAREADY:     'admin-media-ready',

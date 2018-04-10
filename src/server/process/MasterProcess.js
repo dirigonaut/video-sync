@@ -53,6 +53,7 @@ var startMaster = Promise.coroutine(function* () {
           proxy.spawnWorker(workerIndex);
         }
       } else if(message === 'master-process:shutdown') {
+        redisServer.stop();
         process.exit(0);
       }
     });
