@@ -1,13 +1,13 @@
 const Promise = require('bluebird');
 
-var encoderManager, media, redisSocket, fileIO, fileSystemUtils, schemaFactory, sanitizer, eventKeys, log;
+var encoderManager, media, redisSocket, fileIO, fileSystemUtils, schemaFactory, sanitizer, eventKeys, config, log;
 
 function EncodingController() { }
 
 EncodingController.prototype.initialize = function() {
   if(typeof EncodingController.prototype.protoInit === 'undefined') {
     EncodingController.prototype.protoInit = true;
-
+    config          = this.factory.createConfig();
     fileIO          = this.factory.createFileIO();
     encoderManager  = this.factory.createEncoderManager();
     media           = this.factory.createMedia();
@@ -34,7 +34,7 @@ EncodingController.prototype.attachSocket = function(socket) {
   log.info("VideoController.attachSocket");
   socket.on(eventKeys.ENCODE, Promise.coroutine(function* (data) {
     log.debug(eventKeys.ENCODE, data);
-    yield fileIO.ensureDirExistsAsync(data.directory, 484);
+    yield fileIO.ensureDirExistsAsync(data.directory.replace('{mediaDir}', config.getConfig().videoSyncInfo.mediaDir), 484);
     var processes;
 
     try {

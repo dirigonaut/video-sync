@@ -5,7 +5,7 @@ const Crypto  = require('crypto');
 const webm_manifest = "webm_dash_manifest";
 const mp4_manifest = "-frag-rap";
 
-var command, encoding, processes, current, credentials, redisSocket, eventKeys, log;
+var command, encoding, processes, current, credentials, redisSocket, eventKeys, config, log;
 
 function EncoderManager() { }
 
@@ -13,6 +13,8 @@ EncoderManager.prototype.initialize = function() {
 	if(typeof EncoderManager.prototype.protoInit === 'undefined') {
     EncoderManager.prototype.protoInit = true;
 		Object.setPrototypeOf(EncoderManager.prototype, Events.prototype);
+		config      		= this.factory.createConfig();
+
 		encoding				= false;
 		processes 			= [];
 
@@ -35,9 +37,9 @@ EncoderManager.prototype.buildProcess = function(data) {
 			case "ffmpeg" :
 				log.debug("Found ffmpeg encoding", data[i]);
 				var ffmpeg = this.factory.createFfmpegProcess();
-				ffmpeg.setCommand(command.parse(data[i].input));
+				ffmpeg.setCommand(command.parse(data[i].input, config.getConfig().videoSyncInfo.mediaDir));
 				processes.push([Crypto.randomBytes(24).toString('hex'), ffmpeg]);
-
+				console.log(ffmpeg)
 				if(data[i].input.includes(webm_manifest)) {
 					var webm = this.factory.createWebmMetaProcess();
 					webm.setCommand(ffmpeg.command[ffmpeg.command.length - 1]);

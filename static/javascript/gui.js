@@ -172,21 +172,7 @@ function initGui(client, isAdmin) {
           </div>`).prependTo('#path-dropdown');
         });
 
-        $('.path-dropdown div').off();
-        $('.path-dropdown div').click(function(e) {
-          toggleOverlays();
-        });
-
-        $('.path-dropdown .invert').off();
-        $('.path-dropdown .invert').hover(function(e) {
-          $('.path-dropdown .invert').each((index, element) => {
-            if(e.currentTarget == element) {
-              $(element).toggleClass('show');
-            } else {
-              $(element).removeClass('show');
-            }
-          });
-        });
+        resetPathDropDown();
       }
     });
   }
@@ -196,13 +182,30 @@ function initGui(client, isAdmin) {
       dirs.forEach((value, index, array) => {
         $(`<div class="flex-h flex-element primary-color invert">
           <div id='path-${index}' class="flex-element" onclick="$('#path-input').val('${value.replace(/\\/g, '\\\\')}')">${value}</div>
-          <a href="#" onclick="$(document).trigger('path-delete', $('#path-${index}'));">
-            <span class="icon-min flex-icon flaticon-error"></span>
-          </a>
-        </div>`).prependTo('#path-dropdown');
+        </div>`).appendTo('#path-dropdown');
       });
+
+      resetPathDropDown();
     }
   };
+
+  var resetPathDropDown = function() {
+    $('.path-dropdown div').off();
+    $('.path-dropdown div').click(function(e) {
+      toggleOverlays();
+    });
+
+    $('.path-dropdown .invert').off();
+    $('.path-dropdown .invert').hover(function(e) {
+      $('.path-dropdown .invert').each((index, element) => {
+        if(e.currentTarget == element) {
+          $(element).toggleClass('show');
+        } else {
+          $(element).removeClass('show');
+        }
+      });
+    });
+  }
 
   client.formData.on(client.formData.Enums.FORMS.MEDIA_DIRS, joinFolders);
 
@@ -377,6 +380,11 @@ function initGui(client, isAdmin) {
 
   //Encode Events ---------------------------------------------------------------
   function initEncode() {
+    $('#encode-input').on("focusin", function() {
+      client.socket.request(client.keys.GETCONTENTS,
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STRING, ['encodeDir']));
+    });
+
     $('#encode-input').on("focusout", function() {
       var input = encodeURI($('#encode-input').val());
       var inspect = ` -show_streams ${input}`;
@@ -388,7 +396,13 @@ function initGui(client, isAdmin) {
     });
 
     var joinFiles = function(files) {
+      $('#encode-files').empty();
 
+      if(files) {
+        files.forEach((value, index, array) => {
+          $(`<option value="${value}">`).appendTo('#encode-files');
+        });
+      }
     };
 
     client.formData.on(client.formData.Enums.FORMS.ENCODE_DIRS, joinFiles);
