@@ -1,9 +1,9 @@
 # ToDo:
   - Remote admin log in
     - Feature turned on/off via config[Done]
-    - Need base dir for this to work
+    - Need base dir for this to work[Done]
       - Setup Server side[Done]
-      - Setup Client side
+      - Setup Client side[Done]
   - Config file parameter validation[Fixed]
     - Test scenarios
   - Support dropping in signed cert
