@@ -25,22 +25,22 @@ module.exports = CheckConfig;
 
 var validateRedis = function() {
   var exec = Exec(`${config.getConfig().redis ? config.getConfig().redis : 'redis-server'} --version`);
-  return asyncPromise(exec).catch(function(error) {
-    throw new Error(`Calling process redis-server returned error: ${error}`);
+  return asyncPromise(exec).catch(function(error, data) {
+    throw new Error(`Calling process redis-server: ${error}`);
   });
 };
 
 var validateFFmpeg = function() {
   var exec = Exec(`${config.getConfig().ffmpeg ? config.getConfig().ffmpeg : 'ffmpeg'} -version`);
   return asyncPromise(exec).catch(function(error) {
-    throw new Error(`Calling process ffmpeg returned error: ${error}`);
+    throw new Error(`Calling process ffmpeg: ${error}`);
   });
 };
 
 var validateFFprobe = function() {
   var exec = Exec(`${config.getConfig().ffprobe ? config.getConfig().ffprobe : 'ffprobe'} -version`);
   return asyncPromise(exec).catch(function(error) {
-    throw new Error(`Calling process ffprobe returned error: ${error}`);
+    throw new Error(`Calling process ffprobe: ${error}`);
   });
 };
 
@@ -100,12 +100,16 @@ var validateHostInfo = function() {
 
 var validateCertificateInfo = function() {
   try {
-    if(!config.getConfig().certificate) {
-      throw new Error('The certificate map is not in your config.');
+    if(!config.getConfig().ssl) {
+      throw new Error('The ssl map is not in your config.');
     }
 
-    if(!config.getConfig().certificate.path && !config.getConfig().certificate.attributes) {
-      throw new Error('The certificate map needs to provide either a set of attributes to generate a https certificate or a path to a valid certificate.');
+    if(!config.getConfig().ssl.key) {
+      throw new Error('The ssl map needs to contain the path to load/save your ssl key.');
+    }
+
+    if(!config.getConfig().ssl.crt) {
+      throw new Error('The ssl map needs to contain the path to load/save your ssl certificate.');
     }
 
     return new Promise.resolve();

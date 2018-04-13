@@ -10,15 +10,14 @@ const CONFIG_NAME_OS  = `config.${process.platform}.json`;
 const REDIS_CONFIG    = "redis.conf";
 const REDIS_CONFIG_OS = `redis.${process.platform}.conf`;
 
-const CERTIFICATE     = "certificate.pem"
-
 const ROOT_DIR    = Path.join(__dirname, "../../../");
 const CONFIG_DIR  = Path.join(ROOT_DIR, "configs");
 const APP_DATA    = Path.join(process.env.APPDATA || Path.join(process.env.HOME,
   (process.platform == 'darwin' ?  Path.join('Library', 'Preferences') : '.config')), 'video-sync');
 const LOG_DIR     = Path.join(APP_DATA, "logs");
-const ENCODE_DIR  = 'encodeDir';
+
 const MEDIA_DIR   = 'mediaDir';
+const ENCODE_DIR  = 'encodeDir';
 
 var fileIO, config;
 
@@ -61,8 +60,13 @@ Config.prototype.getRedisConfigPath = function() {
 };
 
 Config.prototype.getCertificatePath = function() {
-  return typeof config.certificate.path !== 'undefined' ? this.getConfig().certificate.path : Path.join(APP_DATA, CERTIFICATE);
+  return config.ssl.crt;
 };
+
+Config.prototype.getKeyPath = function() {
+  return config.ssl.key;
+};
+
 
 Config.prototype.getAppDataDir = function() {
   return APP_DATA;

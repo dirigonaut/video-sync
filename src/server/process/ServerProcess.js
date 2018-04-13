@@ -27,12 +27,12 @@ ServerProcess.prototype.start = Promise.coroutine(function* () {
   publisher.initialize();
 
   var certificate = this.factory.createCertificate();
-  var pem = yield certificate.getCertificates();
+  var pem = yield certificate.getCertificate();
 
   log.debug(`Certificates found, initializing ${process.pid} ServerProcess`);
   var options = {
-    key: pem.privateKey,
-    cert: pem.certificate,
+    key: pem.key,
+    cert: pem.crt,
     rejectUnauthorized: false,
     requestCert: true,
   };
