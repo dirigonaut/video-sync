@@ -1,4 +1,5 @@
 # ToDo:
+  - Consistent shutdown/logging reaction based upon whether it is a start up failed or request failed.
   - Remote admin log in
     - Feature turned on/off via config[Done]
     - Need base dir for this to work[Done]
@@ -6,7 +7,7 @@
       - Setup Client side[Done]
   - Config file parameter validation[Fixed]
     - Test scenarios
-  - Support dropping in signed cert
+  - Support dropping in signed cert[Done]
   - Support FireFox fully
   - Update Documentation
   - UI Updates:

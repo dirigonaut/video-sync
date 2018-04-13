@@ -13,7 +13,6 @@ Certificate.prototype.initialize = function(force) {
   if(typeof Certificate.prototype.protoInit === 'undefined') {
     Certificate.prototype.protoInit = true;
     Moment().format('YYYY MM DD');
-
     config          = this.factory.createConfig();
 
     var logManager  = this.factory.createLogManager();
@@ -21,70 +20,90 @@ Certificate.prototype.initialize = function(force) {
   }
 };
 
-Certificate.prototype.getCertificates = Promise.coroutine(function* () {
-  log.debug("Certificate.getCertificates");
-  var cert = yield Fs.readFileAsync(config.getCertificatePath())
-  .catch(function(err) {
-    log.error(err);
-    return undefined;
-  }.bind(this));
+Certificate.prototype.getCertificate = Promise.coroutine(function* () {
+  log.debug("Certificate.getCertificate");
+  var pem = yield load();
 
-  if(typeof cert === 'undefind' || !cert) {
-    log.info("There are no SSL Certificates, signing new ones.");
-    var attributes = config.getConfig().certificate ? config.getConfig().certificate.attributes : '';
-    cert = yield generate(attributes);
+  if(!pem) {
+    log.info("There are no valid SSL Certificates, self signing new ones.");
+    pem = yield generate();
   } else {
-    log.info("Loading SSL Certificates.");
-    cert = JSON.parse(cert);
-
-    if(Moment().diff(cert.expire) >= -1) {
-      log.info("SSL Certificates are expired, signing new ones.");
-
-      cert = yield generate.call(this, getAttributes());
-    }
+    verify(pem.crt);
   }
 
-  return cert.pem;
+  return pem;
 });
 
 module.exports = Certificate;
 
-var generate = function(attrs) {
+var generate = function() {
   log.debug("Certificate._generate");
   var pki = Forge.pki;
 
   var keypair = pki.rsa.generateKeyPair(2048);
   var cert = pki.createCertificate();
 
-  // fill the required fields
   cert.publicKey = keypair.publicKey;
   cert.serialNumber = '01';
   cert.validity.notBefore = new Date();
   cert.validity.notAfter = new Date();
   cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 1);
 
-  // here we set subject and issuer as the same one
-  cert.setSubject(attrs);
-  cert.setIssuer(attrs);
+  try {
+    // here we set subject and issuer as the same one
+    var attrs = config.getConfig().ssl.attributes;
+    cert.setSubject(attrs);
+    cert.setIssuer(attrs);
 
-  // the actual certificate signing
-  cert.sign(keypair.privateKey, Forge.md.sha512.create());
+    // the actual certificate signing
+    cert.sign(keypair.privateKey, Forge.md.sha512.create());
+  } catch(e) {
+    throw new Error(`Unable to generate/sign new certificate. ${e.message || e}`);
+  }
 
-  // now convert the Forge certificate to PEM format
-  var pem = {
-    privateKey: pki.privateKeyToPem(keypair.privateKey),
-    publicKey: pki.publicKeyToPem(keypair.publicKey),
-    certificate: pki.certificateToPem(cert)
-  };
-
-  return save.call(this, pem);
+  return Promise.all([
+    Fs.writeFileAsync(config.getCertificatePath(), pki.privateKeyToPem(keypair.privateKey)),
+    Fs.writeFileAsync(config.getKeyPath(), pki.certificateToPem(cert))
+  ]);
 };
 
-var save = function (certs) {
-  log.debug("Certificate.prototype.save");
-  var certificate = { expire: Moment().add(EXPIR, 'days').valueOf(), pem: certs };
-  return Fs.writeFileAsync(config.getCertificatePath(), JSON.stringify(certificate))
-  .then(function() {
-    return certificate;
+var load = function (path) {
+  log.debug("Certificate._load", path);
+  return Promise.all([
+    Fs.readFileAsync(config.getCertificatePath()),
+    Fs.readFileAsync(config.getKeyPath())
+  ]).then(function(result) {
+    if(result.length === 2) {
+      return {
+        crt: result[1].toString(),
+        key: result[0].toString()
+      }
+    }
+  }).catch(function(error) {
+    log.error(`Error loading certificate: ${error}`);
   });
+};
+
+var verify = function (pem) {
+  log.debug("Certificate._verify");
+  var caStore = Forge.pki.createCaStore();
+  var cert;
+
+  try {
+    cert = Forge.pki.certificateFromPem(pem, true);
+  } catch (e) {
+    throw new Error ('Failed to convert certificate (' + e.message || e + ')');
+  }
+
+  try {
+    caStore.addCertificate(cert);
+  } catch (e) {
+    throw new Error ('Failed to load CA certificate (' + e.message || e + ')');
+  }
+
+  try {
+    Forge.pki.verifyCertificateChain(caStore, [ cert ]);
+  } catch (e) {
+    throw new Error ('Failed to verify certificate (' + e.message || e + ')');
+  }
 };

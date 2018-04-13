@@ -2,6 +2,7 @@
   "videoSyncInfo": {
     "port" : 8080,
     "staticDir" : "static",
+    "threadCount": 3,
     "remoteAdminPass" : "password",
     "encodeDir" : "~/repo/encode/",
     "mediaDir" : "~/repo/media/"
@@ -14,8 +15,9 @@
   "redis" : "redis-server",
   "ffmpeg" : "ffmpeg",
   "ffprobe" : "ffprobe",
-  "certificate" : {
-    "path" : "~/.config/video-sync/certificate.pem",
+  "ssl" : {
+    "key" : "~/.config/video-sync/certificate.key",
+    "crt" : "~/.config/video-sync/certificate.crt",
     "attributes" : [{
         "name": "commonName",
         "value": "example.org"
@@ -34,8 +36,8 @@
       }, {
         "shortName": "OU",
         "value": "Test"
-      }
-  ]},
+      }]
+  },
   "log" : {
     "GENERAL": "debug",
     "ADMINISTRATION": "debug",
