@@ -19,5 +19,6 @@
     - (Encoding)Ffmpeg is skipping the first couple seconds of a video on (some?) encodings
     - (Encoding)Fix parsing of file names so that they do not cut off after the first space[Fixed]
       - Confirm that the files can be consumed on the front end with special characters and spaces[Fixed]
+      - Still some issues with certain characters (look at subtitles)
     - Server shutdown is not killing redis-server[Fixed]
     - There is an issue with deleting encodings needs more research
