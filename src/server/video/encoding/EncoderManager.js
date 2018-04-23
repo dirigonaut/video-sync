@@ -39,7 +39,6 @@ EncoderManager.prototype.buildProcess = function(data) {
 				var ffmpeg = this.factory.createFfmpegProcess();
 				ffmpeg.setCommand(command.parse(data[i].input, config.getConfig().videoSyncInfo.mediaDir));
 				processes.push([Crypto.randomBytes(24).toString('hex'), ffmpeg]);
-				console.log(ffmpeg)
 				if(data[i].input.includes(webm_manifest)) {
 					var webm = this.factory.createWebmMetaProcess();
 					webm.setCommand(ffmpeg.command[ffmpeg.command.length - 1]);

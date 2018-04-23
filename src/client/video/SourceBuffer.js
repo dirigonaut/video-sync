@@ -1,6 +1,8 @@
 const Promise = require('bluebird');
 const Events  = require('events');
 
+const MAX_LOG_LENGTH = 250;
+
 var metaManager, socket, schemaFactory, eventKeys, log;
 
 function SourceBuffer() { }
@@ -184,6 +186,8 @@ function onReady() {
           }
         } else if(segment === null) {
           this.bufferLog.push(`Deleting segments: ${Array.from(this.segmentsToBuffer.get(this.loadingSegment).keys())} for key: ${this.loadingSegment}`);
+          this.bufferLog = this.bufferLog.slice(0, this.bufferLog.length > MAX_LOG_LENGTH ? MAX_LOG_LENGTH : this.bufferLog.length);
+
           this.segmentsToBuffer.delete(this.loadingSegment);
           this.index = 0;
           this.loadingSegment = undefined;

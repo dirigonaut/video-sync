@@ -79,20 +79,24 @@ var setupMedia = Promise.coroutine(function* (domElements) {
     buffers[metaManager.Enums.TYPES.VIDEO] = this.factory.createSourceBuffer();
     mediaPromises.push(buffers[metaManager.Enums.TYPES.VIDEO].setup(metaManager.Enums.TYPES.VIDEO, domElements.mediaSource, video));
 
-    buffers[metaManager.Enums.TYPES.VIDEO].once('init', function() { video.emit('get-segment', metaManager.Enums.TYPES.VIDEO,
-      video.getVideoElement().currentTime ? video.getVideoElement().currentTime : 0) });
+    buffers[metaManager.Enums.TYPES.VIDEO].once('init', function() { video.emit('get-segment', metaManager.Enums.TYPES.VIDEO, 0) });
 
-    buffers[metaManager.Enums.TYPES.VIDEO].on('error', video.resetVideoElementErrorState);
+    buffers[metaManager.Enums.TYPES.VIDEO].on('error', function(err) {
+      this.emit('bufferError');
+      video.resetVideoElementErrorState(err);
+    }.bind(this));
   }
 
   if(active.activeMeta.get(metaManager.Enums.TYPES.AUDIO)) {
     buffers[metaManager.Enums.TYPES.AUDIO] = this.factory.createSourceBuffer();
     mediaPromises.push(buffers[metaManager.Enums.TYPES.AUDIO].setup(metaManager.Enums.TYPES.AUDIO, domElements.mediaSource, video));
 
-    buffers[metaManager.Enums.TYPES.AUDIO].once('init', function() { video.emit('get-segment', metaManager.Enums.TYPES.AUDIO,
-      video.getVideoElement().currentTime ? video.getVideoElement().currentTime : 0) });
+    buffers[metaManager.Enums.TYPES.AUDIO].once('init', function() { video.emit('get-segment', metaManager.Enums.TYPES.AUDIO, 0) });
 
-    buffers[metaManager.Enums.TYPES.AUDIO].on('error', video.resetVideoElementErrorState);
+    buffers[metaManager.Enums.TYPES.AUDIO].on('error', function(err) {
+      this.emit('bufferError');
+      video.resetVideoElementErrorState(err);
+    }.bind(this));
   }
 
   subtitles = this.factory.createSubtitles();
