@@ -69,8 +69,6 @@ MetaManager.prototype.setActiveMetaData = function(metaInfo) {
   if(activeMetaData !== metaData) {
     activeMetaData = metaData;
   }
-
-  console.log(activeMetaData)
 };
 
 MetaManager.prototype.setBufferThreshold = function(threshold) {

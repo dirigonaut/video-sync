@@ -16,9 +16,15 @@
   - Known Bugs:
     - (UI)Fix exiting from full screen[Fixed]
       - Chrome assigns max z-index to the fullscreen video and covers the whole screen so the progress bar cannot be clicked
-    - (Encoding)Ffmpeg is skipping the first couple seconds of a video on (some?) encodings
-    - (Encoding)Fix parsing of file names so that they do not cut off after the first space[Fixed]
-      - Confirm that the files can be consumed on the front end with special characters and spaces[Fixed]
-      - Still some issues with certain characters (look at subtitles)
     - Server shutdown is not killing redis-server[Fixed]
+    - Fix parsing of file names so that they do not cut off after the first space[Fixed]
+      - Confirm that the files can be consumed on the front end with special characters and spaces[Fixed]
     - There is an issue with deleting encodings needs more research
+    - Buffer logs need to be cleared.[Fixed]
+  - Memory Bugs:
+    - chrome heap shows that sourceBuffers, MediaSource, video have leaks
+  - Encoding Bugs:
+    - Still some issues with certain characters (look at subtitles)
+      - [WhyNot] Saint☆Young Men The Movie [BD 720p AAC][12DEEE77].mkv
+    - /home/sabo-san/repo/media/adv.time.s1.ep1 won't play and throws no errors.
+    - (Encoding)Ffmpeg is skipping the first couple seconds of a video on (some?) encodings

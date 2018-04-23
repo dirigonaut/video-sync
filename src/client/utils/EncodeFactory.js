@@ -1,5 +1,5 @@
 const TEMPLATES = {
-  WEBM_VIDEO_TEMPLATE:    `-y -i arg -c:v libvpx-vp9 -s arg -keyint_min 150 -g 150 -b:v 1500k -crf 42 -threads 4 -speed 2 -tile-columns 4 -frame-parallel 1 -an -sn -f webm -dash 1`,
+  WEBM_VIDEO_TEMPLATE:    `-y -i arg -c:v libvpx-vp9 -s arg -keyint_min 150 -g 150 -b:v 1500k -threads 4 -speed 2 -tile-columns 4 -frame-parallel 1 -an -sn -f webm -dash 1`,
   WEBM_AUDIO_TEMPLATE:    `-y -i arg -vn -sn -c:a libvorbis -b:a arg -f webm -dash 1`,
   WEBM_SUBTITLE_TEMPLATE: `-y -txt_format text -i arg`,
   WEBM_MANIFEST_TEMPLATE: `-y arg -c copy -f webm_dash_manifest -adaptation_sets "id=0,streams=arg id=1,streams=arg"`,

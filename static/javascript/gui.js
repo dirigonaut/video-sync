@@ -9,6 +9,9 @@ function initGui(client, isAdmin) {
     };
 
     client.media.initializeMedia(domElements, reset);
+    client.media.on('bufferError', function(reset) {
+      //$(document).trigger('initializeMedia', client.media.isMediaInitialized()); 
+    });
   });
 
   client.socket.setEvent(client.keys.MEDIAREADY, function() {
