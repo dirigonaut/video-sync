@@ -10,7 +10,7 @@ function initGui(client, isAdmin) {
 
     client.media.initializeMedia(domElements, reset);
     client.media.on('bufferError', function(reset) {
-      //$(document).trigger('initializeMedia', client.media.isMediaInitialized()); 
+      //$(document).trigger('initializeMedia', client.media.isMediaInitialized());
     });
   });
 
@@ -112,19 +112,19 @@ function initGui(client, isAdmin) {
 
   $('#control-button-full').click(function(e) {
     if(document.fullScreen || document.webkitIsFullScreen) {
-      $('video')[0].webkitExitFullscreen();
-      //$('.control-full').addClass("control");
-      //$('.control-full').removeClass("control-full");
-      //$('.flaticon-minus').addClass('flaticon-plus')
-      //$('.flaticon-plus').removeClass('flaticon-minus');
+      document.webkitExitFullscreen();
+      $('.control-full').addClass("control");
+      $('.control-full').removeClass("control-full");
+      $('.flaticon-minus').addClass('flaticon-plus')
+      $('.flaticon-plus').removeClass('flaticon-minus');
       toggleOverlays();
     } else {
       $(document).trigger('togglePanel', [true]);
-      $('video')[0].webkitRequestFullScreen();
-      //$('.control').addClass("control-full");
-      //$('.control').removeClass("control");
-      //$('.flaticon-plus').addClass('flaticon-minus')
-      //$('.flaticon-minus').removeClass('flaticon-plus');
+      $('#video-container')[0].webkitRequestFullScreen();
+      $('.control').addClass("control-full");
+      $('.control').removeClass("control");
+      $('.flaticon-plus').addClass('flaticon-minus')
+      $('.flaticon-minus').removeClass('flaticon-plus');
       toggleOverlays();
     }
   });
@@ -938,8 +938,6 @@ function initGui(client, isAdmin) {
 
   $(document).on('webkitfullscreenchange', function(e) {
     if(!document.webkitIsFullScreen) {
-      //$('.control-full').addClass("control");
-      //$('.control-full').removeClass("control-full");
       $('.flaticon-minus').addClass('flaticon-plus')
       $('.flaticon-plus').removeClass('flaticon-minus');
       toggleOverlays();
@@ -1028,7 +1026,7 @@ function initGui(client, isAdmin) {
     $('#log-types').remove();
   }
 
-  $('.video').click(function(e) {
+  $('.video-element').click(function(e) {
     toggleOverlays();
   });
 

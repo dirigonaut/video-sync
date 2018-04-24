@@ -15,12 +15,15 @@
     - Add extra input options for video encoding.[Done]
   - Known Bugs:
     - (UI)Fix exiting from full screen[Fixed]
-      - Chrome assigns max z-index to the fullscreen video and covers the whole screen so the progress bar cannot be clicked
+      - Chrome assigns max z-index to the fullscreen video and covers the whole screen so the progress bar cannot be clicked[Fixed]
+      - https://stackoverflow.com/questions/18578244/displaying-elements-other-than-fullscreen-element-html5-fullscreen-api
     - Server shutdown is not killing redis-server[Fixed]
     - Fix parsing of file names so that they do not cut off after the first space[Fixed]
       - Confirm that the files can be consumed on the front end with special characters and spaces[Fixed]
     - There is an issue with deleting encodings needs more research
     - Buffer logs need to be cleared.[Fixed]
+    - On video start total time is a NaN:NaN
+    - Sometimes on video load the video does not load properly
   - Memory Bugs:
     - chrome heap shows that sourceBuffers, MediaSource, video have leaks
   - Encoding Bugs:

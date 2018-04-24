@@ -43,101 +43,101 @@
           </div>
         </div>
 
-        <div class="video">
+        <div id="video-container" class="video">
           <video id="video" class="video-element"></video>
-        </div>
 
-        <div class="control flex-h flex-center-h primary-color fade rounded-corners borders">
-          <div class="icon-margin">
-            <a href="#" id="control-button-play"><span class="icon flaticon-play-button-1"></span></a>
-          </div>
+          <div class="control flex-h flex-center-h primary-color fade rounded-corners borders">
+            <div class="icon-margin">
+              <a href="#" id="control-button-play"><span class="icon flaticon-play-button-1"></span></a>
+            </div>
 
-          <div class="control-time flex-h">
-            <form class="form flex-element flex-h flex-center-v">
-              <input type="range" class="control-time-slider clear-spacers" value=0 />
-              <div class="flex-h">
-                <input id="control-current" type="text" class="control-time-display clear-spacers" value=00:00:00 >/
-                <input id="control-duration" type="text" class="control-time-display clear-spacers" value=00:00:00 readonly>
-              </div>
-            </form>
-          </div>
+            <div class="control-time flex-h">
+              <form class="form flex-element flex-h flex-center-v">
+                <input type="range" class="control-time-slider clear-spacers" value=0 />
+                <div class="flex-h">
+                  <input id="control-current" type="text" class="control-time-display clear-spacers" value=00:00:00 >/
+                  <input id="control-duration" type="text" class="control-time-display clear-spacers" value=00:00:00 readonly>
+                </div>
+              </form>
+            </div>
 
-          <div class="icon-margin">
-            <a href="#" id="control-button-volume"> <span class="icon flaticon-speaker"></span></a>
-          </div>
+            <div class="icon-margin">
+              <a href="#" id="control-button-volume"> <span class="icon flaticon-speaker"></span></a>
+            </div>
 
-          <div id="control-volume" class="control-volume toggle primary-color rounded-corners borders">
-            <form class="form flex-v flex-center-v">
-              <input type="range" id="volume-bar" class="control-volume-slider" value="50">
-              <div id="volume-level" class="flex-element flex-center-v input-style">50</div>
-            </form>
-          </div>
+            <div id="control-volume" class="control-volume toggle primary-color rounded-corners borders">
+              <form class="form flex-v flex-center-v">
+                <input type="range" id="volume-bar" class="control-volume-slider" value="50">
+                <div id="volume-level" class="flex-element flex-center-v input-style">50</div>
+              </form>
+            </div>
 
-          <div class="icon-margin">
-            <a href="#" id="control-button-sync"><span class="icon flaticon-stopwatch-2"></span></a>
-          </div>
+            <div class="icon-margin">
+              <a href="#" id="control-button-sync"><span class="icon flaticon-stopwatch-2"></span></a>
+            </div>
 
-          <div id="control-sync" class="control-sync flex-v primary-color rounded-corners borders toggle">
-            <form id="sync-form">
-              <fieldset class="form flex-v">
-                <div class="flex-element flex-h">
-                  <div class="flex-left">First: </div>
-                  <div id="sync-first" class="flex-element-part flex-right input-style"> 0</div>
-                </div>
-                <div class="flex-element flex-h">
-                  <div class="flex-left">Last: </div>
-                  <div id="sync-last" class="flex-element-part flex-right input-style"> 0</div>
-                </div>
-                <div class="flex-element flex-h">
-                  <div class="flex-left">Diff: </div>
-                  <div id="sync-diff" class="flex-element-part flex-right flex-center-v input-style"> 0</div>
-                </div>
-                <div class="flex-element flex-v flex-center-v">
-                  <a href="#" id="sync-syncing">
-                    <span class="icon flex-icon flaticon-repeat-1"></span>
-                  </a>
-                </div>
-              </fieldset>
-            </form>
-          </div>
+            <div id="control-sync" class="control-sync flex-v primary-color rounded-corners borders toggle">
+              <form id="sync-form">
+                <fieldset class="form flex-v">
+                  <div class="flex-element flex-h">
+                    <div class="flex-left">First: </div>
+                    <div id="sync-first" class="flex-element-part flex-right input-style"> 0</div>
+                  </div>
+                  <div class="flex-element flex-h">
+                    <div class="flex-left">Last: </div>
+                    <div id="sync-last" class="flex-element-part flex-right input-style"> 0</div>
+                  </div>
+                  <div class="flex-element flex-h">
+                    <div class="flex-left">Diff: </div>
+                    <div id="sync-diff" class="flex-element-part flex-right flex-center-v input-style"> 0</div>
+                  </div>
+                  <div class="flex-element flex-v flex-center-v">
+                    <a href="#" id="sync-syncing">
+                      <span class="icon flex-icon flaticon-repeat-1"></span>
+                    </a>
+                  </div>
+                </fieldset>
+              </form>
+            </div>
 
-          <div class="icon-margin">
-            <a href="#" id="control-button-options"> <span class="icon flaticon-settings-9"></span></a>
-          </div>
+            <div class="icon-margin">
+              <a href="#" id="control-button-options"> <span class="icon flaticon-settings-9"></span></a>
+            </div>
 
-          <div id="control-options" class="control-options flex-v primary-color rounded-corners borders toggle">
-            <form id="options-form">
-              <fieldset class="form flex-v">
-                <div class="flex-h flex-element">
-                  <label for="video-track-options">Video:</label>
-                  <select id="video-track-list" name="video-track-options" class="flex-right flex-element-part">
-                  </select>
-                </div>
-                <div class="flex-h flex-element">
-                  <label for="audio-track-options">Audio:</label>
-                  <select id="audio-track-list" name="audio-track-options" class="flex-right flex-element-part">
-                  </select>
-                </div>
-                <div class="flex-h flex-element">
-                  <label for="subtitle-track-options">Subtitle:</label>
-                  <select id="subtitle-track-list" name="subtitle-track-options" class="flex-right flex-element-part">
-                    <option value="None" selected>None</option>
-                  </select>
-                </div>
-                <div class="flex-h flex-element">
-                  <label for="buffer-options">Buffer:</label>
-                  <input type="range" id="buffer-options" name="buffer-options" class="flex-right flex-element-part" value=30>
-                </div>
-                <div class="flex-h flex-element">
-                  <label for="sync-options">Sync:</label>
-                  <input type="text" id="sync-options" name="sync-options" class="flex-right flex-element-part">
-                </div>
-              </fieldset>
-            </form>
-          </div>
+            <div id="control-options" class="control-options flex-v primary-color rounded-corners borders toggle">
+              <form id="options-form">
+                <fieldset class="form flex-v">
+                  <div class="flex-h flex-element">
+                    <label for="video-track-options">Video:</label>
+                    <select id="video-track-list" name="video-track-options" class="flex-right flex-element-part">
+                    </select>
+                  </div>
+                  <div class="flex-h flex-element">
+                    <label for="audio-track-options">Audio:</label>
+                    <select id="audio-track-list" name="audio-track-options" class="flex-right flex-element-part">
+                    </select>
+                  </div>
+                  <div class="flex-h flex-element">
+                    <label for="subtitle-track-options">Subtitle:</label>
+                    <select id="subtitle-track-list" name="subtitle-track-options" class="flex-right flex-element-part">
+                      <option value="None" selected>None</option>
+                    </select>
+                  </div>
+                  <div class="flex-h flex-element">
+                    <label for="buffer-options">Buffer:</label>
+                    <input type="range" id="buffer-options" name="buffer-options" class="flex-right flex-element-part" value=30>
+                  </div>
+                  <div class="flex-h flex-element">
+                    <label for="sync-options">Sync:</label>
+                    <input type="text" id="sync-options" name="sync-options" class="flex-right flex-element-part">
+                  </div>
+                </fieldset>
+              </form>
+            </div>
 
-          <div class="icon-margin">
-            <a href="#" id="control-button-full"> <span class="icon flaticon-plus"></span></a>
+            <div class="icon-margin">
+              <a href="#" id="control-button-full"> <span class="icon flaticon-plus"></span></a>
+            </div>
           </div>
         </div>
       </div>
