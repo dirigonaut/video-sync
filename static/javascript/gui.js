@@ -140,6 +140,7 @@ function initGui(client, isAdmin) {
   });
 
   $('video').on("timeupdate", updateProgressBar);
+  $("video").on("durationchange", updateProgressBar);
 
   $(".control-volume-slider").on("input change", function (e) {
     var range = parseInt($(".control-volume-slider").val()) * .01;
