@@ -22,7 +22,7 @@
       - Confirm that the files can be consumed on the front end with special characters and spaces[Fixed]
     - There is an issue with deleting encodings needs more research
     - Buffer logs need to be cleared.[Fixed]
-    - On video start total time is a NaN:NaN
+    - On video start total time is a NaN:NaN[Fixed]
     - Sometimes on video load the video does not load properly
   - Memory Bugs:
     - chrome heap shows that sourceBuffers, MediaSource, video have leaks
@@ -31,3 +31,5 @@
       - [WhyNot] Saint☆Young Men The Movie [BD 720p AAC][12DEEE77].mkv
     - /home/sabo-san/repo/media/adv.time.s1.ep1 won't play and throws no errors.
     - (Encoding)Ffmpeg is skipping the first couple seconds of a video on (some?) encodings
+      - might be that the audio sections are not getting the first segment
+      - the audio streams are starting after 0 seconds in the mpd file and this needs to be accounted for
