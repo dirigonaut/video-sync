@@ -81,7 +81,8 @@ MpdMeta.prototype.getSegmentIndex = function(typeId, timestamp) {
   timestamp *= 1000;
 
   for(var i in segments) {
-    if(segments[i][1] <= timestamp) {
+    var segment = Math.trunc(segments[i][1] / 1000) !== 0 ? segments[i][1] : 0
+    if(segment <= timestamp) {
       index = i;
       if(segments.length - 1 > i) {
         if(segments[parseFloat(i) + 1][1] > timestamp) {

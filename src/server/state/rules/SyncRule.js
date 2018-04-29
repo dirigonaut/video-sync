@@ -33,7 +33,7 @@ SyncRule.prototype.evaluate = Promise.coroutine(function* (players) {
 	}
 
   try {
-    stats.difference = stats.foreGuard - stats.rearGuard;
+    stats.difference = (stats.foreGuard ? stats.foreGuard : 0) - (stats.rearGuard ? stats.foreGuard : 0);
 
     //Not yielded as they do not need to be blocking.
     media.setPlayerMetrics(stats);

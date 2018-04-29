@@ -52,6 +52,7 @@ VideoController.prototype.attachSocket = function(socket) {
 
     if(request) {
       var basePath = yield media.getMediaPath();
+
       if(basePath) {
         var sendResponse = function(segment) {
           log.info(`Returning segment ${segment.name} of size ${segment.data ? segment.data.byteLength : null}`);
