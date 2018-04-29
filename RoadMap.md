@@ -23,13 +23,17 @@
     - There is an issue with deleting encodings needs more research
     - Buffer logs need to be cleared.[Fixed]
     - On video start total time is a NaN:NaN[Fixed]
-    - Sometimes on video load the video does not load properly
+    - Sometimes on video load the video does not load properly[Fixed]
   - Memory Bugs:
     - chrome heap shows that sourceBuffers, MediaSource, video have leaks
   - Encoding Bugs:
-    - Still some issues with certain characters (look at subtitles)
+    - Still some issues with certain characters (look at subtitles)[Not A Bug]
       - [WhyNot] Saint☆Young Men The Movie [BD 720p AAC][12DEEE77].mkv
-    - /home/sabo-san/repo/media/adv.time.s1.ep1 won't play and throws no errors.
+      - Illegal characters throws error to admin
     - (Encoding)Ffmpeg is skipping the first couple seconds of a video on (some?) encodings
-      - might be that the audio sections are not getting the first segment
-      - the audio streams are starting after 0 seconds in the mpd file and this needs to be accounted for
+      - the audio streams are starting after 0 seconds in the mpd file and this needs to be accounted for[Fixed]
+      - There is missing data in the video streams 0-0.041 - 6.298-18.81
+        - /home/sabo-san/repo/media/adv.time.s2.ep5
+      - /home/sabo-san/repo/media/adv.time.s1.ep1 won't play and throws no errors.
+        - has missing data all throughout
+      - Thinking cues are corrupted

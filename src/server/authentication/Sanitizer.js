@@ -27,7 +27,7 @@ Sanitizer.prototype.sanitize = function(data, schema, required, socket) {
 	try{
 		request = sanitizeSchema.call(this, data, schema, required);
 	} catch(err) {
-		log.error(err);
+		log.error("Sanitizer error", err.message);
 
 		if(socket) {
 			socket.emit(eventKeys.SERVERLOG, [data, err.toString()]);
@@ -55,7 +55,12 @@ function sanitizeSchema(object, schema, required) {
 		}
 
 		var result = handleInputs.call(this, entry[0], entry[1], schema);
-		schema[entry[0]] = entry[1];
+
+		if(!result) {
+			throw new Error(`Input ${entry[0]} contains illegal characters. This field only allows: ${Sanitizer.Enum.CharacterSets[schema[entry[0]].toUpperCase()]}`);
+		} else {
+			schema[entry[0]] = entry[1];
+		}
 	}
 
 	if(required && required.length > 0) {
@@ -80,11 +85,7 @@ function handleInputs(key, input, schema) {
 		clean = checkInput.call(this, key, input, schema);
 	}
 
-	if(clean) {
-		return clean;
-	} else {
-		throw new Error(`Input ${key} contains illegal characters. This field only allows: ${Sanitizer.Enum.CharacterSets[schema[key].toUpperCase()]}`);
-	}
+	return clean;
 }
 
 function checkInput(key, input, schema) {

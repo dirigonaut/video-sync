@@ -107,6 +107,7 @@ var parseEBML = function(manifest, data) {
   log.silly("WebmMetaData.parseEBML", data);
   var tagType = data[0];
   var tagData = data[1];
+  log.silly(`tag: ${tagType}, tagStr: ${tagData.tagStr}, type: ${tagData.type}, name: ${tagData.name}, start: ${tagData.start}, end: ${tagData.end}, size: ${tagData.dataSize}`);
 
   if(tagType == 'start') {
     if(tagData.name == 'Cluster') {
