@@ -23,10 +23,14 @@ WebmMetaData.prototype.generateWebmMeta = Promise.coroutine(function* (path) {
   log.debug("WebmMetaData.generateWebmMeta", path);
   var meta = yield Fs.readFileAsync(path);
 
-  var tracks = parseMpdForTracks(meta);
-  var dir = fileSystemUtils.splitDirFromPath(path);
+  if(meta) {
+    var tracks = parseMpdForTracks(meta);
+    var dir = fileSystemUtils.splitDirFromPath(path);
 
-  return getClusters.call(this, dir, tracks);
+    return getClusters.call(this, dir, tracks);
+  }
+
+  return Promise.reject("No meta data to get clusters from.");
 });
 
 module.exports = WebmMetaData;
@@ -84,14 +88,19 @@ var getClusters = function(dirPath, tracks) {
   });
 
   webmParser.once('end', function() {
-    var metaData = [];
-    for(var i = 0; i < metaRequests.length; ++i) {
-      var flatManifest = metaRequests[i].manifest.flattenManifest();
-      flatManifest.duration = flatManifest.clusters[1].time;
-      metaData.push(flatManifest);
-    }
+    try {
+      var metaData = [];
+      for(var i = 0; i < metaRequests.length; ++i) {
+        var flatManifest = metaRequests[i].manifest.flattenManifest();
+        flatManifest.duration = flatManifest.clusters[1].time;
+        metaData.push(flatManifest);
+      }
 
-    this.emit('end', metaData);
+      this.emit('end', metaData);
+    } catch(err) {
+      log.error("getClusters failed", err);
+      this.emit('error', err);
+    }
   }.bind(this));
 
   log.debug("Meta requests: ", metaRequests);

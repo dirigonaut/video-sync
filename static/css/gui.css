@@ -304,6 +304,11 @@ body {
   background-color:white;
 }
 
+.even-color {
+  color:black;
+  background-color:white;
+}
+
 .clear-spacers {
   padding:0px;
   margin:0px;

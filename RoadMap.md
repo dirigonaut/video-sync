@@ -20,7 +20,7 @@
     - Server shutdown is not killing redis-server[Fixed]
     - Fix parsing of file names so that they do not cut off after the first space[Fixed]
       - Confirm that the files can be consumed on the front end with special characters and spaces[Fixed]
-    - There is an issue with deleting encodings needs more research
+    - There is an issue with deleting encodings needs more research[Fixed]
     - Buffer logs need to be cleared.[Fixed]
     - On video start total time is a NaN:NaN[Fixed]
     - Sometimes on video load the video does not load properly[Fixed]
