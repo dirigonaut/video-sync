@@ -756,7 +756,7 @@ function initGui(client, isAdmin) {
   var loadEncodings = function(encodings) {
     encodings.data.forEach((value, index) => {
       if(!$(`#encoding-${value[0]}`).length) {
-        $(`<div id="encoding-${value[0]}" class="flex-v alternate-color padding rounded-corners">
+        $(`<div id="encoding-${value[0]}" class="flex-v ${encodingsOdd % 2 ? 'even-color' : ''} padding rounded-corners">
           <div class="flex-h">
             <div type="text" class="flex-element clear-spacers force-text" onclick="$('#encoding-body-${value[0]}').toggleClass('show')">
               <p class="clear-spacers">${value[1] && Array.isArray(value[1]) ? value[1].pop() : value[1]}</p>
@@ -777,6 +777,11 @@ function initGui(client, isAdmin) {
     });
   };
 
+  var cancel = function(message) {
+    $(`#time-${message.label}`).text('Canceled');
+    $(`#encode-complete-${message.label}`).val('true');
+  }
+
   $('[id^=log-toggle-]').click(function(e) {
     $('[id^=log-tab-]').each((i, ele) => {
       var id = $(e.currentTarget).attr('id').split('-')[2];
@@ -793,6 +798,7 @@ function initGui(client, isAdmin) {
   client.socket.setEvent(client.keys.NOTIFICATION, notification);
   client.socket.setEvent(client.keys.ENCODELOG, progress);
   client.socket.setEvent(client.keys.ENCODINGS, loadEncodings);
+  client.socket.setEvent(client.keys.ENCODECANCELED, cancel);
 
   //Video Overlay----------------------------------------------------------------
   $('#options-form select').on("change", function (e) {

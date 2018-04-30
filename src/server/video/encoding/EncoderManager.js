@@ -92,12 +92,18 @@ EncoderManager.prototype.cancelEncode = function(id) {
 	processes.forEach((value, index, array) => {
 		if(value.includes(id)) {
 			deleted = array.splice(index, 1);
+
+			log.info(`Server: Failed Encoding canceled, ` + new Date().toTimeString());
+			uiLog(deleted[0][0], 'error', `Server: Encoding canceled`, eventKeys.ENCODECANCELED);
 		}
 	});
 
 	if(!deleted && current && current[0] === id) {
 		if(current[1].cancel) {
 			current[1].cancel();
+
+			log.info(`Server: Failed Encoding canceled, ` + new Date().toTimeString());
+			uiLog(current[0], 'error', `Server: Encoding canceled`, eventKeys.ENCODECANCELED);
 		}
 	}
 };
@@ -110,6 +116,7 @@ function processedEvent() {
 			var encodeProcess = processes.shift();
 			current = encodeProcess;
 			attachEvents.call(this, encodeProcess[1]);
+
 			yield encodeProcess[1].execute().catch(function(error) {
 				log.socket(error);
 				log.error(error);
@@ -135,7 +142,7 @@ function attachEvents(encodeProcess) {
 	}).on('data', function(percent) {
 		uiLog(current[0], 'info', percent);
 	}).on('exit', function(exitCode) {
-		if(!exitCode) {
+		if(exitCode === 0) {
 			log.info('Server: Succesfully converted file.' + new Date().toTimeString());
 			uiLog(current[0], 'info', 'Server: Succesfully converted file.');
 		} else {
@@ -151,7 +158,7 @@ function attachEvents(encodeProcess) {
 	}.bind(this));
 }
 
-var uiLog = Promise.coroutine(function* (id, level, data) {
+var uiLog = Promise.coroutine(function* (id, level, data, eventKey) {
 	var admin = yield credentials.getAdmin();
 	var payload = {
 		time: new Date().toTimeString(),
@@ -161,7 +168,7 @@ var uiLog = Promise.coroutine(function* (id, level, data) {
 	};
 
 	if(admin) {
-		redisSocket.ping.call(EncoderManager.prototype, admin.id, eventKeys.ENCODELOG, payload);
+		redisSocket.ping.call(EncoderManager.prototype, admin.id, eventKey ? eventKey : eventKeys.ENCODELOG, payload);
 	}
 });
 

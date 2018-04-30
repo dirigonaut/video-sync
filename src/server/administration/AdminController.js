@@ -45,6 +45,7 @@ AdminController.prototype.attachSocket = function(socket) {
 
         log.debug(eventKeys.MEDIAREADY);
         yield redisSocket.broadcast.call(this, eventKeys.MEDIAREADY);
+
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
           [new Date().toTimeString(), 'notify', 'media', `Media is loaded.`]);
         yield redisSocket.broadcast.call(AdminController.prototype, eventKeys.NOTIFICATION, response);

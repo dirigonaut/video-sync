@@ -53,6 +53,7 @@ module.exports = {
   GETENCODE:      'video-get-encode',
   GETMETA:        'video-get-meta',
   //Client
+  ENCODECANCELED: 'video-encode-canceled',
   ENCODINGS:      'video-encodings',
   ENCODED:        'video-encoded',
   META:           'video-meta',

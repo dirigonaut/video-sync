@@ -35,7 +35,11 @@ WebmParser.prototype.queuedDecode = function(metaRequests) {
 	}.bind(this));
 
   for(var i in metaRequests) {
-    readAndDecode(metaRequests[i].path, metaRequests[i].onData, metaRequests[i].manifest, counter);
+		try {
+	    readAndDecode(metaRequests[i].path, metaRequests[i].onData, metaRequests[i].manifest, counter);
+		} catch (e) {
+			log.error(e);
+		}
   }
 };
 
