@@ -947,13 +947,11 @@ function initGui(client, isAdmin) {
     if(!document.webkitIsFullScreen) {
       $('.flaticon-minus').addClass('flaticon-plus')
       $('.flaticon-plus').removeClass('flaticon-minus');
+      $('.control-full').addClass("control");
+      $('.control-full').removeClass("control-full");
       toggleOverlays();
     }
   });
-
-  var addBaseDirInfo = function(elementId) {
-
-  };
 
   //CSS Animation ----------------------------------------------------------------
   var fadeOut, over;
