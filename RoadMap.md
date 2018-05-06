@@ -24,6 +24,7 @@
     - Buffer logs need to be cleared.[Fixed]
     - On video start total time is a NaN:NaN[Fixed]
     - Sometimes on video load the video does not load properly[Fixed]
+    - Difference is not showing correctly for player times which is causing sync pauses not to be issued.[Fixed]
   - Memory Bugs:
     - chrome heap shows that sourceBuffers, MediaSource, video have leaks
   - Encoding Bugs:
