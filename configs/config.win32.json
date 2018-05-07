@@ -1,16 +1,19 @@
 {
   "videoSyncInfo": {
     "port" : 8080,
-    "staticDir" : "static"
+    "staticDir" : "static",
+    "threadCount": 3
   },
   "redisInfo" : {
     "host" : "127.0.0.1",
     "port" : 6379
   },
-  "redis" : "C:\\Redis\\redis-server.exe",
+  "redis" : "redis-server",
   "ffmpeg" : "ffmpeg",
   "ffprobe" : "ffprobe",
-  "certificate" : {
+  "ssl" : {
+    "key" : "~/.config/video-sync/certificate.key",
+    "crt" : "~/.config/video-sync/certificate.crt",
     "attributes" : [{
         "name": "commonName",
         "value": "example.org"
@@ -29,8 +32,8 @@
       }, {
         "shortName": "OU",
         "value": "Test"
-      }
-  ]},
+      }]
+  },
   "log" : {
     "GENERAL": "debug",
     "ADMINISTRATION": "debug",

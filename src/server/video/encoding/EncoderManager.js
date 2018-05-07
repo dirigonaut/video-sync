@@ -175,7 +175,9 @@ var uiLog = Promise.coroutine(function* (id, level, data, eventKey) {
 function format(entries) {
 	var formatted = [];
 	entries.forEach((data) => {
-		formatted.push([data[0], data[1].getCommand()]);
+		if(data) {
+			formatted.push([data[0], data[1].getCommand()]);
+		}
 	});
 
 	return formatted;

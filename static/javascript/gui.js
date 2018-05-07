@@ -9,9 +9,6 @@ function initGui(client, isAdmin) {
     };
 
     client.media.initializeMedia(domElements, reset);
-    client.media.on('bufferError', function(reset) {
-      //$(document).trigger('initializeMedia', client.media.isMediaInitialized());
-    });
   });
 
   client.socket.setEvent(client.keys.MEDIAREADY, function() {
@@ -796,9 +793,13 @@ function initGui(client, isAdmin) {
 
   client.socket.setEvent(client.keys.SERVERLOG, logging);
   client.socket.setEvent(client.keys.NOTIFICATION, notification);
-  client.socket.setEvent(client.keys.ENCODELOG, progress);
-  client.socket.setEvent(client.keys.ENCODINGS, loadEncodings);
-  client.socket.setEvent(client.keys.ENCODECANCELED, cancel);
+
+  if(isAdmin) {
+    client.socket.setEvent(client.keys.ENCODELOG, progress);
+    client.socket.setEvent(client.keys.ENCODINGS, loadEncodings);
+    client.socket.setEvent(client.keys.ENCODECANCELED, cancel);
+    client.socket.request(client.keys.GETENCODE);
+  }
 
   //Video Overlay----------------------------------------------------------------
   $('#options-form select').on("change", function (e) {

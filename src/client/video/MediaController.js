@@ -82,7 +82,6 @@ var setupMedia = Promise.coroutine(function* (domElements) {
     buffers[metaManager.Enums.TYPES.VIDEO].once('init', function() { video.emit('get-segment', metaManager.Enums.TYPES.VIDEO, 0) });
 
     buffers[metaManager.Enums.TYPES.VIDEO].on('error', function(err) {
-      this.emit('bufferError');
       video.resetVideoElementErrorState(err);
     }.bind(this));
   }
@@ -94,7 +93,6 @@ var setupMedia = Promise.coroutine(function* (domElements) {
     buffers[metaManager.Enums.TYPES.AUDIO].once('init', function() { video.emit('get-segment', metaManager.Enums.TYPES.AUDIO, 0) });
 
     buffers[metaManager.Enums.TYPES.AUDIO].on('error', function(err) {
-      this.emit('bufferError');
       video.resetVideoElementErrorState(err);
     }.bind(this));
   }
