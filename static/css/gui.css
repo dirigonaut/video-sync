@@ -63,8 +63,11 @@ body {
 
 .path-dropdown {
   position:fixed;
+  max-height:75%;
   width:75%;
   padding:.25%;
+  overflow-y:auto;
+  overflow-x:hidden;
 }
 
 .path-notification {
@@ -419,6 +422,20 @@ body {
 /* Elements */
 video::-webkit-media-controls {
   display:none !important;
+}
+
+::-webkit-scrollbar {
+  width: 1%;
+  height: auto;
+}
+
+::-webkit-scrollbar-track {
+  margin: 1%;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: #c2c9d2;
 }
 
 a {

@@ -165,7 +165,7 @@ function initGui(client, isAdmin) {
         paths = paths ? paths.split(',') : [];
 
         paths.forEach((value, index, array) => {
-          $(`<div class="flex-h flex-element primary-color invert">
+          $(`<div class="flex-element primary-color invert">
             <div id='path-${index}' class="flex-element" onclick="$('#path-input').val('${value.replace(/\\/g, '\\\\')}')">${value}</div>
             <a href="#" onclick="$(document).trigger('path-delete', $('#path-${index}'));">
               <span class="icon-min flex-icon flaticon-error"></span>
@@ -181,7 +181,7 @@ function initGui(client, isAdmin) {
   var joinFolders = function(dirs) {
     if(dirs) {
       dirs.forEach((value, index, array) => {
-        $(`<div class="flex-h flex-element primary-color invert">
+        $(`<div class="flex-element primary-color invert">
           <div id='path-${index}' class="flex-element" onclick="$('#path-input').val('${value.replace(/\\/g, '\\\\')}')">${value}</div>
         </div>`).appendTo('#path-dropdown');
       });

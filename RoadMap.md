@@ -26,6 +26,7 @@
     - Sometimes on video load the video does not load properly[Fixed]
     - Difference is not showing correctly for player times which is causing sync pauses not to be issued.[Fixed]
     - On reload of page for admin get all current/queued encodings.[Fixed]
+    - Scrolling on encoded media dropdown for overflow.[Fixed]
   - Memory Bugs:
     - chrome heap shows that sourceBuffers, MediaSource, video have leaks
   - Encoding Bugs:
