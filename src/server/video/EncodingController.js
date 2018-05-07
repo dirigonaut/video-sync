@@ -66,7 +66,7 @@ EncodingController.prototype.attachSocket = function(socket) {
   }));
 
   socket.on(eventKeys.GETENCODE, Promise.coroutine(function* () {
-    log.debug(eventKeys.GETENCODE, data);
+    log.debug(eventKeys.GETENCODE);
     encoderManager.getEncodings();
   }));
 
