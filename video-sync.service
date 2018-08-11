@@ -4,12 +4,12 @@ After=network.target
 StartLimitIntervalSec=0
 
 [Service]
-WorkingDirectory=/opt/video-sync
+WorkingDirectory=${dir}
 Type=simple
 Restart=always
 RestartSec=1
-User=video-sync
-ExecStart=/usr/bin/node /opt/video-sync/index.js
+User=${user}
+ExecStart=/usr/bin/node ${dir}/index.js
 
 [Install]
 WantedBy=multi-user.target
