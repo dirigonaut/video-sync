@@ -154,10 +154,10 @@
       </div>
     </div>
 
-    <div class="login toggle">
+    <div class="login toggle show">
       <div class="login-overlay flex-v flex-element-part flex-center-h primary-color rounded-corners borders">
         <div class="flex-center-h">Video-Sync</div>
-        <form id="login-form">
+        <form id="login-form" class="toggle">
           <fieldset class="form flex-v flex-element-part flex-center-h">
             <div id="login-error" class="flex-element"></div>
             <label for="login-handle">Handle:</label>
@@ -167,6 +167,8 @@
             <button type="button" id="login-submit" class="flex-button flex-right ">Submit</button>
           </fieldset>
         </form>
+        <div id="browser-error" class="flex-center-h toggle show">
+        </div>
       </div>
     </div>
 
