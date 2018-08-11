@@ -22,7 +22,7 @@ Subtitles.prototype.setup = function(videoElement) {
     yield onReady.call(this, videoElement);
   }.bind(this));
 
-  video.addEventListener("loadedmetadata", onLoad);
+  videoElement.addEventListener("loadedmetadata", onLoad);
 
   return new Promise.resolve(onReset.call(this, videoElement, onLoad));
 };

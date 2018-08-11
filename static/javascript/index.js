@@ -7,6 +7,26 @@ function setupClient() {
   window.URL = window.URL || window.webkitURL;
   window.MediaSource = window.MediaSource || window.WebKitMediaSource
 
+  var browserCheck = function() {
+    var supported = ['Chrome']
+    var isSupported;
+
+    for(var i in supported) {
+      if(window.navigator.userAgent.includes(supported[i])) {
+        $('#browser-error').hide();
+        $('#login-form').show();
+        isSupported = true;
+        break;
+      }
+    }
+
+    if(!isSupported) {
+      $('#browser-error').html(`<p>Only the following browsers are supported: ${supported.join(', ')}</p>`);
+    } else {
+      initialize();
+    }
+  };
+
   var initialize = function() {
     Promise.all([
       loadAsyncScript('../javascript/login.js'),
@@ -169,5 +189,5 @@ function setupClient() {
     });
   };
 
-  initialize();
+  browserCheck();
 }

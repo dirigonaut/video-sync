@@ -12,15 +12,6 @@ function initGui(client, isAdmin) {
   });
 
   client.socket.setEvent(client.keys.MEDIAREADY, function() {
-    var path = $('#path-input').val();
-    var paths = cookie.get('media-paths');
-    paths = paths ? paths.split(',') : [];
-
-    if(!paths.includes(path) && path !== '') {
-      paths.push(path);
-      cookie.set('media-paths', paths, cookie.getExpiration.YEAR);
-    }
-
     $(document).trigger('initializeMedia');
   });
 
@@ -157,24 +148,8 @@ function initGui(client, isAdmin) {
 
     $('#path-input').click(function() {
       $('#path-dropdown').empty();
-      var paths = cookie.get('media-paths');
       client.socket.request(client.keys.GETCONTENTS,
         client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STRING, ['mediaDir']));
-
-      if(paths) {
-        paths = paths ? paths.split(',') : [];
-
-        paths.forEach((value, index, array) => {
-          $(`<div class="flex-element primary-color invert">
-            <div id='path-${index}' class="flex-element" onclick="$('#path-input').val('${value.replace(/\\/g, '\\\\')}')">${value}</div>
-            <a href="#" onclick="$(document).trigger('path-delete', $('#path-${index}'));">
-              <span class="icon-min flex-icon flaticon-error"></span>
-            </a>
-          </div>`).prependTo('#path-dropdown');
-        });
-
-        resetPathDropDown();
-      }
     });
   }
 
@@ -211,16 +186,7 @@ function initGui(client, isAdmin) {
   client.formData.on(client.formData.Enums.FORMS.MEDIA_DIRS, joinFolders);
 
   $(document).on('path-delete', function(e, element) {
-    var paths = cookie.get('media-paths').split(',');
-
-    if(paths) {
-      var index = paths.indexOf($(element).text());
-      if(index !== -1) {
-        $(element).parent().remove();
-        paths.splice(index, 1);
-        cookie.set('media-paths', paths, cookie.getExpiration.YEAR);
-      }
-    }
+    //TODO create delete logic here for deleting files server side
   });
 
   //Token Events ----------------------------------------------------------------
@@ -577,6 +543,10 @@ function initGui(client, isAdmin) {
 
       client.log.info('video-encode', request);
       client.socket.request('video-encode', request);
+
+      $(`form#encode-command-form textarea`).each((index, element) => {
+        $(element).parent().empty();
+      });
     });
   }
 
@@ -821,9 +791,8 @@ function initGui(client, isAdmin) {
   });
 
   $('#buffer-options').on("change", function (e) {
-    var value = $(e.currentTarget.children[0]).val();
-    var value = Math.trunc(value / 10);
-    $(e.currentTarget.children[0]).val(value * 10);
+    var value = Math.trunc($(e.currentTarget).val() / 4);
+    $(e.currentTarget).val(value * 4);
     client.media.setBufferAhead(value);
   });
 
@@ -898,6 +867,17 @@ function initGui(client, isAdmin) {
 
     $('#subtitle-track-list').empty();
     $(subtitleHtml).appendTo('#subtitle-track-list');
+  });
+
+  client.media.on('progress-event', function(type) {
+    var video = $('video')[0];
+
+    /* TODO get progess bar showing buffered
+    if (video.duration > 0) {
+      for (var i = 0; i < video.buffered.lngth; ++i) {
+
+      }
+    }*/
   });
 
   //Sync Overlay ----------------------------------------------------------------
