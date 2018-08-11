@@ -1,0 +1,15 @@
+[Unit]
+Description=video-sync service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+WorkingDirectory=/opt/video-sync
+Type=simple
+Restart=always
+RestartSec=1
+User=video-sync
+ExecStart=/usr/bin/node /opt/video-sync/index.js
+
+[Install]
+WantedBy=multi-user.target
