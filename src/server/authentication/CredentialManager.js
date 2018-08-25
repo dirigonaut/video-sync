@@ -12,7 +12,7 @@ CredentialManager.prototype.initialize = function(force) {
   if(typeof CredentialManager.prototype.protoInit === 'undefined') {
     CredentialManager.prototype.protoInit = true;
     config          = this.factory.createConfig();
-    client          = Redis.createClient(config.getConfig().redisInfo);
+    client          = Redis.createClient(config.getConfig().redisConnection);
 
     redisSocket     = this.factory.createRedisSocket();
     schemaFactory		= this.factory.createSchemaFactory();
@@ -24,7 +24,7 @@ CredentialManager.prototype.initialize = function(force) {
 };
 
 CredentialManager.prototype.isAdmin = function(socket, password) {
-  return socket.handshake.address.includes('127.0.0.1') || config.getConfig().videoSyncInfo.remoteAdminPass === password;
+  return socket.handshake.address.includes('127.0.0.1') || config.getConfig().serverInfo.remoteAdminPass === password;
 };
 
 CredentialManager.prototype.setAdmin = Promise.coroutine(function* (socket, request) {

@@ -78,8 +78,8 @@ var getClusters = function(dirPath, tracks) {
     var metaRequest = {};
     metaRequest.path          = `${dirPath}${fileName}.${fileExt}`;
     metaRequest.onData        = parseEBML;
-    metaRequest.manifest      = this.factory.createManifest();
-    metaRequest.manifest.prime(`${fileName}.${fileExt}`, tracks[i].initRange.split('-'));
+    metaRequest.clusters      = this.factory.createClusters();
+    metaRequest.clusters.prime(`${fileName}.${fileExt}`, tracks[i].initRange.split('-'));
     metaRequests.push(metaRequest);
   }
 
@@ -91,9 +91,9 @@ var getClusters = function(dirPath, tracks) {
     try {
       var metaData = [];
       for(var i = 0; i < metaRequests.length; ++i) {
-        var flatManifest = metaRequests[i].manifest.flattenManifest();
-        flatManifest.duration = flatManifest.clusters[1].time;
-        metaData.push(flatManifest);
+        var flat = metaRequests[i].clusters.flatten();
+        flat.duration = flat.clusters[1].time;
+        metaData.push(flat);
       }
 
       this.emit('end', metaData);
@@ -112,7 +112,7 @@ var getClusters = function(dirPath, tracks) {
   }.bind(this));
 };
 
-var parseEBML = function(manifest, data) {
+var parseEBML = function(clusters, data) {
   log.silly("WebmMetaData.parseEBML", data);
   var tagType = data[0];
   var tagData = data[1];
@@ -120,21 +120,21 @@ var parseEBML = function(manifest, data) {
 
   if(tagType == 'start') {
     if(tagData.name == 'Cluster') {
-      var cluster = manifest.createCluster();
+      var cluster = clusters.createCluster();
       cluster.start = tagData.start;
       cluster.end = parseInt(tagData.end) - 1;
-      manifest.addCluster(cluster);
+      clusters.addCluster(cluster);
     }
   } else if(tagType === "tag") {
     if(tagData.name === 'Timecode') {
-      var cluster = manifest.getCluster(tagData.start);
+      var cluster = clusters.getCluster(tagData.start);
       cluster.time = tagData.data.readUIntBE(0, tagData.data.length);
     } else if(tagData.name === 'Duration') {
       var duration = tagData.data.readFloatBE(0, tagData.data.length);
-      manifest.setDuration(duration);
+      clusters.setDuration(duration);
     } else if(tagData.name === 'TimecodeScale') {
       var timecodeScale = tagData.data.readUIntBE(0, tagData.data.length)
-      manifest.setTimecodeScale(timecodeScale);
+      clusters.setTimecodeScale(timecodeScale);
     }
   }
 };

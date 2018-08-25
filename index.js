@@ -1,16 +1,22 @@
 const Promise         = require('bluebird');
+const Path            = require('path');
 const FactoryManager  = require('./src/server/factory/FactoryManager');
 
 var masterProcess, factoryManager;
 
-var start = Promise.coroutine(function* () {
+var args = process.argv.slice(2);
+
+if(args.length !== 1 || !Path.isAbsolute(args[0]) ) {
+  throw new Error("Video Sync takes one parameter that \
+    is a path to the config it should run with.", args);
+}
+
+var start = Promise.coroutine(function* (configPath) {
   factoryManager = Object.create(FactoryManager.prototype);
   var factory = yield factoryManager.initialize();
 
   var config = factory.createConfig(true);
-  if(config instanceof Promise) {
-    config = yield config;
-  }
+  yield config.load(configPath);
 
   var checkConfig = factory.createCheckConfig();
   yield checkConfig.validateConfig().catch(function(error) {
@@ -23,4 +29,4 @@ var start = Promise.coroutine(function* () {
 
   masterProcess = factory.createMasterProcess();
   yield masterProcess.start();
-})();
+})(args);

@@ -11,8 +11,8 @@ RedisSocket.prototype.initialize = function() {
   if(typeof RedisSocket.prototype.protoInit === 'undefined') {
     RedisSocket.prototype.protoInit = true;
     var config    = this.factory.createConfig();
-    publisher     = Redis.createClient(config.getConfig().redisInfo);
-    subscriber    = Redis.createClient(config.getConfig().redisInfo);
+    publisher     = Redis.createClient(config.getConfig().redisConnection);
+    subscriber    = Redis.createClient(config.getConfig().redisConnection);
 
     attachEvents.call(this);
 

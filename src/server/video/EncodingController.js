@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-var encoderManager, media, redisSocket, fileIO, fileSystemUtils, schemaFactory, sanitizer, eventKeys, config, log;
+var encodeProcess, fileIO, schemaFactory, sanitizer, eventKeys, config, log;
 
 function EncodingController() { }
 
@@ -9,9 +9,6 @@ EncodingController.prototype.initialize = function() {
     EncodingController.prototype.protoInit = true;
     config          = this.factory.createConfig();
     fileIO          = this.factory.createFileIO();
-    encoderManager  = this.factory.createEncoderManager();
-    media           = this.factory.createMedia();
-    redisSocket     = this.factory.createRedisSocket();
 
     fileSystemUtils = this.factory.createFileSystemUtils();
     schemaFactory   = this.factory.createSchemaFactory();
@@ -21,12 +18,6 @@ EncodingController.prototype.initialize = function() {
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.VIDEO);
 
-    encoderManager.on('encodingList', function(results) {
-      credentials.getAdmin().then(function(admin) {
-        results = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [results]);
-        redisSocket.ping.apply(EncodingController.prototype, [admin.id, eventKeys.ENCODINGS, results]);
-      });
-    });
   }
 };
 
@@ -34,59 +25,48 @@ EncodingController.prototype.attachSocket = function(socket) {
   log.info("VideoController.attachSocket");
   socket.on(eventKeys.ENCODE, Promise.coroutine(function* (data) {
     log.debug(eventKeys.ENCODE, data);
-    yield fileIO.ensureDirExistsAsync(data.directory.replace('{mediaDir}', config.getConfig().videoSyncInfo.mediaDir), 484);
-    var processes;
-
-    try {
-      processes = encoderManager.buildProcess(data.encodings);
-    } catch(err) {
-      log.error(err)
-      socket.emit(eventKeys.INPUTERROR, err);
-    }
-
-    if(processes) {
-      var results = yield encoderManager.encode(processes).then(function() {
-        socket.emit(eventKeys.ENCODED);
-      });
-    }
-  }));
-
-  socket.on(eventKeys.CANCELENCODE, Promise.coroutine(function* (data) {
-    log.debug(eventKeys.CANCELENCODE, data);
-    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.STRING);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
-      socket.emit(eventKeys.CONFIRM, `Are you sure you wish to cancel encoding id: ${request.data}?`, function(confirm) {
-        if(confirm === true) {
-          encoderManager.cancelEncode(request.data);
-        }
-      });
+      if(!encodeProcess) {
+        encodeProcess = Spawn('node', ['pathToCode', [request.quality], request.dir],
+          { detached: true, stdio: [ 'ignore' ] });
+        encodeProcess.unref(/*Detach the process from the parent so it will continue even if the server is shut down*/);
+
+        log.socket(`Starting encoding process for Id: ${request.quality}, Path: ${request.dir},
+          Pid: ${encodeProcess.pid}`);
+
+        encodeProcess.on('exit', function(exitCode) {
+          encodeProcess = undefined;
+          log.socket(`Encoding process for Id: ${request.quality}, Path: ${request.dir},
+            Pid: ${encodeProcess.pid} exited with code: ${exitCode}`);
+        });
+      } else {
+        log.socket("Error: an encoding process already exists with pid:", encodeProcess.pid);
+      }
     }
   }));
 
-  socket.on(eventKeys.GETENCODE, Promise.coroutine(function* () {
-    log.debug(eventKeys.GETENCODE);
-    encoderManager.getEncodings();
+  socket.on(eventKeys.CANCELENCODE, Promise.coroutine(function* () {
+    log.debug(eventKeys.CANCELENCODE, encodeProcess.pid);
+
+    try {
+      encodeProcess.kill();
+      log.debug("Killed process: ", encodeProcess.pid);
+      log.socket("Killed process: ", encodeProcess.pid);
+    } catch(e) {
+      log.error(`Error killing process: ${encodeProcess.pid}`,e);
+    }
   }));
 
-  socket.on(eventKeys.GETMETA, Promise.coroutine(function* (data) {
-    log.debug(eventKeys.GETMETA, data);
+  socket.on(eventKeys.GETENCODESTATUS, Promise.coroutine(function* () {
+    log.debug(eventKeys.GETENCODESTATUS);
+    var logPath = Path.join(config.getConfig().dirs.encodeDir, `Plan-${encodeProcess.pid}.json`);
+    var plan = yield Fs.readFileAsync(planPath);
 
-    if(data.encodings) {
-      var command = this.factory.createCommand();
-      var ffprobe = this.factory.createFfprobeProcess();
-      ffprobe.setCommand(command.parse(data.encodings));
-
-      var metaData = yield ffprobe.execute().catch(function(err) {
-        log.error(err);
-        socket.emit(eventKeys.META);
-      });
-
-      var result = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [metaData]);
-      socket.emit(eventKeys.META, result);
-    }
-  }.bind(this)));
+    socket.emit(eventKeys.ENCODESTATUS, plan);
+  }));
 };
 
 module.exports = EncodingController;

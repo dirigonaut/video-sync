@@ -27,7 +27,7 @@ LogManager.prototype.initialize = function() {
 
 LogManager.prototype.addFileLogging = function() {
   var keys = Object.keys(LogManager.Enum.Logs);
-  var logLevels = config.getConfig().log ? config.getConfig().log : undefined;
+  var logLevels = config.getConfig().log.levels ? config.getConfig().log.levels : undefined;
 
   for(var i in keys) {
     var fileTransport = buildFileTransport.call(this, Path.join(config.getLogDir(), FILE_NAME),

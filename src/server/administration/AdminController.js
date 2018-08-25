@@ -88,11 +88,11 @@ AdminController.prototype.attachSocket = function(socket) {
     if(request) {
       var dirPath = request.data;
 
-      if(dirPath === config.getMediaDir()) {
+      if(dirPath === config.getConfig().dirs.mediaDir) {
         var contents = yield getFolderContents(socket, dirPath, 'dirs');
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [contents]);
         socket.emit(eventKeys.MEDIADIR, response);
-      } else if(dirPath === config.getEncodeDir()) {
+      } else if(dirPath === config.getConfig().dirs.encodeDir) {
         var contents = yield getFolderContents(socket, dirPath, 'files');
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [contents]);
         socket.emit(eventKeys.ENCODEDIR, response);
@@ -104,7 +104,7 @@ AdminController.prototype.attachSocket = function(socket) {
 module.exports = AdminController;
 
 var getFolderContents = Promise.coroutine(function* (socket, dirPath, filter) {
-  var basePath = config.getConfig().videoSyncInfo[dirPath];
+  var basePath = config.getConfig().dirs[dirPath];
   var contents = [];
 
   if(basePath) {

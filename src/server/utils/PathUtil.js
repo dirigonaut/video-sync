@@ -5,9 +5,9 @@ const Path      = require('path');
 
 const FileUtils = require('./FileSystemUtils');
 
-function EnumUtil() { }
+function PathUtil() { }
 
-EnumUtil.prototype.getAllImports = function(path, excludes) {
+PathUtil.prototype.getAllPaths = function(path, excludes, regex) {
   if(path && Path.isAbsolute(path)) {
     var fileUtils = Object.create(FileUtils.prototype);
 
@@ -17,7 +17,7 @@ EnumUtil.prototype.getAllImports = function(path, excludes) {
     var finished = "finished";
     var error = "error";
 
-    Find.eachfile(/\.js$/, path, function(filePath) {
+    Find.eachfile(regex, path, function(filePath) {
       if(filePath) {
         var key = fileUtils.splitNameFromPath(filePath);
 
@@ -51,7 +51,7 @@ EnumUtil.prototype.getAllImports = function(path, excludes) {
   }
 };
 
-EnumUtil.prototype.createEnums = function(object) {
+PathUtil.prototype.createEnums = function(object) {
   var keys = Object.keys(object);
   var Enums = { };
 
@@ -62,4 +62,4 @@ EnumUtil.prototype.createEnums = function(object) {
   return Enums;
 };
 
-module.exports = EnumUtil;
+module.exports = PathUtil;

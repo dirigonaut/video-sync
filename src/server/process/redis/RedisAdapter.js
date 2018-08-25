@@ -11,7 +11,7 @@ RedisAdapter.prototype.initialize = function() {
   if(typeof RedisAdapter.prototype.protoInit === 'undefined') {
     RedisAdapter.prototype.protoInit = true;
     var config      = this.factory.createConfig();
-    client          = Redis.createClient(config.getConfig().redisInfo);
+    client          = Redis.createClient(config.getConfig().redisConnection);
     publisher       = this.factory.createRedisPublisher();
 
     var logManager  = this.factory.createLogManager();

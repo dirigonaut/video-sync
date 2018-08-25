@@ -49,14 +49,13 @@ module.exports = {
   //EncodingController
   //Server
   ENCODE:         'video-encode',
-  CANCELENCODE:   'video-cancel-encode',
-  GETENCODE:      'video-get-encode',
-  GETMETA:        'video-get-meta',
+  CANCELENCODE:   'video-encode-cancel',
+  GETENCODESTATUS:'video-encode-get-status',
+
   //Client
   ENCODECANCELED: 'video-encode-canceled',
-  ENCODINGS:      'video-encodings',
-  ENCODED:        'video-encoded',
-  META:           'video-meta',
+  ENCODESTATUS:   'video-encode-status',
+  ENCODED:        'video-encode-done',
 
   //VideoController
   //Server

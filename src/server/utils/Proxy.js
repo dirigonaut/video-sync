@@ -62,7 +62,7 @@ Proxy.prototype.forwardWorker = function(server) {
 };
 
 Proxy.prototype.start = function() {
-  proxyServer.listen(config.getConfig().videoSyncInfo.port);
+  proxyServer.listen(config.getConfig().serverInfo.port);
 }
 
 module.exports = Proxy;

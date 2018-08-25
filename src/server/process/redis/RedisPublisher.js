@@ -20,8 +20,8 @@ RedisPublisher.prototype.initialize = function() {
     requestMap    = new Map();
     asyncEmitter  = new Events();
     redisSocket   = this.factory.createRedisSocket();
-    subscriber    = Redis.createClient(config.getConfig().redisInfo);
-    publisher     = Redis.createClient(config.getConfig().redisInfo);
+    subscriber    = Redis.createClient(config.getConfig().redisConnection);
+    publisher     = Redis.createClient(config.getConfig().redisConnection);
 
     attachEvents.call(this);
 

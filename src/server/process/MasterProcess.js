@@ -1,5 +1,6 @@
 const Promise = require('bluebird');
 const Cluster = require('cluster');
+const Path    = require('path');
 
 var redisServer, serverProcess, stateProcess, proxy, config, log;
 
@@ -36,7 +37,8 @@ module.exports = MasterProcess;
 
 var startMaster = Promise.coroutine(function* () {
   log.info(`Master ${process.pid} is running`);
-  var numCPUs = require('os').cpus().length - 1;
+  var threads = config.getConfig().serverInfo.threads;
+  var numCPUs = threads && threads > 0 ? threads : require('os').cpus().length - 1;
   var workerIndex = 0;
 
   proxy = this.factory.createProxy();
@@ -60,7 +62,7 @@ var startMaster = Promise.coroutine(function* () {
   });
 
   redisServer = this.factory.createRedisServer();
-  yield redisServer.start(config.getConfig().redis, config.getRedisConfigPath());
+  yield redisServer.start(config.getConfig().external.redis, Path.join(config.getConfig().dirs.configDir, "redis.conf"));
 
   var stateWorker = Cluster.fork({processType: 'stateProcess'});
 

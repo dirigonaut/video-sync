@@ -32,7 +32,7 @@ FfprobeProcess.prototype.execute = function() {
     throw new Error('FfprobeProcess this.command is not set.');
   }
 
-  var ffprobePath = config.getConfig() ? config.getConfig().ffprobePath : undefined;
+  var ffprobePath = config.getConfig() ? config.getConfig().external.ffprobe : undefined;
   var ffprobe = Spawn(ffprobePath ? ffprobePath: 'ffprobe', this.command);
   log.info(`Spawned child pid: ${ffprobe.pid}`, this.command);
 

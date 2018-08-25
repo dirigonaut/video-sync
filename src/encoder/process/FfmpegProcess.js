@@ -4,6 +4,9 @@ const Util    = require('util');
 
 const Spawn = require('child_process').spawn;
 
+const DUR_REG=/(Duration:\s)(\d{2,}:)+(\d{2,})(.\d{2,})/g;
+const CUR_REG=/(time=)(\d{2,}:)+(\d{2,})(.\d{2,})/g;
+
 var config, log;
 
 function FfmpegProcess() { }
@@ -28,7 +31,7 @@ FfmpegProcess.prototype.getCommand = function() {
 };
 
 FfmpegProcess.prototype.execute = function() {
-  var ffmpegPath = config.getConfig() ? config.getConfig().ffmpegPath : undefined;
+  var ffmpegPath = config.getConfig() ? config.getConfig().external.ffmpeg : undefined;
 
   this.ffmpeg = Spawn(ffmpegPath ? ffmpegPath : "ffmpeg", this.command);
   log.info(`Spawned child pid: ${this.ffmpeg.pid}`, this.command);
@@ -38,16 +41,18 @@ FfmpegProcess.prototype.execute = function() {
   }.bind(this));
 
   this.ffmpeg.stderr.on('data', function(data) {
-    this.emit('data', data.toString('utf8'));
+    dur = DUR_REG.exec(data.toString('utf8'));
+    cur = CUR_REG.exec(data.toString('utf8'));
+    this.emit('data', this.ffmpeg.pid,
+      cur && cur.length > 0 ? cur[0] : null,
+      dur && dur.length > 0 ? dur[0] : null);
   }.bind(this));
 
-  this.emit('start');
-
-  return new Promise(function(resolve, reject) {
-    this.once('exit', function(code) {
-      resolve(code);
-    });
+  this.ffmpeg.stderr.on('error', function(data) {
+    this.emit('error', this.ffmpeg.pid, data.toString('utf8'));
   }.bind(this));
+
+  this.emit('start', this.ffmpeg.pid);
 };
 
 FfmpegProcess.prototype.cancel = function() {
@@ -55,7 +60,6 @@ FfmpegProcess.prototype.cancel = function() {
     this.ffmpeg.kill();
   } catch(e) {
     log.error(e);
-    log.socket(e);
   }
 };
 

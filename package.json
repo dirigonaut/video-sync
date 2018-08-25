@@ -3,16 +3,13 @@
   "version": "0.2.0",
   "main": "index.js",
   "scripts": {
-    "install": "sudo apt-get install redis-server ffmpeg -y &&
-                sudo systemctl disable redis-server &&
-                sudo npm install && npm run-script init &&
-                npm run-script service",
+    "install": "sudo apt-get install redis-server ffmpeg -y && sudo systemctl disable redis-server && sudo npm install && npm run-script init && npm run-script service",
     "init": "node develop/init.js",
     "service": "node develop/service.js",
     "start": "node index.js",
     "debug": "npm run-script init && node --inspect=9999 index.js",
     "test": "echo testing tbd",
-    "stats": "cloc --not-match-d '(icons)|(resources)' --not-match-f documentation --by-file ./src/ ./static/ index.js",
+    "stats": "cloc --not-match-d '(icons)|(resources)' --not-match-f documentation --by-file ./src/ ./static/ ./develop/ index.js encode.js",
     "update-deps": "npm outdated --depth=0 | grep -v Package | awk '{print $1}' | xargs -I% npm install %@latest --save"
   },
   "dependencies": {
@@ -22,7 +19,6 @@
     "express": "^4.15.2",
     "find": "^0.2.7",
     "marked": "^0.3.6",
-    "moment": "^2.14.1",
     "node-forge": "^0.7.0",
     "redis": "^2.7.1",
     "socket.io": "^1.7.3",
