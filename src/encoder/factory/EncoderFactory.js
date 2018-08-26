@@ -23,22 +23,16 @@ EncoderFactory.prototype.createEncodingPlan = Promise.coroutine(function* (quali
     commands = [];
     processes = [];
 
-    for(let i in quality) {
-      var vCommand = this.createVideoCommand(quality[i], fileList[i], outDir);
-      var aCommand = this.createAudioCommand(quality[i], fileList[i], outDir);
+    var vCommand = this.createVideoCommand(quality, fileList[i], outDir);
+    var aCommand = this.createAudioCommand(quality, fileList[i], outDir);
 
-      commands.push(vCommand);
-      commands.push(aCommand);
+    commands.push(vCommand);
+    commands.push(aCommand);
 
-      processes.push(createFfmpegProcess.call(this, vCommand));
-      processes.push(createFfmpegProcess.call(this, aCommand));
-    }
-
+    processes.push(createFfmpegProcess.call(this, vCommand));
+    processes.push(createFfmpegProcess.call(this, aCommand));
     processes.push(createFfmpegProcess.call(this, this.createManifestCommand(quality, commands, outDir)));
-
-    if(codec === this.Enum.Types.WEBM) {
-      processes.push(createClusterProcess.call(this, fileList[i]));
-    }
+    processes.push(createClusterProcess.call(this, fileList[i]));
 
     var subtitles = this.createSubtitleCommands(quality, getSubtitleTracks(fileList[i]), fileList[i], outDir);
 
@@ -62,25 +56,43 @@ EncoderFactory.prototype.createEncodingPlan = Promise.coroutine(function* (quali
 
 EncoderFactory.prototype.createVideoCommand = function(quality, input, outputDir) {
   var command = this.factory.createCommand();
-  command.setTemplate(config.getConfig().templates[quality].video.webm);
-  command.format(input, getOutputPath(codec, quality, input, outputDir));
+  var codecs = config.getConfig().templates[quality].video;
+
+  if(codecs && codecs[0])
+    command.setTemplate(codecs[0]);
+    command.format(input, getOutputPath(codecs[0], quality, input,
+      getLoggingPath(quality, input, EncodeFactory.Enum.Types.VIDEO.lower())));
+  }
+
   return command;
 };
 
 EncoderFactory.prototype.createAudioCommand = function(quality, input, outputDir) {
   var command = this.factory.createCommand();
-  command.setTemplate(config.getConfig().templates[quality].audio.webm);
-  command.format(input, getOutputPath(codec, quality, input, outputDir));
+  var codecs = config.getConfig().templates[quality].audio;
+
+  if(codecs && codecs[0])
+    command.setTemplate(codecs[0]);
+    command.format(input, getOutputPath(codecs[0], quality, input,
+      getLoggingPath(quality, input, EncodeFactory.Enum.Types.AUDIO.lower())));
+  }
+
   return command;
 };
 
-EncoderFactory.prototype.createSubtitleCommands = function(quality, tracks, input, outputDir) {
+EncoderFactory.prototype.createSubtitleCommands = function(tracks, quality, input, outputDir) {
+  var codecs = config.getConfig().templates[quality].subtitles;
   var commands = [];
 
   for(var i in tracks) {
     var command = this.factory.createCommand();
-    command.setTemplate(config.getConfig().templates[quality].subtitle.webm);
-    command.format(input, tracks[i], getOutputPath(tracks[i], input, outputDir));
+
+    if(codecs && codecs[0])
+      command.setTemplate(codecs[0]);
+      command.format(input, tracks[i], getOutputPath(tracks[i], input,
+        getLoggingPath(quality, input, EncodeFactory.Enum.Types.SUBTITLE.lower())));
+      }
+
     commands.push(command);
   }
 
@@ -89,8 +101,14 @@ EncoderFactory.prototype.createSubtitleCommands = function(quality, tracks, inpu
 
 EncoderFactory.prototype.createManifestCommand = function(quality, commands, outputDir) {
   var command = this.factory.createCommand();
-  command.setTemplate(config.getConfig().templates[quality].manifest.webm);
-  command.format(`get${codec.charAt(0).toUpperCase() + codec.slice(1)}ManifestArgs`(input, commands, getOutputPath(codec, codec, input, outputDir)));
+  var codecs = config.getConfig().templates[quality].manifest;
+
+  if(codecs && codecs[0])
+    command.setTemplate(codecs[0]);
+    command.format(getWebmManifestArgs(input, commands, getOutputPath(codecs[0], input,
+      getLoggingPath(quality, input, EncodeFactory.Enum.Types.MANIFEST.lower())));
+  }
+  
   return command;
 };
 
@@ -105,7 +123,6 @@ module.exports = EncodeFactory;
 
 EncodeFactory.Enum          = { };
 EncodeFactory.Enum.Types    = { VIDEO: 'VIDEO', AUDIO: 'AUDIO', SUBTITLE: 'SUBTITLE', MANIFEST: 'MANIFEST' };
-EncodeFactory.Enum.Codec    = { WEBM: 'webm', MP4: 'mp4' };
 
 var getWebmManifestArgs = function(codec, commands, output) {
   var maps = [];
@@ -175,3 +192,10 @@ var createClusterProcess = function(command) {
   var webmMeta = this.factory.createWebmMetaProcess();
   return webmMeta.setCommand(command);
 };
+
+var getLoggingPath = function(quality, input, type) {
+  if(config.getConfig().log.logEncoding) {
+    var name = `${Path.basename(input)}-${quality}-${type}.log`
+    return `> ${Path.join(config.getConfig().dirs.encodeLogDir, name)}`;
+  }
+}
