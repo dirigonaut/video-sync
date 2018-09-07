@@ -37,6 +37,11 @@ EncodingController.prototype.attachSocket = function(socket) {
         log.socket(`Starting encoding process for Id: ${request.quality}, Path: ${request.dir},
           Pid: ${encodeProcess.pid}`);
 
+        encodeProcess.on('error', function(e) {
+          log.error(`Encoding process Id: ${request.quality}, Path: ${request.dir},
+            Pid: ${encodeProcess.pid}:`, e);
+        });
+
         encodeProcess.on('exit', function(exitCode) {
           encodeProcess = undefined;
           log.socket(`Encoding process for Id: ${request.quality}, Path: ${request.dir},

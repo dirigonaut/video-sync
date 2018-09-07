@@ -37,6 +37,6 @@ module.exports = Encoder;
 var savePlanInterval = function(dir) {
   var planPath = Path.join(dir, `Plan-${process.pid}.txt`);
   return setInterval(Promise.coroutine(function* () {
-    yield Fs.writeFileAsync(planPath, toJSON(encoderManager.getPlan()));
+    yield Fs.writeFileAsync(planPath, JSON.stringify(encoderManager.getPlan()));
   }.bind(this)), INTERVAL);
 };

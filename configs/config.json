@@ -22,19 +22,25 @@
     "serverLogDir" : "/var/log/video-sync/server/",
     "encodeLogDir" : "/var/log/video-sync/encoding/"
   },
-  "templates" : {
-    "1280v-256a": {
-      "video": {
-        "webm" : "-y -i {} -c:v libvpx-vp9 -s 1280x720 -keyint_min 150 -g 150 -b:v 1M -threads 4 -speed 1 -tile-columns 4 -frame-parallel 1 -an -sn -f webm -dash 1 {}"
-      },
-      "audio": {
-        "webm" : "-y -i {} -vn -sn -c:a libvorbis -b:a 256k -f webm -dash 1 {}"
-      },
-      "subtitles" : {
-        "webm" : "-y -txt_format text -i {} -map {} {}",
-      },
-      "manifest" : {
-        "webm" : "-y {} -c copy -map {} -f webm_dash_manifest -adaptation_sets \"id=0,streams={} id=1,streams={}\" {}"
+  "ffmpeg": {
+    "codecs": "",
+    "ffprobe" : "-v quiet -show_streams -print_format json {}",
+    "templates" : {
+      "default": {
+        "webm" : {
+          "video": {
+            "1280x720": "-y -i {} -c:v libvpx-vp9 -s 1280x720 -keyint_min 150 -g 150 -b:v 1M -threads 4 -speed 1 -tile-columns 4 -frame-parallel 1 -an -sn -f webm -dash 1 {}"
+          },
+          "audio":  {
+            "256k": "-y -i {} -vn -sn -c:a libvorbis -b:a 256k -f webm -dash 1 {}"
+          },
+          "subtitles" : "-y -txt_format text -i {} -map {} {}",
+          "manifest" :  {
+            "base" : "-y {} -c copy {} -f webm_dash_manifest -adaptation_sets \"id=0,streams={} id=1,streams={}\" {}",
+            "inputs" : "-f webm_dash_manifest -i {}",
+            "maps" : "-map {}"
+          }
+        }
       }
     }
   },

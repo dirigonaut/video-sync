@@ -27,8 +27,4 @@ Command.prototype.getArgs = function(loggingArg) {
   return loggingPath ? args.concat(loggingArgloggingArg) : args;
 };
 
-Command.prototype.getInputInfo = function(filters) {
-
-};
-
 module.exports = Command;
