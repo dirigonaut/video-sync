@@ -36,7 +36,7 @@ WebmParser.prototype.queuedDecode = function(metaRequests) {
 
   for(var i in metaRequests) {
 		try {
-	    readAndDecode(metaRequests[i].path, metaRequests[i].onData, metaRequests[i].manifest, counter);
+	    readAndDecode(metaRequests[i].path, metaRequests[i].onData, metaRequests[i].clusters, counter);
 		} catch (e) {
 			log.error(e);
 		}
@@ -45,8 +45,7 @@ WebmParser.prototype.queuedDecode = function(metaRequests) {
 
 module.exports = WebmParser;
 
-//Adjust to take requests with manifest file included
-var readAndDecode = function(path, onData, manifest, counter) {
+var readAndDecode = function(path, onData, clusters, counter) {
   log.debug("WebmParser.readAndDecode");
   var readStream  = Fs.createReadStream(path);
   var decoder     = new Ebml.Decoder();
@@ -65,6 +64,6 @@ var readAndDecode = function(path, onData, manifest, counter) {
   });
 
   decoder.on('data', function(data) {
-    onData(manifest, data);
+    onData(clusters, data);
   });
 };

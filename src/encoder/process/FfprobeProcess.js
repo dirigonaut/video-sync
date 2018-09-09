@@ -31,18 +31,18 @@ FfprobeProcess.prototype.execute = function() {
   var output = "";
   ffprobe.stdout.on('data', function(data) {
     output += data;
-  }.bind(this));
+  });
 
   return new Promise(function(resolve, reject) {
-    this.once('exit', function() {
-      if(output) {
-        resolve(JSON.parse(output));
+    ffprobe.once('exit', function(exitCode) {
+      if(output && exitCode === 0) {
+        resolve(output.toString('utf8'));
       } else {
         reject(new Error('Ffprobe: No output'));
       }
     });
-    this.once('error', reject);
-  }.bind(this));
+    ffprobe.once('error', reject);
+  });
 };
 
 module.exports = FfprobeProcess;

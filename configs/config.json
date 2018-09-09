@@ -3,7 +3,7 @@
     "port" : 8080,
     "staticDir" : "static",
     "threads": 0,
-    "remoteAdminPass" : "password",
+    "remoteAdminPass" : "password"
   },
   "redisConnection" : {
     "host" : "127.0.0.1",
@@ -16,14 +16,14 @@
     "ffprobe" : "ffprobe"
   },
   "dirs" : {
-    "configDir" : "/opt/video-sync/",
-    "encodeDir" : "/opt/video-sync/encode/",
-    "mediaDir" : "/opt/video-sync/media/",
-    "serverLogDir" : "/var/log/video-sync/server/",
-    "encodeLogDir" : "/var/log/video-sync/encoding/"
+    "configDir" : "/opt/video-sync",
+    "encodeDir" : "/opt/video-sync/encode",
+    "mediaDir" : "/opt/video-sync/media",
+    "serverLogDir" : "/var/log/video-sync/server",
+    "encodeLogDir" : "/var/log/video-sync/encoding"
   },
   "ffmpeg": {
-    "codecs": "",
+    "codecs": "(mov|mp4|webm|mkv|avi)",
     "ffprobe" : "-v quiet -show_streams -print_format json {}",
     "templates" : {
       "default": {
@@ -34,11 +34,11 @@
           "audio":  {
             "256k": "-y -i {} -vn -sn -c:a libvorbis -b:a 256k -f webm -dash 1 {}"
           },
-          "subtitles" : "-y -txt_format text -i {} -map {} {}",
+          "subtitle" : "-y -txt_format text -i {} -map {} {}",
           "manifest" :  {
             "base" : "-y {} -c copy {} -f webm_dash_manifest -adaptation_sets \"id=0,streams={} id=1,streams={}\" {}",
-            "inputs" : "-f webm_dash_manifest -i {}",
-            "maps" : "-map {}"
+            "input" : "-f webm_dash_manifest -i {}",
+            "map" : "-map {}"
           }
         }
       }

@@ -8,12 +8,15 @@ Command.prototype.setTemplate = function(template) {
 
 Command.prototype.format = function() {
   var i = 0, args = arguments;
-  return this.command.replace(/{}/g, function () {
-    return typeof args[i] != 'undefined' ? args[i++] : '{}';
+
+  this.command = this.command.replace(/{}/g, function () {
+    return typeof args[i] != 'undefined' ? `${args[i++]} ` : '{}';
   });
+
+  return this.command;
 };
 
-Command.prototype.getArgs = function(loggingArg) {
+Command.prototype.getArgs = function() {
   var regex = REGEX;
   var args = [];
   var lastIndex;
@@ -24,7 +27,7 @@ Command.prototype.getArgs = function(loggingArg) {
     args.push(value.replace(/\"/g, ''));
   }
 
-  return loggingPath ? args.concat(loggingArgloggingArg) : args;
+  return args;
 };
 
 module.exports = Command;

@@ -1,4 +1,5 @@
 const Promise = require('bluebird');
+const Path    = require('path');
 const Exec    = require('child_process').exec;
 
 var config, fileIO;
@@ -26,7 +27,7 @@ module.exports = CheckConfig;
 
 var validateRedis = function() {
   var exec = Exec(`${config.getConfig().external.redis ?
-    config.getConfig().externalProcesses.redis : 'redis-server'} --version`);
+    config.getConfig().external.redis : 'redis-server'} --version`);
   return asyncPromise(exec).catch(function(error, data) {
     throw new Error(`Calling process redis-server: ${error}`);
   });
@@ -34,7 +35,7 @@ var validateRedis = function() {
 
 var validateFFmpeg = function() {
   var exec = Exec(`${config.getConfig().external.ffmpeg ?
-    config.getConfig().externalProcesses.ffmpeg : 'ffmpeg'} -version`);
+    config.getConfig().external.ffmpeg : 'ffmpeg'} -version`);
   return asyncPromise(exec).catch(function(error) {
     throw new Error(`Calling process ffmpeg: ${error}`);
   });
@@ -42,7 +43,7 @@ var validateFFmpeg = function() {
 
 var validateFFprobe = function() {
   var exec = Exec(`${config.getConfig().external.ffprobe ?
-    config.getConfig().externalProcesses.ffprobe : 'ffprobe'} -version`);
+    config.getConfig().external.ffprobe : 'ffprobe'} -version`);
   return asyncPromise(exec).catch(function(error) {
     throw new Error(`Calling process ffprobe: ${error}`);
   });
@@ -92,7 +93,7 @@ var validateHostInfo = Promise.coroutine(function* () {
     }
 
     var mediaDir = config.getConfig().dirs.mediaDir;
-    if(encodedDir && encodedDir === Path.basename(encodedDir)) {
+    if(encodeDir && encodeDir === Path.basename(encodeDir)) {
       throw new Error('The dirs.encodedDir needs to be a path in your config.');
     } else {
       yield fileIO.ensureDirExistsAsync(mediaDir, 484);

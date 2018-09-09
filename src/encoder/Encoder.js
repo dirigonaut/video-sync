@@ -2,41 +2,49 @@ const Promise   = require('bluebird');
 const Cluster   = require('cluster');
 const Fs        = Promise.promisifyAll(require('fs'));
 const Path      = require('path');
+const Util      = require('util');
 
 const INTERVAL  = 500;
 
-var encoderManager, encoderFactory, encodingPlan, log;
+var encoderManager, encoderFactory, encodingPlan, config, log;
 
-function EncoderProcess() {}
+function Encoder() {}
 
 Encoder.prototype.initialize = function() {
-  if(typeof EncoderFactory.prototype.protoInit === 'undefined') {
-    EncoderFactory.prototype.protoInit = true;
-    Object.setPrototypeOf(EncoderProcess.prototype, Events.prototype);
+  if(typeof Encoder.prototype.protoInit === 'undefined') {
+    Encoder.prototype.protoInit = true;
 
+    config          = this.factory.createConfig();
     encoderFactory  = this.factory.createEncoderFactory();
     encoderManager  = this.factory.createEncoderManager();
+
+    var logManager  = this.factory.createLogManager();
+    log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
   }
 };
 
-Encoder.prototype.start = function(quality, inDir, outDir) {
-  encodingPlan = createEncodingPlan(quality, inDir, outDir);
+Encoder.prototype.start = Promise.coroutine(function* (templateId, inDir, outDir) {
+  log.debug('Encoder.start', arguments);
+  encodingPlan = yield encoderFactory.createPlan(templateId, inDir, outDir);
   encoderManager.encode(encodingPlan);
-  var intervalId = savePlanInterval();
 
-  return new Promise(resolve, reject) {
-    encoderManager.on('finished', function() {
+  var intervalId = setInterval(savePlan, INTERVAL);
+
+  return new Promise(function(resolve, reject) {
+    encoderManager.on('finished', Promise.coroutine(function* () {
+      log.debug('Encoder.finished',
+        Path.join(config.getConfig().dirs.encodeLogDir, `Plan-${process.pid}.txt`));
+
       clearInterval(intervalId);
+      yield savePlan(config.getConfig().dirs.encodeLogDir);
       resolve();
-    });
+    }));
   });
-};
+});
 
 module.exports = Encoder;
 
-var savePlanInterval = function(dir) {
-  var planPath = Path.join(dir, `Plan-${process.pid}.txt`);
-  return setInterval(Promise.coroutine(function* () {
-    yield Fs.writeFileAsync(planPath, JSON.stringify(encoderManager.getPlan()));
-  }.bind(this)), INTERVAL);
-};
+var savePlan = Promise.coroutine(function* (dir) {
+  var planPath = Path.join(config.getConfig().dirs.encodeLogDir, `Plan-${process.pid}.txt`);
+  yield Fs.writeFileAsync(planPath, Util.inspect(encodingPlan, { showHidden: false, depth: null}));
+});

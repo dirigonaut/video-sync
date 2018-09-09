@@ -3,6 +3,7 @@ const Cluster    = require('cluster');
 const Path       = require('path');
 const Winston    = require('winston');
 const Fs         = require('fs');
+const Util       = require('util');
 
 var config, eventKeys, schemaFactory, log;
 
@@ -25,12 +26,12 @@ LogManager.prototype.initialize = function() {
   }
 };
 
-LogManager.prototype.addFileLogging = function() {
+LogManager.prototype.addFileLogging = function(loggingDir) {
   var keys = Object.keys(LogManager.Enum.Logs);
   var logLevels = config.getConfig().log.levels ? config.getConfig().log.levels : undefined;
 
   for(var i in keys) {
-    var fileTransport = buildFileTransport.call(this, Path.join(config.getLogDir(), FILE_NAME),
+    var fileTransport = buildFileTransport.call(this, Path.join(loggingDir, FILE_NAME),
                           LogManager.Enum.Logs[keys[i]], logLevels && logLevels[keys[i]] ? logLevels[keys[i]] : LogManager.Enum.Logs.error, true);
     var container     = Winston.loggers.get(LogManager.Enum.Logs[keys[i]]);
 
@@ -85,10 +86,10 @@ function createFormatter(label) {
     };
 
     if(options.meta && Object.keys(options.meta).length) {
-      logMessage.meta = JSON.stringify(options.meta, null, 2);
+      logMessage.meta = options.meta;
     }
 
-    var json = JSON.stringify(logMessage);
+    var json = Util.inspect(logMessage, { showHidden: false, depth: null, compact: false});
     if(LogManager.Enum.Levels[options.level] === LogManager.Enum.Levels.socket) {
       if(!credentials) {
         credentials = this.factory.createCredentialManager();

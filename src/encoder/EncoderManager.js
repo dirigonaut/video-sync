@@ -34,10 +34,13 @@ EncoderManager.prototype.getPlan = function() {
 module.exports = EncoderManager;
 
 function processedEvent() {
+	var pointer = 0;
+
 	this.on('processed', function () {
-		if(plan.processes.length > 0) {
-			var encodeProcess = plan.processes.shift();
-			attachEvents.call(this, encodeProcess[1]);
+		if(plan.processes[pointer]) {
+			var encodeProcess = plan.processes[pointer];
+			attachEvents.apply(this, encodeProcess);
+			++pointer;
 
 			try {
 				encodeProcess[1].execute();
@@ -52,9 +55,10 @@ function processedEvent() {
 	}.bind(this));
 }
 
-function attachEvents(encodeProcess) {
+function attachEvents(id, encodeProcess) {
 	encodeProcess.on('start', function(pid) {
-		plan.statuses.set(pid, { "command": encodeProcess });
+		plan.statuses[pid] = {};
+		plan.statuses[pid].id = id;
 	}).on('data', function(pid, cur, dur) {
 		if(cur) {
 			plan.statuses[pid].encodedTo = cur;
@@ -63,7 +67,7 @@ function attachEvents(encodeProcess) {
 		if(dur) {
 			plan.statuses[pid].duration = dur;
 		}
-	}).on('exit', function(pid, exitCode) {
+	}).on('exit', function(pid, exitCode) {		
 		plan.statuses[pid].exitCode = exitCode;
 		removeEvents(encodeProcess);
 		this.emit('processed');

@@ -3,7 +3,7 @@ const Events    = require('events');
 const Fs        = Promise.promisifyAll(require('fs'));
 const DOMParser = require('xmldom').DOMParser;
 
-var fileSystemUtils, fileIO, log;
+var fileSystemUtils, log;
 
 function WebmMetaData() { }
 
@@ -12,7 +12,6 @@ WebmMetaData.prototype.initialize = function() {
     WebmMetaData.prototype.protoInit = true;
     Object.setPrototypeOf(WebmMetaData.prototype, Events.prototype);
     fileSystemUtils = this.factory.createFileSystemUtils();
-    fileIO          = this.factory.createFileIO();
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);

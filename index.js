@@ -25,7 +25,7 @@ var start = Promise.coroutine(function* (configPath) {
   });
 
   var logManager = factory.createLogManager();
-  logManager.addFileLogging();
+  logManager.addFileLogging(config.getConfig().dirs.serverLogDir);
 
   masterProcess = factory.createMasterProcess();
   yield masterProcess.start();
