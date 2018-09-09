@@ -26,21 +26,23 @@ WebmMetaProcess.prototype.setCommand = function(command) {
 
 WebmMetaProcess.prototype.execute = Promise.coroutine(function* () {
   log.info(`WebmMetaProcess.execute`, this.command);
-  var meta = yield webmMetaData.generateWebmMeta(this.command);
-  var pid = Math.random().toString(8)
+  this.emit('start');
+
+  var meta = yield webmMetaData.generateWebmMeta(this.command)
+  .catch(function(err) {
+    this.emit('error', err);
+  }.bind(this));
 
   if(!meta) {
     this.emit('exit', 1);
     throw new Error('meta data is not defined.');
   }
 
-  this.emit('start', pid);
-
   var xmlMeta = xmlUtil.webmMetaToXml(meta);
   yield mpdUtil.addSegmentsToMpd(this.command, xmlMeta).then(function() {
-    this.emit('exit', pid, 0);
+    this.emit('exit', 0);
   }.bind(this)).catch(function(err) {
-    this.emit('exit', pid, 1);
+    this.emit('exit', 1);
   }.bind(this));
 });
 

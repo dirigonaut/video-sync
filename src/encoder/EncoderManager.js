@@ -37,18 +37,17 @@ function processedEvent() {
 	var pointer = 0;
 
 	this.on('processed', function () {
-		if(plan.processes[pointer]) {
+		if(plan && plan.processes.hasOwnProperty(pointer)) {
 			var encodeProcess = plan.processes[pointer];
 			attachEvents.apply(this, encodeProcess);
 			++pointer;
 
-			try {
-				encodeProcess[1].execute();
-			} catch (error) {
+			encodeProcess[1].execute()
+			.catch(function(error) {
 				log.error(error);
 				this.emit('processed');
-			}
-		} else {
+			}.bind(this));
+		} else if(pointer >= plan.processes.length) {
 			this.emit('finished', plan);
 			plan = undefined;
 		}
@@ -58,7 +57,7 @@ function processedEvent() {
 function attachEvents(id, encodeProcess) {
 	encodeProcess.on('start', function(pid) {
 		plan.statuses[id] = {};
-	}).on('data', function(pid, cur, dur) {
+	}).on('data', function(cur, dur) {
 		if(cur) {
 			plan.statuses[id].encodedTo = cur;
 		}
@@ -66,11 +65,11 @@ function attachEvents(id, encodeProcess) {
 		if(dur) {
 			plan.statuses[id].duration = dur;
 		}
-	}).on('exit', function(pid, exitCode) {
+	}).on('exit', function(exitCode) {
 		plan.statuses[id].exitCode = exitCode;
 		removeEvents(encodeProcess);
 		this.emit('processed');
-	}.bind(this)).on('error', function(pid, error) {
+	}.bind(this)).on('error', function(error) {
 		if(!plan.statuses[id].errors) {
 			plan.statuses[id].errors = [];
 		}

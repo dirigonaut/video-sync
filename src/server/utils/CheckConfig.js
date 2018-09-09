@@ -51,16 +51,16 @@ var validateFFprobe = function() {
 
 var validateRedisConnection = function() {
   try {
-    if(!config.getConfig().redisConnection) {
-      throw new Error('The redisConnection map is not in your config.');
+    if(!config.getConfig().redisInfo.connection) {
+      throw new Error('The redisInfo.connection map is not in your config.');
     }
 
-    if(!config.getConfig().redisConnection.host) {
-      throw new Error('The redisConnection.host is not in your config.');
+    if(!config.getConfig().redisInfo.connection.host) {
+      throw new Error('The redisInfo.connection.host is not in your config.');
     }
 
-    if(!config.getConfig().redisConnection.port) {
-      throw new Error('The redisConnection.port is not in your config.');
+    if(!config.getConfig().redisInfo.connection.port) {
+      throw new Error('The redisInfo.connection.port is not in your config.');
     }
 
     return new Promise.resolve();

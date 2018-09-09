@@ -71,7 +71,7 @@ FileIO.prototype.ensureDirExistsAsync = function(path, mask) {
     var splitDir = path.split(Path.sep);
     splitDir[0] = Path.sep;
     for(var i = 0; i <= splitDir.length; ++i) {
-      yield Fs.mkdirAsync(Path.join.apply(null, splitDir.slice(0,i)), mask)
+      yield Fs.mkdirAsync(Path.join.apply(null, splitDir.slice(0,i)).trim(), mask)
         .catch(function(err) {
           if (err.code !== 'EEXIST') {
             reject(new Error(err));

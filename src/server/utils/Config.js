@@ -1,4 +1,5 @@
 const Promise   = require('bluebird');
+const Yaml      = require('js-yaml');
 const Path      = require('path');
 const Fs        = Promise.promisifyAll(require('fs'));
 
@@ -25,7 +26,7 @@ Config.prototype.load = Promise.coroutine(function* (path) {
 
   try {
     if(binaryConfig) {
-      config = JSON.parse(binaryConfig);
+      config = Yaml.safeLoad(binaryConfig);
     }
   } catch(e) {
     throw new Error(`Json syntax error in config file: ${path}, error: ${e}`);

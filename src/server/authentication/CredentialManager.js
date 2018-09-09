@@ -12,7 +12,7 @@ CredentialManager.prototype.initialize = function(force) {
   if(typeof CredentialManager.prototype.protoInit === 'undefined') {
     CredentialManager.prototype.protoInit = true;
     config          = this.factory.createConfig();
-    client          = Redis.createClient(config.getConfig().redisConnection);
+    client          = Redis.createClient(config.getConfig().redisInfo.connection);
 
     redisSocket     = this.factory.createRedisSocket();
     schemaFactory		= this.factory.createSchemaFactory();

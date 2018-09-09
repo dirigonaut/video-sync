@@ -3,7 +3,7 @@ const Path      = require('path');
 const Fs        = Promise.promisifyAll(require('fs'));
 
 const GENERIC_CONFIG_DIR  = Path.join(__dirname, "../../", "configs");
-const CONFIG_NAME         = "config.json";
+const CONFIG_NAME         = "config.yaml";
 const REDIS_CONFIG        = "redis.conf";
 const REDIS_CONFIG_OS     = `redis.${process.platform}.conf`;
 

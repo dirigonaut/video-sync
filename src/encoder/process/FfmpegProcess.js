@@ -36,22 +36,22 @@ FfmpegProcess.prototype.execute = Promise.coroutine(function* () {
 
   this.ffmpeg.on('close', function(data) {
     log.info(`Closed child pid: `, this.ffmpeg.pid);
-    this.emit('exit', this.ffmpeg.pid, data);
+    this.emit('exit', data);
   }.bind(this));
 
   this.ffmpeg.stderr.on('data', function(data) {
     dur = DUR_REG.exec(data.toString('utf8'));
     cur = CUR_REG.exec(data.toString('utf8'));
-    this.emit('data', this.ffmpeg.pid,
+    this.emit('data',
       cur && cur.length > 0 ? cur[0] : null,
       dur && dur.length > 0 ? dur[0] : null);
   }.bind(this));
 
   this.ffmpeg.on('error', function(data) {
-    this.emit('error', this.ffmpeg.pid, data.toString('utf8'));
+    this.emit('error', data.toString('utf8'));
   }.bind(this));
 
-  this.emit('start', this.ffmpeg.pid);
+  this.emit('start');
 });
 
 FfmpegProcess.prototype.setLoggingPath = function(key) {

@@ -185,10 +185,6 @@ function initGui(client, isAdmin) {
 
   client.formData.on(client.formData.Enums.FORMS.MEDIA_DIRS, joinFolders);
 
-  $(document).on('path-delete', function(e, element) {
-    //TODO create delete logic here for deleting files server side
-  });
-
   //Token Events ----------------------------------------------------------------
   function initToken() {
     var loadTokens = function(tokens) {
@@ -345,218 +341,10 @@ function initGui(client, isAdmin) {
     });
   }
 
-  //Encode Events ---------------------------------------------------------------
-  function initEncode() {
-    $('#encode-input').on("focusin", function() {
-      client.socket.request(client.keys.GETCONTENTS,
-        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STRING, ['encodeDir']));
-    });
-
-    $('#encode-input').on("focusout", function() {
-      var input = encodeURI($('#encode-input').val());
-      var inspect = ` -show_streams ${input}`;
-
-      var request = {};
-      request.encodings = inspect;
-
-      client.socket.request(client.keys.GETMETA, request);
-    });
-
-    var joinFiles = function(files) {
-      $('#encode-files').empty();
-
-      if(files) {
-        files.forEach((value, index, array) => {
-          $(`<option value="${value}">`).appendTo('#encode-files');
-        });
-      }
-    };
-
-    client.formData.on(client.formData.Enums.FORMS.ENCODE_DIRS, joinFiles);
-
-    var loadFileInfo = function(metaData) {
-      $('#encoding-meta').children().each((index, el) => {
-        if($(el)[0].id === "encoding-tabs") {
-          $($(el).children()).each(function(index, child) {
-            if($($(child)[0]).is("a")) {
-              $(child).remove();
-            }
-          });
-        } else {
-          $(el).remove();
-        }
-      });
-
-      $('#subtitle-track').empty();
-
-      if(metaData && typeof metaData.data !== 'undefined') {
-        var trackIndexes = '';
-
-        for(var i = metaData.data.stream.length - 1; i > -1; --i) {
-          $(`<div id='stream-${i}' class="panel-sub-panel flex-element ${i === 0 ? 'toggle show' : 'toggle'}">
-            ${prettifyMeta(JSON.stringify(metaData.data.stream[i]))}
-          </div>`).appendTo('#encoding-meta');
-
-          $(`<a href="#" onclick="$(document).trigger('encode-meta-toggle', ${i})";>
-              <span id='stream-icon-${i}' class='icon-min flex-icon flex-right ${ i === 0 ? "flaticon-file-2" : "flaticon-file-1" }'></span>
-            </a>`).appendTo('#encoding-tabs');
-
-          trackIndexes = `<option value="${i}">` + trackIndexes;
-        }
-
-        $(trackIndexes).appendTo('#subtitle-track');
-      }
-    };
-
-    var prettifyMeta = function(meta) {
-      meta = meta.replace(/(\[STREAM\]|\[\\STREAM\]|\{|\}|")*/g, '');
-      var metaArray = meta.split(',');
-      var html = '<table><tbody>';
-
-      for(let i = 0; i < metaArray.length; ++i) {
-        var value = metaArray[i].trim();
-
-        if(value) {
-          var splitRow = value.split(/\s/)
-          html += `<tr><td>${splitRow[0]}</td><td>${splitRow[1]}</td></tr>`
-        }
-      }
-
-      html+="</tbody></table>";
-      return html;
-    }
-
-    $(document).on('encode-meta-toggle', function(event, index) {
-      $('[id^=stream-]').each((i, el) => {
-        $(el).removeClass("show");
-
-        if($(`#stream-icon-${i}`).hasClass('flaticon-file-2')) {
-          $(`#stream-icon-${i}`).removeClass('flaticon-file-2');
-          $(`#stream-icon-${i}`).addClass('flaticon-file-1');
-        }
-      });
-
-      $(`#stream-${index}`).toggleClass("show");
-      $(`#stream-icon-${index}`).addClass('flaticon-file-2');
-    });
-
-    client.socket.setEvent(client.keys.META, loadFileInfo);
-
-    $('#encode-input-form a').click(function(e) {
-      var values = serializeForm('encode-input-form', 'input');
-      values.splice(2, 0, serializeForm('encode-input-form', 'select').pop());
-      var type;
-
-      $($(e.currentTarget).parent()).children().each((index, ele) => {
-        if($(ele).is("label")) {
-          type = $(ele).html().toUpperCase().match(/^\w*/g)[0];
-        }
-      });
-
-      var template = client.encode.getTemplate(client.encode.Enums.CODEC.WEBM, type);
-      template = client.encode.setKeyValue('i', encodeURI(`${values[0]}`), template);
-
-      if(type === client.encode.Enums.TYPES.VIDEO) {
-        template = client.encode.setKeyValue('speed', values[2], template);
-        template = client.encode.setKeyValue('b:v', values[3], template);
-        template = client.encode.setKeyValue('s', values[4], template);
-        template = client.encode.setOutput(encodeURI(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[4]}.${client.encode.Enums.CODEC.WEBM}`), template);
-      } else if(type === client.encode.Enums.TYPES.AUDIO) {
-        template = client.encode.setKeyValue('b:a', values[5], template);
-        template = client.encode.setOutput(encodeURI(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[5]}.${client.encode.Enums.CODEC.WEBM}`), template);
-      } else if(type === client.encode.Enums.TYPES.SUBTITLE) {
-        template = client.encode.setKeyValue('i', `${values[0]} ${values[6] ? `-map 0:${values[6]}` : ''}`, template);
-        template = client.encode.setOutput(encodeURI(`${values[1]}${client.encode.getNameFromPath(values[0])}.vtt`), template);
-      }
-
-      if(template) {
-        var odd = $(`#${type.toLowerCase()}-commands`).children().length % 2;
-        $(`<div class="flex-h ${odd ? 'input-invert' : ''} rounded-corners">
-          <textarea type="text" class="flex-element ${odd ? 'input-invert' : ''} clear-spacers">${template}</textarea>
-          <a href="#" onclick="$(document).trigger('encode-command-delete', event.currentTarget);">
-            <span class="flex-icon icon-min ${odd ? 'icon-min show' : 'icon-min'} flaticon-error flex-right"></span>
-          </a></div>`).appendTo(`#${type.toLowerCase()}-commands`);
-      }
-
-      generateManifest();
-    });
-
-    $(document).on('encode-command-delete', function(e, element, skipGen) {
-      $($(element).parent()).remove();
-
-      if(!skipGen) {
-        generateManifest();
-      }
-    });
-
-    var generateManifest = function() {
-      var values = serializeForm('encode-input-form', 'input');
-      var commands = [];
-
-      serializeForm('encode-command-form #video-commands', 'textarea')
-      .forEach((value, index, array) => {
-        commands.push({ type: client.encode.Enums.TYPES.VIDEO, input: value});
-      });
-
-      serializeForm('encode-command-form #audio-commands', 'textarea')
-      .forEach((value, index, array) => {
-        commands.push({ type: client.encode.Enums.TYPES.AUDIO, input: value});
-      });
-
-      var template = client.encode.createManifest(values[0], values[1], commands, client.encode.Enums.CODEC.WEBM);
-
-      var locked = $('#manifest-commands div a span');
-      locked = locked && locked.length > 0 ? locked = $(locked[0]).hasClass('flaticon-locked-6') : false;
-
-      if(!locked) {
-        $(`#manifest-commands`).empty();
-
-        if(template && commands && commands.length > 0) {
-          $(`<div class="flex-h">
-            <textarea type="text" class="flex-element clear-spacers">${template}</textarea>
-            <div class="flex-v">
-              <a href="#" onclick="$(document).trigger('lock-element', $('#manifest-commands div a span')[0]);">
-                <span class="icon-min ${!locked ? 'flaticon-unlocked-2' : 'flaticon-locked-6'} flex-right clear-spacers lock"></span>
-              </a>
-              <a href="#" onclick="$(document).trigger('encode-command-delete', [$(event.currentTarget).parent(), true]);">
-                <span class="icon-min flaticon-error flex-right clear-spacers"></span>
-              </a>
-            </div></div>`).appendTo(`#manifest-commands`);
-        }
-      }
-
-      $(document).trigger('textarea-grow');
-    }
-
-    $('#submit-encoding').click(function(e) {
-      var values = serializeForm('encode-input-form', 'input');
-      var commands = [];
-
-      serializeForm('encode-command-form', 'textarea')
-      .forEach((value, index, array) => {
-        commands.push({ input: value, encoder: client.encode.Enums.ENCODER.FFMPEG });
-      });
-
-      var request = {};
-      request.encodings = commands;
-      request.directory = values[1];
-
-      client.log.info('video-encode', request);
-      client.socket.request('video-encode', request);
-
-      $(`form#encode-command-form textarea`).each((index, element) => {
-        $(element).parent().empty();
-      });
-    });
-  }
-
   //Side Events -----------------------------------------------------------------
   if(isAdmin) {
     $(`<div id="side-tokens" class="flex-icon primary-color flex-center-v border-left">
       <a href="#"><span class="icon flaticon-user-3"></span></a>
-    </div>
-    <div id="side-encode" class="flex-icon primary-color flex-center-v border-left">
-      <a href="#"><span class="icon flaticon-compose"></span></a>
     </div>`).prependTo('#side');
 
     $(`<div id="side-shutdown" class="flex-icon primary-color flex-center-v border-left">
@@ -633,15 +421,6 @@ function initGui(client, isAdmin) {
 
   $(document).on('log-delete', logDelete);
 
-  $(document).on('encode-delete', function(e, ele, id) {
-    if($(`#encode-complete-${id}`).val() === 'true') {
-      logDelete(e, ele);
-    } else {
-      client.socket.request(client.keys.CANCELENCODE,
-        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STRING, [id]));
-    }
-  });
-
   var loggingOdd = 0;
   var logging = function(message) {
     $(`<div class="flex-h ${loggingOdd % 2 ? '' : 'input-invert'} flex-element">
@@ -687,89 +466,8 @@ function initGui(client, isAdmin) {
     logging(message);
   };
 
-  var durRegex=/(Duration:\s)(\d{2,}:)+(\d{2,})(.\d{2,})/g;
-  var timeRegex=/(time=)(\d{2,}:)+(\d{2,})(.\d{2,})/g;
-  var progressOdd = 0;
-  var progress = function(message) {
-    if(message.label) {
-      $(`<div class="flex-h flex-element flex-center-v rounded-corners ${progressOdd % 2 ? '' : 'input-invert'}">
-          <label>${message && message.time ? message.time.split(' ')[0] : ''}</label>
-          <p class="clear-spacers force-text">${message && message.data ? message.data : message}</p>
-        </div>`).prependTo(`#encoding-body-${message.label}`);
-
-      if(message.data.includes('Server: Succesfully')) {
-        $(`#time-${message.label}`).text('Finished');
-        $(`#encode-complete-${message.label}`).val('true');
-      } else if (message.data.includes('Server: Failed')) {
-        $(`#time-${message.label}`).text('Failed');
-        $(`#encode-complete-${message.label}`).val('true');
-      }
-
-      var dur = durRegex.exec(message.data);
-      if(dur) {
-        $(`#duration-${message.label}`).text(dur[0].split(' ')[1]);
-      }
-
-      var time = timeRegex.exec(message.data);
-      if(time) {
-        $(`#time-${message.label}`).text(time[0].split('=')[1]);
-      }
-
-      progressOdd = (progressOdd + 1) % 2;
-    }
-  };
-
-  var encodingsOdd = 0;
-  var loadEncodings = function(encodings) {
-    encodings.data.forEach((value, index) => {
-      if(!$(`#encoding-${value[0]}`).length) {
-        $(`<div id="encoding-${value[0]}" class="flex-v ${encodingsOdd % 2 ? 'even-color' : ''} padding rounded-corners">
-          <div class="flex-h">
-            <div type="text" class="flex-element clear-spacers force-text" onclick="$('#encoding-body-${value[0]}').toggleClass('show')">
-              <p class="clear-spacers">${value[1] && Array.isArray(value[1]) ? value[1].pop() : value[1]}</p>
-              <div class="flex-h">
-                <div id="time-${value[0]}"></div>
-                <div id="duration-${value[0]}" class="flex-right"></div>
-              </div>
-            </div>
-            <input id='encode-complete-${value[0]}' type='hidden' value='false'>
-            <a href="#" onclick="$(document).trigger('encode-delete', [$(event.currentTarget).parent(), '${value[0]}']);">
-              <span class="icon-min flaticon-error flex-right clear-spacers ${encodingsOdd % 2 ? 'show' : ''}"></span>
-            </a>
-          </div>
-          <div id="encoding-body-${value[0]}" class="flex-element flex-v toggle"></div>
-        </div>`).appendTo(`#log-body-encode`);
-        encodingsOdd = (encodingsOdd + 1) % 2;
-      }
-    });
-  };
-
-  var cancel = function(message) {
-    $(`#time-${message.label}`).text('Canceled');
-    $(`#encode-complete-${message.label}`).val('true');
-  }
-
-  $('[id^=log-toggle-]').click(function(e) {
-    $('[id^=log-tab-]').each((i, ele) => {
-      var id = $(e.currentTarget).attr('id').split('-')[2];
-
-      if($(ele).attr('id').includes(id)) {
-        $(ele).addClass("show");
-      } else {
-        $(ele).removeClass("show");
-      }
-    });
-  });
-
   client.socket.setEvent(client.keys.SERVERLOG, logging);
   client.socket.setEvent(client.keys.NOTIFICATION, notification);
-
-  if(isAdmin) {
-    client.socket.setEvent(client.keys.ENCODELOG, progress);
-    client.socket.setEvent(client.keys.ENCODINGS, loadEncodings);
-    client.socket.setEvent(client.keys.ENCODECANCELED, cancel);
-    client.socket.request(client.keys.GETENCODE);
-  }
 
   //Video Overlay----------------------------------------------------------------
   $('#options-form select').on("change", function (e) {
@@ -1172,7 +870,6 @@ function initGui(client, isAdmin) {
   if(isAdmin) {
     initMediaPath();
     initToken();
-    initEncode();
   } else {
     $('.is-admin').each((index, ele) => {
       $(ele).removeClass('show');

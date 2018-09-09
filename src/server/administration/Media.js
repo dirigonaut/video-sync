@@ -14,7 +14,7 @@ Media.prototype.initialize = function() {
     eventKeys       = this.factory.createKeys();
 
     var config      = this.factory.createConfig();
-    client          = Redis.createClient(config.getConfig().redisConnection);
+    client          = Redis.createClient(config.getConfig().redisInfo.connection);
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.ADMINISTRATION);

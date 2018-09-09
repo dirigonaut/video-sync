@@ -13,17 +13,18 @@
     "update-deps": "npm outdated --depth=0 | grep -v Package | awk '{print $1}' | xargs -I% npm install %@latest --save"
   },
   "dependencies": {
-    "bluebird": "^3.5.0",
+    "bluebird": "^3.5.2",
     "browserify": "^14.1.0",
-    "ebml": "^2.2.0",
+    "ebml": "^2.2.4",
     "express": "^4.15.2",
     "find": "^0.2.7",
+    "js-yaml": "^3.12.0",
     "marked": "^0.3.6",
-    "node-forge": "^0.7.0",
+    "node-forge": "^0.7.6",
     "redis": "^2.7.1",
     "socket.io": "^1.7.3",
     "socket.io-client": "^1.7.3",
-    "winston": "^2.3.1",
+    "winston": "^2.4.4",
     "xml2js": "^0.4.17",
     "xmldom": "^0.1.27"
   },

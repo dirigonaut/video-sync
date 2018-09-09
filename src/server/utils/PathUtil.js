@@ -8,7 +8,7 @@ const FileUtils = require('./FileSystemUtils');
 
 function PathUtil() { }
 
-PathUtil.prototype.getAllPaths = function(path, excludes, regex, unique) {
+PathUtil.prototype.getAllPaths = function(path, excludes, regex, uniqueKeys) {
   if(path && Path.isAbsolute(path)) {
     var fileUtils = Object.create(FileUtils.prototype);
     var asyncEmitter = new Events();
@@ -16,7 +16,7 @@ PathUtil.prototype.getAllPaths = function(path, excludes, regex, unique) {
 
     Find.eachfile(regex, path, function(filePath) {
       if(filePath) {
-        var key = unique ? getHash(files) : fileUtils.splitNameFromPath(filePath);
+        var key = uniqueKeys ? getHash(files) : fileUtils.splitNameFromPath(filePath);
 
         var foundExclude = false;
         if(excludes) {
@@ -44,7 +44,7 @@ PathUtil.prototype.getAllPaths = function(path, excludes, regex, unique) {
       asyncEmitter.once('error', reject);
     });
   } else {
-    new Error(`${path} is not a valid path.`);
+    throw new Error(`${path} is not a valid path.`);
   }
 };
 

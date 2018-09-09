@@ -1,28 +1,46 @@
 const Promise         = require('bluebird');
 const Path            = require('path');
+const Util            = require('util');
 const FactoryManager  = require('./src/server/factory/FactoryManager');
 
 var encoder, factoryManager;
 
-var args = process.argv.slice(2);
+const PARAMS = { CONFIG : "-c", ENCODE_DIR : "-d", TEMPLATES : "-t" };
+args = { };
+process.argv.forEach(function (val, index, array) {
+  switch(val) {
+    case PARAMS.CONFIG:
+      if(!Path.isAbsolute(array[index + 1])){
+        throw new Error("The argument -c (config) is expected to be an absolute path to the config it should run with.", args);
+      } else {
+        args[PARAMS.CONFIG] = array[index + 1];
+      }
+      break;
+    case PARAMS.ENCODE_DIR:
+      if(!Path.isAbsolute(array[index + 1])){
+        throw new Error("The -d argument is expected to be an absolute path to the directory to recursively crawl and encode.", args);
+      } else {
+        args[PARAMS.ENCODE_DIR] = array[index + 1];
+      }
+      break;
+    case PARAMS.TEMPLATES:
+      var templates = [];
 
-if(args.length < 2 && args.length > 3){
-  new Error("Encoding requires a path to the config to use and quality parameter with an optional dir argument instead of: ", args);
-}
+      for(var i = index + 1; i < array.length; ++i) {
+        if(array[i].match(PARAMS.CONFIG) || array[i].match(PARAMS.ENCODE_DIR)) {
+          break;
+        } else {
+          templates.push(array[i]);
+        }
+      }
 
-if(!Path.isAbsolute(args[0])){
-  new Error("The first argument is expected to be an absolute path to the config it should run with.", args);
-}
+      args[PARAMS.TEMPLATES] = templates;
+      break;
+  }
+});
 
-if(!Array.isArray(args[1])){
-  new Error("The second argument is expected to be a list of strings instead of: ", args[0].constructor);
-}
-
-if(args[1] && args[2] && !Path.isAbsolute(args[2])){
-  new Error("The third optional argument is expected to be a absolute path to a dir instead of: ", args[1]);
-}
-
-var start = Promise.coroutine(function* (configPath, templateIds, inDir) {
+console.log(`Running with commands: ${Util.inspect(args)}`);
+var start = Promise.coroutine(function* (configPath, inDir, templateIds) {
   factoryManager = Object.create(FactoryManager.prototype);
   var factory = yield factoryManager.initialize();
 
@@ -39,9 +57,6 @@ var start = Promise.coroutine(function* (configPath, templateIds, inDir) {
   logManager.addFileLogging(config.getConfig().dirs.encodeLogDir);
 
   encoder = factory.createEncoder();
-  yield encoder.start.apply(encoder, getCodecArgs(config, templateIds, inDir));
-}).apply(this, args);
-
-var getCodecArgs = function(config, templateIds, inDir) {
-  return [templateIds, inDir ? inDir : config.getConfig().dirs.encodeDir, config.getConfig().dirs.mediaDir];
-};
+  codecArgs = [templateIds, inDir ? inDir : config.getConfig().dirs.encodeDir, config.getConfig().dirs.mediaDir];
+  yield encoder.start.apply(encoder, codecArgs);
+}).call(this, args[PARAMS.CONFIG], args[PARAMS.ENCODE_DIR], args[PARAMS.TEMPLATES]);
