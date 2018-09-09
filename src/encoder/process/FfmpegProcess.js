@@ -29,7 +29,7 @@ FfmpegProcess.prototype.setCommand = function(command) {
 
 FfmpegProcess.prototype.execute = Promise.coroutine(function* () {
   var ffmpegPath = config.getConfig() ? config.getConfig().external.ffmpeg : undefined;
-  yield fileIO.ensureDirExistsAsync(Path.dirname(this.command[this.command.length - 1]), 484);
+  yield fileIO.ensureDirExistsAsync(Path.dirname(this.command[this.command.length - 1]));
 
   this.ffmpeg = Spawn(ffmpegPath ? ffmpegPath : "ffmpeg", this.command);
   log.info(`Spawned child pid: ${this.ffmpeg.pid}`, this.command);

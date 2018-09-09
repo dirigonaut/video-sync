@@ -57,26 +57,25 @@ function processedEvent() {
 
 function attachEvents(id, encodeProcess) {
 	encodeProcess.on('start', function(pid) {
-		plan.statuses[pid] = {};
-		plan.statuses[pid].id = id;
+		plan.statuses[id] = {};
 	}).on('data', function(pid, cur, dur) {
 		if(cur) {
-			plan.statuses[pid].encodedTo = cur;
+			plan.statuses[id].encodedTo = cur;
 		}
 
 		if(dur) {
-			plan.statuses[pid].duration = dur;
+			plan.statuses[id].duration = dur;
 		}
-	}).on('exit', function(pid, exitCode) {		
-		plan.statuses[pid].exitCode = exitCode;
+	}).on('exit', function(pid, exitCode) {
+		plan.statuses[id].exitCode = exitCode;
 		removeEvents(encodeProcess);
 		this.emit('processed');
 	}.bind(this)).on('error', function(pid, error) {
-		if(!plan.statuses[pid].errors) {
-			plan.statuses[pid].errors = [];
+		if(!plan.statuses[id].errors) {
+			plan.statuses[id].errors = [];
 		}
 
-		plan.statuses[pid].errors.push(error);
+		plan.statuses[id].errors.push(error);
 	});
 }
 

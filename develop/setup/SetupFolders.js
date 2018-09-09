@@ -14,7 +14,7 @@ var args = process.argv.slice(2);
 yield setupAppDataDir.apply(this, args);
 
 var setupAppDataDir = Promise.coroutine(function* (configDir) {
-  yield ensureDirExists(configDir, 484);
+  yield ensureDirExists(configDir);
   yield ensureAssetExists(configDir, REDIS_CONFIG, `redis.${}.conf`, "conf");
   yield ensureAssetExists(configDir, CONFIG_NAME, CONFIG_NAME, "json");
 });

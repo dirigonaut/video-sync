@@ -96,28 +96,28 @@ var validateHostInfo = Promise.coroutine(function* () {
     if(encodeDir && encodeDir === Path.basename(encodeDir)) {
       throw new Error('The dirs.encodedDir needs to be a path in your config.');
     } else {
-      yield fileIO.ensureDirExistsAsync(mediaDir, 484);
+      yield fileIO.ensureDirExistsAsync(mediaDir);
     }
 
     var encodeDir = config.getConfig().dirs.encodeDir;
     if(encodeDir && encodeDir === Path.basename(encodeDir)) {
       throw new Error('The dirs.encodeDir needs to be a path in your config.');
     } else {
-      yield fileIO.ensureDirExistsAsync(encodeDir, 484);
+      yield fileIO.ensureDirExistsAsync(encodeDir);
     }
 
     var serverLogDir = config.getConfig().dirs.serverLogDir;
     if(serverLogDir && serverLogDir === Path.basename(serverLogDir)) {
       throw new Error('The dirs.serverLogDir needs to be a path in your config.');
     } else {
-      yield fileIO.ensureDirExistsAsync(serverLogDir, 484);
+      yield fileIO.ensureDirExistsAsync(serverLogDir);
     }
 
     var encodeLogDir = config.getConfig().dirs.encodeLogDir;
     if(encodeLogDir && encodeLogDir === Path.basename(encodeLogDir)) {
       throw new Error('The dirs.encodeLogDir needs to be a path in your config.');
     } else {
-      yield fileIO.ensureDirExistsAsync(encodeLogDir, 484);
+      yield fileIO.ensureDirExistsAsync(encodeLogDir);
     }
 
     if(!config.getConfig().log) {

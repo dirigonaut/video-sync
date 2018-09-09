@@ -20,12 +20,11 @@ EncoderFactory.prototype.initialize = function() {
 EncoderFactory.prototype.createPlan = Promise.coroutine(function* (templateId, inDir, outDir) {
   log.info('EncoderFactory.createPlan', arguments);
   var fileList = yield getAllFilesToEncode(inDir);
-  var plan = { processes : [], statuses: {} };
+  var plan = { processes : [], statuses: [] };
   var template = config.getConfig().ffmpeg.templates[templateId];
 
   if(template) {
     for(var i in fileList) {
-      console.log(fileList)
       for(var codec of Object.keys(template)) {
         commands = [];
 

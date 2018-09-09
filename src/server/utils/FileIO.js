@@ -2,6 +2,8 @@ const Promise     = require('bluebird');
 const Fs          = Promise.promisifyAll(require('fs'));
 const Path        = require('path');
 
+const DIR_MASK = 464;
+
 var log;
 
 function FileIO() { }
@@ -61,18 +63,21 @@ FileIO.prototype.isDir = Promise.coroutine(function* (path) {
 FileIO.prototype.ensureDirExistsAsync = function(path, mask) {
   FileIO.prototype.protoInit ? log.debug('FileIO.ensureDirExistsAsync', arguments)
                              : console.log('FileIO.ensureDirExistsAsync', arguments);
+  if(!mask) {
+    mask = DIR_MASK;
+  }
 
- return new Promise(Promise.coroutine(function* (resolve, reject) {
-   var splitDir = path.split(Path.sep);
-   splitDir[0] = Path.sep;
-   for(var i = 0; i <= splitDir.length; ++i) {
-     yield Fs.mkdirAsync(Path.join.apply(null, splitDir.slice(0,i)), mask)
-     .catch(function(err) {
-       if (err.code !== 'EEXIST') {
-         reject(new Error(err));
-       }
-     });
-   }
+  return new Promise(Promise.coroutine(function* (resolve, reject) {
+    var splitDir = path.split(Path.sep);
+    splitDir[0] = Path.sep;
+    for(var i = 0; i <= splitDir.length; ++i) {
+      yield Fs.mkdirAsync(Path.join.apply(null, splitDir.slice(0,i)), mask)
+        .catch(function(err) {
+          if (err.code !== 'EEXIST') {
+            reject(new Error(err));
+          }
+      });
+    }
 
    resolve();
  }));
