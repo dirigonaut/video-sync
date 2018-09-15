@@ -81,47 +81,41 @@ AdminController.prototype.attachSocket = function(socket) {
   }));
 
   socket.on(eventKeys.GETCONTENTS, Promise.coroutine(function* (data) {
-    log.debug(eventKeys.GETCONTENTS, data);
-    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.STRING);
-    var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
+    log.debug(eventKeys.GETMEDIACONTENTS, data);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.SPECIAL);
+    var request = sanitizer.sanitize(data, schema, undefined, socket);
 
     if(request) {
-      var dirPath = request.data;
-
-      if(dirPath === config.getConfig().dirs.mediaDir) {
-        var contents = yield getFolderContents(socket, dirPath, 'dirs');
-        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [contents]);
-        socket.emit(eventKeys.MEDIADIR, response);
-      } else if(dirPath === config.getConfig().dirs.encodeDir) {
-        var contents = yield getFolderContents(socket, dirPath, 'files');
-        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [contents]);
-        socket.emit(eventKeys.ENCODEDIR, response);
-      }
+      var contents = yield getFolderContents(socket, request.data);
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [contents]);
+      socket.emit(eventKeys.MEDIADIR, response);
     }
   }));
 };
 
 module.exports = AdminController;
 
-var getFolderContents = Promise.coroutine(function* (socket, dirPath, filter) {
-  var basePath = config.getConfig().dirs[dirPath];
+var getFolderContents = Promise.coroutine(function* (socket, path) {
+  var basePath = config.getConfig().dirs.mediaDir;
   var contents = [];
 
   if(basePath) {
-    var entries = yield fileIO.readDirAsync(basePath);
+    try {
+      var entries = yield fileIO.readDirAsync(Path.join(basePath, path));
 
-    for(let i = 0; i < entries.length; ++i) {
-      var isDir = yield fileIO.isDir(Path.join(basePath, entries[i]));
+      for(let i = 0; i < entries.length; ++i) {
+        var isDir = yield fileIO.isDir(Path.join(basePath, path, entries[i]));
 
-      if(isDir && filter === 'dirs') {
-        contents.push(Path.join(basePath, entries[i]));
-      } else if(!isDir && filter === 'files') {
-        contents.push(Path.join(basePath, entries[i]));
+        if(isDir) {
+          contents.push(Path.join(path, entries[i]));
+        }
       }
+    } catch (e) {
+      log.socket(e);
     }
   } else {
     log.warn(`Socket: ${socket.id} requested folders in dir variable: ${dirPath}, which is not in the config.`);
   }
 
-  return contents;
+  return contents && contents.length > 0 ? contents : undefined;
 });

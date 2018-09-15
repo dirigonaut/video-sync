@@ -9,14 +9,14 @@ process.on('uncaughtException', function(err) {
 });
 
 var b = browserify({
-  entries: [path.join(__dirname, '../src/client/factory/ClientFactoryManager.js')],
+  entries: [path.join(__dirname, '../../src/client/factory/ClientFactoryManager.js')],
   standalone: 'FactoryManager',
   cache: {}
 });
 
-b.bundle().pipe(fs.createWriteStream(path.join(__dirname, '../static/resources/bundle.js')));
+b.bundle().pipe(fs.createWriteStream(path.join(__dirname, '../../static/resources/bundle.js')));
 
-var readMe = fs.readFileSync(path.join(__dirname, '../README.md'), 'utf-8');
+var readMe = fs.readFileSync(path.join(__dirname, '../../README.md'), 'utf-8');
 var markdownReadMe = marked(readMe);
 
-fs.writeFileSync(path.join(__dirname,'../static/html/documentation.html'), markdownReadMe);
+fs.writeFileSync(path.join(__dirname,'../../static/html/documentation.html'), markdownReadMe);

@@ -5,7 +5,7 @@ const FactoryManager  = require('./src/server/factory/FactoryManager');
 
 var encoder, factoryManager;
 
-const PARAMS = { CONFIG : "-c", ENCODE_DIR : "-d", TEMPLATES : "-t" };
+const PARAMS = { CONFIG : "-c", ENCODE_DIR : "-d", TEMPLATES : "-t", DRY_RUN : "-dry" };
 args = { };
 process.argv.forEach(function (val, index, array) {
   switch(val) {
@@ -35,6 +35,9 @@ process.argv.forEach(function (val, index, array) {
       }
 
       args[PARAMS.TEMPLATES] = templates;
+      break;
+    case PARAMS.DRY_RUN:
+      args[PARAMS.DRY_RUN] = true;
       break;
   }
 });

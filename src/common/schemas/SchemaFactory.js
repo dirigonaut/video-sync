@@ -34,6 +34,8 @@ SchemaFactory.prototype.createPopulatedSchema = function (id, args) {
     for(var i = 0; i < keys.length; ++i) {
       object[keys[i]] = args[i];
     }
+  } else {
+    throw new Error(`Failed creating a schema for id: ${id}, args: ${args}`)
   }
 
   return object;

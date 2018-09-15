@@ -40,6 +40,7 @@ module.exports = {
   PING:           'state-ping',
   UPDATEINIT:     'state-update-init',
   SYNCINFO:       'state-metrics',
+  ADMINSTATS:     'state-admin-metrics',
   //Client
   INIT:           'state-init',
   PLAY:           'state-play',

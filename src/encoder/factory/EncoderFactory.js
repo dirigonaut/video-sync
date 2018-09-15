@@ -187,7 +187,8 @@ var getOutputPath = function(codec, id, input, inDir, outDir) {
   var splitPath = subPath.split(/[/\\]+/);
   var splitType = splitPath.pop().split('.');
 
-  return Path.join(outDir, Path.join.apply(null, splitPath), Path.basename(input, `.${splitType.pop()}`),
+  var dirName = decodeURI(Path.basename(input, `.${splitType.pop()}`))
+  return Path.join(outDir, Path.join.apply(null, splitPath), dirName.trim(),
       `${splitType.join('.')}_${id}.${codec}`);
 };
 
@@ -230,7 +231,7 @@ var getHash = function(object) {
 var createFfmpegProcess = function(command, id) {
   var ffmpeg = this.factory.createFfmpegProcess();
   ffmpeg.setCommand(command.getArgs());
-  ffmpeg.setLoggingPath.call(ffmpeg, id);
+  ffmpeg.setHash.call(ffmpeg, id);
   return ffmpeg
 };
 

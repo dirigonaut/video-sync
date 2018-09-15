@@ -4,7 +4,8 @@ const Events  = require('events');
 const METRICSINTERVAL = 500;
 
 var publisher, playRule, syncingRule, syncRule, schemaFactory, redisSocket,
-    metricInterval, playerManager, trigger, media, publisher, eventKeys, log;
+    metricInterval, playerManager, credentials, trigger, media, publisher,
+    eventKeys, log;
 
 function StateEngine() { };
 
@@ -15,6 +16,7 @@ StateEngine.prototype.initialize = function() {
     media           = this.factory.createMedia();
     publisher       = this.factory.createRedisPublisher();
     redisSocket     = this.factory.createRedisSocket();
+    credentials     = this.factory.createCredentialManager();
     trigger         = new Events();
 
     playRule        = this.factory.createPlayRule();
@@ -240,7 +242,8 @@ var canPlay = function(players, state) {
 
 var createMetricInterval = function() {
   return setInterval(Promise.coroutine(function* () {
-    var triggered = yield syncRule.evaluate(playerManager.getPlayers());
+    var players = playerManager.getPlayers();
+    var triggered = yield syncRule.evaluate(players);
 
     if(triggered) {
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
@@ -248,5 +251,12 @@ var createMetricInterval = function() {
       yield redisSocket.broadcast.call(StateEngine.prototype, eventKeys.NOTIFICATION, response);
       yield redisSocket.broadcast.call(this, eventKeys.PAUSE);
     }
+
+    credentials.getAdmin().then(function(admin) {
+      if(admin && admin.id) {
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, players);
+        redisSocket.ping.call(this, admin.id, eventKeys.ADMINSTATS, response);
+      }
+    });
   }.bind(this)), 500);
 };

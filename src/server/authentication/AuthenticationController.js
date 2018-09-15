@@ -132,11 +132,9 @@ var isAdministrator = Promise.coroutine(function* (socket, request) {
 
     var adminController       = this.factory.createAdminController();
     var credentialController  = this.factory.createCredentialController();
-    var encodingContoller     = this.factory.createEncodingController();
 
     adminController.attachSocket(socket);
     credentialController.attachSocket(socket);
-    encodingContoller.attachSocket(socket);
 
     userAuthorized.call(this, socket);
   }

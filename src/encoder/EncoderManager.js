@@ -47,7 +47,7 @@ function processedEvent() {
 				log.error(error);
 				this.emit('processed');
 			}.bind(this));
-		} else if(pointer >= plan.processes.length) {
+		} else if(plan && pointer >= plan.processes.length) {
 			this.emit('finished', plan);
 			plan = undefined;
 		}

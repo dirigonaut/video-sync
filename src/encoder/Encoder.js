@@ -23,28 +23,33 @@ Encoder.prototype.initialize = function() {
   }
 };
 
-Encoder.prototype.start = Promise.coroutine(function* (templateId, inDir, outDir) {
+Encoder.prototype.start = Promise.coroutine(function* (templateId, inDir, outDir, dry) {
   log.debug('Encoder.start', arguments);
   encodingPlan = yield encoderFactory.createPlan(templateId, inDir, outDir);
   encoderManager.encode(encodingPlan);
 
-  var intervalId = setInterval(savePlan, INTERVAL);
+  if(dry) {
+    savePlan();
+    return new Promise.resolve();
+  } else {
+    var intervalId = setInterval(savePlan, INTERVAL);
 
-  return new Promise(function(resolve, reject) {
-    encoderManager.on('finished', Promise.coroutine(function* () {
-      log.debug('Encoder.finished',
-        Path.join(config.getConfig().dirs.encodeLogDir, `Plan-${process.pid}.txt`));
+    return new Promise(function(resolve, reject) {
+      encoderManager.on('finished', Promise.coroutine(function* () {
+        log.debug('Encoder.finished',
+          Path.join(config.getConfig().dirs.encodeLogDir, `Plan-${process.pid}.txt`));
 
-      clearInterval(intervalId);
-      yield savePlan(config.getConfig().dirs.encodeLogDir);
-      resolve();
-    }));
-  });
+        clearInterval(intervalId);
+        yield savePlan(config.getConfig().dirs.encodeLogDir);
+        resolve();
+      }));
+    });
+  }
 });
 
 module.exports = Encoder;
 
-var savePlan = Promise.coroutine(function* (dir) {
+var savePlan = Promise.coroutine(function* () {
   var planPath = Path.join(config.getConfig().dirs.encodeLogDir, `Plan-${process.pid}.txt`);
   yield Fs.writeFileAsync(planPath, Util.inspect(encodingPlan, { showHidden: false, depth: null}));
 });

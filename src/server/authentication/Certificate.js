@@ -37,7 +37,7 @@ var load = function (path) {
   log.debug("Certificate._load", path);
   return Promise.all([
     Fs.readFileAsync(config.getConfig().ssl.key),
-    Fs.readFileAsync(config.getConfig().ssl.cert)
+    Fs.readFileAsync(config.getConfig().ssl.crt)
   ]).then(function(result) {
     if(result.length === 2) {
       return {

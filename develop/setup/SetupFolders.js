@@ -2,21 +2,44 @@ const Promise   = require('bluebird');
 const Path      = require('path');
 const Fs        = Promise.promisifyAll(require('fs'));
 
+const Config     = require('../../src/server/utils/Config.js');
+const FileIO     = require('../../src/server/utils/FileIO.js');
+
 const GENERIC_CONFIG_DIR  = Path.join(__dirname, "../../", "configs");
 const CONFIG_NAME         = "config.yaml";
 const REDIS_CONFIG        = "redis.conf";
 const REDIS_CONFIG_OS     = `redis.${process.platform}.conf`;
 
-/*
-  configPath: path/to/config/dir/
-*/
-var args = process.argv.slice(2);
-yield setupAppDataDir.apply(this, args);
+var getConfig = function () {
+  if(process.env.VIDEO_SYNC_CONFIG) {
+    if(Path.isAbsolute(process.env.VIDEO_SYNC_CONFIG)) {
+      configPath = process.env.VIDEO_SYNC_CONFIG;
+      var config = Object.create(Config.prototype);
+
+      return new Promise(Promise.coroutine(function*(resolve, reject) {
+        try {
+          yield config.load(configPath);
+          resolve(config);
+        } catch (e) {
+          reject(e);
+        }
+      }));
+    } else {
+      throw new Error(
+        `VIDEO_SYNC_CONFIG env var is expected to be an absolute path not: ${process.env.VIDEO_SYNC_CONFIG}`);
+    }
+  }
+};
+
+var fileIO = Object.create(FileIO.prototype);
+getConfig().then(function(config) {
+  setupAppDataDir.call(this, config.getConfig().dirs.configDir)
+});
 
 var setupAppDataDir = Promise.coroutine(function* (configDir) {
   yield ensureDirExists(configDir);
-  yield ensureAssetExists(configDir, REDIS_CONFIG, `redis.${}.conf`, "conf");
-  yield ensureAssetExists(configDir, CONFIG_NAME, CONFIG_NAME, "json");
+  yield ensureAssetExists(configDir, REDIS_CONFIG, `redis.${REDIS_CONFIG_OS}.conf`, "conf");
+  yield ensureAssetExists(configDir, CONFIG_NAME, CONFIG_NAME, "yaml");
 });
 
 var ensureDirExists = Promise.coroutine(function* (dir, mask) {

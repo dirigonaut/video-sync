@@ -8,7 +8,7 @@ Player.prototype.reset = function() {
 };
 
 Player.Enum = {};
-Player.Enum.State = {"PAUSE" : 0, "PLAY" : 1};
-Player.Enum.Sync  = {"SYNCING" : 0, "SYNCED" : 1, "BUFFWAIT" : 2};
+Player.Enum.State = { "PAUSE" : 0, "PLAY" : 1 };
+Player.Enum.Sync  = { "SYNCING" : 0, "SYNCED" : 1, "BUFFWAIT" : 2 };
 
 module.exports = Player;

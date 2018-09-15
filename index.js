@@ -6,10 +6,24 @@ var masterProcess, factoryManager;
 
 var args = process.argv.slice(2);
 
+var configPath;
 if(args.length !== 1 || !Path.isAbsolute(args[0]) ) {
-  throw new Error("Video Sync takes one parameter that \
-    is a path to the config it should run with.", args);
+  if(process.env.VIDEO_SYNC_CONFIG) {
+      if(Path.isAbsolute(process.env.VIDEO_SYNC_CONFIG)) {
+        configPath = process.env.VIDEO_SYNC_CONFIG;
+      } else {
+        throw new Error(
+          `VIDEO_SYNC_CONFIG env var is expected to be an absolute path not: ${process.env.VIDEO_SYNC_CONFIG}`);
+      }
+  } else {
+    throw new Error(
+      `Video Sync takes one parameter that is a path to the config it should run with not: ${args}`);
+  }
+} else {
+  configPath = args[0];
 }
+
+console.log(`Using config: ${configPath}`);
 
 var start = Promise.coroutine(function* (configPath) {
   factoryManager = Object.create(FactoryManager.prototype);
@@ -29,4 +43,4 @@ var start = Promise.coroutine(function* (configPath) {
 
   masterProcess = factory.createMasterProcess();
   yield masterProcess.start();
-})(args);
+})(configPath);

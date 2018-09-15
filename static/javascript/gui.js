@@ -146,22 +146,30 @@ function initGui(client, isAdmin) {
       $('#control-time-slider').val(0);
     });
 
-    $('#path-input').click(function() {
+    var scanDirs = function() {
       $('#path-dropdown').empty();
       client.socket.request(client.keys.GETCONTENTS,
-        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STRING, ['mediaDir']));
-    });
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STRING, [$('#path-input').val()]));
+    };
+
+    $('#path-input').on('input', scanDirs);
+    $('#path-input').click(scanDirs);
   }
 
   var joinFolders = function(dirs) {
-    if(dirs) {
+    if(dirs || $('#path-input').val() === '') {
       dirs.forEach((value, index, array) => {
         $(`<div class="flex-element primary-color invert">
           <div id='path-${index}' class="flex-element" onclick="$('#path-input').val('${value.replace(/\\/g, '\\\\')}')">${value}</div>
         </div>`).appendTo('#path-dropdown');
       });
 
-      resetPathDropDown();
+      if($('#path-dropdown').is(":hidden")) {
+        resetPathDropDown();
+        toggleOverlays('path-dropdown');
+      }
+    } else {
+      toggleOverlays();
     }
   };
 
@@ -339,6 +347,12 @@ function initGui(client, isAdmin) {
         $(ele).addClass('flaticon-unlocked-2');
       }
     });
+
+    var updateUserStats = function(players) {
+      console.log(players);
+    };
+
+    client.socket.setEvent(client.keys.ADMINSTATUS, updateUserStats);
   }
 
   //Side Events -----------------------------------------------------------------
@@ -699,7 +713,10 @@ function initGui(client, isAdmin) {
 
   if(isAdmin) {
     $('#path-input').click(function(e) {
-      toggleOverlays('path-dropdown');
+      changeDropDown();
+    });
+
+    $('#path-input').on('input', function(e) {
       changeDropDown();
     });
 

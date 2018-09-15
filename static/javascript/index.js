@@ -153,8 +153,7 @@ function setupClient() {
     if(!isExtraResourcesLoaded) {
       if(isAdmin) {
         return Promise.all([
-          loadAsyncFile('#panel-encode', 'gui/panels/encode.html'),
-          loadAsyncFile('#panel-tokens',  'gui/panels/tokens.html'),
+          loadAsyncFile('#panel-tokens',  'gui/panels/tokens.html')
         ]).then(function() {
           return loadAsyncScript('../javascript/gui.js').then(function() {
             isExtraResourcesLoaded = true;

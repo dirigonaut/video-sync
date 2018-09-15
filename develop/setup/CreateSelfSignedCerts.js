@@ -1,28 +1,56 @@
 const Promise    = require('bluebird');
 const Fs         = Promise.promisifyAll(require('fs'));
 const Forge      = require('node-forge');
+const Path       = require('path');
+
+const Config     = require('../../src/server/utils/Config.js');
 
 const EXPIR = 365;
 
-/*
-  bits: 4048,
-  attr:
-    [{"name":"commonName","value":""},
-    {"name":"countryName","value":""},
-    {"shortName":"ST","value":""},
-    {"name":"localityName","value":""},
-    {"name":"organizationName","value": ""},
-    {"shortName":"OU","value": ""}]
-  keyPath: path/to/save/key
-  certPath: path/to/save/cert
-*/
+var getConfig = function () {
+  if(process.env.VIDEO_SYNC_CONFIG) {
+    if(Path.isAbsolute(process.env.VIDEO_SYNC_CONFIG)) {
+      configPath = process.env.VIDEO_SYNC_CONFIG;
+      var config = Object.create(Config.prototype);
 
-var args = process.argv.slice(2);
-generate.apply(this, args)
-  .then(function() { console.log(`Finished running for args: ${args}`) })
-  .catch(function(error) { console.log(`Error running args: ${args}`, error) });
+      return new Promise(Promise.coroutine(function*(resolve, reject) {
+        try {
+          yield config.load(configPath);
+          resolve(config);
+        } catch (e) {
+          reject(e);
+        }
+      }));
+    } else {
+      throw new Error(
+        `VIDEO_SYNC_CONFIG env var is expected to be an absolute path not: ${process.env.VIDEO_SYNC_CONFIG}`);
+    }
+  }
+};
 
-var generate = function(bits, attr, keyPath, certPath) {
+getConfig()
+.then(function(config) {
+  return [
+    1024,
+    [{"name":"commonName","value":Math.random()},
+    {"name":"countryName","value":Math.random()},
+    {"shortName":"ST","value":Math.random()},
+    {"name":"localityName","value":Math.random()},
+    {"name":"organizationName","value":Math.random()},
+    {"shortName":"OU","value":Math.random()}],
+    config.getConfig().ssl.key,
+    config.getConfig().ssl.crt
+  ];
+}).then(function(attrs) {
+  console.log("Executing with the following args: ");
+  console.log(attrs);
+  generate.apply(this, attrs)
+  .then(function() { console.log(`Generated Self Signed Certs`) })
+  .catch(function(error) { console.log(`Error Generating Self Signed Certs`, error) });
+});
+
+var generate = function(bits, attrs, keyPath, certPath) {
+  console.log("Generating Self Signed Certs")
   var pki = Forge.pki;
 
   var keypair = pki.rsa.generateKeyPair(bits);
@@ -47,7 +75,7 @@ var generate = function(bits, attr, keyPath, certPath) {
 
   var pemKey = pki.privateKeyToPem(keypair.privateKey);
   var pemCert = pki.certificateToPem(cert);
-  
+
   verify(pemCert);
 
   return Promise.all([
@@ -57,7 +85,7 @@ var generate = function(bits, attr, keyPath, certPath) {
 };
 
 var verify = function (pem) {
-  log.debug("Certificate._verify");
+  console.log("Verify Self Signed Certs");
   var caStore = Forge.pki.createCaStore();
   var cert;
 

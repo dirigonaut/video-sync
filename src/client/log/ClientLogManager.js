@@ -53,20 +53,11 @@ function log(level, message, meta) {
     time: new Date().toTimeString(),
     level: level,
     label: this.label,
-    text: message ? message : ''
+    text: message ? message : meta,
+    meta: message && meta ? meta : ''
   };
 
-  if(logMessage.text instanceof Object) {
-    logMessage.meta = JSON.stringify(logMessage.text, null, 2);
-    logMessage.text = null;
-  }
-
-  if(meta) {
-    logMessage.meta = JSON.stringify(meta, null, 2);
-  }
-
   if(ClientLogManager.Enum.Levels[level] <= ClientLogManager.Enum.Levels[this.level]) {
-    var logLevel = typeof console[level] !== 'undefined' ? level : 'trace';
-    console[logLevel](logMessage);
+    console.log(logMessage);
   }
 }
