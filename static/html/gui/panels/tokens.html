@@ -1,29 +1,42 @@
-<div class="panel-header ">User Tokens</div>
+<div class="panel-header ">
+  <div class="flex-h flex-center-h flex-element primary-color-invert">
+    <div class="flex-element flex-center-h">
+      User Management
+    </div>
+  </div>
+</div>
 <hr>
-<div id="token-body" class="">
-  <label for="token-count">Create:</label>
-  <form id="token-form" class="flex-h flex-center-h flex-element">
-    <a href="#">
-      <span id="token-permissions" class="flex-icon icon-min flaticon-unlocked-2"></span>
-    </a>
-    <input type="text" name="token-count" class="flex-element" value="4">
-    <a href="#" id="token-create">
-      <span class="flex-icon icon-min flaticon-plus"></span>
-    </a>
-  </form>
-  <hr>
-  <label for="token-count">Update:</label>
-  <form id="token-manage" class="flex-h flex-element">
-    <a href="#" onclick="$(document).trigger('token-level', event.currentTarget);">
-      <span class="flex-icon icon-min flaticon-unlocked-2"></span>
-    </a>
-    <div class="flex-h flex-element flex-center-v">
+<div id="token-body">
+  <form id="token-form" class="flex-element primary-color-invert margin clear-spacers">
+    <label>Create Tokens:</label>
+    <div class="flex-h flex-center-h flex-element">
       <a href="#">
-        <span id="token-copy" class="flex-icon icon-min flaticon-photo-camera-1"></span>
+        <span id="token-permissions" class="flex-icon invert icon-min flaticon-unlocked-2"></span>
+      </a>
+      <div class="flex-element flex-center-h">
+        <input type="text" name="token-count" class="flex-element" value="1">
+      </div>
+      <a href="#" id="token-create">
+        <span class="flex-icon invert icon-min flaticon-plus"></span>
       </a>
     </div>
-    <a href="#" onclick="$(document).trigger('token-delete', event.currentTarget);">
-      <span class="flex-icon icon-min flaticon-error"></span>
-    </a>
+  </form>
+  <form id="token-manage" class="flex-v flex-element primary-color-invert margin clear-spacers">
+    <div class="flex-h flex-center-h flex-element">
+      <a href="#" id="token-levels" onclick="$(document).trigger('token-level', event.currentTarget);">
+        <span class="flex-icon icon-min flaticon-unlocked-2 invert"></span>
+      </a>
+      <div class="flex-h flex-element flex-center-v">
+        <a href="#" class="flex-h flex-element primary-color">
+          <span id="token-copy" class="flex-center-h">Copy Tokens</span>
+        </a>
+      </div>
+      <a href="#" id="delete-tokens" onclick="$(document).trigger('token-delete', event.currentTarget);">
+        <span class="flex-icon icon-min flaticon-error invert"></span>
+      </a>
+    </div>
+  </form>
+  <hr>
+  <form id="token-list" class="flex-v flex-element clear-spacers">
   </form>
 </div>

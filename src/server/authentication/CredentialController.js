@@ -9,6 +9,7 @@ CredentialController.prototype.initialize = function(force) {
   if(typeof CredentialController.prototype.protoInit === 'undefined') {
     CredentialController.prototype.protoInit = true;
     credentials     = this.factory.createCredentialManager();
+    redisSocket     = this.factory.createRedisSocket();
 
     schemaFactory		= this.factory.createSchemaFactory();
     sanitizer		    = this.factory.createSanitizer();
@@ -16,6 +17,10 @@ CredentialController.prototype.initialize = function(force) {
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.AUTHENTICATION);
+
+    credentials.on(credentials.Enums.EVENT.UPDATED, function(data) {
+      sendUpdatedTokens.call(this, data);
+    }.bind(this));
   }
 };
 
@@ -27,26 +32,23 @@ CredentialController.prototype.attachSocket = function(socket) {
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
-      var tokens = yield credentials.generateTokens(request.id, request.data);
-      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [tokens]);
-      socket.emit(eventKeys.TOKENS, response);
+      yield credentials.generateTokens(request.id, request.data);
     }
   }.bind(this)));
 
   socket.on(eventKeys.GETTOKENS, Promise.coroutine(function*() {
     var tokens = yield credentials.getTokens();
-    var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [tokens]);
-    socket.emit(eventKeys.TOKENS, response);
+    sendUpdatedTokens(tokens ? tokens : {});
   }.bind(this)));
 
   socket.on(eventKeys.SETTOKENLEVEL, Promise.coroutine(function*(data) {
-    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.SPECIAL);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
-      var tokens = yield credentials.setTokenLevel(request.id, request.data);
-      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [tokens]);
-      socket.emit(eventKeys.TOKENS, response);
+      for(var i in request.data) {
+        yield credentials.setTokenLevel(request.data[i][0], request.data[i][1]);
+      }
     }
   }.bind(this)));
 
@@ -55,11 +57,22 @@ CredentialController.prototype.attachSocket = function(socket) {
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
-      var tokens = yield credentials.deleteTokens(request.data.includes(',') ? request.data.split(',') : [request.data]);
-      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [tokens]);
-      socket.emit(eventKeys.TOKENS, response);
+      yield credentials.deleteTokens(request.data);
     }
   }.bind(this)));
 };
 
 module.exports = CredentialController;
+
+var sendUpdatedTokens = Promise.coroutine(function* (tokens) {
+  var admin = yield credentials.getAdmin();
+
+  if(admin && admin.id) {
+    if(tokens) {
+      tokens['admin'] = admin;
+    }
+
+    var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [tokens]);
+    redisSocket.ping.call(this, admin.id, eventKeys.TOKENS, response);
+  }
+});

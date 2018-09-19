@@ -1,24 +1,26 @@
-<div class="panel-header ">System Logs</div>
+<div class="panel-header">
+  <div class="flex-h flex-center-h flex-element primary-color-invert">
+    <div class="flex-element flex-center-h">
+      System Logs
+    </div>
+  </div>
+</div>
 <hr>
-<div class="flex-element ">
-  <label>Log Levels:</label>
-  <div class="flex-right">
-    <lable>quiet ---------- verbose<label>
+<div>
+  <div class="flex-h flex-center-h flex-element primary-color-invert margin">
+    <label>Log Levels:</label>
   </div>
-  <div id="log-levels" class="flex-v flex-element">
+  <div id="log-levels" class="flex-v flex-element margin">
   </div>
   <hr>
-  <div id='log-tab-server' class="toggle show">
-    <div>
+  <div id='log-tab-server' class="flex-element">
+    <div class="flex-h flex-center-h flex-element primary-color-invert margin">
       <label>Server Logs:</label>
-      <div class="flex-right">
-        <a href="#" onclick="$(document).trigger('log-delete', ['all', 'log-body-server']);">
-          <span class="flex-icon icon-min flaticon-error"></span>
-        </a>
-      </div>
+      <a class="flex-right" href="#" onclick="$(document).trigger('log-delete', ['all', 'log-body-server']);">
+        <span class="flex-icon icon-min flaticon-error invert"></span>
+      </a>
     </div>
-    <div id="log-body-server" class="flex-v flex-element log-body">
+    <div id="log-body-server" class="flex-v flex-element log-body margin">
     </div>
   </div>
-  <hr>
 </div>

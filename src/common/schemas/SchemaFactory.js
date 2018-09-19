@@ -1,3 +1,5 @@
+const Util = require('util');
+
 var schemas;
 
 function SchemaFactory() { }
@@ -35,7 +37,7 @@ SchemaFactory.prototype.createPopulatedSchema = function (id, args) {
       object[keys[i]] = args[i];
     }
   } else {
-    throw new Error(`Failed creating a schema for id: ${id}, args: ${args}`)
+    throw new Error(`Failed creating a schema for id: ${id}, args: ${Util.inspect(args)}`)
   }
 
   return object;

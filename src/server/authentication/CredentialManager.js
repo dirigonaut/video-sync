@@ -1,18 +1,21 @@
 const Promise = require('bluebird');
 const Redis   = require('redis');
 const Crypto  = require('crypto');
+const Events  = require('events');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-var client, redisSocket, schemaFactory, eventKeys, config, log;
+var client, redisSocket, schemaFactory, eventKeys, config, emitter, log;
 
 function CredentialManager() { }
 
 CredentialManager.prototype.initialize = function(force) {
   if(typeof CredentialManager.prototype.protoInit === 'undefined') {
     CredentialManager.prototype.protoInit = true;
+    Object.setPrototypeOf(CredentialManager.prototype, Events.prototype);
     config          = this.factory.createConfig();
     client          = Redis.createClient(config.getConfig().redisInfo.connection);
+    emitter         = new Events();
 
     redisSocket     = this.factory.createRedisSocket();
     schemaFactory		= this.factory.createSchemaFactory();
@@ -21,6 +24,10 @@ CredentialManager.prototype.initialize = function(force) {
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.AUTHENTICATION);
   }
+
+  emitter.on(CredentialManager.Enum.Event.UPDATED, function(tokens) {
+    this.emit(CredentialManager.Enum.Event.UPDATED, tokens);
+  }.bind(this));
 };
 
 CredentialManager.prototype.isAdmin = function(socket, password) {
@@ -34,7 +41,7 @@ CredentialManager.prototype.setAdmin = Promise.coroutine(function* (socket, requ
     level: CredentialManager.Enum.Level.CONTROLS
   };
 
-  yield setUserData(CredentialManager.Enum.User.ADMIN, entry);
+  yield setUserData.call(this, CredentialManager.Enum.User.ADMIN, entry);
 });
 
 CredentialManager.prototype.getAdmin = Promise.coroutine(function* () {
@@ -43,7 +50,7 @@ CredentialManager.prototype.getAdmin = Promise.coroutine(function* () {
 });
 
 CredentialManager.prototype.removeAdmin = Promise.coroutine(function* () {
-  yield setUserData(CredentialManager.Enum.User.ADMIN, null);
+  yield setUserData.call(this, CredentialManager.Enum.User.ADMIN, null);
 });
 
 CredentialManager.prototype.generateTokens = Promise.coroutine(function* (count, level) {
@@ -58,7 +65,7 @@ CredentialManager.prototype.generateTokens = Promise.coroutine(function* (count,
     entries[Crypto.randomBytes(24).toString('hex')] = entry;
   }
 
-  yield setUserData(CredentialManager.Enum.User.CLIENT, entries);
+  yield setUserData.call(this, CredentialManager.Enum.User.CLIENT, entries);
   return entries;
 });
 
@@ -80,7 +87,7 @@ CredentialManager.prototype.deleteTokens = Promise.coroutine(function* (keys) {
     }
   }
 
-  yield setUserData(CredentialManager.Enum.User.CLIENT, entries);
+  yield setUserData.call(this, CredentialManager.Enum.User.CLIENT, entries);
   return entries;
 });
 
@@ -124,7 +131,7 @@ CredentialManager.prototype.resetToken = Promise.coroutine(function* (socketId) 
     for(let key in entries) {
       if(entries[key] && entries[key].id === socketId) {
         entries[key] = { level: entries[key].level };
-        yield setUserData(CredentialManager.Enum.User.CLIENT, entries);
+        yield setUserData.call(this, CredentialManager.Enum.User.CLIENT, entries);
         return entries;
       }
     }
@@ -140,7 +147,7 @@ CredentialManager.prototype.setTokenLevel = Promise.coroutine(function* (key, le
       CredentialManager.Enum.Level.CONTROLS : CredentialManager.Enum.Level.NONE;
     entries[key] = entry;
 
-    yield setUserData(CredentialManager.Enum.User.CLIENT, entries);
+    yield setUserData.call(this, CredentialManager.Enum.User.CLIENT, entries);
   }
 
   return entries;
@@ -177,9 +184,7 @@ CredentialManager.prototype.authenticateToken = Promise.coroutine(function* (soc
       user.level = entry.level;
 
       entries[key] = user;
-      yield setUserData(CredentialManager.Enum.User.CLIENT, entries);
-      sendUpdatedTokens.call(this, entries);
-
+      yield setUserData.call(this, CredentialManager.Enum.User.CLIENT, entries);
       return true;
     }
   }
@@ -190,10 +195,17 @@ module.exports = CredentialManager;
 CredentialManager.Enum = {};
 CredentialManager.Enum.User = { ADMIN: 'auth-admin', CLIENT: 'auth-client' };
 CredentialManager.Enum.Level = { CONTROLS : 'controls', NONE: 'none' };
-CredentialManager.Enum.Event = { DELETE : 'delete' };
+CredentialManager.Enum.Event = { UPDATED : 'users-updated' };
 
 var setUserData = function(key, data) {
   log.silly(`setCredentialData for key: ${key}`, data);
+
+  if(key === CredentialManager.Enum.User.CLIENT) {
+    emitter.emit(CredentialManager.Enum.Event.UPDATED, data);
+  } else if(key === CredentialManager.Enum.User.ADMIN) {
+    emitter.emit(CredentialManager.Enum.Event.UPDATED, {});
+  }
+
   return client.setAsync(key, JSON.stringify(data));
 };
 
@@ -203,12 +215,3 @@ var getUserData = function(key) {
     return JSON.parse(results);
   });
 };
-
-var sendUpdatedTokens = Promise.coroutine(function* (tokens) {
-  var admin = yield this.getAdmin();
-  var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [tokens]);
-
-  if(admin && admin.id) {
-    redisSocket.ping.call(this, admin.id, eventKeys.TOKENS, response);
-  }
-});

@@ -1,9 +1,5 @@
 var Schemas = {
   //Request
-  path: { schema: { data: undefined},
-    definition: { data: 'path',
-    Enum: { DATA: 'data' } } },
-
   string: { schema: { data: undefined},
     definition: { data: 'string',
     Enum: { DATA: 'data' } } },

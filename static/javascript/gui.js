@@ -142,7 +142,7 @@ function initGui(client, isAdmin) {
       client.log.info("Load new video.");
       var media = $('#path-input').val();
       client.socket.request(client.keys.SETMEDIA,
-        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PATH, [media]));
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [media]));
       $('#control-time-slider').val(0);
     });
 
@@ -159,7 +159,7 @@ function initGui(client, isAdmin) {
   var joinFolders = function(dirs) {
     if(dirs || $('#path-input').val() === '') {
       dirs.forEach((value, index, array) => {
-        $(`<div class="flex-element primary-color invert">
+        $(`<div class="flex-element transparency invert">
           <div id='path-${index}' class="flex-element" onclick="$('#path-input').val('${value.replace(/\\/g, '\\\\')}')">${value}</div>
         </div>`).appendTo('#path-dropdown');
       });
@@ -197,28 +197,28 @@ function initGui(client, isAdmin) {
   function initToken() {
     var loadTokens = function(tokens) {
       if(tokens) {
-        $($('#token-body').find('form')).each((index, element) => {
-          if(!$(element)[0].id) {
-            $(element).remove();
-          }
-        });
+        removeTokensFromUI();
 
-        var i = 0;
         for(var token in tokens) {
-          $(`<form class="flex-h flex-element alternate-color">
-            <a href="#" class='flex-icon' onclick="$(document).trigger('token-level', event.currentTarget);">
-              <span class="${i % 2 ? 'icon-min' : 'icon-min show'} ${tokens[token].level === 'controls' ? 'flaticon-unlocked-2' : 'flaticon-locked-6'}"></span>
-            </a>
-            <input type="text" class="flex-element ${tokens[token].handle ? 'toggle' : 'toggle show'} ${i % 2 ? '' : 'input-invert'}" value="${token}" /readonly>
-            <input type="text" class="flex-element handle ${tokens[token].handle ? 'toggle show' : 'toggle'} ${i % 2 ? '' : 'input-invert'}" value="${tokens[token].handle}" /readonly>
-            <a href="#" onclick="$(document).trigger('token-delete', event.currentTarget);">
-              <span class="flex-icon ${i % 2 ? 'icon-min' : 'icon-min show'} flaticon-error"></span>
-            </a>
-          </form>`).appendTo('#token-body');
-          ++i;
+          $(`<form id="${token}" class="flex-element primary-color-invert margin">
+            <div class="flex-h" id="${tokens[token].id ? tokens[token].id : token}">
+              <a href="#" class="flex-v flex-center-v" onclick="$(document).trigger('token-level', [$(event.currentTarget).children()[0], $(event.currentTarget).parent().parent()]);">
+                <span class="flex-icon ${token !== 'admin' ? 'invert' : ''} clear-spacers ${tokens[token].level === 'controls' ? 'flaticon-unlocked-2' : 'flaticon-locked-6'}"></span>
+              </a>
+              <div class="flex-element flex-center-h">
+                <input type="text" class="flex-element ${tokens[token].handle ? 'toggle' : 'toggle show'}" value="${token}" /readonly>
+                <input type="text" class="flex-element ${tokens[token].handle ? 'toggle show' : 'toggle'}" value="${tokens[token].handle}" /readonly>
+                <input type="text" class="flex-element ${tokens[token].handle ? 'toggle show' : 'toggle'}"
+                  ${tokens[token].id ? "id="+tokens[token].id+"-stats" : ""} /readonly>
+              </div>
+              <a href="#" class="flex-v flex-center-v" onclick="$(document).trigger('token-delete', $(event.currentTarget).parent().parent());">
+                <span class="flex-icon ${token !== 'admin' ? 'invert' : ''} clear-spacers flaticon-error"></span>
+              </a>
+            </div>
+          </form>`).prependTo('#token-list');
         }
       } else {
-        client.log.error(`${tokens} is not a valid list of tokens.`);
+        client.log.warn(`${tokens} is not a valid list of tokens.`);
       }
     };
 
@@ -232,103 +232,109 @@ function initGui(client, isAdmin) {
       client.log.info("Create Tokens.");
       var values = serializeForm('token-form', 'input');
       values.push($('#token-permissions').hasClass('flaticon-unlocked-2'));
-
       client.socket.request(client.keys.CREATETOKENS, client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PAIR, values));
     });
 
     $(document).on('token-delete', function(e, element) {
-      var ids = '';
-
-      var removeForms = function(form) {
-        $($(form).children()).each((index, el) => {
-          if($(el).is("input") && !$(el).hasClass("handle")) {
-            ids = ids ? `${ids}, ${$(el).val()}` : $(el).val();
-            $(form).remove();
-          } else if ($(el).is("div")) {
-            var removeAlltokens = function(confirm) {
-              if(confirm) {
-                $('#token-body form').each((index, element) => {
-                  if(!$(element).attr('id')) {
-                    removeForms(element);
-                  }
-                });
-
-                client.socket.request(client.keys.DELETETOKENS,
-                  client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [ids]));
-              }
+      if(element) {
+        if(element.id === "delete-tokens") {
+          var removeAlltokens = function(confirm) {
+            if(confirm) {
+              client.socket.request(client.keys.DELETETOKENS,
+                client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [getTokenValues()]));
             }
-
-            triggerConfirmation(removeAlltokens, "Are you sure you wish to delete all the tokens?");
           }
-        });
-      };
 
-      removeForms($(element).parent()[0]);
-      if(ids) {
-        client.socket.request(client.keys.DELETETOKENS,
-          client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [ids]));
+          triggerConfirmation(removeAlltokens, "Are you sure you wish to delete all the tokens?");
+        } else if(element.id !== 'admin') {
+          client.socket.request(client.keys.DELETETOKENS,
+            client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [[element.id]]));
+        }
       }
     });
 
-    $(document).on('token-level', function(e, element) {
-      var updateForms = function(form, override) {
-        var level = override;
+    var removeTokensFromUI = function() {
+      $('#token-list > form').each((index, el) => {
+        $(el).remove();
+      });
+    };
 
-        $($(form).children()).each((index, el) => {
-          if($(el).is("input")) {
-            var id = $(el).val();
+    var getTokenValues = function(skipUsed) {
+      var ids = [];
 
-            client.socket.request(client.keys.SETTOKENLEVEL,
-              client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PAIR, [id, level]));
-          } else if($(el).is("a")) {
-            var child = $(el).children()[0];
-
-            if(!level && child && $(child).hasClass('flaticon-locked-6')) {
-              level = 'controls';
-              $(child).removeClass('flaticon-locked-6');
-              $(child).addClass('flaticon-unlocked-2');
-            } else if(!level && child && $(child).hasClass('flaticon-unlocked-2')) {
-              level = 'none';
-              $(child).removeClass('flaticon-unlocked-2');
-              $(child).addClass('flaticon-locked-6');
+      $('#token-list > form > div > div input:nth-child(1)').each((index, el) => {
+        var id = $(el).val();
+        if(id !== 'admin') {
+          if(skipUsed) {
+            var handle = $(el).parent().children().get(1);
+            if(handle && $(handle).val() === "undefined") {
+              ids.push(id);
             }
-          } else if ($(el).is("div")) {
-            $('#token-body form').each((index, element) => {
-              if(!$(element).attr('id')) {
-                updateForms(element, level);
-              }
-            });
-          }
-        });
-      }
-
-      updateForms($(element).parent()[0]);
-    });
-
-    $('#token-copy').click(function(e) {
-      var temp = $("<input>");
-      $("body").append(temp);
-
-      $('#token-body form').each((index, element) => {
-        if(!$(element).attr('id')) {
-          var id;
-
-          $($(element).children()).each((index, el) => {
-            if($(el).is("input")) {
-              if(!id) {
-                id = $(el).val();
-              } else if($(el).val() !== 'undefined') {
-                id = undefined;
-              }
-            }
-          });
-
-          if(id) {
-            $(temp).val($(temp).val() ? `${$(temp).val()}, ${id}` : `${id}` );
+          } else {
+            ids.push(id);
           }
         }
       });
 
+      return ids;
+    }
+
+    $(document).on('token-level', function(e, element, form) {
+      var tokens = [];
+
+      if(element.id === "token-levels") {
+        var ids = getTokenValues();
+        var span = $(element).children()[0];
+        var level = $(span).hasClass('flaticon-locked-6') ? 'controls' : 'none';
+
+        for(let i in ids) {
+          $(`#${ids[i]} > div > a:nth-child(1) > span`).each((index, el) => {
+            if(ids[i] !== "admin") {
+              tokens.push([ids[i], switchTokenIconAndGetLevel(el, level)]);
+            }
+          });
+        }
+
+        switchTokenIconAndGetLevel(span)
+      } else {
+        $("#token-list > form > div > a:nth-child(1) > span").each((index, el) => {
+          if(el === element) {
+            level = switchTokenIconAndGetLevel(el);
+            tokens.push([$(form)[0].id, level]);
+          }
+        });
+      }
+
+      for(let i in tokens) {
+        client.socket.request(client.keys.SETTOKENLEVEL,
+          client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [tokens]));
+      }
+    });
+
+    var switchTokenIconAndGetLevel = function(el, level) {
+      var value;
+
+      if(!level && $(el).hasClass('flaticon-locked-6')) {
+        value = 'controls';
+        $(el).removeClass('flaticon-locked-6');
+        $(el).addClass('flaticon-unlocked-2');
+      } else if(!level && $(el).hasClass('flaticon-unlocked-2')) {
+        value = 'none';
+        $(el).removeClass('flaticon-unlocked-2');
+        $(el).addClass('flaticon-locked-6');
+      } else {
+        value = level;
+        $(el).removeClass(`${level === 'controls' ? 'flaticon-unlocked-2' : 'flaticon-locked-6' }`);
+        $(el).addClass(`${level === 'none' ? 'flaticon-unlocked-2' : 'flaticon-locked-6' }`);
+      }
+
+      return value;
+    };
+
+    $('#token-copy').click(function(e) {
+      var temp = $("<input>");
+      $("body").append(temp);
+      $(temp).val(getTokenValues(true));
       $(temp).select()
       document.execCommand("copy");
       $(temp).remove();
@@ -348,20 +354,30 @@ function initGui(client, isAdmin) {
       }
     });
 
-    var updateUserStats = function(players) {
-      console.log(players);
+    var updateUserStats = function(response) {
+      var stats = response.data;
+
+      for(var i in stats) {
+        var id = stats[i][0];
+        var info = stats[i][1];
+        info.time = toFormatted(info.timestamp);
+        info.buffer = info.buffer ? 1 : 0;
+        info.buffered = info.buffered ? 1 : 0;
+        delete info.timestamp;
+        $(`#${id}-stats`).val(JSON.stringify(info));
+      }
     };
 
-    client.socket.setEvent(client.keys.ADMINSTATUS, updateUserStats);
+    client.socket.setEvent(client.keys.ADMINSTATS, updateUserStats);
   }
 
   //Side Events -----------------------------------------------------------------
   if(isAdmin) {
-    $(`<div id="side-tokens" class="flex-icon primary-color flex-center-v border-left">
+    $(`<div id="side-tokens" class="flex-icon transparency flex-center-v border-left">
       <a href="#"><span class="icon flaticon-user-3"></span></a>
     </div>`).prependTo('#side');
 
-    $(`<div id="side-shutdown" class="flex-icon primary-color flex-center-v border-left">
+    $(`<div id="side-shutdown" class="flex-icon transparency flex-center-v border-left">
       <a href="#"><span class="icon flaticon-power"></span></a>
     </div>`).insertAfter('#side-documentation');
   }
@@ -399,16 +415,16 @@ function initGui(client, isAdmin) {
     for(let key in logs) {
       var level = cookieLevels && cookieLevels[key] ? cookieLevels[key] : undefined;
 
-      $(`<div class="flex-h flex-element alternate-color">
-        <label>${logs[key]}:</label>
-        <form id="log-${logs[key]}" class="flex-right">
-          <input name="${logs[key]}" type="radio" ${level && level.includes("error") ? 'checked' : ''} value="${levels.error}">
-          <input name="${logs[key]}" type="radio" ${level && level.includes("warn") ? 'checked' : ''} value="${levels.warn}">
-          <input name="${logs[key]}" type="radio" ${level && !level.includes("info") ? '' : 'checked'} value="${levels.info}">
-          <input name="${logs[key]}" type="radio" ${level && level.includes("verbose") ? 'checked' : ''} value="${levels.verbose}">
-          <input name="${logs[key]}" type="radio" ${level && level.includes("debug") ? 'checked' : ''} value="${levels.debug}">
-          <input name="${logs[key]}" type="radio" ${level && level.includes("silly") ? 'checked' : ''} value="${levels.silly}">
-        </form>
+      $(`<div class="flex-h flex-center-h flex-element primary-color-invert margin">
+          <div>${logs[key]}</div>
+          <form id="log-${logs[key]}" class="flex-right">
+            <select name="${logs[key]}">
+              <option value=${levels.error}>Error</option>
+              <option value=${levels.warn}>Warn</option>
+              <option value=${levels.info}>Info</option>
+              <option value=${levels.debug}>Debug</option>
+            </select>
+          </form>
       </div>`).appendTo(`#log-levels`);
     }
 
@@ -435,16 +451,15 @@ function initGui(client, isAdmin) {
 
   $(document).on('log-delete', logDelete);
 
-  var loggingOdd = 0;
   var logging = function(message) {
-    $(`<div class="flex-h ${loggingOdd % 2 ? '' : 'input-invert'} flex-element">
-      <div type="text" class="flex-element clear-spacers force-text">
-        ${message && message.time ? message.time : ''} ${message && message.data ? message.data : message}
-      </div>
-      <a href="#" onclick="$(document).trigger('log-delete', event.currentTarget);">
-        <span class="flex-icon ${loggingOdd % 2 ? 'icon-min' : 'icon-min show'} flaticon-error flex-right"></span>
-      </a></div>`).prependTo(`#log-body-server`);
-      loggingOdd = (loggingOdd + 1) % 2;
+    $(`<div class="flex-h flex-center-h flex-element primary-color-invert margin">
+        <div type="text" class="flex-element clear-spacers force-text">
+          ${message && message.time ? message.time : ''} ${message && message.data ? message.data : message}
+        </div>
+        <a href="#" onclick="$(document).trigger('log-delete', event.currentTarget);">
+          <span class="flex-icon flaticon-error flex-right invert"></span>
+        </a>
+      </div>`).prependTo(`#log-body-server`);
   };
 
   var notifyInterval;

@@ -32,11 +32,12 @@ AdminController.prototype.attachSocket = function(socket) {
 
   socket.on(eventKeys.SETMEDIA, Promise.coroutine(function* (data) {
     log.debug(eventKeys.SETMEDIA);
-    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PATH);
+    var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.SPECIAL);
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
-      var dir = fileSystemUtils.ensureEOL(request.data);
+      var dir = Path.join(config.getConfig().dirs.mediaDir,
+                  fileSystemUtils.ensureEOL(request.data));
       var exists = yield fileIO.dirExists(dir);
 
       if(exists) {

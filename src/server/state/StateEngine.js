@@ -254,7 +254,7 @@ var createMetricInterval = function() {
 
     credentials.getAdmin().then(function(admin) {
       if(admin && admin.id) {
-        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, players);
+        var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [Array.from(players.entries())]);
         redisSocket.ping.call(this, admin.id, eventKeys.ADMINSTATS, response);
       }
     });

@@ -18,7 +18,7 @@
     <div class="container">
       <div class="media fill-in show">
 
-        <div class="path flex-h primary-color fade">
+        <div class="path flex-h transparency fade">
           <div class="flex-icon is-admin show flex-left">
             <a href="#" id="path-button"> <span class="icon flaticon-compact-disc"></span></a>
           </div>
@@ -27,26 +27,26 @@
             <input type="text" id="path-input" class="flex-element rounded-corners borders" placeholder="/path/to/movie/dir/">
           </form>
 
-          <div id="path-dropdown" class="path-dropdown flex-v primary-color rounded-corners borders toggle">
+          <div id="path-dropdown" class="path-dropdown flex-v transparency rounded-corners borders toggle">
           </div>
 
           <div id="notification" class="path-notification flex-h"></div>
 
           <div id="side" class="side flex-v">
-            <div id="side-log" class="flex-icon primary-color flex-center-v border-left">
+            <div id="side-log" class="flex-icon transparency flex-center-v border-left">
               <a href="#"><span class="icon flaticon-menu-1"></span></a>
             </div>
-            <div id="side-documentation" class="flex-icon primary-color flex-center-v border-left">
+            <div id="side-documentation" class="flex-icon transparency flex-center-v border-left">
               <a href="#"><span class="icon flaticon-worldwide"></span></a>
             </div>
-            <div class="flex-icon primary-color flex-center-v rounded-corners-bottom-left"></div>
+            <div class="flex-icon transparency flex-center-v rounded-corners-bottom-left"></div>
           </div>
         </div>
 
         <div id="video-container" class="video">
           <video id="video" class="video-element"></video>
 
-          <div class="control flex-h flex-center-h primary-color fade rounded-corners borders">
+          <div class="control flex-h flex-center-h transparency fade rounded-corners borders">
             <div class="icon-margin">
               <a href="#" id="control-button-play"><span class="icon flaticon-play-button-1"></span></a>
             </div>
@@ -65,7 +65,7 @@
               <a href="#" id="control-button-volume"> <span class="icon flaticon-speaker"></span></a>
             </div>
 
-            <div id="control-volume" class="control-volume toggle primary-color rounded-corners borders">
+            <div id="control-volume" class="control-volume toggle transparency rounded-corners borders">
               <form class="form flex-v flex-center-v">
                 <input type="range" id="volume-bar" class="control-volume-slider" value="50">
                 <div id="volume-level" class="flex-element flex-center-v input-style">50</div>
@@ -76,7 +76,7 @@
               <a href="#" id="control-button-sync"><span class="icon flaticon-stopwatch-2"></span></a>
             </div>
 
-            <div id="control-sync" class="control-sync flex-v primary-color rounded-corners borders toggle">
+            <div id="control-sync" class="control-sync flex-v transparency rounded-corners borders toggle">
               <form id="sync-form">
                 <fieldset class="form flex-v">
                   <div class="flex-element flex-h">
@@ -104,7 +104,7 @@
               <a href="#" id="control-button-options"> <span class="icon flaticon-settings-9"></span></a>
             </div>
 
-            <div id="control-options" class="control-options flex-v primary-color rounded-corners borders toggle">
+            <div id="control-options" class="control-options flex-v transparency rounded-corners borders toggle">
               <form id="options-form">
                 <fieldset class="form flex-v">
                   <div class="flex-h flex-element">
@@ -142,12 +142,18 @@
         </div>
       </div>
 
-      <div class="panel slide-in primary-color">
+      <div class="panel slide-in">
         <div id="panel-tokens" class="toggle"></div>
         <div id="panel-encode" class="toggle"></div>
         <div id="panel-log" class="toggle"></div>
         <div id="panel-documentation" class="toggle">
-          <div class="panel-header ">Documentation</div>
+          <div class="panel-header ">
+            <div class="flex-h flex-center-h flex-element primary-color-invert">
+              <div class="flex-element flex-center-h">
+                Documentation
+              </div>
+            </div>
+          </div>
           <hr>
           <div id="documenation-body" class="flex-element "></div>
         </div>
@@ -155,7 +161,7 @@
     </div>
 
     <div class="login toggle show">
-      <div class="login-overlay flex-v flex-element-part flex-center-h primary-color rounded-corners borders">
+      <div class="login-overlay flex-v flex-element-part flex-center-h transparency rounded-corners borders">
         <div class="flex-center-h">Video-Sync</div>
         <form id="login-form" class="toggle">
           <fieldset class="form flex-v flex-element-part flex-center-h">
@@ -172,7 +178,7 @@
       </div>
     </div>
 
-    <div class="confirm primary-color rounded-corners borders toggle">
+    <div class="confirm transparency rounded-corners borders toggle">
       <div class="confirm-form flex-v">
         <div class="confirm-message toggle show">Are you sure?</div>
         <div id="confirm-custom" class="confirm-message toggle force-text">Custom confirmation?</div>

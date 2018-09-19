@@ -17,7 +17,6 @@ WebmParser.prototype.initialize = function() {
 
 WebmParser.prototype.queuedDecode = function(metaRequests) {
   log.debug("WebmParser.queuedDecode");
-  var emitter = this;
   var counter = new Events();
   counter.queue = metaRequests.length - 1;
 

@@ -214,16 +214,14 @@ body {
 }
 
 .flex-element {
-  width:100%;
-  padding-top:.5%;
-  padding-bottom:.5%;
+  width:99%;
+  padding:.5%;
   border-radius: .5em;
 }
 
 .flex-element-part {
   width:60%;
-  padding-top:.5%;
-  padding-bottom:.5%;
+  padding:.5%;
   border-radius: .5em;
 }
 
@@ -283,12 +281,6 @@ body {
   font-style: normal;
 }
 
-.icon-min.show {
-  color:black;
-  font-size: 20px;
-  font-style: normal;
-}
-
 .icon-margin {
   margin:auto;
 }
@@ -298,16 +290,16 @@ body {
   border:none
 }
 
-.primary-color {
+.transparency {
   background-color:rgba(0, 0, 0, 0.75);
 }
 
-.alternate-color:nth-child(even) {
-  color:black;
-  background-color:white;
+.primary-color {
+  color:white;
+  background-color:black;
 }
 
-.even-color {
+.primary-color-invert {
   color:black;
   background-color:white;
 }
@@ -320,6 +312,10 @@ body {
 
 .padding {
   padding:1%;
+}
+
+.margin {
+  margin:2px;
 }
 
 .force-text {
@@ -418,7 +414,6 @@ body {
   filter: invert(100);
 }
 
-
 /* Elements */
 video::-webkit-media-controls {
   display:none !important;
@@ -441,6 +436,10 @@ video::-webkit-media-controls {
 a {
   color:white;
   text-decoration: none;
+}
+
+a .invert {
+  filter: invert(100%);
 }
 
 input, select {
