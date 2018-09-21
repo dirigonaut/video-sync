@@ -138,14 +138,14 @@ CredentialManager.prototype.resetToken = Promise.coroutine(function* (socketId) 
   }
 });
 
-CredentialManager.prototype.setTokenLevel = Promise.coroutine(function* (key, level) {
+CredentialManager.prototype.setTokenLevel = Promise.coroutine(function* (tokens) {
   var entries = yield this.getTokens(CredentialManager.Enum.User.CLIENT);
-  var entry = entries ? entries[key] : undefined;
 
-  if(entry) {
-    entry.level = level === CredentialManager.Enum.Level.CONTROLS ?
-      CredentialManager.Enum.Level.CONTROLS : CredentialManager.Enum.Level.NONE;
-    entries[key] = entry;
+  if(entries) {
+    for(let i in tokens) {
+      entries[tokens[i][0]].level = tokens[i][1] === CredentialManager.Enum.Level.CONTROLS ?
+        CredentialManager.Enum.Level.CONTROLS : CredentialManager.Enum.Level.NONE;
+    }
 
     yield setUserData.call(this, CredentialManager.Enum.User.CLIENT, entries);
   }

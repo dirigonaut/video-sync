@@ -46,9 +46,7 @@ CredentialController.prototype.attachSocket = function(socket) {
     var request = sanitizer.sanitize(data, schema, Object.values(schema.Enum), socket);
 
     if(request) {
-      for(var i in request.data) {
-        yield credentials.setTokenLevel(request.data[i][0], request.data[i][1]);
-      }
+      yield credentials.setTokenLevel(request.data);
     }
   }.bind(this)));
 

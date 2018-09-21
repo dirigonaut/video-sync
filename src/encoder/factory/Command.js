@@ -10,7 +10,7 @@ Command.prototype.format = function() {
   var i = 0, args = arguments;
 
   this.command = this.command.replace(/{}/g, function () {
-    return typeof args[i] != 'undefined' ? `${args[i++]} ` : '{}';
+    return typeof args[i] != 'undefined' ? `${args[i++]}` : '{}';
   });
 
   return this.command;

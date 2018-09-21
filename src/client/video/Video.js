@@ -183,7 +183,6 @@ function onReset(eventId, metaManager) {
 
 function onProgress(typeId) {
   var progress = function() {
-    log.silly('Video.progress');
     if(metaData.isLastSegment(typeId, videoElement.currentTime)) {
       var timeToRequest = metaData.isReadyForNextSegment(typeId, videoElement.currentTime);
       if(timeToRequest !== undefined && timeToRequest === timeToRequest){

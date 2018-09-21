@@ -114,6 +114,10 @@ body {
   z-index: 2147483648;
 }
 
+.control-progress {
+  position: inherit;
+}
+
 .control-options {
   position:fixed;
   margin: .25%;
@@ -143,22 +147,15 @@ body {
   width:60px;
 }
 
-.control-time-slider {
-  float:left;
-  width: 100%;
-  z-index: 2147483648;
-}
-
 .control-volume {
+  -webkit-transform: rotate(-90deg);
   position:fixed;
-  margin:.25%;
-  padding:.25%;
+  margin: .25%;
+  padding: .25%;
 }
 
 .control-volume-slider {
-  -webkit-appearance: slider-vertical;
-  width: 20px;
-  height: 100px;
+  border:0px;
 }
 
 .side {
@@ -199,6 +196,55 @@ body {
   width:100%;
 }
 
+/* Progress Bar */
+.current {
+  top: -3px;
+  width: 100%;
+  height: 5px;
+  position: absolute;
+  border-radius: .5em;
+}
+
+#currently-at {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border: 0%;
+  padding: 0%;
+  margin: 0%;
+}
+
+.buffered {
+  top: -3px;
+  width: 100%;
+  height: 5px;
+  position: absolute;
+  background: #555;
+  border-radius: .5em;
+}
+
+#buffered-amount {
+  display: block;
+  height: 100%;
+  background-color: #777;
+  width: 0;
+}
+
+.progress {
+  top: -3px;
+  width: 100%;
+  height: 5px;
+  position: absolute;
+  border-radius: .5em;
+}
+
+#progress-amount {
+  display: block;
+  height: 100%;
+  background-color: #595;
+  width: 0;
+}
+
 /* Flex Elements */
 .flex-icon {
   text-align: center;
@@ -214,7 +260,7 @@ body {
 }
 
 .flex-element {
-  width:99%;
+  width:99.5%;
   padding:.5%;
   border-radius: .5em;
 }
@@ -508,4 +554,25 @@ table tr:nth-child(even) {
 
 textarea {
   resize: none;
+}
+
+input[type=range] {
+  -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
+  background: transparent; /* Otherwise white in Chrome */
+}
+
+input[type=range]:focus {
+  outline: none; /* Removes the blue border. You should probably do some kind of focus styling for accessibility reasons though. */
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  border: 2px solid black;
+  height: 20px;
+  width: 20px;
+  border-radius: 100px;
+  background: white;
+  cursor: pointer;
+  margin-top: 1px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+  z-index: 2147483648;
 }

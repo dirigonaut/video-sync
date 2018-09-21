@@ -1,6 +1,7 @@
 const Promise         = require('bluebird');
 const Path            = require('path');
 const Util            = require('util');
+const Assert          = require('assert');
 const FactoryManager  = require('./src/server/factory/FactoryManager');
 
 var encoder, factoryManager;
@@ -42,24 +43,33 @@ process.argv.forEach(function (val, index, array) {
   }
 });
 
-console.log(`Running with commands: ${Util.inspect(args)}`);
-var start = Promise.coroutine(function* (configPath, inDir, templateIds) {
-  factoryManager = Object.create(FactoryManager.prototype);
-  var factory = yield factoryManager.initialize();
+try {
+  Assert.notEqual(args[PARAMS.CONFIG], undefined);
+  Assert.notEqual(args[PARAMS.TEMPLATES], undefined);
 
-  var config = factory.createConfig(true);
-  yield config.load(configPath);
+  console.log(`Running with commands: ${Util.inspect(args)}`);
+  var start = Promise.coroutine(function* (configPath, inDir, templateIds) {
+    factoryManager = Object.create(FactoryManager.prototype);
+    var factory = yield factoryManager.initialize();
 
-  var checkConfig = factory.createCheckConfig();
-  yield checkConfig.validateConfig().catch(function(error) {
-    console.error(error);
-    process.exit(1);
-  });
+    var config = factory.createConfig(true);
+    yield config.load(configPath);
 
-  var logManager = factory.createLogManager();
-  logManager.addFileLogging(config.getConfig().dirs.encodeLogDir);
+    var checkConfig = factory.createCheckConfig();
+    yield checkConfig.validateConfig().catch(function(error) {
+      console.error(error);
+      process.exit(1);
+    });
 
-  encoder = factory.createEncoder();
-  codecArgs = [templateIds, inDir ? inDir : config.getConfig().dirs.encodeDir, config.getConfig().dirs.mediaDir];
-  yield encoder.start.apply(encoder, codecArgs);
-}).call(this, args[PARAMS.CONFIG], args[PARAMS.ENCODE_DIR], args[PARAMS.TEMPLATES]);
+    var logManager = factory.createLogManager();
+    logManager.addFileLogging(config.getConfig().dirs.encodeLogDir);
+
+    encoder = factory.createEncoder();
+    codecArgs = [templateIds, inDir ? inDir : config.getConfig().dirs.encodeDir, config.getConfig().dirs.mediaDir];
+    yield encoder.start.apply(encoder, codecArgs);
+  }).call(this, args[PARAMS.CONFIG], args[PARAMS.ENCODE_DIR], args[PARAMS.TEMPLATES]);
+
+} catch(e) {
+  console.log("Missing required options.");
+  console.log(PARAMS);
+}

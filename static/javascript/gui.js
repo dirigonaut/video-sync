@@ -36,7 +36,7 @@ function initGui(client, isAdmin) {
   $('#control-button-play').click(togglePlay);
 
   function updateProgressBar(e) {
-    $('.control-time-slider').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
+    $('#currently-at').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
     $('#control-duration').val(toFormatted($("#video")[0].duration));
 
     if(!$('#control-current').is(':focus')) {
@@ -82,8 +82,8 @@ function initGui(client, isAdmin) {
     }
   });
 
-  $('.control-time-slider').on('mouseup', function() {
-    var percent = parseInt($('.control-time-slider').val());
+  $('#currently-at').on('mouseup', function() {
+    var percent = parseInt($('#currently-at').val());
     var length  = $('#video')[0].duration;
     var time = Math.round(length * (percent / 100));
 
@@ -94,7 +94,7 @@ function initGui(client, isAdmin) {
     $("video").on("timeupdate", updateProgressBar);
   });
 
-  $('.control-time-slider').on('mousedown', function() {
+  $('#currently-at').on('mousedown', function() {
     $("video").off("timeupdate", updateProgressBar);
   });
 
@@ -133,7 +133,6 @@ function initGui(client, isAdmin) {
   $(".control-volume-slider").on("input change", function (e) {
     var range = parseInt($(".control-volume-slider").val()) * .01;
     $('#video')[0].volume = range;
-    $('#volume-level').text(Math.floor(range * 100));
   });
 
   //Media Path Events -----------------------------------------------------------
@@ -146,13 +145,18 @@ function initGui(client, isAdmin) {
       $('#control-time-slider').val(0);
     });
 
-    var scanDirs = function() {
+    var scanDirs = function(e) {
       $('#path-dropdown').empty();
       client.socket.request(client.keys.GETCONTENTS,
         client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STRING, [$('#path-input').val()]));
     };
 
-    $('#path-input').on('input', scanDirs);
+    $('#path-input').on('keydown', function(e) {
+      if([220, 191, 40, 13].includes(e.which)) {
+        scanDirs();
+      }
+    });
+
     $('#path-input').click(scanDirs);
   }
 
@@ -201,11 +205,11 @@ function initGui(client, isAdmin) {
 
         for(var token in tokens) {
           $(`<form id="${token}" class="flex-element primary-color-invert margin">
-            <div class="flex-h" id="${tokens[token].id ? tokens[token].id : token}">
+            <div class="flex-h flex-center-h" id="${tokens[token].id ? tokens[token].id : token}">
               <a href="#" class="flex-v flex-center-v" onclick="$(document).trigger('token-level', [$(event.currentTarget).children()[0], $(event.currentTarget).parent().parent()]);">
                 <span class="flex-icon ${token !== 'admin' ? 'invert' : ''} clear-spacers ${tokens[token].level === 'controls' ? 'flaticon-unlocked-2' : 'flaticon-locked-6'}"></span>
               </a>
-              <div class="flex-element flex-center-h">
+              <div class="flex-v flex-element flex-center-v">
                 <input type="text" class="flex-element ${tokens[token].handle ? 'toggle' : 'toggle show'}" value="${token}" /readonly>
                 <input type="text" class="flex-element ${tokens[token].handle ? 'toggle show' : 'toggle'}" value="${tokens[token].handle}" /readonly>
                 <input type="text" class="flex-element ${tokens[token].handle ? 'toggle show' : 'toggle'}"
@@ -277,7 +281,7 @@ function initGui(client, isAdmin) {
       });
 
       return ids;
-    }
+    };
 
     $(document).on('token-level', function(e, element, form) {
       var tokens = [];
@@ -286,46 +290,41 @@ function initGui(client, isAdmin) {
         var ids = getTokenValues();
         var span = $(element).children()[0];
         var level = $(span).hasClass('flaticon-locked-6') ? 'controls' : 'none';
+        $(span).hasClass('flaticon-locked-6')
+          ? $(span).removeClass('flaticon-locked-6') && $(span).addClass('flaticon-unlocked-2')
+          : $(span).removeClass('flaticon-unlocked-2') && $(span).addClass('flaticon-locked-6');
 
         for(let i in ids) {
           $(`#${ids[i]} > div > a:nth-child(1) > span`).each((index, el) => {
             if(ids[i] !== "admin") {
-              tokens.push([ids[i], switchTokenIconAndGetLevel(el, level)]);
+              tokens.push([ids[i], getLevel(el, level)]);
             }
           });
         }
 
-        switchTokenIconAndGetLevel(span)
+        getLevel(span);
       } else {
         $("#token-list > form > div > a:nth-child(1) > span").each((index, el) => {
           if(el === element) {
-            level = switchTokenIconAndGetLevel(el);
+            level = getLevel(el);
             tokens.push([$(form)[0].id, level]);
           }
         });
       }
 
-      for(let i in tokens) {
-        client.socket.request(client.keys.SETTOKENLEVEL,
-          client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [tokens]));
-      }
+      client.socket.request(client.keys.SETTOKENLEVEL,
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [tokens]));
     });
 
-    var switchTokenIconAndGetLevel = function(el, level) {
+    var getLevel = function(el, level) {
       var value;
 
       if(!level && $(el).hasClass('flaticon-locked-6')) {
         value = 'controls';
-        $(el).removeClass('flaticon-locked-6');
-        $(el).addClass('flaticon-unlocked-2');
       } else if(!level && $(el).hasClass('flaticon-unlocked-2')) {
         value = 'none';
-        $(el).removeClass('flaticon-unlocked-2');
-        $(el).addClass('flaticon-locked-6');
-      } else {
+      } else if(level) {
         value = level;
-        $(el).removeClass(`${level === 'controls' ? 'flaticon-unlocked-2' : 'flaticon-locked-6' }`);
-        $(el).addClass(`${level === 'none' ? 'flaticon-unlocked-2' : 'flaticon-locked-6' }`);
       }
 
       return value;
@@ -421,16 +420,16 @@ function initGui(client, isAdmin) {
             <select name="${logs[key]}">
               <option value=${levels.error}>Error</option>
               <option value=${levels.warn}>Warn</option>
-              <option value=${levels.info}>Info</option>
+              <option value=${levels.info} selected="selected">Info</option>
               <option value=${levels.debug}>Debug</option>
             </select>
           </form>
       </div>`).appendTo(`#log-levels`);
     }
 
-    $('#log-levels input').on('change', function(e) {
+    $('#log-levels > select').on('change', function(e) {
       var id = $(e.currentTarget).attr('name');
-      var value = $(e.currentTarget).val();
+      var value = this.value;
       value = Object.keys(client.logMan.Enums.LEVELS)[value];
       client.logMan.setLevel(id, value);
     });
@@ -454,9 +453,11 @@ function initGui(client, isAdmin) {
   var logging = function(message) {
     $(`<div class="flex-h flex-center-h flex-element primary-color-invert margin">
         <div type="text" class="flex-element clear-spacers force-text">
-          ${message && message.time ? message.time : ''} ${message && message.data ? message.data : message}
+          ${message && message.time ? message.time : ''}
+          ${message && message.data ? message.data : ''}
+          ${message && message.meta ? JSON.stringify(message.meta) : ''}
         </div>
-        <a href="#" onclick="$(document).trigger('log-delete', event.currentTarget);">
+        <a href="#" class="flex-v flex-center-v" onclick="$(document).trigger('log-delete', event.currentTarget);">
           <span class="flex-icon flaticon-error flex-right invert"></span>
         </a>
       </div>`).prependTo(`#log-body-server`);
@@ -518,7 +519,8 @@ function initGui(client, isAdmin) {
   });
 
   $('#buffer-options').on("change", function (e) {
-    var value = Math.trunc($(e.currentTarget).val() / 4);
+    var value = $(e.currentTarget).val() ? $(e.currentTarget).val() : 0
+    value = Math.trunc(value / 4);
     $(e.currentTarget).val(value * 4);
     client.media.setBufferAhead(value);
   });
@@ -757,13 +759,11 @@ function initGui(client, isAdmin) {
       var parentWid = $(`#${parent}`).outerWidth(true);
       var parentHie = $(`#${parent}`).outerHeight(true);
 
-      var position  = $(`#${child}`).position();
       var width     = $(`#${child}`).outerWidth(true);
-      var height    = $(`#${child}`).outerHeight(true);
+      var height    = $(`.${child}`).hasClass('control-volume') ?  $(`#${child}`).outerWidth(true) /1.53 : $(`#${child}`).outerHeight(true);
 
       var left = parentOff.left - (width/2) + (parentWid/2);
-      var top = parentOff.top > (screen.height/2) ? parentOff.top - parentPos.top - height :
-        parentOff.top + parentPos.top + parentHie;
+      var top = parentOff.top - parentPos.top - height
 
       if(container) {
         var containerWid = $(`.${container}`).outerWidth(true);
