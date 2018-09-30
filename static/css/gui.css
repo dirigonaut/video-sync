@@ -1,33 +1,22 @@
 /* GUI CSS */
-html {
-  width:100%;
-  height:100%;
-}
-
 body {
   background-color: black;
-  margin: 0px;
-  padding: 0px;
-  border: 0px;
-  width:inherit;
-  height:inherit;
   color:white;
-  overflow:hidden;
-}
-
-.container {
-  display: flex;
-  flex-direction: row;
-  width:inherit;
-  height:inherit;
+  height:100%;
+  width:100%;
+  margin:0;
+  border:0;
+  padding:0;
+  overflow: hidden;
 }
 
 .panel {
-  position: relative;
-  float: right;
-  width: 25%;
+  position:fixed;
+  top:0%;
+  height:100%;
   overflow-y:auto;
   overflow-x:hidden;
+  z-index: 100;
 }
 
 .panel-header {
@@ -36,29 +25,30 @@ body {
   font-style:normal;
 }
 
-.panel-sub-panel {
-  min-height:25%;
-  max-height:75%;
-}
-
 .media {
-  position:relative;
-  float:left;
-  min-width:30%;
+  position:absolute;
+  height:inherit;
+  width:inherit;
+  height:100%;
+  width:100%;
 }
 
 .path {
   position:relative;
-  height:5%;
+  height:40px;
+  top:0px;
+  left:0px;
   width:100%;
   z-index:20;
 }
 
 .path-input {
+  height:100%;
   float:left;
   text-align:left;
   width:60%;
   padding:.5%;
+  z-index:inherit;
 }
 
 .path-dropdown {
@@ -68,13 +58,14 @@ body {
   padding:.25%;
   overflow-y:auto;
   overflow-x:hidden;
+  z-index:inherit;
 }
 
 .path-notification {
+  height:100%;
   text-align: left;
-  padding:.25%;
-  margin-left:auto;
-  margin-right:auto;
+  padding: 0% .25% 0% .25%;
+  margin: 0% auto 0% auto;
 }
 
 .path-notification:empty {
@@ -83,12 +74,19 @@ body {
   margin-right:auto;
 }
 
-.video {
+.fullscreen {
   background-color: black;
-  position:relative;
-  float:left;
+  height:100%;
   width:100%;
-  height:90%;
+  z-index:1;
+}
+
+.video {
+  position:absolute;
+  top:45px;
+  bottom:50px;
+  width:100%;
+  background-color: black;
   z-index:1;
 }
 
@@ -99,18 +97,19 @@ body {
 }
 
 .control {
-  position: relative;
-  height: 4.5%;
-  width: 98%;
+  position:absolute;
+  bottom:0px;
+  height:40px;
+  width: 99.5%;
+  padding: auto 0% auto 0%;
   z-index: 20;
 }
 
 .control-full {
-  position: fixed;
-  width:98%;
-  left:1%;
-  bottom: 0%;
-  height:4.5%;
+  position:fixed;
+  bottom: 0px;
+  width:99.5%;
+  height:4%;
   z-index: 2147483648;
 }
 
@@ -119,7 +118,7 @@ body {
 }
 
 .control-options {
-  position:fixed;
+  position: fixed;
   margin: .25%;
   padding: .25%;
   z-index: 2147483648;
@@ -130,6 +129,7 @@ body {
   min-width: 100px;
   margin: .25%;
   padding: .25%;
+  z-index: 2147483648;
 }
 
 .control-time {
@@ -152,6 +152,7 @@ body {
   position:fixed;
   margin: .25%;
   padding: .25%;
+  z-index: 2147483648;
 }
 
 .control-volume-slider {
@@ -159,7 +160,9 @@ body {
 }
 
 .side {
-  width:45px;
+  position:absolute;
+  right:0px;
+  top:0px;
   padding-bottom: 2.5px;
   z-index:20;
 }
@@ -177,6 +180,8 @@ body {
 .login-overlay {
   position:relative;
   top:25%;
+  max-height:50%;
+  height:min-content;
   background:rgba(255, 255, 255, 1);
 }
 
@@ -203,6 +208,7 @@ body {
   height: 5px;
   position: absolute;
   border-radius: .5em;
+  z-index:2;
 }
 
 #currently-at {
@@ -219,14 +225,15 @@ body {
   width: 100%;
   height: 5px;
   position: absolute;
-  background: #555;
+  background: #999;
   border-radius: .5em;
+  z-index:1;
 }
 
 #buffered-amount {
   display: block;
   height: 100%;
-  background-color: #777;
+  background-color: #111;
   width: 0;
 }
 
@@ -236,12 +243,13 @@ body {
   height: 5px;
   position: absolute;
   border-radius: .5em;
+  z-index:2;
 }
 
 #progress-amount {
   display: block;
   height: 100%;
-  background-color: #595;
+  background-color: white;
   width: 0;
 }
 
@@ -394,6 +402,13 @@ body {
   border-color: white;
 }
 
+.rounded-corners-top-left {
+  border-top: solid 2px;
+  border-left: solid 2px;
+  border-top-left-radius: 1em;
+  border-color: white;
+}
+
 .borders {
   border: solid 2px;
   border-radius: 1em;
@@ -407,13 +422,13 @@ body {
 
 /* CSS Animations */
 .slide-in {
-  right: -100%;
+  right: -45%;
   width: 0%;
 }
 
 .slide-in.show {
-  left: 0%;
-  width: 25%;
+  right: 0%;
+  width: 22.8%;
   border-left:4px solid white;
 }
 
@@ -567,11 +582,11 @@ input[type=range]:focus {
 
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  border: 2px solid black;
+  border: 2px solid white;
   height: 20px;
   width: 20px;
   border-radius: 100px;
-  background: white;
+  background:rgba(255, 255, 255, 0);
   cursor: pointer;
   margin-top: 1px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
   z-index: 2147483648;

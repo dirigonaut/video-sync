@@ -99,7 +99,7 @@ CredentialManager.prototype.getTokens = Promise.coroutine(function* () {
 CredentialManager.prototype.getHandle = Promise.coroutine(function* (socket) {
   var admin = yield this.getAdmin();
 
-  if(admin.id !== socket.id) {
+  if(admin && socket && admin.id !== socket.id) {
     var id = socket.id;
     var tokens = yield getUserData(CredentialManager.Enum.User.CLIENT);
 

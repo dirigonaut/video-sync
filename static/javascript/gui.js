@@ -1,4 +1,6 @@
 function initGui(client, isAdmin) {
+  var FADE_TIMER = 12000;
+
   //Setup -----------------------------------------------------------------------
   $(document).on('initializeMedia', function(e, reset) {
     var domElements = {
@@ -36,11 +38,24 @@ function initGui(client, isAdmin) {
   $('#control-button-play').click(togglePlay);
 
   function updateProgressBar(e) {
-    $('#currently-at').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
-    $('#control-duration').val(toFormatted($("#video")[0].duration));
+    var video = $("#video")[0];
+    var duration = video.duration;
+    var current = video.currentTime;
+
+    $('#currently-at').val((current / duration)*100);
+    $('#progress-amount')[0].style.width = ((current/ duration)*100) + "%";
+
+    for (var i = 0; i < video.buffered.length; ++i) {
+      if (video.buffered.start(video.buffered.length - 1 - i) < video.currentTime) {
+        $('#buffered-amount')[0].style.width = (video.buffered.end(video.buffered.length - 1 - i) / duration) * 100 + "%";
+        break;
+      }
+    }
+
+    $('#control-duration').val(toFormatted(duration));
 
     if(!$('#control-current').is(':focus')) {
-      $('#control-current').val(toFormatted($("#video")[0].currentTime));
+      $('#control-current').val(toFormatted(current));
     }
   }
 
@@ -108,7 +123,7 @@ function initGui(client, isAdmin) {
       toggleOverlays();
     } else {
       $(document).trigger('togglePanel', [true]);
-      $('#video-container')[0].webkitRequestFullScreen();
+      $('#fullscreen')[0].webkitRequestFullScreen();
       $('.control').addClass("control-full");
       $('.control').removeClass("control");
       $('.flaticon-plus').addClass('flaticon-minus')
@@ -374,7 +389,7 @@ function initGui(client, isAdmin) {
   if(isAdmin) {
     $(`<div id="side-tokens" class="flex-icon transparency flex-center-v border-left">
       <a href="#"><span class="icon flaticon-user-3"></span></a>
-    </div>`).prependTo('#side');
+    </div>`).insertAfter('#side-top');
 
     $(`<div id="side-shutdown" class="flex-icon transparency flex-center-v border-left">
       <a href="#"><span class="icon flaticon-power"></span></a>
@@ -389,9 +404,8 @@ function initGui(client, isAdmin) {
         $(document).trigger('togglePanel');
       }
 
-      $('.side .flex-icon').each((index, element) => {
+      $('.side > .flex-icon').each((index, element) => {
         var elementId = element.id.split('-')[1];
-
         if(id == elementId) {
           if($(`#panel-${elementId}`).hasClass('show')) {
             $(document).trigger('togglePanel');
@@ -598,17 +612,6 @@ function initGui(client, isAdmin) {
     $(subtitleHtml).appendTo('#subtitle-track-list');
   });
 
-  client.media.on('progress-event', function(type) {
-    var video = $('video')[0];
-
-    /* TODO get progess bar showing buffered
-    if (video.duration > 0) {
-      for (var i = 0; i < video.buffered.lngth; ++i) {
-
-      }
-    }*/
-  });
-
   //Sync Overlay ----------------------------------------------------------------
   $('#sync-syncing').click(function(e) {
     client.socket.request(client.keys.SYNCING);
@@ -665,7 +668,7 @@ function initGui(client, isAdmin) {
 
   //CSS Animation ----------------------------------------------------------------
   var fadeOut, over;
-  $('.container').on('mousemove', function(e) {
+  $('.media').on('mousemove', function(e) {
     if(!$('.fade').hasClass('show')) {
       $('.fade').toggleClass('show');
     }
@@ -674,7 +677,7 @@ function initGui(client, isAdmin) {
     if(!over) {
       fadeOut = setTimeout(() => {
         $('.fade').toggleClass('show');
-      }, 6000);
+      }, FADE_TIMER);
     }
   });
 
@@ -694,8 +697,12 @@ function initGui(client, isAdmin) {
     if(e.offsetX <= border && $(e.target).hasClass('panel')) {
       e.originalEvent.preventDefault();
       $(document).on('mousemove', function(e) {
-        changePanelWidth(e.pageX);
-        updateOverlays();
+        var panelWidth = e.pageX / $(window).width()
+        if(panelWidth > .25 && panelWidth < .75) {
+          var padding = parseFloat($('.panel').css('padding')) * 2;
+          changePanelWidth(e.pageX, padding);
+          updateOverlays();
+        }
       });
     }
   });
@@ -778,14 +785,16 @@ function initGui(client, isAdmin) {
     }
   };
 
-  var changePanelWidth = function(x) {
+  var changePanelWidth = function(x, padding) {
     var wWith =  $(window).width();
     var width1 = Math.max(Math.min(wWith - x, wWith), 0);
     var width2 = Math.max(Math.min(x, wWith), 0);
 
-    $(`.media`).attr('style', `width: ${width2}px`);
+
     $(`.panel`).attr('style', `width: ${width1}px;min-width:25%;padding:1%;`);
-    $(`.path-dropdown`).attr('style', `width: ${width2}px`);
+    $(`.media`).attr('style', `width: ${width2 - padding}px`);
+
+    $(`.path-dropdown`).attr('style', `width: ${width2 - padding}px`);
     $(document).trigger('textarea-grow');
   };
 
@@ -795,15 +804,7 @@ function initGui(client, isAdmin) {
     $(`.path-dropdown`).attr('style', `width: ${width}px;left:${$(`#path-input`).offset().left}px;top:${height}px;`);
   };
 
-  var changeSidePosition = function() {
-    if($('.panel').hasClass('show')) {
-      var left = $('.panel').position().left - $('.side').width();
-      $('.side').attr('style', `left:${left}px;`);
-    }
-  };
-
   var updateOverlays = function() {
-    changeSidePosition();
     changeOverlayPosition('control-button-volume', 'control-volume', 'media');
     changeOverlayPosition('control-button-options', 'control-options', 'media');
     changeOverlayPosition('control-button-sync', 'control-sync', 'media');
@@ -862,7 +863,7 @@ function initGui(client, isAdmin) {
       $('.panel').removeClass('show');
       $('.media').addClass('show');
 
-      $('.side .flex-icon').each((index, element) => {
+      $('.side > .flex-icon').each((index, element) => {
         var elementId = element.id.split('-')[1];
         if(elementId) {
           $(`#panel-${elementId}`).removeClass('show');
