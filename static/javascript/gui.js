@@ -514,8 +514,10 @@ function initGui(client, isAdmin) {
   client.socket.setEvent(client.keys.NOTIFICATION, notification);
 
   //Client Events
-  client.log.events.on(client.keys.SERVERLOG, logging);
-  client.log.events.on(client.keys.NOTIFICATION, notification);
+  $(document).on('uiLogging', function(data) {
+    notification(data);
+    logging(data);
+  });
 
   //Video Overlay----------------------------------------------------------------
   $('#options-form select').on("change", function (e) {

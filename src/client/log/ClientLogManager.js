@@ -14,7 +14,7 @@ ClientLogManager.prototype.initialize = function() {
 	}
 };
 
-ClientLogManager.prototype.addUILogging = function() {
+ClientLogManager.prototype.createLoggers = function() {
   logs = [];
 
   var keys = Object.keys(ClientLogManager.Enum.Logs);
@@ -72,7 +72,6 @@ function log(level, message, meta) {
   }
 
   if(ClientLogManager.Enum.Levels[level] === ClientLogManager.Enum.Levels.ui) {
-    ClientLogManager.prototype.events.emit(eventKeys.NOTIFICATION, logMessage);
-    ClientLogManager.prototype.events.emit(eventKeys.SERVERLOG, logMessage);
+    ClientLogManager.prototype.events.emit(ClientLogManager.Enum.Levels.ui, logMessage);
   }
 }
