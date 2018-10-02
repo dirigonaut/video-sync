@@ -97,7 +97,11 @@ function setSocketEvents() {
 
   socket.setEvent(eventKeys.PLAY, function(command) {
     log.debug(eventKeys.PLAY, command);
-    play().catch(log.ui);
+    try {
+      play();
+    } catch(e) {
+      log.ui(e);
+    };
     videoPing();
   });
 
@@ -114,7 +118,11 @@ function setSocketEvents() {
     if(!command.play) {
       pause();
     } else {
-      play().catch(log.ui);
+      try {
+        play();
+      } catch(e) {
+        log.ui(e);
+      };
     }
 
     videoElement.currentTime = parseFloat(command.time);
