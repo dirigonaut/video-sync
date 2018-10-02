@@ -1,8 +1,18 @@
-const Util = require('util');
+const Util    = require('util');
+const Events  = require('events');
 
-var logs;
+var emitter, eventKeys, logs;
 
 function ClientLogManager() { }
+
+ClientLogManager.prototype.initialize = function() {
+	if(typeof ClientLogManager.prototype.protoInit === 'undefined') {
+		ClientLogManager.prototype.protoInit 	= true;
+		ClientLogManager.prototype.events 		= Object.create(Events.prototype);
+
+    eventKeys = this.factory.createKeys();
+	}
+};
 
 ClientLogManager.prototype.addUILogging = function() {
   logs = [];
@@ -59,5 +69,10 @@ function log(level, message, meta) {
 
   if(ClientLogManager.Enum.Levels[level] <= ClientLogManager.Enum.Levels[this.level]) {
     console.log(logMessage);
+  }
+
+  if(ClientLogManager.Enum.Levels[level] === ClientLogManager.Enum.Levels.ui) {
+    ClientLogManager.prototype.events.emit(eventKeys.NOTIFICATION, logMessage);
+    ClientLogManager.prototype.events.emit(eventKeys.SERVERLOG, logMessage);
   }
 }
