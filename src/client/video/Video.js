@@ -29,6 +29,12 @@ Video.prototype.setup = function(element, window, mediaSource) {
     videoElement.addEventListener('timeupdate', videoPing);
     videoElement.addEventListener('error', logVideoElementErrors.call(this));
 
+    setTimeout(function() {
+      if(videoElement.readyState < 2) {
+        videoElement.currentTime = 0;
+      }
+    }, 2500);
+
     var eventId = setInterval(function() {
       if(videoElement.pause) {
         videoPing();
@@ -91,7 +97,7 @@ function setSocketEvents() {
 
   socket.setEvent(eventKeys.PLAY, function(command) {
     log.debug(eventKeys.PLAY, command);
-    play();
+    play().catch(log.ui);
     videoPing();
   });
 
@@ -108,7 +114,7 @@ function setSocketEvents() {
     if(!command.play) {
       pause();
     } else {
-      play();
+      play().catch(log.ui);
     }
 
     videoElement.currentTime = parseFloat(command.time);
