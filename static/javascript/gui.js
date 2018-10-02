@@ -516,7 +516,6 @@ function initGui(client, isAdmin) {
   //Client Events
   client.logMan.events.on(client.logMan.Enums.LEVELS.ui, function(data) {
     notification(data);
-    logging(data);
   });
 
   //Video Overlay----------------------------------------------------------------

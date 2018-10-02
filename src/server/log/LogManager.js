@@ -67,7 +67,7 @@ var buildFileTransport = function(path, label, level, handleExceptions) {
     json: false,
     formatter: createFormatter.call(this, label),
     timestamp: function() {
-      return new Date().toISOString();
+      return new Date().toTimeString();
     }
   });
 

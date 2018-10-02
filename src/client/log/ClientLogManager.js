@@ -60,7 +60,7 @@ var buildUILogger = function(label, level) {
 
 function log(level, message, meta) {
   var logMessage = {
-    time: new Date().toISOString(),
+    time: new Date().toTimeString(),
     level: level,
     label: this.label,
     data: message ? message : meta,
