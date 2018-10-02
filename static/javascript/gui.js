@@ -514,9 +514,7 @@ function initGui(client, isAdmin) {
   client.socket.setEvent(client.keys.NOTIFICATION, notification);
 
   //Client Events
-  console.log(client.logMan.Enums.LEVELS.ui)
-  client.logMan.events.on(client.logMan.Enums.LEVELS.ui, function(data) {
-    alert(data);
+  client.logMan.events.on(client.logMan.Enums.LEVELS.ui, function(e, data) {
     notification(data);
     logging(data);
   });
