@@ -35,7 +35,7 @@ StateController.prototype.attachSocket = function(socket) {
       if(triggered === true) {
         var handle = yield credentials.getHandle(socket);
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-          [new Date().toTimeString(), 'notify', 'state', `${handle} issued play.`]);
+          [new Date().toLocaleTimeString(), 'notify', 'state', `${handle} issued play.`]);
         yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
       }
     }
@@ -54,7 +54,7 @@ StateController.prototype.attachSocket = function(socket) {
 
         var handle = yield credentials.getHandle(socket);
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-          [new Date().toTimeString(), 'notify', 'state', `${handle} issued pause.`]);
+          [new Date().toLocaleTimeString(), 'notify', 'state', `${handle} issued pause.`]);
         yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
       }
     }
@@ -78,7 +78,7 @@ StateController.prototype.attachSocket = function(socket) {
 
           var handle = yield credentials.getHandle(socket);
           var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-            [new Date().toTimeString(), 'notify', 'state', `${handle} issued seek to ${request.timestamp}.`]);
+            [new Date().toLocaleTimeString(), 'notify', 'state', `${handle} issued seek to ${request.timestamp}.`]);
           yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
         }
       }
@@ -103,7 +103,7 @@ StateController.prototype.attachSocket = function(socket) {
 
     var handle = yield credentials.getHandle(socket);
     var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-      [new Date().toTimeString(), 'notify', 'state', `${handle} is syncing.`]);
+      [new Date().toLocaleTimeString(), 'notify', 'state', `${handle} is syncing.`]);
     yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
   }));
 

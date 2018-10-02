@@ -76,7 +76,7 @@ AuthenticationController.prototype.attachIO = function (io) {
 
       var handle = yield credentials.getHandle(socket);
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-        [new Date().toTimeString(), 'notify', 'auth', `${handle} joined.`]);
+        [new Date().toLocaleTimeString(), 'notify', 'auth', `${handle} joined.`]);
       yield redisSocket.broadcast.call(AuthenticationController.prototype, eventKeys.NOTIFICATION, response);
     }));
 
@@ -88,7 +88,7 @@ AuthenticationController.prototype.attachIO = function (io) {
         var includes = yield credentials.includes(socket.id);
         var handle = yield credentials.getHandle(socket);
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-          [new Date().toTimeString(), 'notify', 'auth', `${handle} left.`]);
+          [new Date().toLocaleTimeString(), 'notify', 'auth', `${handle} left.`]);
 
         if(admin && admin.id === socket.id) {
           credentials.removeAdmin(socket);

@@ -247,7 +247,7 @@ var createMetricInterval = function() {
 
     if(triggered) {
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-        [new Date().toTimeString(), 'notify', 'state', `Auto Sync issued pause.`]);
+        [new Date().toLocaleTimeString(), 'notify', 'state', `Auto Sync issued pause.`]);
       yield redisSocket.broadcast.call(StateEngine.prototype, eventKeys.NOTIFICATION, response);
       yield redisSocket.broadcast.call(this, eventKeys.PAUSE);
     }

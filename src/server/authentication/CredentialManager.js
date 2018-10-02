@@ -77,7 +77,7 @@ CredentialManager.prototype.deleteTokens = Promise.coroutine(function* (keys) {
     if(entries && entries[key]) {
       if(entries[key].id) {
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-          [new Date().toTimeString(), 'notify', 'auth', `${entries[key].handle} has been kicked.`]);
+          [new Date().toLocaleTimeString(), 'notify', 'auth', `${entries[key].handle} has been kicked.`]);
 
         redisSocket.broadcast.call(CredentialManager.prototype, eventKeys.NOTIFICATION, response);
         redisSocket.disconnect(entries[key].id);

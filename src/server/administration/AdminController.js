@@ -48,7 +48,7 @@ AdminController.prototype.attachSocket = function(socket) {
         yield redisSocket.broadcast.call(this, eventKeys.MEDIAREADY);
 
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-          [new Date().toTimeString(), 'notify', 'media', `Media is loaded.`]);
+          [new Date().toLocaleTimeString(), 'notify', 'media', `Media is loaded.`]);
         yield redisSocket.broadcast.call(AdminController.prototype, eventKeys.NOTIFICATION, response);
       } else {
         log.socket(`${dir} is not found.`);
@@ -65,7 +65,7 @@ AdminController.prototype.attachSocket = function(socket) {
       media.setMediaRule(request.data)
       .then(Promise.coroutine(function* () {
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-          [new Date().toTimeString(), 'notify', 'media', `${request.data ? 'Auto Sync set to ' + request.data + 's.' : 'Auto Sync turned off.'}`]);
+          [new Date().toLocaleTimeString(), 'notify', 'media', `${request.data ? 'Auto Sync set to ' + request.data + 's.' : 'Auto Sync turned off.'}`]);
 
         yield redisSocket.broadcast.call(AdminController.prototype, eventKeys.NOTIFICATION, response);
       })).catch(function(error) {
