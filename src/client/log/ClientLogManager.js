@@ -8,7 +8,7 @@ function ClientLogManager() { }
 ClientLogManager.prototype.initialize = function() {
 	if(typeof ClientLogManager.prototype.protoInit === 'undefined') {
 		ClientLogManager.prototype.protoInit 	= true;
-		Object.setPrototypeOf(Cache.prototype, Events.prototype);
+		Object.setPrototypeOf(ClientLogManager.prototype, Events.prototype);
     eventKeys = this.factory.createKeys();
 	}
 };
