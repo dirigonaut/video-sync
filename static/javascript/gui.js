@@ -1,10 +1,6 @@
 function initGui(client, isAdmin) {
   var FADE_TIMER = 12000;
 
-  $(window).onerror(function(e) {
-    client.log.ui(e);
-  });
-
   //Setup -----------------------------------------------------------------------
   $(document).on('initializeMedia', function(e, reset) {
     var domElements = {
