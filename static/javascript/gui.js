@@ -483,9 +483,11 @@ function initGui(client, isAdmin) {
       $(`#notification`).empty();
     }
 
+    var data = message && message.data ? message.data : message;
+
     $(`<div class="flex-h flex-center-v padding rounded-corners borders">
       <div class="padding">
-        ${message && message.time ? message.time : ''} ${message && message.data ? message.data : message}
+        ${message && message.time ? message.time : ''} ${data.length > 200 ? data.substring(0, 200).concat("...") : data }
       </div>
       <input id='notify-timer' type='hidden' value='10'>
       <a href="#" onclick="$(document).trigger('log-delete', event.currentTarget);">
