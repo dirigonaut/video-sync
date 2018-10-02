@@ -112,7 +112,7 @@ StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
         if(mediaStarted === false) {
           player[1].sync       = player[1].Enums.SYNC.BUFFWAIT;
           player[1].timestamp  = data.timestamp;
-          player[1].buffered   = false;
+          player[1].buffer     = false;
         }
       }
 
@@ -170,7 +170,7 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
           player.timestamp = data.timestamp;
         }
         if(typeof data.buffered !== 'undefined') {
-          player.buffered = data.buffered;
+          player.buffer = data.buffered;
 
           if(trigger && data.buffered) {
             trigger.emit('canPlay', id);

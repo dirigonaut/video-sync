@@ -376,7 +376,6 @@ function initGui(client, isAdmin) {
         var info = stats[i][1];
         info.time = toFormatted(info.timestamp);
         info.buffer = info.buffer ? 1 : 0;
-        info.buffered = info.buffered ? 1 : 0;
         delete info.timestamp;
         $(`#${id}-stats`).val(JSON.stringify(info));
       }
@@ -533,8 +532,8 @@ function initGui(client, isAdmin) {
   });
 
   $('#buffer-options').on("change", function (e) {
-    var value = $(e.currentTarget).val() ? $(e.currentTarget).val() : 0
-    value = Math.trunc(value / 4);
+    var value = $(e.currentTarget).val() ? $(e.currentTarget).val() : 8
+    value = value > 16 ? Math.trunc(value / 4) : 4;
     $(e.currentTarget).val(value * 4);
     client.media.setBufferAhead(value);
   });
