@@ -399,7 +399,7 @@ function initGui(client, isAdmin) {
     var id = e.currentTarget.id.split('-')[1];
 
     if(id !== 'shutdown') {
-      if(!$(`.panel`).hasClass('show')) {
+      if(!$('.panel').hasClass('show')) {
         $(document).trigger('togglePanel');
       }
 
@@ -703,6 +703,15 @@ function initGui(client, isAdmin) {
           updateOverlays();
         }
       });
+    }
+  });
+
+  $(window).resize(function(e) {
+    var padding = parseFloat($('.panel').css('padding')) * 2;
+    var width = $('.panel').outerWidth(true);
+    if($('.panel').hasClass('show')) {
+      changePanelWidth($(window).outerWidth(true) - width, padding);
+      updateOverlays();
     }
   });
 
