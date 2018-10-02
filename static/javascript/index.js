@@ -38,7 +38,7 @@ function setupClient() {
 
       var logManager  = factory.createClientLogManager();
       logManager.createLoggers();
-      logManager.on(logManager.Enums.Levels.ui, function(data) {
+      logManager.on(logManager.Enums.LEVELS.UI, function(data) {
         $(document).trigger('uiLogging', data);
       });
 
