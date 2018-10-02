@@ -515,6 +515,7 @@ function initGui(client, isAdmin) {
 
   //Client Events
   client.logMan.events.on(client.logMan.Enums.LEVELS.UI, function(data) {
+    console.log(data)
     notification(data);
     logging(data);
   });
@@ -923,4 +924,6 @@ function initGui(client, isAdmin) {
       $(ele).removeClass('show');
     });
   }
+
+  client.log.ui("Client Loaded");
 }
