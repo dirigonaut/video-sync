@@ -38,10 +38,6 @@ function setupClient() {
 
       var logManager  = factory.createClientLogManager();
       logManager.createLoggers();
-      logManager.on(logManager.Enums.LEVELS.UI, function(data) {
-        $(document).trigger('uiLogging', data);
-      });
-
       log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
 
       clientSocket = factory.createClientSocket();
@@ -98,7 +94,6 @@ function setupClient() {
         keys:     factory.createKeys(),
         logMan:   factory.createClientLogManager(),
         log:      log,
-        ui:       logManager.getLog(logManager.Enums.LOGS.GENERAL),
       };
 
       client.socket.events.on(client.socket.Enums.EVENTS.RECONNECT, function(response) {

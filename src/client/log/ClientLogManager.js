@@ -8,8 +8,8 @@ function ClientLogManager() { }
 ClientLogManager.prototype.initialize = function() {
 	if(typeof ClientLogManager.prototype.protoInit === 'undefined') {
 		ClientLogManager.prototype.protoInit 	= true;
-		Object.setPrototypeOf(ClientLogManager.prototype, Events.prototype);
-    emitter = this;
+		ClientLogManager.prototype.events 		= Object.create(Events.prototype);
+
     eventKeys = this.factory.createKeys();
 	}
 };
@@ -72,6 +72,6 @@ function log(level, message, meta) {
   }
 
   if(ClientLogManager.Enum.Levels[level] === ClientLogManager.Enum.Levels.ui) {
-    emitter.emit(ClientLogManager.Enum.Levels.ui, logMessage);
+    ClientLogManager.prototype.events.emit(ClientLogManager.Enum.Levels.ui, logMessage);
   }
 }
