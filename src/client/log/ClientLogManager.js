@@ -9,6 +9,7 @@ ClientLogManager.prototype.initialize = function() {
 	if(typeof ClientLogManager.prototype.protoInit === 'undefined') {
 		ClientLogManager.prototype.protoInit 	= true;
 		Object.setPrototypeOf(ClientLogManager.prototype, Events.prototype);
+    emitter = this;
     eventKeys = this.factory.createKeys();
 	}
 };
@@ -71,6 +72,6 @@ function log(level, message, meta) {
   }
 
   if(ClientLogManager.Enum.Levels[level] === ClientLogManager.Enum.Levels.ui) {
-    ClientLogManager.prototype.events.emit(ClientLogManager.Enum.Levels.ui, logMessage);
+    emitter.emit(ClientLogManager.Enum.Levels.ui, logMessage);
   }
 }
