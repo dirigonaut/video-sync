@@ -73,7 +73,10 @@ function play() {
   log.debug('Video.play');
   if(videoElement.readyState === 4) {
     log.debug("Set video to play");
-    videoElement.play().catch(function(e) { log.ui(e) });
+    videoElement.play().catch(function(e) {
+      log.error(e);
+      log.ui(e);
+    });
   } else {
     log.debug("Set video to play when canplay");
     videoElement.addEventListener('canplay', videoElement.play, {"once": true});
