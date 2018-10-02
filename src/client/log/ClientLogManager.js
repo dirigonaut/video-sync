@@ -63,7 +63,7 @@ function log(level, message, meta) {
     time: new Date().toISOString(),
     level: level,
     label: this.label,
-    text: message ? message : meta,
+    data: message ? message : meta,
     meta: message && meta ? meta : ''
   };
 
