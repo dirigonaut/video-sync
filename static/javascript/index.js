@@ -27,6 +27,7 @@ function setupClient() {
     }
   };
 
+  var logManager;
   var initialize = function() {
     Promise.all([
       loadAsyncScript('../javascript/login.js'),
@@ -36,7 +37,7 @@ function setupClient() {
       var factoryManager  = Object.create(FactoryManager.prototype);
       factory             = factoryManager.getFactory();
 
-      var logManager  = factory.createClientLogManager();
+      logManager = factory.createClientLogManager();
       logManager.createLoggers();
       log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
 
@@ -92,7 +93,7 @@ function setupClient() {
         encode:   factory.createEncodeFactory(),
         schema:   factory.createSchemaFactory(),
         keys:     factory.createKeys(),
-        logMan:   factory.createClientLogManager(),
+        logMan:   logManager,
         log:      log,
       };
 
