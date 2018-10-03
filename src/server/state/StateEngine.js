@@ -195,6 +195,15 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
   return commands;
 });
 
+StateEngine.prototype.syncingAll = Promise.coroutine(function* () {
+  log.silly(`StateEngine.syncingAll`);
+  var players = playerManager.getPlayers();
+
+  for(var key of players.keys()) {
+    this.syncing(key);
+  }
+});
+
 StateEngine.prototype.syncing = Promise.coroutine(function* (id) {
   log.silly(`StateEngine.syncing ${id}`);
   var basePath = yield media.getMediaPath();

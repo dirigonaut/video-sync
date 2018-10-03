@@ -579,6 +579,7 @@ function initGui(client, isAdmin) {
     changeSync($('#sync-options').val());
   } else {
     $('#sync-options').parent().remove();
+    $('#sync-group').parent().remove();
   }
 
   client.media.on('meta-data-loaded', function(trackInfo) {
@@ -621,7 +622,11 @@ function initGui(client, isAdmin) {
 
   //Sync Overlay ----------------------------------------------------------------
   $('#sync-syncing').click(function(e) {
-    client.socket.request(client.keys.SYNCING);
+    if($('#sync-group') && $('#sync-group').prop('checked')) {
+      client.socket.request(client.keys.SYNCINGALL);
+    } else {
+      client.socket.request(client.keys.SYNCING);
+    }
   });
 
   var updateSyncInfo = function(data) {
@@ -704,22 +709,13 @@ function initGui(client, isAdmin) {
     if(e.offsetX <= border && $(e.target).hasClass('panel')) {
       e.originalEvent.preventDefault();
       $(document).on('mousemove', function(e) {
-        var panelWidth = e.pageX / $(window).width()
+        var panelWidth = e.pageX / $(window).width();
         if(panelWidth > .25 && panelWidth < .75) {
-          var padding = parseFloat($('.panel').css('padding')) * 2;
+          var padding = parseFloat($('.panel').css('paddingLeft')) * 2;
           changePanelWidth(e.pageX, padding);
           updateOverlays();
         }
       });
-    }
-  });
-
-  $(window).resize(function(e) {
-    var padding = parseFloat($('.panel').css('padding')) * 2;
-    var width = $('.panel').outerWidth(true);
-    if($('.panel').hasClass('show')) {
-      changePanelWidth($(window).outerWidth(true) - width, padding);
-      updateOverlays();
     }
   });
 
@@ -734,6 +730,9 @@ function initGui(client, isAdmin) {
 
   $(window).resize(function() {
     updateOverlays();
+    $('.panel').removeAttr("style");
+    $('.media').removeAttr("style");
+    $('.side').removeAttr("style");
   });
 
   $('#control-button-options').click(function(e) {
@@ -806,8 +805,7 @@ function initGui(client, isAdmin) {
     var width1 = Math.max(Math.min(wWith - x, wWith), 0);
     var width2 = Math.max(Math.min(x, wWith), 0);
 
-
-    $(`.panel`).attr('style', `width: ${width1}px;min-width:25%;padding:1%;`);
+    $(`.panel`).attr('style', `width: ${width1}px;min-width:25%;`);
     $(`.media`).attr('style', `width: ${width2 - padding}px`);
 
     $(`.path-dropdown`).attr('style', `width: ${width2 - padding}px`);
@@ -890,10 +888,6 @@ function initGui(client, isAdmin) {
     } else {
       $('.panel').toggleClass('show');
       $('.media').toggleClass('show');
-    }
-
-    if($('.panel').hasClass('show')) {
-      $(`.panel`).attr('style', `padding:1%;`);
     }
 
     updateOverlays();

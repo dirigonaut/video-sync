@@ -107,6 +107,17 @@ StateController.prototype.attachSocket = function(socket) {
     yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
   }));
 
+  socket.on(eventKeys.SYNCINGALL, Promise.coroutine(function* () {
+    log.debug(eventKeys.SYNCINGALL);
+    yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.SYNCINGALL]);
+
+    var handle = yield credentials.getHandle(socket);
+    var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
+      [new Date().toLocaleTimeString(), 'notify', 'state', `${handle} issued a sync all.`]);
+
+    yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
+  }));
+
   socket.on(eventKeys.PING, Promise.coroutine(function* (data, acknowledge) {
     log.silly(eventKeys.PING, data);
 

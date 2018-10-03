@@ -37,6 +37,7 @@ module.exports = {
   REQSEEK:        'state-req-seek',
   SYNC:           'state-sync',
   SYNCING:        'state-syncing',
+  SYNCINGALL:     'state-syncing-all',
   PING:           'state-ping',
   UPDATEINIT:     'state-update-init',
   SYNCINFO:       'state-metrics',
