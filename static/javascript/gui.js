@@ -45,11 +45,15 @@ function initGui(client, isAdmin) {
     $('#currently-at').val((current / duration)*100);
     $('#progress-amount')[0].style.width = ((current/ duration)*100) + "%";
 
-    for (var i = 0; i < video.buffered.length; ++i) {
-      if (video.buffered.start(video.buffered.length - 1 - i) < video.currentTime) {
-        $('#buffered-amount')[0].style.width = (video.buffered.end(video.buffered.length - 1 - i) / duration) * 100 + "%";
-        break;
+    if(video.buffered.length) {
+      for (var i = 0; i < video.buffered.length; ++i) {
+        if (video.buffered.start(video.buffered.length - 1 - i) < video.currentTime) {
+          $('#buffered-amount')[0].style.width = (video.buffered.end(video.buffered.length - 1 - i) / duration) * 100 + "%";
+          break;
+        }
       }
+    } else {
+      $('#buffered-amount')[0].style.width = 0;
     }
 
     $('#control-duration').val(toFormatted(duration));
