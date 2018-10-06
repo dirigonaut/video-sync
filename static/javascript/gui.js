@@ -813,9 +813,11 @@ function initGui(client, isAdmin) {
   };
 
   var changeDropDown = function() {
-    var width = $(`#path-input`).width();
-    var height = $(`.path`).height() + $(`.path`).offset().top;
-    $(`.path-dropdown`).attr('style', `width: ${width}px;left:${$(`#path-input`).offset().left}px;top:${height}px;`);
+    if($(`#path-input`).length) {
+      var width = $(`#path-input`).width();
+      var height = $(`.path`).height() + $(`.path`).offset().top;
+      $(`.path-dropdown`).attr('style', `width: ${width}px;left:${$(`#path-input`).offset().left}px;top:${height}px;`);
+    }
   };
 
   var updateOverlays = function() {
@@ -915,7 +917,7 @@ function initGui(client, isAdmin) {
     initToken();
   } else {
     $('.is-admin').each((index, ele) => {
-      $(ele).removeClass('show');
+      $(ele).remove();
     });
   }
 }

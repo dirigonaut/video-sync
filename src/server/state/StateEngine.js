@@ -1,11 +1,10 @@
 const Promise = require('bluebird');
-const Events  = require('events');
 
 const METRICSINTERVAL = 500;
+const DEFAULTMEDIARULE = 3;
 
-var publisher, playRule, syncingRule, syncRule, schemaFactory, redisSocket,
-    metricInterval, playerManager, credentials, trigger, media, publisher,
-    eventKeys, log;
+var publisher, stateLeader, schemaFactory, redisSocket, metricInterval,
+    playerManager, playerInfo, credentials, media, publisher, eventKeys, log;
 
 function StateEngine() { };
 
@@ -17,11 +16,9 @@ StateEngine.prototype.initialize = function() {
     publisher       = this.factory.createRedisPublisher();
     redisSocket     = this.factory.createRedisSocket();
     credentials     = this.factory.createCredentialManager();
-    trigger         = new Events();
 
-    playRule        = this.factory.createPlayRule();
-    syncingRule     = this.factory.createSyncingRule();
-    syncRule        = this.factory.createSyncRule();
+    stateLeader     = this.factory.createStateLeader();
+    playerInfo      = this.factory.getPlayerInfo();
 
     schemaFactory   = this.factory.createSchemaFactory();
     eventKeys       = this.factory.createKeys();
@@ -31,122 +28,94 @@ StateEngine.prototype.initialize = function() {
   }
 };
 
-StateEngine.prototype.play = Promise.coroutine(function* (id) {
-  log.debug(`StateEngine.play ${id}`);
+StateEngine.prototype.play = Promise.coroutine(function* () {
+  log.debug(`StateEngine.play`);
   var basePath = yield media.getMediaPath();
 
   if(basePath && basePath.length > 0) {
-    var mediaStarted = yield media.getMediaStarted();
-    var rule = yield media.getMediaRule();
-    var issuer = playerManager.getPlayer(id);
+    var commands = [];
+    var results;
 
-    if(issuer) {
-      var players = playRule.evaluate(issuer, playerManager.getPlayers(), mediaStarted, rule ? rule : 3);
-
-      if(players) {
-        var buffering = new Map();
-
-        log.info(`StateEngine issuing play for: `, players);
-        for(var player of players.entries()) {
-          buffering.set(player[0], player[1]);
-
-          if(mediaStarted === false) {
-            player[1].sync = player[1].Enums.SYNC.SYNCED;
-          }
-        }
-
-        canPlay.call(this, buffering, issuer.Enums.STATE.PLAY);
-
-        if(!mediaStarted) {
-          yield media.setMediaStarted(!mediaStarted);
-          metricInterval !== 'undefined' ? clearInterval(metricInterval) : undefined;
-          metricInterval = createMetricInterval.call(this);
-        }
-
-        return true;
-      }
+    var initedMedia = yield mediaStarted();
+    if(initedMedia) {
+      results = getMinMaxSyncedPlayers(
+        [playerInfo.Enums.SYNC.SYNCING, playerInfo.Enums.SYNC.ISSUED],
+        function(id, player) {
+          player.sync = playerInfo.Enums.SYNC.SYNCED;
+        });
+    } else {
+      results = getMinMaxSyncedPlayers([playerInfo.Enums.SYNC.SYNCED]);
     }
+
+    var rule = yield media.getMediaRule();
+    rule = rule ? rule : DEFAULTMEDIARULE;
+
+    for(let i in results.ids) {
+      player = playerManager.getPlayer(results.ids[i]);
+      commands.push([results.ids[i], eventKeys.PLAY]);
+    }
+
+    if(Math.abs(results.max - results.min) > rule) {
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
+        [new Date().toLocaleTimeString(), 'notify', 'state', `Play request failed.`]);
+      yield redisSocket.broadcast.call(StateEngine.prototype, eventKeys.NOTIFICATION, response);
+
+      delete commands;
+    } else {
+      log.info(`StateEngine issuing play for: `, commands);
+    }
+
+    return commands;
   }
 });
 
-StateEngine.prototype.pause = Promise.coroutine(function* (id) {
-  log.debug(`StateEngine.pause ${id}`);
-  var commands;
+StateEngine.prototype.pause = Promise.coroutine(function* () {
+  log.debug(`StateEngine.pause`);
   var basePath = yield media.getMediaPath();
 
   if(basePath && basePath.length > 0) {
-    var issuer = playerManager.getPlayer(id);
-
-    if(issuer) {
-      commands = [];
-      var players = playerManager.getPlayers();
-      for(let player of players.entries()) {
-        commands.push([player[0], eventKeys.PAUSE]);
-        player[1].sync = player[1].Enums.SYNC.SYNCED;
-      }
+    var commands = [];
+    var players = playerManager.getPlayers();
+    for(let player of players.entries()) {
+      commands.push([player[0], eventKeys.PAUSE]);
     }
   }
 
   return commands;
 });
 
-StateEngine.prototype.seek = Promise.coroutine(function* (id, data) {
-  log.debug(`StateEngine.seek ${id}`);
-  var commands;
+StateEngine.prototype.seek = Promise.coroutine(function* (data) {
+  log.debug(`StateEngine.seek`);
   var basePath = yield media.getMediaPath();
   var mediaStarted = yield media.getMediaStarted();
 
   if(basePath && basePath.length > 0) {
-    var issuer = playerManager.getPlayer(id);
+    var commands = [];
+    var players = playerManager.getPlayers();
 
-    if(issuer) {
-      commands = [];
-      var buffering = new Map();
-      var players = playerManager.getPlayers();
-
-      for(let player of players.entries()) {
-        buffering.set(player[0], player[1]);
-        var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.STATERESPONSE, [false, data.timestamp]);
-        commands.push([player[0], eventKeys.SEEK, schema]);
-
-        if(mediaStarted === false) {
-          player[1].sync       = player[1].Enums.SYNC.BUFFWAIT;
-          player[1].timestamp  = data.timestamp;
-          player[1].buffer     = false;
-        }
-      }
-
-      canPlay.call(this, buffering, issuer.state);
+    for(let player of players.entries()) {
+      var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.STATERESPONSE, [false, data.timestamp]);
+      commands.push([player[0], eventKeys.SEEK, schema]);
+      player[1].sync       = playerInfo.Enums.SYNC.ISSUED;
+      player[1].timestamp  = data.timestamp;
+      player[1].buffer     = false;
     }
   }
 
   return commands;
 });
 
-StateEngine.prototype.sync = Promise.coroutine(function* (id) {
-  log.debug(`StateEngine.sync ${id}`);
-  var command;
+StateEngine.prototype.sync = Promise.coroutine(function* () {
+  log.debug(`StateEngine.sync`);
   var basePath = yield media.getMediaPath();
 
   if(basePath && basePath.length > 0) {
-    var issuer = playerManager.getPlayer(id);
+    var results = getMinMaxSyncedPlayers([playerInfo.Enums.SYNC.SYNCED], function(id, player) {
+      player.sync = playerInfo.Enums.SYNC.ISSUED;
+    });
 
-    if(issuer) {
-      var players = playerManager.getPlayers();
-      if(players.size > 1) {
-        var syncTime;
-
-        for(let player of players.values()) {
-          if(!syncTime || (player.sync === player.Enums.SYNC.SYNCED && syncTime > player.timestamp)) {
-            syncTime = player.timestamp;
-          }
-        }
-
-        command = [];
-        var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.STATERESPONSE, [false, syncTime]);
-        command.push([id, eventKeys.SEEK, schema]);
-      }
-    }
+    var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.STATERESPONSE, [false, results.min]);
+    var command = [[eventKeys.SEEK, schema]];
   }
 
   return command;
@@ -164,30 +133,36 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
     if(player) {
       if(data) {
         if(typeof data.state !== 'undefined') {
-          player.state = data.state ? player.Enums.STATE.PLAY : player.Enums.STATE.PAUSE;
+          player.state = data.state ? playerInfo.Enums.STATE.PLAY : playerInfo.Enums.STATE.PAUSE;
         }
         if(typeof data.timestamp !== 'undefined') {
           player.timestamp = data.timestamp;
         }
         if(typeof data.buffered !== 'undefined') {
           player.buffer = data.buffered;
-
-          if(trigger && data.buffered) {
-            trigger.emit('canPlay', id);
-          }
         }
       }
 
-      if(player.sync === player.Enums.SYNC.SYNCING) {
-        var leader = syncingRule.evaluate(player, playerManager.getOtherPlayers(id));
+      var rule = yield media.getMediaRule();
+      rule = rule ? rule : DEFAULTMEDIARULE;
+      var leader = stateLeader.getLeader(rule);
 
-        if(leader) {
-          commands = [];
-          var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.STATERESPONSE,
-            leader.state === player.Enums.STATE.PLAY ? [true, leader.timestamp + 1] : [false, leader.timestamp]);
-          commands.push([id, eventKeys.SEEK, schema]);
-          player.sync = player.Enums.SYNC.SYNCED;
+      if(player.sync === playerInfo.Enums.SYNC.ISSUED) {
+        if(Math.abs(leader.timestamp - player.timestamp) <= rule && player.buffer) {
+          if(player.state !== leader.state) {
+            commands = [[id, leader.state ? eventKeys.PLAY : eventKeys.PAUSE ]];
+          }
+
+          player.sync = playerInfo.Enums.SYNC.SYNCED;
         }
+      } else if (player.sync === playerInfo.Enums.SYNC.SYNCING) {
+        if(Math.abs(leader.timestamp - player.timestamp) > rule) {
+          var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.STATERESPONSE,
+              leader.state === playerInfo.Enums.STATE.PLAY ? [true, leader.timestamp + 1] : [false, leader.timestamp]);
+          commands = [[id, eventKeys.SEEK, schema]];
+        }
+
+        player.sync = playerInfo.Enums.SYNC.ISSUED;
       }
     }
   }
@@ -196,7 +171,6 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
 });
 
 StateEngine.prototype.syncingAll = Promise.coroutine(function* () {
-  log.silly(`StateEngine.syncingAll`);
   var players = playerManager.getPlayers();
 
   for(var key of players.keys()) {
@@ -206,55 +180,42 @@ StateEngine.prototype.syncingAll = Promise.coroutine(function* () {
 
 StateEngine.prototype.syncing = Promise.coroutine(function* (id) {
   log.silly(`StateEngine.syncing ${id}`);
-  var basePath = yield media.getMediaPath();
-  var mediaStarted = yield media.getMediaStarted();
+  var player = playerManager.getPlayer(id);
 
-  if(basePath && basePath.length > 0 && mediaStarted) {
-    var player = playerManager.getPlayer(id);
-
-    if(player) {
-      player.sync = player.Enums.SYNC.SYNCING;
-    }
+  if(player) {
+    player.sync = playerInfo.Enums.SYNC.SYNCING;
   }
 });
 
 module.exports = StateEngine;
 
-var canPlay = function(players, state) {
-  var buffering = new Map();
+var mediaStarted = Promise.coroutine(function* () {
+  log.silly(`StateEngine._mediaStarted`);
+  var mediaStarted = yield media.getMediaStarted();
 
-  for(let player of players.entries()) {
-    player[1].sync = player[1].Enums.SYNC.BUFFWAIT;
-    buffering.set(player[0], player[1]);
+  if(!mediaStarted) {
+    yield media.setMediaStarted(true);
+    metricInterval !== 'undefined' ? clearInterval(metricInterval) : undefined;
+    metricInterval = createMetricInterval.call(this);
+    return true;
   }
-
-  var canPlayLogic = function(id) {
-    log.debug(`StateEngine player canPlay.`, id);
-    buffering.delete(id);
-
-    if(buffering.size === 0) {
-      log.debug(`StateEngine players canplay:`, players);
-      for(let player of players.entries()) {
-        player[1].sync = player[1].Enums.SYNC.SYNCED;
-        redisSocket.ping.apply(this, [player[0], state === player[1].Enums.STATE.PLAY ? eventKeys.PLAY : eventKeys.PAUSE]);
-      }
-
-      trigger.removeAllListeners('canPlay');
-    }
-  }.bind(this);
-
-  if(buffering.size > 0) {
-    trigger.removeAllListeners('canPlay');
-    trigger.on('canPlay', canPlayLogic);
-  }
-};
+});
 
 var createMetricInterval = function() {
   return setInterval(Promise.coroutine(function* () {
+    var isPlaying = false;
     var players = playerManager.getPlayers();
-    var triggered = yield syncRule.evaluate(players);
+    var results = getMinMaxSyncedPlayers([playerInfo.Enums.SYNC.ISSUED, playerInfo.Enums.SYNC.SYNCED],
+                      function(id, player) { isPlaying = isPlaying ? isPlaying : player.state; });
 
-    if(triggered) {
+    var rule = yield media.getMediaRule();
+    rule = rule ? rule : DEFAULTMEDIARULE;
+
+    var stats = {rearGuard: results.min, foreGuard: results.max, difference: Math.abs(results.max - results.min)};
+    media.setPlayerMetrics(stats);
+    redisSocket.broadcast.call(this, eventKeys.SYNCINFO, stats);
+
+    if(stats.difference > rule && isPlaying) {
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
         [new Date().toLocaleTimeString(), 'notify', 'state', `Auto Sync issued pause.`]);
       yield redisSocket.broadcast.call(StateEngine.prototype, eventKeys.NOTIFICATION, response);
@@ -268,4 +229,29 @@ var createMetricInterval = function() {
       }
     });
   }.bind(this)), 500);
+};
+
+var getMinMaxSyncedPlayers = function(states, custom) {
+  var results = {};
+  results.ids = [];
+  var players = playerManager.getPlayers();
+
+  if(players && players.size) {
+    var min, max;
+    for(let player of players.entries()) {
+      if(states.includes(player[1].sync)) {
+        min = min !== undefined ? Math.min(min, player[1].timestamp) : player[1].timestamp;
+        max = max !== undefined ? Math.max(max, player[1].timestamp) : player[1].timestamp;
+        results.ids.push(player[0]);
+      }
+
+      if(custom && typeof custom === "function") {
+        custom.apply(null, player);
+      }
+    }
+  }
+
+  results.min = min;
+  results.max = max;
+  return results
 };

@@ -125,18 +125,22 @@ AuthenticationController.prototype.attachIO = function (io) {
 module.exports = AuthenticationController;
 
 var isAdministrator = Promise.coroutine(function* (socket, request) {
-  var isAdmin = credentials.isAdmin(socket, request ? request.id : undefined);
+  var admin = yield credentials.getAdmin();
 
-  if(isAdmin) {
-    yield credentials.setAdmin(socket, request);
+  if(!admin) {
+    var isAdmin = credentials.isAdmin(socket, request ? request.id : undefined);
 
-    var adminController       = this.factory.createAdminController();
-    var credentialController  = this.factory.createCredentialController();
+    if(isAdmin) {
+      yield credentials.setAdmin(socket, request);
 
-    adminController.attachSocket(socket);
-    credentialController.attachSocket(socket);
+      var adminController       = this.factory.createAdminController();
+      var credentialController  = this.factory.createCredentialController();
 
-    userAuthorized.call(this, socket);
+      adminController.attachSocket(socket);
+      credentialController.attachSocket(socket);
+
+      userAuthorized.call(this, socket);
+    }
   }
 
   return isAdmin;

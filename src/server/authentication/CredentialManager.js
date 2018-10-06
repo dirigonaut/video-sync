@@ -15,6 +15,7 @@ CredentialManager.prototype.initialize = function(force) {
     Object.setPrototypeOf(CredentialManager.prototype, Events.prototype);
     config          = this.factory.createConfig();
     client          = Redis.createClient(config.getConfig().redisInfo.connection);
+    subscriber      = Redis.createClient(config.getConfig().redisInfo.connection);
     emitter         = new Events();
 
     redisSocket     = this.factory.createRedisSocket();
@@ -23,11 +24,14 @@ CredentialManager.prototype.initialize = function(force) {
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.AUTHENTICATION);
+
+    attachEvents.call(this);
   }
 
-  emitter.on(CredentialManager.Enum.Event.UPDATED, function(tokens) {
+  emitter.on(CredentialManager.Enum.Event.UPDATED, Promise.coroutine(function* () {
+    var tokens = yield this.getTokens();
     this.emit(CredentialManager.Enum.Event.UPDATED, tokens);
-  }.bind(this));
+  }.bind(this)));
 };
 
 CredentialManager.prototype.isAdmin = function(socket, password) {
@@ -200,13 +204,11 @@ CredentialManager.Enum.Event = { UPDATED : 'users-updated' };
 var setUserData = function(key, data) {
   log.silly(`setCredentialData for key: ${key}`, data);
 
-  if(key === CredentialManager.Enum.User.CLIENT) {
-    emitter.emit(CredentialManager.Enum.Event.UPDATED, data);
-  } else if(key === CredentialManager.Enum.User.ADMIN) {
-    emitter.emit(CredentialManager.Enum.Event.UPDATED, {});
-  }
+  var result = client.setAsync(key, JSON.stringify(data));
+  emitter.emit(CredentialManager.Enum.Event.UPDATED);
+  client.publishAsync(CredentialManager.Enum.Event.UPDATED, "payload");
 
-  return client.setAsync(key, JSON.stringify(data));
+  return result;
 };
 
 var getUserData = function(key) {
@@ -214,4 +216,22 @@ var getUserData = function(key) {
   return client.getAsync(key).then(function(results) {
     return JSON.parse(results);
   });
+};
+
+var attachEvents = function() {
+  subscriber.on("message", function(channel, payload) {
+    if(channel === CredentialManager.Enum.Event.UPDATED) {
+      emitter.emit(CredentialManager.Enum.Event.UPDATED);
+    }
+  }.bind(this));
+
+  subscriber.on("connect", function(err) {
+    log.info("CredentialManager is connected to redis server");
+  }.bind(this));
+
+  subscriber.on("error", function(err) {
+    log.error(err);
+  }.bind(this));
+
+  subscriber.subscribe(CredentialManager.Enum.Event.UPDATED);
 };
