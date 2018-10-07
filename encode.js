@@ -11,11 +11,14 @@ args = { };
 process.argv.forEach(function (val, index, array) {
   switch(val) {
     case PARAMS.CONFIG:
-      if(!Path.isAbsolute(array[index + 1])){
-        throw new Error("The argument -c (config) is expected to be an absolute path to the config it should run with.", args);
-      } else {
+      if(Path.isAbsolute(array[index + 1])){
         args[PARAMS.CONFIG] = array[index + 1];
+      } else if(Path.isAbsolute(process.env.VIDEO_SYNC_CONFIG)) {
+        args[PARAMS.CONFIG] = process.env.VIDEO_SYNC_CONFIG;
+      } else {
+        throw new Error("The argument -c (config) is expected to be an absolute path to the config it should run with.", args);
       }
+
       break;
     case PARAMS.ENCODE_DIR:
       if(!Path.isAbsolute(array[index + 1])){
