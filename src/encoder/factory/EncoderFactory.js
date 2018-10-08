@@ -27,7 +27,7 @@ EncoderFactory.prototype.createPlan = Promise.coroutine(function* (templateIds, 
       var template = config.getConfig().ffmpeg.templates[templateIds[id]];
 
       for(var i in fileList) {
-        var file = encodeURI(fileList[i])
+        var file = fileList[i];
         for(var codec of Object.keys(template)) {
           commands = [];
 
@@ -93,7 +93,7 @@ EncoderFactory.prototype.createMediaCommands = function(codec, type, templates, 
   for(var entry of Object.entries(templates)) {
     var command = this.factory.createCommand();
     command.setTemplate(entry[1]);
-    command.format(input, getOutputPath(codec, entry[0], input, inDir, outDir));
+    command.setArgs(input, getOutputPath(codec, entry[0], input, inDir, outDir));
     commands.push(command);
   }
 
@@ -109,7 +109,7 @@ EncoderFactory.prototype.createSubtitleCommands = function(codec, id, tracks, in
     var command = this.factory.createCommand();
 
     command.setTemplate(subtitle);
-    command.format(input, tracks[i],
+    command.setArgs(input, tracks[i],
       getOutputPath("vtt", codec, input, inDir, outDir));
     commands.push(command);
   }
@@ -125,7 +125,7 @@ EncoderFactory.prototype.createManifestCommand = function(codec, id, commands, i
   command.setTemplate(manifest.base);
 
   if(codec === EncoderFactory.Enum.Codecs.WEBM) {
-    command.format.apply(command, getWebmManifestArgs(manifest, codec, commands,
+    command.setArgs.apply(command, getWebmManifestArgs(manifest, command, codec, commands,
       getOutputPath("mpd", codec, input, inDir, outDir)));
   } else {
     throw new Error(`Codec: ${codec} is not supported.`);
@@ -139,7 +139,7 @@ EncoderFactory.prototype.createFfprobeCommand = function(input) {
   var command = this.factory.createCommand();
 
   command.setTemplate(config.getConfig().ffmpeg.ffprobe);
-  command.format(input);
+  command.setArgs(input);
 
   return command;
 };
@@ -150,12 +150,14 @@ EncoderFactory.Enum        = { };
 EncoderFactory.Enum.Types  = { VIDEO: 'VIDEO', AUDIO: 'AUDIO', SUBTITLE: 'SUBTITLE', MANIFEST: 'MANIFEST' };
 EncoderFactory.Enum.Codecs = { WEBM: 'webm' };
 
-var getWebmManifestArgs = function(manifest, codec, commands, output) {
+var getWebmManifestArgs = function(manifest, manCommand, codec, commands, output) {
   var maps = [];
   var aSet = [];
   var vSet = [];
   var inputs = [];
 
+  var inputString = "";
+  var mapString = "";
   for(let i = 0; i < commands.length; ++i) {
     var args = commands[i].getArgs();
 
@@ -165,21 +167,19 @@ var getWebmManifestArgs = function(manifest, codec, commands, output) {
       aSet.push(i);
     }
 
-    inputs.push(format.call(manifest.input, encodeURI(args[args.length -1])));
-    maps.push(format.call(manifest.map, i));
+    inputString += inputString && inputString.length === 0 ? manifest.input : ` ${manifest.input}`;
+    mapString += mapString && mapString.length === 0 ? manifest.map : ` ${manifest.map}`;
+    inputs.push(commands[i].getOutput());
+    maps.push(i);
   }
 
-  return [
-    inputs.join(" "), maps.join(" "),
-    vSet.join(","), aSet.join(","),
-    output];
-};
+  manCommand.setTemplate(manCommand.format(0, inputString.trim()));
+  manCommand.setTemplate(manCommand.format(2, mapString.trim()));
 
-var format = function() {
-  var i = 0, args = arguments;
-  return this.replace(/{}/g, function () {
-    return typeof args[i] != 'undefined' ? `${args[i++]} ` : '{}';
-  });
+  var args = inputs.concat(maps);
+  args.push([vSet.join(","), aSet.join(",")]);
+  args.push(output);
+  return args;
 };
 
 var getOutputPath = function(codec, id, input, inDir, outDir) {

@@ -51,7 +51,7 @@ try {
   Assert.notEqual(args[PARAMS.TEMPLATES], undefined);
 
   console.log(`Running with commands: ${Util.inspect(args)}`);
-  var start = Promise.coroutine(function* (configPath, inDir, templateIds) {
+  var start = Promise.coroutine(function* (configPath, inDir, templateIds, dryRun) {
     factoryManager = Object.create(FactoryManager.prototype);
     var factory = yield factoryManager.initialize();
 
@@ -68,9 +68,10 @@ try {
     logManager.addFileLogging(config.getConfig().dirs.encodeLogDir);
 
     encoder = factory.createEncoder();
-    codecArgs = [templateIds, inDir ? inDir : config.getConfig().dirs.encodeDir, config.getConfig().dirs.mediaDir];
+    codecArgs = [templateIds, inDir ? inDir : config.getConfig().dirs.encodeDir, config.getConfig().dirs.mediaDir, dryRun];
+
     yield encoder.start.apply(encoder, codecArgs);
-  }).call(this, args[PARAMS.CONFIG], args[PARAMS.ENCODE_DIR], args[PARAMS.TEMPLATES]);
+  }).call(this, args[PARAMS.CONFIG], args[PARAMS.ENCODE_DIR], args[PARAMS.TEMPLATES], args[PARAMS.DRY_RUN] ? true : false);
 
 } catch(e) {
   console.log("Missing required options.");

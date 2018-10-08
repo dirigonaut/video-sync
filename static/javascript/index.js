@@ -89,7 +89,6 @@ function setupClient() {
         socket:   clientSocket,
         formData: factory.createFormData(true),
         media:    factory.createMediaController(true),
-        encode:   factory.createEncodeFactory(),
         schema:   factory.createSchemaFactory(),
         keys:     factory.createKeys(),
         logMan:   factory.createClientLogManager(),

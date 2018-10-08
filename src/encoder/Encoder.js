@@ -26,12 +26,12 @@ Encoder.prototype.initialize = function() {
 Encoder.prototype.start = Promise.coroutine(function* (templateId, inDir, outDir, dry) {
   log.debug('Encoder.start', arguments);
   encodingPlan = yield encoderFactory.createPlan(templateId, inDir, outDir);
-  encoderManager.encode(encodingPlan);
 
   if(dry) {
-    savePlan();
+    yield savePlan();
     return new Promise.resolve();
   } else {
+    encoderManager.encode(encodingPlan);
     var intervalId = setInterval(savePlan, INTERVAL);
 
     return new Promise(function(resolve, reject) {
