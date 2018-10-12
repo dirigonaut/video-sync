@@ -26,3 +26,5 @@ npm run-script init
 
 cp /opt/video-sync/develop/services/video-sync.service /lib/systemd/system/video-sync.service
 systemctl daemon-reload
+systemctl stop video-sync
+systemctl start video-sync

@@ -28,7 +28,7 @@ Proxy.prototype.setOnConnect = function(numProcesses) {
       }
     }
 
-    return Number(s) % len;
+    return parseInt(s) % len;
   };
 
   // Create the outside facing server listening on the port.
@@ -63,7 +63,7 @@ Proxy.prototype.forwardWorker = function(server) {
 
 Proxy.prototype.start = function() {
   var port = config.getConfig().serverInfo.port;
-  log.info(`Starting proxy with port: ${port}`);
+  log.info(`Proxy port: ${port}`);
   proxyServer.listen(port);
 }
 

@@ -50,7 +50,8 @@ module.exports = MasterProcess;
 var startMaster = Promise.coroutine(function* () {
   log.info(`Master ${process.pid} is running`);
   var threads = config.getConfig().serverInfo.threads;
-  var numCPUs = threads && threads > 0 ? threads : require('os').cpus().length - 1;
+  var cpus = require('os').cpus().length === 1 ? 1 : require('os').cpus().length - 1;
+  var numCPUs = threads !== undefined && threads > 0 ? threads : cpus
   var workerIndex = 0;
 
   proxy = this.factory.createProxy();
