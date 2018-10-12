@@ -35,7 +35,7 @@ ffmpeg:
      input: "-f webm_dash_manifest -i {}"
      map: "-map {}"
 ssl:
- #selfSign: true
+ selfSign: true
  key: "/etc/video-sync/certificate.key"
  crt: "/etc/video-sync/certificate.crt"
 log:
