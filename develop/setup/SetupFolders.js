@@ -38,7 +38,7 @@ getConfig().then(function(config) {
 
 var setupAppDataDir = Promise.coroutine(function* (configDir) {
   yield ensureDirExists(configDir);
-  yield ensureAssetExists(configDir, REDIS_CONFIG, `redis.${REDIS_CONFIG_OS}.conf`, "conf");
+  yield ensureAssetExists(configDir, REDIS_CONFIG, REDIS_CONFIG_OS, "conf");
   yield ensureAssetExists(configDir, CONFIG_NAME, CONFIG_NAME, "yml");
 });
 
