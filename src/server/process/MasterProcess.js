@@ -12,6 +12,18 @@ process.on('uncaughtException', function (err) {
   }
 });
 
+process.on('exit', function(e) {
+  if(log) {
+    log.info(e);
+  } else {
+    console.error('EXIT:', e);
+  }
+
+  if(redisServer) {
+    redisServer.stop();
+  }
+});
+
 function MasterProcess() { }
 
 MasterProcess.prototype.initialize = function(force) {
