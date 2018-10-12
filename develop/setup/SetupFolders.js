@@ -6,7 +6,7 @@ const Config     = require('../../src/server/utils/Config.js');
 const FileIO     = require('../../src/server/utils/FileIO.js');
 
 const GENERIC_CONFIG_DIR  = Path.join(__dirname, "../../", "configs");
-const CONFIG_NAME         = "config.yaml";
+const CONFIG_NAME         = "config.yml";
 const REDIS_CONFIG        = "redis.conf";
 const REDIS_CONFIG_OS     = `redis.${process.platform}.conf`;
 
@@ -39,7 +39,7 @@ getConfig().then(function(config) {
 var setupAppDataDir = Promise.coroutine(function* (configDir) {
   yield ensureDirExists(configDir);
   yield ensureAssetExists(configDir, REDIS_CONFIG, `redis.${REDIS_CONFIG_OS}.conf`, "conf");
-  yield ensureAssetExists(configDir, CONFIG_NAME, CONFIG_NAME, "yaml");
+  yield ensureAssetExists(configDir, CONFIG_NAME, CONFIG_NAME, "yml");
 });
 
 var ensureDirExists = Promise.coroutine(function* (dir, mask) {

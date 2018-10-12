@@ -1,5 +1,5 @@
 serverInfo:
- port: 8080
+ port: 8000
  staticDir: static
  threads: 0
  #remoteAdminPass: password
@@ -36,8 +36,8 @@ ffmpeg:
      map: "-map {}"
 ssl:
  #selfSign: true
- key: "/opt/video-sync/keys/certificate.key"
- crt: "/opt/video-sync/keys/certificate.crt"
+ key: "/etc/video-sync/certificate.key"
+ crt: "/etc/video-sync/certificate.crt"
 log:
  #logEncoding: true
  levels:

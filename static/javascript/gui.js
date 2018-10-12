@@ -183,7 +183,7 @@ function initGui(client, isAdmin) {
   }
 
   var joinFolders = function(dirs) {
-    if(dirs || $('#path-input').val() === '') {
+    if(dirs) {
       dirs.forEach((value, index, array) => {
         $(`<div class="flex-element transparency invert">
           <div id='path-${index}' class="flex-element" onclick="$('#path-input').val('${value.replace(/\\/g, '\\\\')}')">${value}</div>
