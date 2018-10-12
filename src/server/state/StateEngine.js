@@ -158,7 +158,7 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
       } else if (player.sync === playerInfo.Enums.SYNC.SYNCING) {
         if(Math.abs(leader.timestamp - player.timestamp) > rule) {
           var schema = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.STATERESPONSE,
-              leader.state === playerInfo.Enums.STATE.PLAY ? [true, leader.timestamp + 1] : [false, leader.timestamp]);
+              leader.state === playerInfo.Enums.STATE.PLAY ? [true, leader.timestamp + Math.max(rule / 2, 1)] : [false, leader.timestamp]);
           commands = [[id, eventKeys.SEEK, schema]];
         }
 

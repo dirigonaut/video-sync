@@ -14,6 +14,7 @@ function initGui(client, isAdmin) {
   });
 
   client.socket.setEvent(client.keys.MEDIAREADY, function() {
+    setButtonPlay();
     $(document).trigger('initializeMedia');
   });
 
@@ -136,10 +137,12 @@ function initGui(client, isAdmin) {
     }
   });
 
-  $('#video').on("pause", function (e) {
+  $('#video').on("pause", setButtonPlay);
+
+  var setButtonPlay = function (e) {
     $('.flaticon-pause-1').addClass('flaticon-play-button-1');
     $('.flaticon-pause-1').removeClass('flaticon-pause-1');
-  });
+  };
 
   $('#video').on("play", function (e) {
     $('.flaticon-play-button-1').addClass('flaticon-pause-1');

@@ -14,9 +14,9 @@ external:
  ffmpeg: ffmpeg
  ffprobe: ffprobe
 dirs:
- configDir: "/opt/video-sync"
- encodeDir: "/opt/video-sync/encode"
- mediaDir: "/opt/video-sync/media"
+ configDir: "/etc/video-sync"
+ encodeDir: "/var/video-sync/encode"
+ mediaDir: "/var/video-sync/media"
  serverLogDir: "/var/log/video-sync/server"
  encodeLogDir: "/var/log/video-sync/encoding"
 ffmpeg:
