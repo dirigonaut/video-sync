@@ -1,5 +1,5 @@
 serverInfo:
- port: 8000
+ port: 443
  staticDir: static
  threads: 0
  #remoteAdminPass: password
