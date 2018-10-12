@@ -14,7 +14,7 @@ mkdir -p /etc/video-sync
 cp /opt/video-sync/configs/config.yml /etc/video-sync/config.yml
 
 if [[ ! -z $PASS ]]; then
-  sed -i "/ #password:/c\ password: ${PASS}" /etc/video-sync/config.yml
+  sed -i "/ #remoteAdminPass:/c\ remoteAdminPass: '${PASS}'" /etc/video-sync/config.yml
 fi
 
 export VIDEO_SYNC_CONFIG='/etc/video-sync/config.yml'

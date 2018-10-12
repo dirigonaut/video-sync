@@ -62,7 +62,9 @@ Proxy.prototype.forwardWorker = function(server) {
 };
 
 Proxy.prototype.start = function() {
-  proxyServer.listen(config.getConfig().serverInfo.port);
+  var port = config.getConfig().serverInfo.port;
+  log.info(`Starting proxy with port: ${port}`);
+  proxyServer.listen(port);
 }
 
 module.exports = Proxy;
