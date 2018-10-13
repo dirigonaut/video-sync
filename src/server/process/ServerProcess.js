@@ -44,7 +44,9 @@ ServerProcess.prototype.start = Promise.coroutine(function* () {
   var redisSocket = this.factory.createRedisSocket();
   redisSocket.setIO(io);
 
-  app.use(Express.static(config.getConfig().serverInfo.staticDir));
+  var staticFileDir = config.getConfig().serverInfo.staticDir;
+  app.use('/', Express.static(`${staticFileDir}/html`, {index: 'client.html'}));
+  app.use(Express.static(staticFileDir));
   server.listen(0);
 
   var authController = this.factory.createAuthenticationController();
