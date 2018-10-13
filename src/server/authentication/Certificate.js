@@ -24,8 +24,6 @@ Certificate.prototype.getCertificate = Promise.coroutine(function* () {
 
   if(!pem) {
     throw new Error("There are no valid SSL Certificates.");
-  } else {
-    verify(pem.crt);
   }
 
   return pem;
@@ -48,32 +46,4 @@ var load = function (path) {
   }).catch(function(error) {
     log.error(`Error loading certificate: ${error}`);
   });
-};
-
-var verify = function (pem) {
-  log.debug("Certificate._verify");
-  var caStore = Forge.pki.createCaStore();
-  var cert;
-  
-  try {
-    caStore.addCertificate(cert);
-  } catch (e) {
-    try {
-      cert = Forge.pki.certificateFromPem(pem, true);
-    } catch (e) {
-      throw new Error ('Failed to convert certificate (' + e.message || e + ')');
-    }
-
-    try {
-      caStore.addCertificate(cert);
-    } catch (e) {
-      throw new Error ('Failed to load CA certificate (' + e.message || e + ')');
-    }
-  }
-
-  try {
-    Forge.pki.verifyCertificateChain(caStore, [ cert ]);
-  } catch (e) {
-    throw new Error ('Failed to verify certificate (' + e.message || e + ')');
-  }
 };
