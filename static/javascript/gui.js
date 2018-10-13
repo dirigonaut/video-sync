@@ -14,7 +14,6 @@ function initGui(client, isAdmin) {
   });
 
   client.socket.setEvent(client.keys.MEDIAREADY, function() {
-    setButtonPlay();
     $(document).trigger('initializeMedia');
   });
 
