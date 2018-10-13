@@ -174,7 +174,7 @@ var getWebmManifestArgs = function(manifest, manCommand, codec, commands, output
   }
 
   manCommand.setTemplate(manCommand.format(0, inputString.trim()));
-  manCommand.setTemplate(manCommand.format(inputString.length, mapString.trim()));
+  manCommand.setTemplate(manCommand.format(inputs.length, mapString.trim()));
 
   var args = inputs.concat(maps);
   args.push([vSet.join(","), aSet.join(",")]);
