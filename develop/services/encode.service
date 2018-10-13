@@ -1,0 +1,13 @@
+[Unit]
+Description=encode service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+WorkingDirectory=/opt/video-sync
+Type=simple
+User=root
+ExecStart=/usr/bin/node /opt/video-sync/encode.js -c /etc/video-sync/config.yml -t default
+
+[Install]
+WantedBy=multi-user.target

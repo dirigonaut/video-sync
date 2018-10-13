@@ -54,17 +54,21 @@ var verify = function (pem) {
   log.debug("Certificate._verify");
   var caStore = Forge.pki.createCaStore();
   var cert;
-
-  try {
-    cert = Forge.pki.certificateFromPem(pem, true);
-  } catch (e) {
-    throw new Error ('Failed to convert certificate (' + e.message || e + ')');
-  }
-
+  
   try {
     caStore.addCertificate(cert);
   } catch (e) {
-    throw new Error ('Failed to load CA certificate (' + e.message || e + ')');
+    try {
+      cert = Forge.pki.certificateFromPem(pem, true);
+    } catch (e) {
+      throw new Error ('Failed to convert certificate (' + e.message || e + ')');
+    }
+
+    try {
+      caStore.addCertificate(cert);
+    } catch (e) {
+      throw new Error ('Failed to load CA certificate (' + e.message || e + ')');
+    }
   }
 
   try {
