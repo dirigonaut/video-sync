@@ -23,6 +23,7 @@ npm run-script install
 npm run-script init
 
 cp /opt/video-sync/develop/services/video-sync.service /lib/systemd/system/video-sync.service
+cp /opt/video-sync/develop/services/encode.service /lib/systemd/system/encode.service
 systemctl daemon-reload
 systemctl stop redis-server
 systemctl disable redis-server
