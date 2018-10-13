@@ -47,6 +47,7 @@ ServerProcess.prototype.start = Promise.coroutine(function* () {
   var staticFileDir = config.getConfig().serverInfo.staticDir;
   app.use('/', Express.static(`${staticFileDir}/html`, {index: 'client.html'}));
   app.use(Express.static(staticFileDir));
+  app.use(function(req, res, next) { res.status(404) });
   server.listen(0);
 
   var authController = this.factory.createAuthenticationController();
