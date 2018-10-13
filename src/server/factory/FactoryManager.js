@@ -1,7 +1,7 @@
 const Promise       = require('bluebird');
 const ObjectFactory = require('./ObjectFactory');
 const BaseFactory   = require('../../common/factory/BaseFactory');
-const EnumUtil      = require('../utils/EnumUtil');
+const PathUtil      = require('../utils/PathUtil');
 
 function FactoryManager() { }
 
@@ -9,10 +9,10 @@ FactoryManager.prototype.initialize = Promise.coroutine(function* () {
   if(typeof FactoryManager.prototype.protoInit === 'undefined') {
     FactoryManager.prototype.protoInit = true;
     var baseFactory = Object.create(BaseFactory.prototype);
-    var enumUtil    = Object.create(EnumUtil.prototype);
+    var pathUtil    = Object.create(PathUtil.prototype);
 
     var factory = Object.create(ObjectFactory.prototype);
-    yield factory.initialize(baseFactory, enumUtil);
+    yield factory.initialize(baseFactory, pathUtil);
 
     return factory;
   } else {

@@ -1,4 +1,6 @@
 function initGui(client, isAdmin) {
+  var FADE_TIMER = 12000;
+
   //Setup -----------------------------------------------------------------------
   $(document).on('initializeMedia', function(e, reset) {
     var domElements = {
@@ -12,6 +14,7 @@ function initGui(client, isAdmin) {
   });
 
   client.socket.setEvent(client.keys.MEDIAREADY, function() {
+    setButtonPlay();
     $(document).trigger('initializeMedia');
   });
 
@@ -36,11 +39,28 @@ function initGui(client, isAdmin) {
   $('#control-button-play').click(togglePlay);
 
   function updateProgressBar(e) {
-    $('.control-time-slider').val($("#video")[0].currentTime / $("#video")[0].duration * 100);
-    $('#control-duration').val(toFormatted($("#video")[0].duration));
+    var video = $("#video")[0];
+    var duration = video.duration;
+    var current = video.currentTime;
+
+    $('#currently-at').val((current / duration)*100);
+    $('#progress-amount')[0].style.width = ((current/ duration)*100) + "%";
+
+    if(video.buffered.length) {
+      for (var i = 0; i < video.buffered.length; ++i) {
+        if (video.buffered.start(video.buffered.length - 1 - i) < video.currentTime) {
+          $('#buffered-amount')[0].style.width = (video.buffered.end(video.buffered.length - 1 - i) / duration) * 100 + "%";
+          break;
+        }
+      }
+    } else {
+      $('#buffered-amount')[0].style.width = 0;
+    }
+
+    $('#control-duration').val(toFormatted(duration));
 
     if(!$('#control-current').is(':focus')) {
-      $('#control-current').val(toFormatted($("#video")[0].currentTime));
+      $('#control-current').val(toFormatted(current));
     }
   }
 
@@ -82,8 +102,8 @@ function initGui(client, isAdmin) {
     }
   });
 
-  $('.control-time-slider').on('mouseup', function() {
-    var percent = parseInt($('.control-time-slider').val());
+  $('#currently-at').on('mouseup', function() {
+    var percent = parseInt($('#currently-at').val());
     var length  = $('#video')[0].duration;
     var time = Math.round(length * (percent / 100));
 
@@ -94,7 +114,7 @@ function initGui(client, isAdmin) {
     $("video").on("timeupdate", updateProgressBar);
   });
 
-  $('.control-time-slider').on('mousedown', function() {
+  $('#currently-at').on('mousedown', function() {
     $("video").off("timeupdate", updateProgressBar);
   });
 
@@ -108,7 +128,7 @@ function initGui(client, isAdmin) {
       toggleOverlays();
     } else {
       $(document).trigger('togglePanel', [true]);
-      $('#video-container')[0].webkitRequestFullScreen();
+      $('#fullscreen')[0].webkitRequestFullScreen();
       $('.control').addClass("control-full");
       $('.control').removeClass("control");
       $('.flaticon-plus').addClass('flaticon-minus')
@@ -117,10 +137,12 @@ function initGui(client, isAdmin) {
     }
   });
 
-  $('#video').on("pause", function (e) {
+  $('#video').on("pause", setButtonPlay);
+
+  var setButtonPlay = function (e) {
     $('.flaticon-pause-1').addClass('flaticon-play-button-1');
     $('.flaticon-pause-1').removeClass('flaticon-pause-1');
-  });
+  };
 
   $('#video').on("play", function (e) {
     $('.flaticon-play-button-1').addClass('flaticon-pause-1');
@@ -133,7 +155,6 @@ function initGui(client, isAdmin) {
   $(".control-volume-slider").on("input change", function (e) {
     var range = parseInt($(".control-volume-slider").val()) * .01;
     $('#video')[0].volume = range;
-    $('#volume-level').text(Math.floor(range * 100));
   });
 
   //Media Path Events -----------------------------------------------------------
@@ -142,26 +163,39 @@ function initGui(client, isAdmin) {
       client.log.info("Load new video.");
       var media = $('#path-input').val();
       client.socket.request(client.keys.SETMEDIA,
-        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PATH, [media]));
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [media]));
       $('#control-time-slider').val(0);
     });
 
-    $('#path-input').click(function() {
+    var scanDirs = function(e) {
       $('#path-dropdown').empty();
       client.socket.request(client.keys.GETCONTENTS,
-        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STRING, ['mediaDir']));
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STRING, [$('#path-input').val()]));
+    };
+
+    $('#path-input').on('keydown', function(e) {
+      if([220, 191, 40, 13].includes(e.which)) {
+        scanDirs();
+      }
     });
+
+    $('#path-input').click(scanDirs);
   }
 
   var joinFolders = function(dirs) {
     if(dirs) {
       dirs.forEach((value, index, array) => {
-        $(`<div class="flex-element primary-color invert">
+        $(`<div class="flex-element transparency invert">
           <div id='path-${index}' class="flex-element" onclick="$('#path-input').val('${value.replace(/\\/g, '\\\\')}')">${value}</div>
         </div>`).appendTo('#path-dropdown');
       });
 
-      resetPathDropDown();
+      if($('#path-dropdown').is(":hidden")) {
+        resetPathDropDown();
+        toggleOverlays('path-dropdown');
+      }
+    } else {
+      toggleOverlays();
     }
   };
 
@@ -185,36 +219,32 @@ function initGui(client, isAdmin) {
 
   client.formData.on(client.formData.Enums.FORMS.MEDIA_DIRS, joinFolders);
 
-  $(document).on('path-delete', function(e, element) {
-    //TODO create delete logic here for deleting files server side
-  });
-
   //Token Events ----------------------------------------------------------------
   function initToken() {
     var loadTokens = function(tokens) {
       if(tokens) {
-        $($('#token-body').find('form')).each((index, element) => {
-          if(!$(element)[0].id) {
-            $(element).remove();
-          }
-        });
+        removeTokensFromUI();
 
-        var i = 0;
         for(var token in tokens) {
-          $(`<form class="flex-h flex-element alternate-color">
-            <a href="#" class='flex-icon' onclick="$(document).trigger('token-level', event.currentTarget);">
-              <span class="${i % 2 ? 'icon-min' : 'icon-min show'} ${tokens[token].level === 'controls' ? 'flaticon-unlocked-2' : 'flaticon-locked-6'}"></span>
-            </a>
-            <input type="text" class="flex-element ${tokens[token].handle ? 'toggle' : 'toggle show'} ${i % 2 ? '' : 'input-invert'}" value="${token}" /readonly>
-            <input type="text" class="flex-element handle ${tokens[token].handle ? 'toggle show' : 'toggle'} ${i % 2 ? '' : 'input-invert'}" value="${tokens[token].handle}" /readonly>
-            <a href="#" onclick="$(document).trigger('token-delete', event.currentTarget);">
-              <span class="flex-icon ${i % 2 ? 'icon-min' : 'icon-min show'} flaticon-error"></span>
-            </a>
-          </form>`).appendTo('#token-body');
-          ++i;
+          $(`<form id="${token}" class="flex-element primary-color-invert margin">
+            <div class="flex-h flex-center-h" id="${tokens[token].id ? tokens[token].id : token}">
+              <a href="#" class="flex-v flex-center-v" onclick="$(document).trigger('token-level', [$(event.currentTarget).children()[0], $(event.currentTarget).parent().parent()]);">
+                <span class="flex-icon ${token !== 'admin' ? 'invert' : ''} clear-spacers ${tokens[token].level === 'controls' ? 'flaticon-unlocked-2' : 'flaticon-locked-6'}"></span>
+              </a>
+              <div class="flex-v flex-element flex-center-v">
+                <input type="text" class="flex-element ${tokens[token].handle ? 'toggle' : 'toggle show'}" value="${token}" /readonly>
+                <input type="text" class="flex-element ${tokens[token].handle ? 'toggle show' : 'toggle'}" value="${tokens[token].handle}" /readonly>
+                <input type="text" class="flex-element ${tokens[token].handle ? 'toggle show' : 'toggle'}"
+                  ${tokens[token].id ? "id="+tokens[token].id+"-stats" : ""} /readonly>
+              </div>
+              <a href="#" class="flex-v flex-center-v" onclick="$(document).trigger('token-delete', $(event.currentTarget).parent().parent());">
+                <span class="flex-icon ${token !== 'admin' ? 'invert' : ''} clear-spacers flaticon-error"></span>
+              </a>
+            </div>
+          </form>`).prependTo('#token-list');
         }
       } else {
-        client.log.error(`${tokens} is not a valid list of tokens.`);
+        client.log.warn(`${tokens} is not a valid list of tokens.`);
       }
     };
 
@@ -228,103 +258,104 @@ function initGui(client, isAdmin) {
       client.log.info("Create Tokens.");
       var values = serializeForm('token-form', 'input');
       values.push($('#token-permissions').hasClass('flaticon-unlocked-2'));
-
       client.socket.request(client.keys.CREATETOKENS, client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PAIR, values));
     });
 
     $(document).on('token-delete', function(e, element) {
-      var ids = '';
-
-      var removeForms = function(form) {
-        $($(form).children()).each((index, el) => {
-          if($(el).is("input") && !$(el).hasClass("handle")) {
-            ids = ids ? `${ids}, ${$(el).val()}` : $(el).val();
-            $(form).remove();
-          } else if ($(el).is("div")) {
-            var removeAlltokens = function(confirm) {
-              if(confirm) {
-                $('#token-body form').each((index, element) => {
-                  if(!$(element).attr('id')) {
-                    removeForms(element);
-                  }
-                });
-
-                client.socket.request(client.keys.DELETETOKENS,
-                  client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [ids]));
-              }
+      if(element) {
+        if(element.id === "delete-tokens") {
+          var removeAlltokens = function(confirm) {
+            if(confirm) {
+              client.socket.request(client.keys.DELETETOKENS,
+                client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [getTokenValues()]));
             }
-
-            triggerConfirmation(removeAlltokens, "Are you sure you wish to delete all the tokens?");
           }
-        });
-      };
 
-      removeForms($(element).parent()[0]);
-      if(ids) {
-        client.socket.request(client.keys.DELETETOKENS,
-          client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [ids]));
+          triggerConfirmation(removeAlltokens, "Are you sure you wish to delete all the tokens?");
+        } else if(element.id !== 'admin') {
+          client.socket.request(client.keys.DELETETOKENS,
+            client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [[element.id]]));
+        }
       }
     });
 
-    $(document).on('token-level', function(e, element) {
-      var updateForms = function(form, override) {
-        var level = override;
+    var removeTokensFromUI = function() {
+      $('#token-list > form').each((index, el) => {
+        $(el).remove();
+      });
+    };
 
-        $($(form).children()).each((index, el) => {
-          if($(el).is("input")) {
-            var id = $(el).val();
+    var getTokenValues = function(skipUsed) {
+      var ids = [];
 
-            client.socket.request(client.keys.SETTOKENLEVEL,
-              client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.PAIR, [id, level]));
-          } else if($(el).is("a")) {
-            var child = $(el).children()[0];
-
-            if(!level && child && $(child).hasClass('flaticon-locked-6')) {
-              level = 'controls';
-              $(child).removeClass('flaticon-locked-6');
-              $(child).addClass('flaticon-unlocked-2');
-            } else if(!level && child && $(child).hasClass('flaticon-unlocked-2')) {
-              level = 'none';
-              $(child).removeClass('flaticon-unlocked-2');
-              $(child).addClass('flaticon-locked-6');
+      $('#token-list > form > div > div input:nth-child(1)').each((index, el) => {
+        var id = $(el).val();
+        if(id !== 'admin') {
+          if(skipUsed) {
+            var handle = $(el).parent().children().get(1);
+            if(handle && $(handle).val() === "undefined") {
+              ids.push(id);
             }
-          } else if ($(el).is("div")) {
-            $('#token-body form').each((index, element) => {
-              if(!$(element).attr('id')) {
-                updateForms(element, level);
-              }
-            });
-          }
-        });
-      }
-
-      updateForms($(element).parent()[0]);
-    });
-
-    $('#token-copy').click(function(e) {
-      var temp = $("<input>");
-      $("body").append(temp);
-
-      $('#token-body form').each((index, element) => {
-        if(!$(element).attr('id')) {
-          var id;
-
-          $($(element).children()).each((index, el) => {
-            if($(el).is("input")) {
-              if(!id) {
-                id = $(el).val();
-              } else if($(el).val() !== 'undefined') {
-                id = undefined;
-              }
-            }
-          });
-
-          if(id) {
-            $(temp).val($(temp).val() ? `${$(temp).val()}, ${id}` : `${id}` );
+          } else {
+            ids.push(id);
           }
         }
       });
 
+      return ids;
+    };
+
+    $(document).on('token-level', function(e, element, form) {
+      var tokens = [];
+
+      if(element.id === "token-levels") {
+        var ids = getTokenValues();
+        var span = $(element).children()[0];
+        var level = $(span).hasClass('flaticon-locked-6') ? 'controls' : 'none';
+        $(span).hasClass('flaticon-locked-6')
+          ? $(span).removeClass('flaticon-locked-6') && $(span).addClass('flaticon-unlocked-2')
+          : $(span).removeClass('flaticon-unlocked-2') && $(span).addClass('flaticon-locked-6');
+
+        for(let i in ids) {
+          $(`#${ids[i]} > div > a:nth-child(1) > span`).each((index, el) => {
+            if(ids[i] !== "admin") {
+              tokens.push([ids[i], getLevel(el, level)]);
+            }
+          });
+        }
+
+        getLevel(span);
+      } else {
+        $("#token-list > form > div > a:nth-child(1) > span").each((index, el) => {
+          if(el === element) {
+            level = getLevel(el);
+            tokens.push([$(form)[0].id, level]);
+          }
+        });
+      }
+
+      client.socket.request(client.keys.SETTOKENLEVEL,
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.SPECIAL, [tokens]));
+    });
+
+    var getLevel = function(el, level) {
+      var value;
+
+      if(!level && $(el).hasClass('flaticon-locked-6')) {
+        value = 'controls';
+      } else if(!level && $(el).hasClass('flaticon-unlocked-2')) {
+        value = 'none';
+      } else if(level) {
+        value = level;
+      }
+
+      return value;
+    };
+
+    $('#token-copy').click(function(e) {
+      var temp = $("<input>");
+      $("body").append(temp);
+      $(temp).val(getTokenValues(true));
       $(temp).select()
       document.execCommand("copy");
       $(temp).remove();
@@ -343,223 +374,30 @@ function initGui(client, isAdmin) {
         $(ele).addClass('flaticon-unlocked-2');
       }
     });
-  }
 
-  //Encode Events ---------------------------------------------------------------
-  function initEncode() {
-    $('#encode-input').on("focusin", function() {
-      client.socket.request(client.keys.GETCONTENTS,
-        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STRING, ['encodeDir']));
-    });
+    var updateUserStats = function(response) {
+      var stats = response.data;
 
-    $('#encode-input').on("focusout", function() {
-      var input = encodeURI($('#encode-input').val());
-      var inspect = ` -show_streams ${input}`;
-
-      var request = {};
-      request.encodings = inspect;
-
-      client.socket.request(client.keys.GETMETA, request);
-    });
-
-    var joinFiles = function(files) {
-      $('#encode-files').empty();
-
-      if(files) {
-        files.forEach((value, index, array) => {
-          $(`<option value="${value}">`).appendTo('#encode-files');
-        });
+      for(var i in stats) {
+        var id = stats[i][0];
+        var info = stats[i][1];
+        info.time = toFormatted(info.timestamp);
+        info.buffer = info.buffer ? 1 : 0;
+        delete info.timestamp;
+        $(`#${id}-stats`).val(JSON.stringify(info));
       }
     };
 
-    client.formData.on(client.formData.Enums.FORMS.ENCODE_DIRS, joinFiles);
-
-    var loadFileInfo = function(metaData) {
-      $('#encoding-meta').children().each((index, el) => {
-        if($(el)[0].id === "encoding-tabs") {
-          $($(el).children()).each(function(index, child) {
-            if($($(child)[0]).is("a")) {
-              $(child).remove();
-            }
-          });
-        } else {
-          $(el).remove();
-        }
-      });
-
-      $('#subtitle-track').empty();
-
-      if(metaData && typeof metaData.data !== 'undefined') {
-        var trackIndexes = '';
-
-        for(var i = metaData.data.stream.length - 1; i > -1; --i) {
-          $(`<div id='stream-${i}' class="panel-sub-panel flex-element ${i === 0 ? 'toggle show' : 'toggle'}">
-            ${prettifyMeta(JSON.stringify(metaData.data.stream[i]))}
-          </div>`).appendTo('#encoding-meta');
-
-          $(`<a href="#" onclick="$(document).trigger('encode-meta-toggle', ${i})";>
-              <span id='stream-icon-${i}' class='icon-min flex-icon flex-right ${ i === 0 ? "flaticon-file-2" : "flaticon-file-1" }'></span>
-            </a>`).appendTo('#encoding-tabs');
-
-          trackIndexes = `<option value="${i}">` + trackIndexes;
-        }
-
-        $(trackIndexes).appendTo('#subtitle-track');
-      }
-    };
-
-    var prettifyMeta = function(meta) {
-      meta = meta.replace(/(\[STREAM\]|\[\\STREAM\]|\{|\}|")*/g, '');
-      var metaArray = meta.split(',');
-      var html = '<table><tbody>';
-
-      for(let i = 0; i < metaArray.length; ++i) {
-        var value = metaArray[i].trim();
-
-        if(value) {
-          var splitRow = value.split(/\s/)
-          html += `<tr><td>${splitRow[0]}</td><td>${splitRow[1]}</td></tr>`
-        }
-      }
-
-      html+="</tbody></table>";
-      return html;
-    }
-
-    $(document).on('encode-meta-toggle', function(event, index) {
-      $('[id^=stream-]').each((i, el) => {
-        $(el).removeClass("show");
-
-        if($(`#stream-icon-${i}`).hasClass('flaticon-file-2')) {
-          $(`#stream-icon-${i}`).removeClass('flaticon-file-2');
-          $(`#stream-icon-${i}`).addClass('flaticon-file-1');
-        }
-      });
-
-      $(`#stream-${index}`).toggleClass("show");
-      $(`#stream-icon-${index}`).addClass('flaticon-file-2');
-    });
-
-    client.socket.setEvent(client.keys.META, loadFileInfo);
-
-    $('#encode-input-form a').click(function(e) {
-      var values = serializeForm('encode-input-form', 'input');
-      values.splice(2, 0, serializeForm('encode-input-form', 'select').pop());
-      var type;
-
-      $($(e.currentTarget).parent()).children().each((index, ele) => {
-        if($(ele).is("label")) {
-          type = $(ele).html().toUpperCase().match(/^\w*/g)[0];
-        }
-      });
-
-      var template = client.encode.getTemplate(client.encode.Enums.CODEC.WEBM, type);
-      template = client.encode.setKeyValue('i', encodeURI(`${values[0]}`), template);
-
-      if(type === client.encode.Enums.TYPES.VIDEO) {
-        template = client.encode.setKeyValue('speed', values[2], template);
-        template = client.encode.setKeyValue('b:v', values[3], template);
-        template = client.encode.setKeyValue('s', values[4], template);
-        template = client.encode.setOutput(encodeURI(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[4]}.${client.encode.Enums.CODEC.WEBM}`), template);
-      } else if(type === client.encode.Enums.TYPES.AUDIO) {
-        template = client.encode.setKeyValue('b:a', values[5], template);
-        template = client.encode.setOutput(encodeURI(`${values[1]}${client.encode.getNameFromPath(values[0])}_${values[5]}.${client.encode.Enums.CODEC.WEBM}`), template);
-      } else if(type === client.encode.Enums.TYPES.SUBTITLE) {
-        template = client.encode.setKeyValue('i', `${values[0]} ${values[6] ? `-map 0:${values[6]}` : ''}`, template);
-        template = client.encode.setOutput(encodeURI(`${values[1]}${client.encode.getNameFromPath(values[0])}.vtt`), template);
-      }
-
-      if(template) {
-        var odd = $(`#${type.toLowerCase()}-commands`).children().length % 2;
-        $(`<div class="flex-h ${odd ? 'input-invert' : ''} rounded-corners">
-          <textarea type="text" class="flex-element ${odd ? 'input-invert' : ''} clear-spacers">${template}</textarea>
-          <a href="#" onclick="$(document).trigger('encode-command-delete', event.currentTarget);">
-            <span class="flex-icon icon-min ${odd ? 'icon-min show' : 'icon-min'} flaticon-error flex-right"></span>
-          </a></div>`).appendTo(`#${type.toLowerCase()}-commands`);
-      }
-
-      generateManifest();
-    });
-
-    $(document).on('encode-command-delete', function(e, element, skipGen) {
-      $($(element).parent()).remove();
-
-      if(!skipGen) {
-        generateManifest();
-      }
-    });
-
-    var generateManifest = function() {
-      var values = serializeForm('encode-input-form', 'input');
-      var commands = [];
-
-      serializeForm('encode-command-form #video-commands', 'textarea')
-      .forEach((value, index, array) => {
-        commands.push({ type: client.encode.Enums.TYPES.VIDEO, input: value});
-      });
-
-      serializeForm('encode-command-form #audio-commands', 'textarea')
-      .forEach((value, index, array) => {
-        commands.push({ type: client.encode.Enums.TYPES.AUDIO, input: value});
-      });
-
-      var template = client.encode.createManifest(values[0], values[1], commands, client.encode.Enums.CODEC.WEBM);
-
-      var locked = $('#manifest-commands div a span');
-      locked = locked && locked.length > 0 ? locked = $(locked[0]).hasClass('flaticon-locked-6') : false;
-
-      if(!locked) {
-        $(`#manifest-commands`).empty();
-
-        if(template && commands && commands.length > 0) {
-          $(`<div class="flex-h">
-            <textarea type="text" class="flex-element clear-spacers">${template}</textarea>
-            <div class="flex-v">
-              <a href="#" onclick="$(document).trigger('lock-element', $('#manifest-commands div a span')[0]);">
-                <span class="icon-min ${!locked ? 'flaticon-unlocked-2' : 'flaticon-locked-6'} flex-right clear-spacers lock"></span>
-              </a>
-              <a href="#" onclick="$(document).trigger('encode-command-delete', [$(event.currentTarget).parent(), true]);">
-                <span class="icon-min flaticon-error flex-right clear-spacers"></span>
-              </a>
-            </div></div>`).appendTo(`#manifest-commands`);
-        }
-      }
-
-      $(document).trigger('textarea-grow');
-    }
-
-    $('#submit-encoding').click(function(e) {
-      var values = serializeForm('encode-input-form', 'input');
-      var commands = [];
-
-      serializeForm('encode-command-form', 'textarea')
-      .forEach((value, index, array) => {
-        commands.push({ input: value, encoder: client.encode.Enums.ENCODER.FFMPEG });
-      });
-
-      var request = {};
-      request.encodings = commands;
-      request.directory = values[1];
-
-      client.log.info('video-encode', request);
-      client.socket.request('video-encode', request);
-
-      $(`form#encode-command-form textarea`).each((index, element) => {
-        $(element).parent().empty();
-      });
-    });
+    client.socket.setEvent(client.keys.ADMINSTATS, updateUserStats);
   }
 
   //Side Events -----------------------------------------------------------------
   if(isAdmin) {
-    $(`<div id="side-tokens" class="flex-icon primary-color flex-center-v border-left">
+    $(`<div id="side-tokens" class="flex-icon transparency flex-center-v border-left">
       <a href="#"><span class="icon flaticon-user-3"></span></a>
-    </div>
-    <div id="side-encode" class="flex-icon primary-color flex-center-v border-left">
-      <a href="#"><span class="icon flaticon-compose"></span></a>
-    </div>`).prependTo('#side');
+    </div>`).insertAfter('#side-top');
 
-    $(`<div id="side-shutdown" class="flex-icon primary-color flex-center-v border-left">
+    $(`<div id="side-shutdown" class="flex-icon transparency flex-center-v border-left">
       <a href="#"><span class="icon flaticon-power"></span></a>
     </div>`).insertAfter('#side-documentation');
   }
@@ -568,13 +406,12 @@ function initGui(client, isAdmin) {
     var id = e.currentTarget.id.split('-')[1];
 
     if(id !== 'shutdown') {
-      if(!$(`.panel`).hasClass('show')) {
+      if(!$('.panel').hasClass('show')) {
         $(document).trigger('togglePanel');
       }
 
-      $('.side .flex-icon').each((index, element) => {
+      $('.side > .flex-icon').each((index, element) => {
         var elementId = element.id.split('-')[1];
-
         if(id == elementId) {
           if($(`#panel-${elementId}`).hasClass('show')) {
             $(document).trigger('togglePanel');
@@ -597,22 +434,22 @@ function initGui(client, isAdmin) {
     for(let key in logs) {
       var level = cookieLevels && cookieLevels[key] ? cookieLevels[key] : undefined;
 
-      $(`<div class="flex-h flex-element alternate-color">
-        <label>${logs[key]}:</label>
-        <form id="log-${logs[key]}" class="flex-right">
-          <input name="${logs[key]}" type="radio" ${level && level.includes("error") ? 'checked' : ''} value="${levels.error}">
-          <input name="${logs[key]}" type="radio" ${level && level.includes("warn") ? 'checked' : ''} value="${levels.warn}">
-          <input name="${logs[key]}" type="radio" ${level && !level.includes("info") ? '' : 'checked'} value="${levels.info}">
-          <input name="${logs[key]}" type="radio" ${level && level.includes("verbose") ? 'checked' : ''} value="${levels.verbose}">
-          <input name="${logs[key]}" type="radio" ${level && level.includes("debug") ? 'checked' : ''} value="${levels.debug}">
-          <input name="${logs[key]}" type="radio" ${level && level.includes("silly") ? 'checked' : ''} value="${levels.silly}">
-        </form>
+      $(`<div class="flex-h flex-center-h flex-element primary-color-invert margin">
+          <div>${logs[key]}</div>
+          <form id="log-${logs[key]}" class="flex-right">
+            <select name="${logs[key]}">
+              <option value=${levels.error}>Error</option>
+              <option value=${levels.warn}>Warn</option>
+              <option value=${levels.info} selected="selected">Info</option>
+              <option value=${levels.debug}>Debug</option>
+            </select>
+          </form>
       </div>`).appendTo(`#log-levels`);
     }
 
-    $('#log-levels input').on('change', function(e) {
+    $('#log-levels > select').on('change', function(e) {
       var id = $(e.currentTarget).attr('name');
-      var value = $(e.currentTarget).val();
+      var value = this.value;
       value = Object.keys(client.logMan.Enums.LEVELS)[value];
       client.logMan.setLevel(id, value);
     });
@@ -633,25 +470,17 @@ function initGui(client, isAdmin) {
 
   $(document).on('log-delete', logDelete);
 
-  $(document).on('encode-delete', function(e, ele, id) {
-    if($(`#encode-complete-${id}`).val() === 'true') {
-      logDelete(e, ele);
-    } else {
-      client.socket.request(client.keys.CANCELENCODE,
-        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STRING, [id]));
-    }
-  });
-
-  var loggingOdd = 0;
   var logging = function(message) {
-    $(`<div class="flex-h ${loggingOdd % 2 ? '' : 'input-invert'} flex-element">
-      <div type="text" class="flex-element clear-spacers force-text">
-        ${message && message.time ? message.time : ''} ${message && message.data ? message.data : message}
-      </div>
-      <a href="#" onclick="$(document).trigger('log-delete', event.currentTarget);">
-        <span class="flex-icon ${loggingOdd % 2 ? 'icon-min' : 'icon-min show'} flaticon-error flex-right"></span>
-      </a></div>`).prependTo(`#log-body-server`);
-      loggingOdd = (loggingOdd + 1) % 2;
+    $(`<div class="flex-h flex-center-h flex-element primary-color-invert margin">
+        <div type="text" class="flex-element clear-spacers force-text">
+          ${message && message.time ? message.time : ''}
+          ${message && message.data ? message.data : ''}
+          ${message && message.meta ? JSON.stringify(message.meta) : ''}
+        </div>
+        <a href="#" class="flex-v flex-center-v" onclick="$(document).trigger('log-delete', event.currentTarget);">
+          <span class="flex-icon flaticon-error flex-right invert"></span>
+        </a>
+      </div>`).prependTo(`#log-body-server`);
   };
 
   var notifyInterval;
@@ -661,9 +490,11 @@ function initGui(client, isAdmin) {
       $(`#notification`).empty();
     }
 
+    var data = message && message.data ? message.data : message;
+
     $(`<div class="flex-h flex-center-v padding rounded-corners borders">
       <div class="padding">
-        ${message && message.time ? message.time : ''} ${message && message.data ? message.data : message}
+        ${message && message.time ? message.time : ''} ${data.length > 200 ? data.substring(0, 200).concat("...") : data }
       </div>
       <input id='notify-timer' type='hidden' value='10'>
       <a href="#" onclick="$(document).trigger('log-delete', event.currentTarget);">
@@ -687,89 +518,14 @@ function initGui(client, isAdmin) {
     logging(message);
   };
 
-  var durRegex=/(Duration:\s)(\d{2,}:)+(\d{2,})(.\d{2,})/g;
-  var timeRegex=/(time=)(\d{2,}:)+(\d{2,})(.\d{2,})/g;
-  var progressOdd = 0;
-  var progress = function(message) {
-    if(message.label) {
-      $(`<div class="flex-h flex-element flex-center-v rounded-corners ${progressOdd % 2 ? '' : 'input-invert'}">
-          <label>${message && message.time ? message.time.split(' ')[0] : ''}</label>
-          <p class="clear-spacers force-text">${message && message.data ? message.data : message}</p>
-        </div>`).prependTo(`#encoding-body-${message.label}`);
-
-      if(message.data.includes('Server: Succesfully')) {
-        $(`#time-${message.label}`).text('Finished');
-        $(`#encode-complete-${message.label}`).val('true');
-      } else if (message.data.includes('Server: Failed')) {
-        $(`#time-${message.label}`).text('Failed');
-        $(`#encode-complete-${message.label}`).val('true');
-      }
-
-      var dur = durRegex.exec(message.data);
-      if(dur) {
-        $(`#duration-${message.label}`).text(dur[0].split(' ')[1]);
-      }
-
-      var time = timeRegex.exec(message.data);
-      if(time) {
-        $(`#time-${message.label}`).text(time[0].split('=')[1]);
-      }
-
-      progressOdd = (progressOdd + 1) % 2;
-    }
-  };
-
-  var encodingsOdd = 0;
-  var loadEncodings = function(encodings) {
-    encodings.data.forEach((value, index) => {
-      if(!$(`#encoding-${value[0]}`).length) {
-        $(`<div id="encoding-${value[0]}" class="flex-v ${encodingsOdd % 2 ? 'even-color' : ''} padding rounded-corners">
-          <div class="flex-h">
-            <div type="text" class="flex-element clear-spacers force-text" onclick="$('#encoding-body-${value[0]}').toggleClass('show')">
-              <p class="clear-spacers">${value[1] && Array.isArray(value[1]) ? value[1].pop() : value[1]}</p>
-              <div class="flex-h">
-                <div id="time-${value[0]}"></div>
-                <div id="duration-${value[0]}" class="flex-right"></div>
-              </div>
-            </div>
-            <input id='encode-complete-${value[0]}' type='hidden' value='false'>
-            <a href="#" onclick="$(document).trigger('encode-delete', [$(event.currentTarget).parent(), '${value[0]}']);">
-              <span class="icon-min flaticon-error flex-right clear-spacers ${encodingsOdd % 2 ? 'show' : ''}"></span>
-            </a>
-          </div>
-          <div id="encoding-body-${value[0]}" class="flex-element flex-v toggle"></div>
-        </div>`).appendTo(`#log-body-encode`);
-        encodingsOdd = (encodingsOdd + 1) % 2;
-      }
-    });
-  };
-
-  var cancel = function(message) {
-    $(`#time-${message.label}`).text('Canceled');
-    $(`#encode-complete-${message.label}`).val('true');
-  }
-
-  $('[id^=log-toggle-]').click(function(e) {
-    $('[id^=log-tab-]').each((i, ele) => {
-      var id = $(e.currentTarget).attr('id').split('-')[2];
-
-      if($(ele).attr('id').includes(id)) {
-        $(ele).addClass("show");
-      } else {
-        $(ele).removeClass("show");
-      }
-    });
-  });
-
+  //Server Events
   client.socket.setEvent(client.keys.SERVERLOG, logging);
   client.socket.setEvent(client.keys.NOTIFICATION, notification);
 
-  if(isAdmin) {
-    client.socket.setEvent(client.keys.ENCODELOG, progress);
-    client.socket.setEvent(client.keys.ENCODINGS, loadEncodings);
-    client.socket.setEvent(client.keys.ENCODECANCELED, cancel);
-    client.socket.request(client.keys.GETENCODE);
-  }
+  //Client Events
+  client.logMan.events.on(client.logMan.Enums.LEVELS.ui, function(data) {
+    notification(data);
+  });
 
   //Video Overlay----------------------------------------------------------------
   $('#options-form select').on("change", function (e) {
@@ -791,7 +547,8 @@ function initGui(client, isAdmin) {
   });
 
   $('#buffer-options').on("change", function (e) {
-    var value = Math.trunc($(e.currentTarget).val() / 4);
+    var value = $(e.currentTarget).val() ? $(e.currentTarget).val() : 8
+    value = value > 16 ? Math.trunc(value / 4) : 4;
     $(e.currentTarget).val(value * 4);
     client.media.setBufferAhead(value);
   });
@@ -829,6 +586,7 @@ function initGui(client, isAdmin) {
     changeSync($('#sync-options').val());
   } else {
     $('#sync-options').parent().remove();
+    $('#sync-group').parent().remove();
   }
 
   client.media.on('meta-data-loaded', function(trackInfo) {
@@ -869,20 +627,13 @@ function initGui(client, isAdmin) {
     $(subtitleHtml).appendTo('#subtitle-track-list');
   });
 
-  client.media.on('progress-event', function(type) {
-    var video = $('video')[0];
-
-    /* TODO get progess bar showing buffered
-    if (video.duration > 0) {
-      for (var i = 0; i < video.buffered.lngth; ++i) {
-
-      }
-    }*/
-  });
-
   //Sync Overlay ----------------------------------------------------------------
   $('#sync-syncing').click(function(e) {
-    client.socket.request(client.keys.SYNCING);
+    if($('#sync-group') && $('#sync-group').prop('checked')) {
+      client.socket.request(client.keys.SYNCINGALL);
+    } else {
+      client.socket.request(client.keys.SYNCING);
+    }
   });
 
   var updateSyncInfo = function(data) {
@@ -936,7 +687,7 @@ function initGui(client, isAdmin) {
 
   //CSS Animation ----------------------------------------------------------------
   var fadeOut, over;
-  $('.container').on('mousemove', function(e) {
+  $('.media').on('mousemove', function(e) {
     if(!$('.fade').hasClass('show')) {
       $('.fade').toggleClass('show');
     }
@@ -945,7 +696,7 @@ function initGui(client, isAdmin) {
     if(!over) {
       fadeOut = setTimeout(() => {
         $('.fade').toggleClass('show');
-      }, 6000);
+      }, FADE_TIMER);
     }
   });
 
@@ -965,8 +716,12 @@ function initGui(client, isAdmin) {
     if(e.offsetX <= border && $(e.target).hasClass('panel')) {
       e.originalEvent.preventDefault();
       $(document).on('mousemove', function(e) {
-        changePanelWidth(e.pageX);
-        updateOverlays();
+        var panelWidth = e.pageX / $(window).width();
+        if(panelWidth > .25 && panelWidth < .75) {
+          var padding = parseFloat($('.panel').css('paddingLeft')) * 2;
+          changePanelWidth(e.pageX, padding);
+          updateOverlays();
+        }
       });
     }
   });
@@ -982,6 +737,9 @@ function initGui(client, isAdmin) {
 
   $(window).resize(function() {
     updateOverlays();
+    $('.panel').removeAttr("style");
+    $('.media').removeAttr("style");
+    $('.side').removeAttr("style");
   });
 
   $('#control-button-options').click(function(e) {
@@ -1001,7 +759,10 @@ function initGui(client, isAdmin) {
 
   if(isAdmin) {
     $('#path-input').click(function(e) {
-      toggleOverlays('path-dropdown');
+      changeDropDown();
+    });
+
+    $('#path-input').on('input', function(e) {
       changeDropDown();
     });
 
@@ -1027,13 +788,11 @@ function initGui(client, isAdmin) {
       var parentWid = $(`#${parent}`).outerWidth(true);
       var parentHie = $(`#${parent}`).outerHeight(true);
 
-      var position  = $(`#${child}`).position();
       var width     = $(`#${child}`).outerWidth(true);
-      var height    = $(`#${child}`).outerHeight(true);
+      var height    = $(`.${child}`).hasClass('control-volume') ?  $(`#${child}`).outerWidth(true) /1.53 : $(`#${child}`).outerHeight(true);
 
       var left = parentOff.left - (width/2) + (parentWid/2);
-      var top = parentOff.top > (screen.height/2) ? parentOff.top - parentPos.top - height :
-        parentOff.top + parentPos.top + parentHie;
+      var top = parentOff.top - parentPos.top - height
 
       if(container) {
         var containerWid = $(`.${container}`).outerWidth(true);
@@ -1048,32 +807,27 @@ function initGui(client, isAdmin) {
     }
   };
 
-  var changePanelWidth = function(x) {
+  var changePanelWidth = function(x, padding) {
     var wWith =  $(window).width();
     var width1 = Math.max(Math.min(wWith - x, wWith), 0);
     var width2 = Math.max(Math.min(x, wWith), 0);
 
-    $(`.media`).attr('style', `width: ${width2}px`);
-    $(`.panel`).attr('style', `width: ${width1}px;min-width:25%;padding:1%;`);
-    $(`.path-dropdown`).attr('style', `width: ${width2}px`);
+    $(`.panel`).attr('style', `width: ${width1}px;min-width:25%;`);
+    $(`.media`).attr('style', `width: ${width2 - padding}px`);
+
+    $(`.path-dropdown`).attr('style', `width: ${width2 - padding}px`);
     $(document).trigger('textarea-grow');
   };
 
   var changeDropDown = function() {
-    var width = $(`#path-input`).width();
-    var height = $(`.path`).height() + $(`.path`).offset().top;
-    $(`.path-dropdown`).attr('style', `width: ${width}px;left:${$(`#path-input`).offset().left}px;top:${height}px;`);
-  };
-
-  var changeSidePosition = function() {
-    if($('.panel').hasClass('show')) {
-      var left = $('.panel').position().left - $('.side').width();
-      $('.side').attr('style', `left:${left}px;`);
+    if($(`#path-input`).length) {
+      var width = $(`#path-input`).width();
+      var height = $(`.path`).height() + $(`.path`).offset().top;
+      $(`.path-dropdown`).attr('style', `width: ${width}px;left:${$(`#path-input`).offset().left}px;top:${height}px;`);
     }
   };
 
   var updateOverlays = function() {
-    changeSidePosition();
     changeOverlayPosition('control-button-volume', 'control-volume', 'media');
     changeOverlayPosition('control-button-options', 'control-options', 'media');
     changeOverlayPosition('control-button-sync', 'control-sync', 'media');
@@ -1132,7 +886,7 @@ function initGui(client, isAdmin) {
       $('.panel').removeClass('show');
       $('.media').addClass('show');
 
-      $('.side .flex-icon').each((index, element) => {
+      $('.side > .flex-icon').each((index, element) => {
         var elementId = element.id.split('-')[1];
         if(elementId) {
           $(`#panel-${elementId}`).removeClass('show');
@@ -1143,10 +897,6 @@ function initGui(client, isAdmin) {
     } else {
       $('.panel').toggleClass('show');
       $('.media').toggleClass('show');
-    }
-
-    if($('.panel').hasClass('show')) {
-      $(`.panel`).attr('style', `padding:1%;`);
     }
 
     updateOverlays();
@@ -1172,10 +922,9 @@ function initGui(client, isAdmin) {
   if(isAdmin) {
     initMediaPath();
     initToken();
-    initEncode();
   } else {
     $('.is-admin').each((index, ele) => {
-      $(ele).removeClass('show');
+      $(ele).remove();
     });
   }
 }

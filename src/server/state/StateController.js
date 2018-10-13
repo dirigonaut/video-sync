@@ -30,12 +30,16 @@ StateController.prototype.attachSocket = function(socket) {
     var access = yield credentials.getTokenLevel(socket.id);
 
     if(access === credentials.Enums.LEVEL.CONTROLS) {
-      var triggered = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.PLAY, [socket.id]]);
+      var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.PLAY]);
 
-      if(triggered === true) {
+      if(commands) {
+        for(var i = 0; i < commands.length; ++i) {
+          yield redisSocket.ping.apply(StateController.prototype, commands[i]);
+        }
+
         var handle = yield credentials.getHandle(socket);
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-          [new Date().toTimeString(), 'notify', 'state', `${handle} issued play.`]);
+          [new Date().toLocaleTimeString(), 'notify', 'state', `${handle} issued play.`]);
         yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
       }
     }
@@ -46,7 +50,7 @@ StateController.prototype.attachSocket = function(socket) {
     var access = yield credentials.getTokenLevel(socket.id);
 
     if(access === credentials.Enums.LEVEL.CONTROLS) {
-      var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.PAUSE, [socket.id]]);
+      var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.PAUSE]);
       if(commands) {
         for(var i = 0; i < commands.length; ++i) {
           yield redisSocket.ping.apply(StateController.prototype, commands[i]);
@@ -54,7 +58,7 @@ StateController.prototype.attachSocket = function(socket) {
 
         var handle = yield credentials.getHandle(socket);
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-          [new Date().toTimeString(), 'notify', 'state', `${handle} issued pause.`]);
+          [new Date().toLocaleTimeString(), 'notify', 'state', `${handle} issued pause.`]);
         yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
       }
     }
@@ -69,7 +73,7 @@ StateController.prototype.attachSocket = function(socket) {
       var request = sanitizer.sanitize(data, schema, [schema.Enum.TIMESTAMP], socket);
 
       if(request) {
-        var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.SEEK, [socket.id, request]]);
+        var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.SEEK, [request]]);
 
         if(commands) {
           for(var i = 0; i < commands.length; ++i) {
@@ -78,7 +82,7 @@ StateController.prototype.attachSocket = function(socket) {
 
           var handle = yield credentials.getHandle(socket);
           var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-            [new Date().toTimeString(), 'notify', 'state', `${handle} issued seek to ${request.timestamp}.`]);
+            [new Date().toLocaleTimeString(), 'notify', 'state', `${handle} issued seek to ${request.timestamp}.`]);
           yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
         }
       }
@@ -87,13 +91,11 @@ StateController.prototype.attachSocket = function(socket) {
 
   socket.on(eventKeys.SYNC, Promise.coroutine(function* () {
     log.debug(eventKeys.SYNC);
-    var commands = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.SYNC, [socket.id]]);
+    var command = yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.SYNC]);
 
-    if(commands) {
-      for(var i = 0; i < commands.length; ++i) {
-        log.debug(`state-sync sync`, commands[i]);
-        yield redisSocket.ping.apply(StateController.prototype, commands[i]);
-      }
+    if(command.length) {
+      log.debug(`state-sync sync`, command);
+      yield redisSocket.broadcast.apply(StateController.prototype, command.shift());
     }
   }));
 
@@ -103,7 +105,18 @@ StateController.prototype.attachSocket = function(socket) {
 
     var handle = yield credentials.getHandle(socket);
     var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-      [new Date().toTimeString(), 'notify', 'state', `${handle} is syncing.`]);
+      [new Date().toLocaleTimeString(), 'notify', 'state', `${handle} is syncing.`]);
+    yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
+  }));
+
+  socket.on(eventKeys.SYNCINGALL, Promise.coroutine(function* () {
+    log.debug(eventKeys.SYNCINGALL);
+    yield publisher.publishAsync(publisher.Enums.KEY.STATE, [stateEngine.Functions.SYNCINGALL]);
+
+    var handle = yield credentials.getHandle(socket);
+    var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
+      [new Date().toLocaleTimeString(), 'notify', 'state', `${handle} issued a sync all.`]);
+
     yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
   }));
 

@@ -1,6 +1,7 @@
 const Events  = require('events');
 const Util    = require('util');
 const Promise = require('bluebird');
+const Crypto  = require('crypto');
 
 var webmMetaData, xmlUtil, mpdUtil, log;
 
@@ -23,12 +24,14 @@ WebmMetaProcess.prototype.setCommand = function(command) {
   this.command = command;
 };
 
-WebmMetaProcess.prototype.getCommand = function() {
-  return this.command;
-};
-
 WebmMetaProcess.prototype.execute = Promise.coroutine(function* () {
-  var meta = yield webmMetaData.generateWebmMeta(this.command);
+  log.info(`WebmMetaProcess.execute`, this.command);
+  this.emit('start');
+
+  var meta = yield webmMetaData.generateWebmMeta(this.command)
+  .catch(function(err) {
+    this.emit('error', err);
+  }.bind(this));
 
   if(!meta) {
     this.emit('exit', 1);
@@ -42,5 +45,9 @@ WebmMetaProcess.prototype.execute = Promise.coroutine(function* () {
     this.emit('exit', 1);
   }.bind(this));
 });
+
+WebmMetaProcess.prototype.inspect = function() {
+  return { "WebmMetaProcess": this.command };
+};
 
 module.exports = WebmMetaProcess;

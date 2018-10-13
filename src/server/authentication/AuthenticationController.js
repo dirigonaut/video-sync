@@ -76,7 +76,7 @@ AuthenticationController.prototype.attachIO = function (io) {
 
       var handle = yield credentials.getHandle(socket);
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-        [new Date().toTimeString(), 'notify', 'auth', `${handle} joined.`]);
+        [new Date().toLocaleTimeString(), 'notify', 'auth', `${handle} joined.`]);
       yield redisSocket.broadcast.call(AuthenticationController.prototype, eventKeys.NOTIFICATION, response);
     }));
 
@@ -88,7 +88,7 @@ AuthenticationController.prototype.attachIO = function (io) {
         var includes = yield credentials.includes(socket.id);
         var handle = yield credentials.getHandle(socket);
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-          [new Date().toTimeString(), 'notify', 'auth', `${handle} left.`]);
+          [new Date().toLocaleTimeString(), 'notify', 'auth', `${handle} left.`]);
 
         if(admin && admin.id === socket.id) {
           credentials.removeAdmin(socket);
@@ -125,20 +125,22 @@ AuthenticationController.prototype.attachIO = function (io) {
 module.exports = AuthenticationController;
 
 var isAdministrator = Promise.coroutine(function* (socket, request) {
-  var isAdmin = credentials.isAdmin(socket, request ? request.id : undefined);
+  var admin = yield credentials.getAdmin();
 
-  if(isAdmin) {
-    yield credentials.setAdmin(socket, request);
+  if(!admin) {
+    var isAdmin = credentials.isAdmin(socket, request ? request.id : undefined);
 
-    var adminController       = this.factory.createAdminController();
-    var credentialController  = this.factory.createCredentialController();
-    var encodingContoller     = this.factory.createEncodingController();
+    if(isAdmin) {
+      yield credentials.setAdmin(socket, request);
 
-    adminController.attachSocket(socket);
-    credentialController.attachSocket(socket);
-    encodingContoller.attachSocket(socket);
+      var adminController       = this.factory.createAdminController();
+      var credentialController  = this.factory.createCredentialController();
 
-    userAuthorized.call(this, socket);
+      adminController.attachSocket(socket);
+      credentialController.attachSocket(socket);
+
+      userAuthorized.call(this, socket);
+    }
   }
 
   return isAdmin;

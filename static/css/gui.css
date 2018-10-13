@@ -1,33 +1,24 @@
 /* GUI CSS */
-html {
-  width:100%;
-  height:100%;
-}
-
 body {
   background-color: black;
-  margin: 0px;
-  padding: 0px;
-  border: 0px;
-  width:inherit;
-  height:inherit;
   color:white;
-  overflow:hidden;
-}
-
-.container {
-  display: flex;
-  flex-direction: row;
-  width:inherit;
-  height:inherit;
+  height:100%;
+  width:100%;
+  margin:0;
+  border:0;
+  padding:0;
+  overflow: hidden;
 }
 
 .panel {
-  position: relative;
-  float: right;
-  width: 25%;
-  overflow-y:auto;
+  position:absolute;
+  background-color:black;
+  top:0%;
+  height:98%;
+  overflow:auto;
   overflow-x:hidden;
+  padding:10px 1% 20px 1%;
+  z-index: 100;
 }
 
 .panel-header {
@@ -36,29 +27,30 @@ body {
   font-style:normal;
 }
 
-.panel-sub-panel {
-  min-height:25%;
-  max-height:75%;
-}
-
 .media {
-  position:relative;
-  float:left;
-  min-width:30%;
+  position:absolute;
+  height:inherit;
+  width:inherit;
+  height:100%;
+  width:100%;
 }
 
 .path {
   position:relative;
-  height:5%;
+  height:40px;
+  top:0px;
+  left:0px;
   width:100%;
   z-index:20;
 }
 
 .path-input {
+  height:100%;
   float:left;
   text-align:left;
   width:60%;
   padding:.5%;
+  z-index:inherit;
 }
 
 .path-dropdown {
@@ -68,13 +60,15 @@ body {
   padding:.25%;
   overflow-y:auto;
   overflow-x:hidden;
+  z-index:inherit;
 }
 
 .path-notification {
+  height:100%;
   text-align: left;
-  padding:.25%;
-  margin-left:auto;
-  margin-right:auto;
+  padding: 0% .25% 0% .25%;
+  margin: 0% auto 0% auto;
+  overflow:hidden;
 }
 
 .path-notification:empty {
@@ -83,12 +77,24 @@ body {
   margin-right:auto;
 }
 
-.video {
+.spacer {
+  height:40px;
+  width:80px;
+}
+
+.fullscreen {
   background-color: black;
-  position:relative;
-  float:left;
+  height:100%;
   width:100%;
-  height:90%;
+  z-index:1;
+}
+
+.video {
+  position:absolute;
+  top:45px;
+  bottom:50px;
+  width:100%;
+  background-color: black;
   z-index:1;
 }
 
@@ -99,23 +105,30 @@ body {
 }
 
 .control {
-  position: relative;
-  height: 4.5%;
+  position:absolute;
+  background-color:black;
+  left:.75%;
+  right:.75%;
+  bottom:0px;
+  height:40px;
   width: 98%;
   z-index: 20;
 }
 
 .control-full {
-  position: fixed;
-  width:98%;
-  left:1%;
-  bottom: 0%;
-  height:4.5%;
+  position:fixed;
+  bottom: 0px;
+  width:99.5%;
+  height:4%;
   z-index: 2147483648;
 }
 
+.control-progress {
+  position: inherit;
+}
+
 .control-options {
-  position:fixed;
+  position: fixed;
   margin: .25%;
   padding: .25%;
   z-index: 2147483648;
@@ -126,6 +139,7 @@ body {
   min-width: 100px;
   margin: .25%;
   padding: .25%;
+  z-index: 2147483648;
 }
 
 .control-time {
@@ -143,26 +157,22 @@ body {
   width:60px;
 }
 
-.control-time-slider {
-  float:left;
-  width: 100%;
+.control-volume {
+  -webkit-transform: rotate(-90deg);
+  position:fixed;
+  margin: .25%;
+  padding: .25%;
   z-index: 2147483648;
 }
 
-.control-volume {
-  position:fixed;
-  margin:.25%;
-  padding:.25%;
-}
-
 .control-volume-slider {
-  -webkit-appearance: slider-vertical;
-  width: 20px;
-  height: 100px;
+  border:0px;
 }
 
 .side {
-  width:45px;
+  position:absolute;
+  right:0px;
+  top:0px;
   padding-bottom: 2.5px;
   z-index:20;
 }
@@ -174,12 +184,14 @@ body {
   height:100%;
   width:100%;
   background:rgba(0, 0, 0, .9);
-  z-index: 30;
+  z-index: 2147483648;
 }
 
 .login-overlay {
   position:relative;
   top:25%;
+  max-height:50%;
+  height:min-content;
   background:rgba(255, 255, 255, 1);
 }
 
@@ -199,6 +211,58 @@ body {
   width:100%;
 }
 
+/* Progress Bar */
+.current {
+  top: -3px;
+  width: 100%;
+  height: 5px;
+  position: absolute;
+  border-radius: .5em;
+  z-index:2;
+}
+
+#currently-at {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border: 0%;
+  padding: 0%;
+  margin: 0%;
+}
+
+.buffered {
+  top: -3px;
+  width: 100%;
+  height: 5px;
+  position: absolute;
+  background: #999;
+  border-radius: .5em;
+  z-index:1;
+}
+
+#buffered-amount {
+  display: block;
+  height: 100%;
+  background-color: #111;
+  width: 0;
+}
+
+.progress {
+  top: -3px;
+  width: 100%;
+  height: 5px;
+  position: absolute;
+  border-radius: .5em;
+  z-index:2;
+}
+
+#progress-amount {
+  display: block;
+  height: 100%;
+  background-color: white;
+  width: 0;
+}
+
 /* Flex Elements */
 .flex-icon {
   text-align: center;
@@ -214,16 +278,14 @@ body {
 }
 
 .flex-element {
-  width:100%;
-  padding-top:.5%;
-  padding-bottom:.5%;
+  width:99.5%;
+  padding:.5%;
   border-radius: .5em;
 }
 
 .flex-element-part {
   width:60%;
-  padding-top:.5%;
-  padding-bottom:.5%;
+  padding:.5%;
   border-radius: .5em;
 }
 
@@ -283,12 +345,6 @@ body {
   font-style: normal;
 }
 
-.icon-min.show {
-  color:black;
-  font-size: 20px;
-  font-style: normal;
-}
-
 .icon-margin {
   margin:auto;
 }
@@ -298,16 +354,16 @@ body {
   border:none
 }
 
-.primary-color {
+.transparency {
   background-color:rgba(0, 0, 0, 0.75);
 }
 
-.alternate-color:nth-child(even) {
-  color:black;
-  background-color:white;
+.primary-color {
+  color:white;
+  background-color:black;
 }
 
-.even-color {
+.primary-color-invert {
   color:black;
   background-color:white;
 }
@@ -320,6 +376,10 @@ body {
 
 .padding {
   padding:1%;
+}
+
+.margin {
+  margin:2px;
 }
 
 .force-text {
@@ -352,6 +412,13 @@ body {
   border-color: white;
 }
 
+.rounded-corners-top-left {
+  border-top: solid 2px;
+  border-left: solid 2px;
+  border-top-left-radius: 1em;
+  border-color: white;
+}
+
 .borders {
   border: solid 2px;
   border-radius: 1em;
@@ -365,13 +432,13 @@ body {
 
 /* CSS Animations */
 .slide-in {
-  right: -100%;
+  right: -45%;
   width: 0%;
 }
 
 .slide-in.show {
-  left: 0%;
-  width: 25%;
+  right: 0%;
+  width: 22.8%;
   border-left:4px solid white;
 }
 
@@ -400,16 +467,6 @@ body {
   display:inherit;
 }
 
-.is-admin {
-  opacity: 0;
-  z-index: -1;
-}
-
-.is-admin.show {
-  opacity: 1;
-  z-index: 20;
-}
-
 .invert {
   filter: invert(0);
 }
@@ -417,7 +474,6 @@ body {
 .invert.show {
   filter: invert(100);
 }
-
 
 /* Elements */
 video::-webkit-media-controls {
@@ -441,6 +497,10 @@ video::-webkit-media-controls {
 a {
   color:white;
   text-decoration: none;
+}
+
+a .invert {
+  filter: invert(100%);
 }
 
 input, select {
@@ -509,4 +569,25 @@ table tr:nth-child(even) {
 
 textarea {
   resize: none;
+}
+
+input[type=range] {
+  -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
+  background: transparent; /* Otherwise white in Chrome */
+}
+
+input[type=range]:focus {
+  outline: none; /* Removes the blue border. You should probably do some kind of focus styling for accessibility reasons though. */
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  border: 2px solid black;
+  height: 20px;
+  width: 8px;
+  border-radius: 100px;
+  background:white;
+  cursor: pointer;
+  margin-top: 1px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+  z-index: 2147483648;
 }

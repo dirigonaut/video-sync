@@ -1,7 +1,8 @@
 const Promise = require('bluebird');
+const Path    = require('path');
 const Exec    = require('child_process').exec;
 
-var config;
+var config, fileIO;
 
 function CheckConfig() { };
 
@@ -9,6 +10,7 @@ CheckConfig.prototype.initialize = function() {
   if(typeof CheckConfig.prototype.protoInit === 'undefined') {
     CheckConfig.prototype.protoInit = true;
     config = this.factory.createConfig();
+    fileIO = this.factory.createFileIO(false);
   }
 };
 
@@ -16,7 +18,7 @@ CheckConfig.prototype.validateConfig = function() {
   return Promise.all([validateRedis(),
                       validateFFmpeg(),
                       validateFFprobe(),
-                      validateRedisInfo(),
+                      validateRedisConnection(),
                       validateHostInfo(),
                       validateCertificateInfo()]);
 };
@@ -24,38 +26,41 @@ CheckConfig.prototype.validateConfig = function() {
 module.exports = CheckConfig;
 
 var validateRedis = function() {
-  var exec = Exec(`${config.getConfig().redis ? config.getConfig().redis : 'redis-server'} --version`);
+  var exec = Exec(`${config.getConfig().external.redis ?
+    config.getConfig().external.redis : 'redis-server'} --version`);
   return asyncPromise(exec).catch(function(error, data) {
     throw new Error(`Calling process redis-server: ${error}`);
   });
 };
 
 var validateFFmpeg = function() {
-  var exec = Exec(`${config.getConfig().ffmpeg ? config.getConfig().ffmpeg : 'ffmpeg'} -version`);
+  var exec = Exec(`${config.getConfig().external.ffmpeg ?
+    config.getConfig().external.ffmpeg : 'ffmpeg'} -version`);
   return asyncPromise(exec).catch(function(error) {
     throw new Error(`Calling process ffmpeg: ${error}`);
   });
 };
 
 var validateFFprobe = function() {
-  var exec = Exec(`${config.getConfig().ffprobe ? config.getConfig().ffprobe : 'ffprobe'} -version`);
+  var exec = Exec(`${config.getConfig().external.ffprobe ?
+    config.getConfig().external.ffprobe : 'ffprobe'} -version`);
   return asyncPromise(exec).catch(function(error) {
     throw new Error(`Calling process ffprobe: ${error}`);
   });
 };
 
-var validateRedisInfo = function() {
+var validateRedisConnection = function() {
   try {
-    if(!config.getConfig().redisInfo) {
-      throw new Error('The redisInfo map is not in your config.');
+    if(!config.getConfig().redisInfo.connection) {
+      throw new Error('The redisInfo.connection map is not in your config.');
     }
 
-    if(!config.getConfig().redisInfo.host) {
-      throw new Error('The redisInfo.host is not in your config.');
+    if(!config.getConfig().redisInfo.connection.host) {
+      throw new Error('The redisInfo.connection.host is not in your config.');
     }
 
-    if(!config.getConfig().redisInfo.port) {
-      throw new Error('The redisInfo.port is not in your config.');
+    if(!config.getConfig().redisInfo.connection.port) {
+      throw new Error('The redisInfo.connection.port is not in your config.');
     }
 
     return new Promise.resolve();
@@ -64,39 +69,66 @@ var validateRedisInfo = function() {
   }
 };
 
-var validateHostInfo = function() {
+var validateHostInfo = Promise.coroutine(function* () {
   try {
-    if(!config.getConfig().videoSyncInfo) {
-      throw new Error('The videoSyncInfo map is not in your config.');
+    if(!config.getConfig().serverInfo) {
+      throw new Error('The serverInfo map is not in your config.');
     }
 
-    if(!config.getConfig().videoSyncInfo.port) {
-      throw new Error('The videoSyncInfo.port is not in your config.');
+    if(!config.getConfig().serverInfo.port) {
+      throw new Error('The serverInfo.port is not in your config.');
     }
 
-    if(!config.getConfig().videoSyncInfo.staticDir) {
-      throw new Error('The videoSyncInfo.staticDir is not in your config.');
+    if(!config.getConfig().serverInfo.staticDir) {
+      throw new Error('The serverInfo.static is not in your config.');
     }
 
-    if(!config.getConfig().videoSyncInfo.staticDir) {
-      throw new Error('The videoSyncInfo.staticDir is not in your config.');
+    if(!config.getConfig().dirs) {
+      throw new Error('The dirs map is not in your config.');
     }
 
-    var encodedDir = config.getConfig().videoSyncInfo.encodedDir;
-    if(encodedDir && encodedDir === Path.basename(encodedDir)) {
-      throw new Error('The videoSyncInfo.encodedDir needs to be a path in your config.');
+    var configDir = config.getConfig().dirs.configDir;
+    if(configDir && configDir === Path.basename(configDir)) {
+      throw new Error('The dirs.configDir needs to be a path in your config.');
     }
 
-    var rawDir = config.getConfig().videoSyncInfo.rawDir;
-    if(rawDir && rawDir === Path.basename(rawDir)) {
-      throw new Error('The videoSyncInfo.rawDir needs to be a path in your config.');
+    var mediaDir = config.getConfig().dirs.mediaDir;
+    if(encodeDir && encodeDir === Path.basename(encodeDir)) {
+      throw new Error('The dirs.encodedDir needs to be a path in your config.');
+    } else {
+      yield fileIO.ensureDirExistsAsync(mediaDir);
+    }
+
+    var encodeDir = config.getConfig().dirs.encodeDir;
+    if(encodeDir && encodeDir === Path.basename(encodeDir)) {
+      throw new Error('The dirs.encodeDir needs to be a path in your config.');
+    } else {
+      yield fileIO.ensureDirExistsAsync(encodeDir);
+    }
+
+    var serverLogDir = config.getConfig().dirs.serverLogDir;
+    if(serverLogDir && serverLogDir === Path.basename(serverLogDir)) {
+      throw new Error('The dirs.serverLogDir needs to be a path in your config.');
+    } else {
+      yield fileIO.ensureDirExistsAsync(serverLogDir);
+    }
+
+    var encodeLogDir = config.getConfig().dirs.encodeLogDir;
+    if(encodeLogDir && encodeLogDir === Path.basename(encodeLogDir)) {
+      throw new Error('The dirs.encodeLogDir needs to be a path in your config.');
+    } else {
+      yield fileIO.ensureDirExistsAsync(encodeLogDir);
+    }
+
+    if(!config.getConfig().log) {
+      throw new Error('The log map is not in your config.');
     }
 
     return new Promise.resolve();
   } catch(e) {
     return new Promise.reject(e);
   }
-};
+});
 
 var validateCertificateInfo = function() {
   try {
