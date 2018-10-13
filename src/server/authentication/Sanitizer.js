@@ -1,4 +1,5 @@
 const Path 					= require('path');
+const Util					= require('util');
 
 const NUMBER 				= '^((?=.)((\\d*)(\\.(\\d+))?))$';
 const ALPHANUMERIC 	= '([^\\u0000-\\u007F]|\\w|\\s)+';
@@ -30,7 +31,7 @@ Sanitizer.prototype.sanitize = function(data, schema, required, socket) {
 		log.error("Sanitizer error", err.message);
 
 		if(socket) {
-			socket.emit(eventKeys.SERVERLOG, [data, err.toString()]);
+			socket.emit(eventKeys.SERVERLOG, [Util.inspect(data), err.toString()]);
 		} else {
 			return err;
 		}
@@ -55,9 +56,8 @@ function sanitizeSchema(object, schema, required) {
 		}
 
 		var result = handleInputs.call(this, entry[0], entry[1], schema);
-
 		if(!result) {
-			throw new Error(`Input ${entry[0]} contains illegal characters. This field only allows: ${Sanitizer.Enum.CharacterSets[schema[entry[0]].toUpperCase()]}`);
+			throw new Error(`Input ${Util.inspect(entry[0])} contains illegal characters. This field only allows: ${schema[entry[0]]}`);
 		} else {
 			schema[entry[0]] = entry[1];
 		}

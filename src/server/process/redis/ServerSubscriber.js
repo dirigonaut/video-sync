@@ -13,7 +13,7 @@ ServerSubscriber.prototype.initialize = Promise.coroutine(function* () {
     ServerSubscriber.prototype.protoInit = true;
     var config      = this.factory.createConfig();
     adapter         = this.factory.createRedisAdapter();
-    subscriber      = Redis.createClient(config.getConfig().redisInfo);
+    subscriber      = Redis.createClient(config.getConfig().redisInfo.connection);
 
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.GENERAL);

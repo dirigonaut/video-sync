@@ -37,9 +37,11 @@ module.exports = {
   REQSEEK:        'state-req-seek',
   SYNC:           'state-sync',
   SYNCING:        'state-syncing',
+  SYNCINGALL:     'state-syncing-all',
   PING:           'state-ping',
   UPDATEINIT:     'state-update-init',
   SYNCINFO:       'state-metrics',
+  ADMINSTATS:     'state-admin-metrics',
   //Client
   INIT:           'state-init',
   PLAY:           'state-play',
@@ -49,14 +51,13 @@ module.exports = {
   //EncodingController
   //Server
   ENCODE:         'video-encode',
-  CANCELENCODE:   'video-cancel-encode',
-  GETENCODE:      'video-get-encode',
-  GETMETA:        'video-get-meta',
+  CANCELENCODE:   'video-encode-cancel',
+  GETENCODESTATUS:'video-encode-get-status',
+
   //Client
   ENCODECANCELED: 'video-encode-canceled',
-  ENCODINGS:      'video-encodings',
-  ENCODED:        'video-encoded',
-  META:           'video-meta',
+  ENCODESTATUS:   'video-encode-status',
+  ENCODED:        'video-encode-done',
 
   //VideoController
   //Server

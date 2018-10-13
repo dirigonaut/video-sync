@@ -1,16 +1,16 @@
 var log;
 
-function Manifest() { }
+function Clusters() { }
 
-Manifest.prototype.initialize = function() {
-	if(typeof Manifest.prototype.protoInit === 'undefined') {
-    Manifest.prototype.protoInit = true;
+Clusters.prototype.initialize = function() {
+	if(typeof Clusters.prototype.protoInit === 'undefined') {
+    Clusters.prototype.protoInit = true;
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
   }
 };
 
-Manifest.prototype.createCluster = function() {
+Clusters.prototype.createCluster = function() {
   return {
     start: undefined,
     end: undefined,
@@ -18,25 +18,25 @@ Manifest.prototype.createCluster = function() {
   };
 };
 
-Manifest.prototype.prime = function(path, init) {
-  log.debug('Manifest.prime', path);
+Clusters.prototype.prime = function(path, init) {
+  log.debug('Clusters.prime', path);
   this.path = path;
   this.init = init;
   this.linkedClusters;
 }
 
-Manifest.prototype.setTimecodeScale = function(timecodeScale) {
-  log.silly('Manifest.setTimecodeScale', timecodeScale);
+Clusters.prototype.setTimecodeScale = function(timecodeScale) {
+  log.silly('Clusters.setTimecodeScale', timecodeScale);
   this.timecodeScale = timecodeScale;
 };
 
-Manifest.prototype.setDuration = function(duration) {
-  log.silly('Manifest.setDuration', duration);
+Clusters.prototype.setDuration = function(duration) {
+  log.silly('Clusters.setDuration', duration);
   this.duration = duration;
 };
 
-Manifest.prototype.addCluster = function(cluster) {
-  log.silly('Manifest.addCluster', cluster);
+Clusters.prototype.addCluster = function(cluster) {
+  log.silly('Clusters.addCluster', cluster);
   var linkedCluster = createLinkedCluster();
   linkedCluster.cluster = cluster;
 
@@ -57,7 +57,7 @@ Manifest.prototype.addCluster = function(cluster) {
 	}
 };
 
-Manifest.prototype.getCluster = function(position) {
+Clusters.prototype.getCluster = function(position) {
   var cluster;
 
   for(var pointer = this.linkedClusters; pointer; pointer = pointer.next) {
@@ -70,8 +70,8 @@ Manifest.prototype.getCluster = function(position) {
   return cluster;
 };
 
-Manifest.prototype.flattenManifest = function() {
-  log.debug('Manifest.flattenManifest');
+Clusters.prototype.flatten = function() {
+  log.debug('Clusters.flatten');
   var clusterList = [];
 
   for(var pointer = this.linkedClusters; pointer; pointer = pointer.next) {
@@ -85,7 +85,7 @@ Manifest.prototype.flattenManifest = function() {
   };
 };
 
-module.exports = Manifest;
+module.exports = Clusters;
 
 function createLinkedCluster() {
   return {

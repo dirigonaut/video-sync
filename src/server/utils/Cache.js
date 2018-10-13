@@ -4,10 +4,9 @@ const Events      = require('events');
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-const EXPIRES     = 300;
 const READID      = '-readRequest';
 
-var media, publisher, client, fileIO, fileUtils, schemaFactory, log;
+var media, publisher, client, fileIO, fileUtils, schemaFactory, expire, log;
 
 function Cache() { }
 
@@ -17,14 +16,16 @@ Cache.prototype.initialize = function() {
     Object.setPrototypeOf(Cache.prototype, Events.prototype);
 
     var config      = this.factory.createConfig();
+    expire          = config.getConfig().redisInfo.expireCache ?
+                        config.getConfig().redisInfo.expireCache : 300;
 
     fileIO          = this.factory.createFileIO();
     fileUtils       = this.factory.createFileSystemUtils();
     schemaFactory   = this.factory.createSchemaFactory();
 
     media           = this.factory.createMedia();
-    publisher       = Redis.createClient(config.getConfig().redisInfo);
-    client          = Redis.createClient(config.getConfig().redisInfo);
+    publisher       = Redis.createClient(config.getConfig().redisInfo.connection);
+    client          = Redis.createClient(config.getConfig().redisInfo.connection);
 
     setSubscriber.call(this);
 
@@ -75,7 +76,7 @@ Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback)
                   timeout = setTimeout(function() {
                     this.removeListener(key, segmentHandler);
                     client.unsubscribe(key);
-                  }.bind(this), EXPIRES/4);
+                  }.bind(this), expire/4);
                 }
                 break;
               } else if(!triggerCheck) {
@@ -147,7 +148,7 @@ var readFile = Promise.coroutine(function* (key, requestData) {
 var setCacheData = Promise.coroutine(function* (key, index, data) {
   log.silly(`setCacheData for key: ${key}:${index}`);
   var json = JSON.stringify(data);
-  yield publisher.setAsync(`${key}:${index}`, json, 'EX', EXPIRES);
+  yield publisher.setAsync(`${key}:${index}`, json, 'EX', expire);
   yield publisher.publishAsync(key, index);
 });
 
@@ -163,6 +164,6 @@ var getCacheData = Promise.coroutine(function* (key) {
 });
 
 var registerFileRead = Promise.coroutine(function* (key) {
-  var result = yield publisher.setAsync(`${key}`, 'registered', 'NX', 'EX', EXPIRES);
+  var result = yield publisher.setAsync(`${key}`, 'registered', 'NX', 'EX', expire);
   return result === 'OK' ? true : false;
 });

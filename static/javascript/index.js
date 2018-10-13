@@ -37,7 +37,7 @@ function setupClient() {
       factory             = factoryManager.getFactory();
 
       var logManager  = factory.createClientLogManager();
-      logManager.addUILogging();
+      logManager.createLoggers();
       log = logManager.getLog(logManager.Enums.LOGS.GENERAL);
 
       clientSocket = factory.createClientSocket();
@@ -89,7 +89,6 @@ function setupClient() {
         socket:   clientSocket,
         formData: factory.createFormData(true),
         media:    factory.createMediaController(true),
-        encode:   factory.createEncodeFactory(),
         schema:   factory.createSchemaFactory(),
         keys:     factory.createKeys(),
         logMan:   factory.createClientLogManager(),
@@ -153,8 +152,7 @@ function setupClient() {
     if(!isExtraResourcesLoaded) {
       if(isAdmin) {
         return Promise.all([
-          loadAsyncFile('#panel-encode', 'gui/panels/encode.html'),
-          loadAsyncFile('#panel-tokens',  'gui/panels/tokens.html'),
+          loadAsyncFile('#panel-tokens',  'gui/panels/tokens.html')
         ]).then(function() {
           return loadAsyncScript('../javascript/gui.js').then(function() {
             isExtraResourcesLoaded = true;

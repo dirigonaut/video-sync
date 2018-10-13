@@ -157,7 +157,7 @@ function bufferSegment() {
 function onReady() {
   var logBuffer = logBufferEntries.call(this);
   var isReadyForNextSegment = function() {
-    log.silly(`SourceBuffer isReadyForNextSegment ${this.type}`);
+    log.debug(`SourceBuffer isReadyForNextSegment ${this.type}`);
 
     if(this.sourceBuffer && !this.sourceBuffer.updating) {
       if(typeof this.loadingSegment === 'undefined' && !this.forceStop) {
@@ -168,7 +168,7 @@ function onReady() {
       }
 
       var mapQueue = this.segmentsToBuffer.get(this.loadingSegment);
-      log.silly(`For buffer ${this.type} with key: ${this.loadingSegment}: ${mapQueue ? Array.from(mapQueue.keys()) : 'undefined'}.length(${mapQueue ? mapQueue.size : 'undefined'}) > ${this.index} which is null: ${mapQueue ? mapQueue.get(this.index) === null : 'mapQueue is undefined'}`);
+      log.debug(`For buffer ${this.type} with key: ${this.loadingSegment}: ${mapQueue ? Array.from(mapQueue.keys()) : 'undefined'}.length(${mapQueue ? mapQueue.size : 'undefined'}) > ${this.index} which is null: ${mapQueue ? mapQueue.get(this.index) === null : 'mapQueue is undefined'}`);
       if(mapQueue && mapQueue.size > this.index) {
         var segment = mapQueue.get(this.index);
 
@@ -194,7 +194,7 @@ function onReady() {
           this.loadingSegment = undefined;
 
           for(let i = 0; i < this.sourceBuffer.buffered.length; ++i) {
-            log.verbose(`For buffer ${this.type}: ${this.sourceBuffer.buffered.start(i)}-${this.sourceBuffer.buffered.end(i)}`);
+            log.debug(`For buffer ${this.type}: ${this.sourceBuffer.buffered.start(i)}-${this.sourceBuffer.buffered.end(i)}`);
           }
         }
       }

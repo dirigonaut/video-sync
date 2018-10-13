@@ -74,7 +74,6 @@ var setupMedia = Promise.coroutine(function* (domElements) {
 
   var active = metaManager.getActiveMetaData();
   var mediaPromises = [video.setup(domElements.videoElement, domElements.window, domElements.mediaSource)];
-  mediaPromises.push(setupVideoEventTunnel.call(this));
 
   if(active.activeMeta.get(metaManager.Enums.TYPES.VIDEO)) {
     buffers[metaManager.Enums.TYPES.VIDEO] = this.factory.createSourceBuffer();
@@ -108,24 +107,6 @@ var setupMedia = Promise.coroutine(function* (domElements) {
   domElements.mediaSource.addEventListener('error', log.error);
   return onReset.call(this, resetCallbacks, domElements.mediaSource);
 });
-
-var setupVideoEventTunnel = function() {
-  log.info("MediaController.setupVideoEventTunnel");
-  var eventFunc = function(type, timestamp) { this.emit("progress-event", type) }.bind(this);
-  video.on("get-segment", eventFunc);
-
-  var videoEventTunnelReset = function(resolve, reject) {
-    log.info("MediaController.videoEventTunnelReset");
-
-    try {
-      video.removeListener("get-segment", eventFunc);
-    } catch (e) {
-      log.debug(`MediaController.videoEventTunnelReset: ${e}`);
-    }
-  };
-
-  return new Promise.resolve(videoEventTunnelReset);
-};
 
 function onReset(resets, mediaSource) {
   var resetMedia = function() {

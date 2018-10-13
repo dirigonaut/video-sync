@@ -28,7 +28,7 @@ Proxy.prototype.setOnConnect = function(numProcesses) {
       }
     }
 
-    return Number(s) % len;
+    return parseInt(s) % len;
   };
 
   // Create the outside facing server listening on the port.
@@ -62,7 +62,9 @@ Proxy.prototype.forwardWorker = function(server) {
 };
 
 Proxy.prototype.start = function() {
-  proxyServer.listen(config.getConfig().videoSyncInfo.port);
+  var port = config.getConfig().serverInfo.port;
+  log.info(`Proxy port: ${port}`);
+  proxyServer.listen(port);
 }
 
 module.exports = Proxy;

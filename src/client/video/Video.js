@@ -29,12 +29,6 @@ Video.prototype.setup = function(element, window, mediaSource) {
     videoElement.addEventListener('timeupdate', videoPing);
     videoElement.addEventListener('error', logVideoElementErrors.call(this));
 
-    setTimeout(function() {
-      if(videoElement.readyState < 2) {
-        videoElement.currentTime = 0;
-      }
-    }, 2500);
-
     var eventId = setInterval(function() {
       if(videoElement.pause) {
         videoPing();
@@ -79,7 +73,10 @@ function play() {
   log.debug('Video.play');
   if(videoElement.readyState === 4) {
     log.debug("Set video to play");
-    videoElement.play();
+    videoElement.play().catch(function(e) {
+      log.error(e);
+      log.ui(e);
+    });
   } else {
     log.debug("Set video to play when canplay");
     videoElement.addEventListener('canplay', videoElement.play, {"once": true});
@@ -108,7 +105,7 @@ function setSocketEvents() {
     socket.request(eventKeys.SYNC);
   });
 
-  var timeout;
+  var interval;
   socket.setEvent(eventKeys.SEEK, function(command) {
     log.debug(eventKeys.SEEK, command);
     if(!command.play) {
@@ -120,13 +117,15 @@ function setSocketEvents() {
     videoElement.currentTime = parseFloat(command.time);
     videoPing();
 
-    if(timeout) {
-      clearTimeout(timeout);
+    if(interval) {
+      clearInterval(interval);
     }
 
-    timeout = setTimeout(function() {
+    interval = setInterval(function() {
       if(videoElement.readyState < 2) {
         videoElement.currentTime = parseFloat(command.time);
+      } else {
+        clearInterval(interval);
       }
     }, 2500);
   });
@@ -183,7 +182,6 @@ function onReset(eventId, metaManager) {
 
 function onProgress(typeId) {
   var progress = function() {
-    log.silly('Video.progress');
     if(metaData.isLastSegment(typeId, videoElement.currentTime)) {
       var timeToRequest = metaData.isReadyForNextSegment(typeId, videoElement.currentTime);
       if(timeToRequest !== undefined && timeToRequest === timeToRequest){

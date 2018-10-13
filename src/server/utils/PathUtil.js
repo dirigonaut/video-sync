@@ -2,24 +2,21 @@ const Promise   = require('bluebird');
 const Events    = require('events');
 const Find      = require('find');
 const Path      = require('path');
+const Crypto    = require('crypto');
 
 const FileUtils = require('./FileSystemUtils');
 
-function EnumUtil() { }
+function PathUtil() { }
 
-EnumUtil.prototype.getAllImports = function(path, excludes) {
+PathUtil.prototype.getAllPaths = function(path, excludes, regex, uniqueKeys) {
   if(path && Path.isAbsolute(path)) {
     var fileUtils = Object.create(FileUtils.prototype);
-
-    var imports = {};
-
     var asyncEmitter = new Events();
-    var finished = "finished";
-    var error = "error";
+    var files = {};
 
-    Find.eachfile(/\.js$/, path, function(filePath) {
+    Find.eachfile(regex, path, function(filePath) {
       if(filePath) {
-        var key = fileUtils.splitNameFromPath(filePath);
+        var key = uniqueKeys ? getHash(files) : fileUtils.splitNameFromPath(filePath);
 
         var foundExclude = false;
         if(excludes) {
@@ -31,27 +28,27 @@ EnumUtil.prototype.getAllImports = function(path, excludes) {
         }
 
         if(!foundExclude) {
-          imports[key] = filePath;
+          files[key] = filePath;
         }
       }
     })
     .end(function() {
-      asyncEmitter.emit(finished, imports);
+      asyncEmitter.emit('finished', files);
     })
     .error(function(err) {
-      asyncEmitter.emit(error, err);
+      asyncEmitter.emit('error', err);
     });
 
     return new Promise(function(resolve, reject) {
-      asyncEmitter.once(finished, resolve);
-      asyncEmitter.once(error, reject);
+      asyncEmitter.once('finished', resolve);
+      asyncEmitter.once('error', reject);
     });
   } else {
     throw new Error(`${path} is not a valid path.`);
   }
 };
 
-EnumUtil.prototype.createEnums = function(object) {
+PathUtil.prototype.createEnums = function(object) {
   var keys = Object.keys(object);
   var Enums = { };
 
@@ -62,4 +59,14 @@ EnumUtil.prototype.createEnums = function(object) {
   return Enums;
 };
 
-module.exports = EnumUtil;
+module.exports = PathUtil;
+
+var getHash = function(object) {
+  while(true) {
+    hash = Crypto.randomBytes(32).toString('hex');
+    if(!object[hash]) {
+      return hash;
+    }
+    continue;
+  }
+};

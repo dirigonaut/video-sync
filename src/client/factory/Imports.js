@@ -1,7 +1,6 @@
 //Client Packages
 const ClientLogManager  = require('../log/ClientLogManager');
 const ClientSocket      = require('../socket/ClientSocket');
-const EncodeFactory     = require('../utils/EncodeFactory');
 const FileBuffer        = require('../utils/FileBuffer');
 const FormData          = require('../utils/FormData');
 const MetaState         = require('../video/meta/MetaState');
@@ -22,7 +21,6 @@ module.exports = {
   BaseFactory:      BaseFactory,
   ClientLogManager: ClientLogManager,
   ClientSocket:     ClientSocket,
-  EncodeFactory:    EncodeFactory,
   FileBuffer:       FileBuffer,
   FormData:         FormData,
   Keys:             Keys,
