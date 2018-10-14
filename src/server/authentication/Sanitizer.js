@@ -3,7 +3,7 @@ const Util					= require('util');
 
 const NUMBER 				= '^((?=.)((\\d*)(\\.(\\d+))?))$';
 const ALPHANUMERIC 	= '([^\\u0000-\\u007F]|\\w|\\s)+';
-const SPECIAL				= '([^\\u0000-\\u007F]|[?!&:;@.,/\\-\\\'\\\"\\s\\w\\\\])+';
+const SPECIAL				= '([^\\u0000-\\u007F]|[?!&:;@.,\\[\\]/\\-\\\'\\\"\\s\\w\\\\])+';
 
 var fileSystemUtils, schemaFactory, eventKeys, log;
 
