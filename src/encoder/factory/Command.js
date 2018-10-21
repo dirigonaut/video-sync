@@ -39,8 +39,8 @@ Command.prototype.getArgs = function() {
 
       if(replacement !== undefined) {
         if(Array.isArray(replacement)) {
-          for(let i of replacement) {
-            value = value.replace(/{}/, replacement[i]);
+          for(let entry of replacement) {
+            value = value.replace(/{}/, entry);
           }
         } else {
           value = value.replace(/{}/, replacement);
@@ -50,7 +50,7 @@ Command.prototype.getArgs = function() {
 
     args.push(value);
   }
-  
+
   return args;
 };
 
