@@ -105,14 +105,10 @@ EncoderFactory.prototype.createSubtitleCommands = function(codec, id, tracks, in
   var subtitle = config.getConfig().ffmpeg.templates[id][codec].subtitle;
   var commands = [];
 
-  for(var i in tracks) {
-    var command = this.factory.createCommand();
-
-    command.setTemplate(subtitle);
-    command.setArgs(input, tracks[i],
-      getOutputPath("vtt", codec, input, inDir, outDir));
-    commands.push(command);
-  }
+  var command = this.factory.createCommand();
+  command.setTemplate(subtitle);
+  command.setArgs(input, getOutputPath("vtt", codec, input, inDir, outDir));
+  commands.push(command);
 
   return commands;
 };
