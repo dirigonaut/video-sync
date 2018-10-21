@@ -66,7 +66,12 @@ CredentialManager.prototype.generateTokens = Promise.coroutine(function* (count,
       level: level ? CredentialManager.Enum.Level.CONTROLS : CredentialManager.Enum.Level.NONE,
     };
 
-    entries[Crypto.randomBytes(24).toString('hex')] = entry;
+    var key = Crypto.randomBytes(6).toString('hex')
+    for(let i = 4; i < key.length; ++i) {
+      key.splice(i, 0, "-");
+    }
+
+    entries[key] = entry;
   }
 
   yield setUserData.call(this, CredentialManager.Enum.User.CLIENT, entries);

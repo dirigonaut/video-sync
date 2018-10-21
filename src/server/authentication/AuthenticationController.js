@@ -38,7 +38,7 @@ AuthenticationController.prototype.attachIO = function (io) {
     }
 
     var schema  = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
-    var request = sanitizer.sanitize(token, schema, [schema.Enum.DATA]);
+    var request = sanitizer.sanitize(token, schema, Object.values(schema.Enum));
 
     if(!(request instanceof Error)) {
       var isAdmin = yield isAdministrator.call(this, socket, request);
