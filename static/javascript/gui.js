@@ -42,24 +42,26 @@ function initGui(client, isAdmin) {
     var duration = video.duration;
     var current = video.currentTime;
 
-    $('#currently-at').val((current / duration)*100);
-    $('#progress-amount')[0].style.width = ((current/ duration)*100) + "%";
+    if(!isNaN(duration) && !isNaN(current)) {
+      $('#currently-at').val((current / duration)*100);
+      $('#progress-amount')[0].style.width = ((current/ duration)*100) + "%";
 
-    if(video.buffered.length) {
-      for (var i = 0; i < video.buffered.length; ++i) {
-        if (video.buffered.start(video.buffered.length - 1 - i) < video.currentTime) {
-          $('#buffered-amount')[0].style.width = (video.buffered.end(video.buffered.length - 1 - i) / duration) * 100 + "%";
-          break;
+      if(video.buffered.length) {
+        for (var i = 0; i < video.buffered.length; ++i) {
+          if (video.buffered.start(video.buffered.length - 1 - i) < video.currentTime) {
+            $('#buffered-amount')[0].style.width = (video.buffered.end(video.buffered.length - 1 - i) / duration) * 100 + "%";
+            break;
+          }
         }
+      } else {
+        $('#buffered-amount')[0].style.width = 0;
       }
-    } else {
-      $('#buffered-amount')[0].style.width = 0;
-    }
 
-    $('#control-duration').val(toFormatted(duration));
+      $('#control-duration').val(toFormatted(duration));
 
-    if(!$('#control-current').is(':focus')) {
-      $('#control-current').val(toFormatted(current));
+      if(!$('#control-current').is(':focus')) {
+        $('#control-current').val(toFormatted(current));
+      }
     }
   }
 
@@ -665,7 +667,7 @@ function initGui(client, isAdmin) {
 
   //Prevent form submitting by pressing Enter
   $('form input').on('keypress', function(e) {
-    e.which === 13 ? e.preventDefault() : undefined;
+    return e.which === 13 ? $(':focus').blur() && false : true;
   });
 
   $(document).on('keyup', function(e) {
