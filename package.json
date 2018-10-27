@@ -5,9 +5,9 @@
   "scripts": {
     "install": "sudo apt-get install redis-server ffmpeg -y && sudo systemctl disable redis-server",
     "init": "npm run-script setup-folders && npm run-script bundle && npm run-script self-sign",
-    "setup-folders": "node develop/setup/SetupFolders.js",
-    "bundle": "node develop/setup/BundleClientCode.js",
-    "self-sign": "node develop/setup/CreateSelfSignedCerts.js",
+    "setup-folders": "node develop/utils/SetupFolders.js",
+    "bundle": "node develop/utils/BundleClientCode.js",
+    "self-sign": "node develop/utils/CreateSelfSignedCerts.js",
     "start": "node index.js",
     "debug": "npm run-script bundle && node --inspect=9999 index.js",
     "stats": "cloc --not-match-d '(icons)|(resources)' --not-match-f documentation --by-file ./src/ ./static/ ./develop/ index.js encode.js",
