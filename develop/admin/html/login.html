@@ -1,0 +1,68 @@
+<html>
+  <head>
+      <style>
+        body {
+          height: 100%;
+          width: 100%;
+          display: flex;
+          flex-direction: row;
+        }
+        .flex {
+          display: flex;
+          padding: 1%;
+          border-radius: 10%;
+          border: 2px solid #777777;
+          flex-direction: column;
+          margin:auto;
+        }
+        .item {
+          display: flex;
+          justify-content: left;
+          align-items: left;
+          margin-left: 0%;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="flex">
+        <div>
+          <label class="item" for="user">User: </label>
+          <input class="item" name="user" id="user" value="">
+        </div>
+        <div>
+          <label class="item" for="pass">Password: </label>
+          <input class="item" name="pass" id="pass" value="" type="password">
+        </div>
+        <div>
+          <button onclick="login();">Submit</button>
+        </div>
+      </div>
+
+    <script>
+      function login() {
+        const xhr = new XMLHttpRequest();
+        const url='https://us-central1-annular-beacon-207401.cloudfunctions.net/Admin';
+
+        xhr.open("GET", url, true);
+        xhr.setRequestHeader('Authorization',
+              format(document.getElementById('user').value,
+                     document.getElementById('pass').value));
+
+        xhr.onload= (e) => {
+          if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+            document.open();
+            document.write(xhr.responseText);
+            document.close();
+          }
+        }
+
+        xhr.send();
+      }
+
+      function format(user, token) {
+        return `Basic ${btoa(user+":"+token)}`;
+      }
+    </script>
+
+  </body>
+</html>
