@@ -8,11 +8,13 @@ function setupClient() {
   window.MediaSource = window.MediaSource || window.WebKitMediaSource
 
   var browserCheck = function() {
-    var supported = ['Chrome']
+    var supported = ['Chrome'];
+    var vendors = ['Google Inc.'];
     var isSupported;
 
     for(var i in supported) {
-      if(window.navigator.userAgent.includes(supported[i])) {
+      if(window.navigator.userAgent.includes(supported[i]) &&
+         window.navigator.vendor.includes(vendors[i])) {
         $('#browser-error').hide();
         $('#login-form').show();
         isSupported = true;
