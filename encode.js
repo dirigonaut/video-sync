@@ -1,4 +1,5 @@
 const Promise         = require('bluebird');
+const LockFile        = require('lockfile');
 const Path            = require('path');
 const Util            = require('util');
 const Assert          = require('assert');
@@ -67,11 +68,32 @@ try {
     var logManager = factory.createLogManager();
     logManager.addFileLogging(config.getConfig().dirs.encodeLogDir);
 
-    encoder = factory.createEncoder();
-    codecArgs = [templateIds, inDir ? inDir : config.getConfig().dirs.encodeDir, config.getConfig().dirs.mediaDir, dryRun];
+    var encode = Promise.coroutine(function* () {
+      encoder = factory.createEncoder();
+      codecArgs = [templateIds,
+                   inDir ? inDir : config.getConfig().dirs.encodeDir,
+                   config.getConfig().dirs.mediaDir, dryRun];
 
-    yield encoder.start.apply(encoder, codecArgs);
-  }).call(this, args[PARAMS.CONFIG], args[PARAMS.ENCODE_DIR], args[PARAMS.TEMPLATES], args[PARAMS.DRY_RUN] ? true : false);
+      yield encoder.start.apply(encoder, codecArgs);
+    });
+
+    //If locking is enabled then grab file lock
+    if(typeof config.getConfig().serverInfo.lockDir !== "undefined") {
+      process.on('exit', (code) => {
+        LockFile.unlock(Path.join(config.getConfig().serverInfo.lockDir, "video-sync-encode.lock"), console.log);
+      });
+
+      LockFile.lock(Path.join(config.getConfig().serverInfo.lockDir, "video-sync-encode.lock"), {},
+        Promise.coroutine(function* (err) { err ? console.log(err) : yield encode(); }));
+    } else {
+      yield encode();
+    }
+
+  }).call(this,
+          args[PARAMS.CONFIG],
+          args[PARAMS.ENCODE_DIR],
+          args[PARAMS.TEMPLATES],
+          args[PARAMS.DRY_RUN] ? true : false);
 
 } catch(e) {
   console.log("Missing required options.");
