@@ -57,11 +57,14 @@ EncoderFactory.prototype.createPlan = Promise.coroutine(function* (templateIds, 
                 break;
               case EncoderFactory.Enum.Types.SUBTITLE.toLowerCase():
                 let tracks = yield getSubtitleTracks.call(this, file);
-                let subtitles = this.createSubtitleCommands(codec, templateIds[id], tracks,
-                                  file, inDir, outDir);
 
-                for(let i in subtitles) {
-                  plan.processes.push([hash, createFfmpegProcess.call(this, subtitles[i], hash)]);
+                if(tracks.length > 0) {
+                  let subtitles = this.createSubtitleCommands(codec, templateIds[id], tracks,
+                                    file, inDir, outDir);
+
+                  for(let i in subtitles) {
+                    plan.processes.push([hash, createFfmpegProcess.call(this, subtitles[i], hash)]);
+                  }
                 }
                 break;
             }
@@ -154,19 +157,25 @@ var getWebmManifestArgs = function(manifest, manCommand, codec, commands, output
 
   var inputString = "";
   var mapString = "";
+
+  var trackIndex = -1;
   for(let i = 0; i < commands.length; ++i) {
     var args = commands[i].getArgs();
 
-    if(args.indexOf('-c:v') > 0) {
-      vSet.push(i);
-    } else if(args.indexOf('-c:a') > 0) {
-      aSet.push(i);
-    }
+    if(args.indexOf('NUL') === -1 && args.indexOf('/dev/null') === -1) {
+      ++trackIndex;
 
-    inputString += inputString && inputString.length === 0 ? manifest.input : ` ${manifest.input}`;
-    mapString += mapString && mapString.length === 0 ? manifest.map : ` ${manifest.map}`;
-    inputs.push(commands[i].getOutput());
-    maps.push(i);
+      if(args.indexOf('-c:v') > -1) {
+        vSet.push(trackIndex);
+      } else if(args.indexOf('-c:a') > -1) {
+        aSet.push(trackIndex);
+      }
+
+      inputString += inputString && inputString.length === 0 ? manifest.input : ` ${manifest.input}`;
+      mapString += mapString && mapString.length === 0 ? manifest.map : ` ${manifest.map}`;
+      inputs.push(commands[i].getOutput());
+      maps.push(trackIndex);
+    }
   }
 
   manCommand.setTemplate(manCommand.format(0, inputString.trim()));

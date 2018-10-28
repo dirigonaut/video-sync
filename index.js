@@ -1,4 +1,6 @@
 const Promise         = require('bluebird');
+const LockFile        = require('lockfile');
+const Cluster         = require('cluster');
 const Path            = require('path');
 const FactoryManager  = require('./src/server/factory/FactoryManager');
 
@@ -41,6 +43,25 @@ var start = Promise.coroutine(function* (configPath) {
   var logManager = factory.createLogManager();
   logManager.addFileLogging(config.getConfig().dirs.serverLogDir);
 
-  masterProcess = factory.createMasterProcess();
-  yield masterProcess.start();
+  var server = Promise.coroutine(function* () {
+    masterProcess = factory.createMasterProcess();
+    yield masterProcess.start();
+  });
+
+  //If locking is enabled then grab file lock
+  if(typeof config.getConfig().serverInfo.lockDir !== "undefined") {
+    if(Cluster.isMaster) {
+      process.on('exit', (code) => {
+        LockFile.unlock(Path.join(config.getConfig().serverInfo.lockDir, "video-sync-server.lock"), console.log);
+      });
+
+      LockFile.lock(Path.join(config.getConfig().serverInfo.lockDir, "video-sync-server.lock"), {},
+        Promise.coroutine(function* (err) { err ? console.log(err) : yield server(); }));
+    } else {
+      yield server();
+    }
+  } else {
+    yield server();
+  }
+
 })(configPath);

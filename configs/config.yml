@@ -2,6 +2,7 @@ serverInfo:
  port: 443
  staticDir: static
  threads: 0
+ #lockDir: "/var/lock/"
  #remoteAdminPass: password
 redisInfo:
  connection:
@@ -26,7 +27,8 @@ ffmpeg:
   default:
    webm:
     video:
-     1280x720: "-y -i {} -c:v libvpx-vp9 -s 1280x720 -b:v 1500k -keyint_min 150 -g 150 -threads 4 -speed 1 -tile-columns 4 -frame-parallel 1 -an -sn -f webm -dash 1 {}"
+     1280x720_: "-y -i {} -c:v libvpx-vp9 -s 1280x720 -b:v 800k -keyint_min 75 -g 75 -threads 4 -speed 2 -tile-columns 4 -frame-parallel 1 -an -sn -f webm -dash 1 -pass 1 /dev/null"
+     1280x720: "-y -i {} -c:v libvpx-vp9 -s 1280x720 -b:v 800k -keyint_min 75 -g 75 -threads 4 -speed 2 -tile-columns 4 -frame-parallel 1 -an -sn -f webm -dash 1 -pass 2 {}"
     audio:
      256k: "-y -i {} -vn -sn -c:a libvorbis -b:a 256k -f webm -dash 1 {}"
     subtitle: "-y -txt_format text -i {} {}"
