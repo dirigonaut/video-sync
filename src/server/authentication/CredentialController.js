@@ -1,4 +1,4 @@
-const Promise = require('bluebird');
+const Promise = require("bluebird");
 
 var publisher, redisSocket, schemaFactory, sanitizer, credentialManager,
       media, playerManager, eventKeys, log;
@@ -6,7 +6,7 @@ var publisher, redisSocket, schemaFactory, sanitizer, credentialManager,
 function CredentialController() { }
 
 CredentialController.prototype.initialize = function(force) {
-  if(typeof CredentialController.prototype.protoInit === 'undefined') {
+  if(typeof CredentialController.prototype.protoInit === "undefined") {
     CredentialController.prototype.protoInit = true;
     credentials     = this.factory.createCredentialManager();
     redisSocket     = this.factory.createRedisSocket();
@@ -25,7 +25,7 @@ CredentialController.prototype.initialize = function(force) {
 };
 
 CredentialController.prototype.attachSocket = function(socket) {
-  log.info('CredentialController.attachSocket');
+  log.info("CredentialController.attachSocket");
 
   socket.on(eventKeys.CREATETOKENS, Promise.coroutine(function*(data) {
     var schema = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
@@ -67,7 +67,7 @@ var sendUpdatedTokens = Promise.coroutine(function* (tokens) {
 
   if(admin && admin.id) {
     if(tokens) {
-      tokens['admin'] = admin;
+      tokens["admin"] = admin;
     }
 
     var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.RESPONSE, [tokens]);

@@ -1,6 +1,5 @@
-const Promise    = require('bluebird');
-const Fs         = Promise.promisifyAll(require('fs'));
-const Forge      = require('node-forge');
+const Promise    = require("bluebird");
+const Fs         = Promise.promisifyAll(require("fs"));
 
 const EXPIR = 365;
 
@@ -9,7 +8,7 @@ var config, log;
 function Certificate() { }
 
 Certificate.prototype.initialize = function(force) {
-  if(typeof Certificate.prototype.protoInit === 'undefined') {
+  if(typeof Certificate.prototype.protoInit === "undefined") {
     Certificate.prototype.protoInit = true;
     config          = this.factory.createConfig();
 

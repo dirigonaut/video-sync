@@ -119,7 +119,7 @@ WebmParser.prototype.getTrackType = function(mpd, adaptIndex) {
 
   if(adaptSets !== null && adaptSets[adaptIndex] !== null && adaptSets[adaptIndex] !== undefined) {
     type = adaptSets[adaptIndex].$.mimeType;
-    type = type.split('/')[0];
+    type = type.split("/")[0];
   }
 
   return type;

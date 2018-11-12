@@ -1,5 +1,5 @@
-const Promise = require('bluebird');
-const Redis   = require('redis');
+const Promise = require("bluebird");
+const Redis   = require("redis");
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
@@ -8,7 +8,7 @@ var client, redisSocket, eventKeys, log;
 function Media() { }
 
 Media.prototype.initialize = function() {
-  if(typeof Media.prototype.protoInit === 'undefined') {
+  if(typeof Media.prototype.protoInit === "undefined") {
     Media.prototype.protoInit = true;
     redisSocket     = this.factory.createRedisSocket();
     eventKeys       = this.factory.createKeys();
@@ -29,7 +29,7 @@ Media.prototype.getMediaStarted = function() {
 Media.prototype.setMediaStarted = Promise.coroutine(function* (started) {
   log.silly("Media.setMediaStarted");
   var basePath = yield this.getMediaPath();
-  if(typeof basePath !== 'undefined' && basePath) {
+  if(typeof basePath !== "undefined" && basePath) {
     return setMediaData(Media.Enum.Keys.STARTED, started);
   }
 
@@ -56,7 +56,7 @@ Media.prototype.getMediaRule = function() {
 
 Media.prototype.setMediaRule = function(range) {
   log.silly("Media.setMediaSyncRule");
-  if(typeof range === 'number') {
+  if(typeof range === "number") {
     return setMediaData(Media.Enum.Keys.RULE, range);
   } else {
     return Promise.reject(`${range} is not a valid value for auto sync.`);
@@ -79,12 +79,12 @@ Media.Enum = {};
 Media.Enum.Keys = { PATH: "media-path", STARTED: "media-started", RULE: "media-rule", METRICS: "media-metrics"};
 
 var setMediaData = function(key, data) {
-  log.silly('setMediaData for key: ', key);
+  log.silly("setMediaData for key: ", key);
   return client.setAsync(key, JSON.stringify(data));
 };
 
 var getMediaData = function(key) {
-  log.silly('getMediaData for key:', key);
+  log.silly("getMediaData for key:", key);
   return client.getAsync(key).then(function(results) {
     return JSON.parse(results);
   });

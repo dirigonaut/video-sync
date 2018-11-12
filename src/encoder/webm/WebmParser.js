@@ -1,13 +1,13 @@
-const Fs      = require('fs');
-const Ebml    = require('ebml');
-const Events  = require('events');
+const Fs      = require("fs");
+const Ebml    = require("ebml");
+const Events  = require("events");
 
 var log;
 
 function WebmParser() { }
 
 WebmParser.prototype.initialize = function() {
-	if(typeof WebmParser.prototype.protoInit === 'undefined') {
+	if(typeof WebmParser.prototype.protoInit === "undefined") {
     WebmParser.prototype.protoInit = true;
 		Object.setPrototypeOf(WebmParser.prototype, Events.prototype);
     var logManager  = this.factory.createLogManager();
@@ -20,17 +20,17 @@ WebmParser.prototype.queuedDecode = function(metaRequests) {
   var counter = new Events();
   counter.queue = metaRequests.length - 1;
 
-  counter.on('processed', function() {
+  counter.on("processed", function() {
     if(counter.queue > 0) {
       --this.queue;
     } else {
-			this.removeAllListeners('processed');
-			this.emit('finished')
+			this.removeAllListeners("processed");
+			this.emit("finished")
     }
   });
 
-	counter.once('finished', function() {
-		this.emit('end');
+	counter.once("finished", function() {
+		this.emit("end");
 	}.bind(this));
 
   for(var i in metaRequests) {
@@ -49,20 +49,20 @@ var readAndDecode = function(path, onData, clusters, counter) {
   var readStream  = Fs.createReadStream(path);
   var decoder     = new Ebml.Decoder();
 
-  readStream.on('data', function(data) {
+  readStream.on("data", function(data) {
     decoder.write(data);
   });
 
-  readStream.on('error', function(e) {
+  readStream.on("error", function(e) {
 		this.emit("WebmParser.readAndDecode, Server: Error: " + e)
   });
 
-  readStream.on('end', function() {
+  readStream.on("end", function() {
     log.info("WebmParser.readAndDecode, Server: Finished reading stream");
-    counter.emit('processed');
+    counter.emit("processed");
   });
 
-  decoder.on('data', function(data) {
+  decoder.on("data", function(data) {
     onData(clusters, data);
   });
 };

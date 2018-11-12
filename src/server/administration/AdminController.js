@@ -1,5 +1,5 @@
-const Path    = require('path');
-const Promise = require('bluebird');
+const Path    = require("path");
+const Promise = require("bluebird");
 
 var config, schemaFactory, sanitizer, redisSocket,
   publisher, media, fileIO, fileSystemUtils, playerManager, eventKeys, log;
@@ -7,7 +7,7 @@ var config, schemaFactory, sanitizer, redisSocket,
 function AdminController() { }
 
 AdminController.prototype.initialize = function (force) {
-  if(typeof AdminController.prototype.protoInit === 'undefined') {
+  if(typeof AdminController.prototype.protoInit === "undefined") {
     AdminController.prototype.protoInit = true;
     config          = this.factory.createConfig();
     schemaFactory   = this.factory.createSchemaFactory();
@@ -28,7 +28,7 @@ AdminController.prototype.initialize = function (force) {
 };
 
 AdminController.prototype.attachSocket = function(socket) {
-  log.info('AdminController.attachSocket');
+  log.info("AdminController.attachSocket");
 
   socket.on(eventKeys.SETMEDIA, Promise.coroutine(function* (data) {
     log.debug(eventKeys.SETMEDIA);
@@ -48,7 +48,7 @@ AdminController.prototype.attachSocket = function(socket) {
         yield redisSocket.broadcast.call(this, eventKeys.MEDIAREADY);
 
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-          [new Date().toLocaleTimeString(), 'notify', 'media', `Media is loaded.`]);
+          [new Date().toLocaleTimeString(), "notify", "media", `Media is loaded.`]);
         yield redisSocket.broadcast.call(AdminController.prototype, eventKeys.NOTIFICATION, response);
       } else {
         log.socket(`${dir} is not found.`);
@@ -65,7 +65,7 @@ AdminController.prototype.attachSocket = function(socket) {
       media.setMediaRule(request.data)
       .then(Promise.coroutine(function* () {
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-          [new Date().toLocaleTimeString(), 'notify', 'media', `${request.data ? 'Auto Sync set to ' + request.data + 's.' : 'Auto Sync turned off.'}`]);
+          [new Date().toLocaleTimeString(), "notify", "media", `${request.data ? "Auto Sync set to " + request.data + "s." : "Auto Sync turned off."}`]);
 
         yield redisSocket.broadcast.call(AdminController.prototype, eventKeys.NOTIFICATION, response);
       })).catch(function(error) {

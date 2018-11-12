@@ -1,12 +1,12 @@
-const Promise = require('bluebird');
-const Events  = require('events');
+const Promise = require("bluebird");
+const Events  = require("events");
 
 var videoElement, sourceEvents, metaData, socket, schemaFactory, eventKeys, log;
 
 function Video() { }
 
 Video.prototype.initialize = function(force) {
-  if(typeof Video.prototype.protoInit === 'undefined') {
+  if(typeof Video.prototype.protoInit === "undefined") {
     Video.prototype.protoInit = true;
     Object.setPrototypeOf(Video.prototype, Events.prototype);
     eventKeys       = this.factory.createKeys();
@@ -19,15 +19,15 @@ Video.prototype.initialize = function(force) {
 };
 
 Video.prototype.setup = function(element, window, mediaSource) {
-  log.debug('Video.setup');
+  log.debug("Video.setup");
   if(element) {
     videoElement = element;
     videoElement.src = window.URL.createObjectURL(mediaSource);
     videoElement.load();
     videoElement.currentTime = 0;
 
-    videoElement.addEventListener('timeupdate', videoPing);
-    videoElement.addEventListener('error', logVideoElementErrors.call(this));
+    videoElement.addEventListener("timeupdate", videoPing);
+    videoElement.addEventListener("error", logVideoElementErrors.call(this));
 
     var eventId = setInterval(function() {
       if(videoElement.pause) {
@@ -48,14 +48,14 @@ Video.prototype.setup = function(element, window, mediaSource) {
         sourceEvents[metaManager.Enums.TYPES.AUDIO] = setVideoSourceEvents.call(this, metaManager.Enums.TYPES.AUDIO);
       }
     } else {
-      throw new Error('Video.setup: metaData.activeMeta is not defined.');
+      throw new Error("Video.setup: metaData.activeMeta is not defined.");
     }
 
     setSocketEvents();
 
     return new Promise.resolve(onReset.call(this, eventId, metaManager));
   } else {
-    throw new Error('Video.setup: element is not defined.');
+    throw new Error("Video.setup: element is not defined.");
   }
 };
 
@@ -70,7 +70,7 @@ Video.prototype.resetVideoElementErrorState = function() {
 module.exports = Video;
 
 function play() {
-  log.debug('Video.play');
+  log.debug("Video.play");
   if(videoElement.readyState === 4) {
     log.debug("Set video to play");
     videoElement.play().catch(function(e) {
@@ -79,18 +79,18 @@ function play() {
     });
   } else {
     log.debug("Set video to play when canplay");
-    videoElement.addEventListener('canplay', videoElement.play, {"once": true});
+    videoElement.addEventListener("canplay", videoElement.play, {"once": true});
   }
 }
 
 function pause() {
-  log.debug('Video.pause');
+  log.debug("Video.pause");
   videoElement.pause();
-  videoElement.removeEventListener('canplay', videoElement.play, {"once": true});
+  videoElement.removeEventListener("canplay", videoElement.play, {"once": true});
 }
 
 function setSocketEvents() {
-  log.debug('Video.setSocketEvents');
+  log.debug("Video.setSocketEvents");
 
   socket.setEvent(eventKeys.PLAY, function(command) {
     log.debug(eventKeys.PLAY, command);
@@ -132,7 +132,7 @@ function setSocketEvents() {
 }
 
 function removeSocketEvents() {
-  log.debug('Video.removeSocketEvents');
+  log.debug("Video.removeSocketEvents");
   socket.removeEvent(eventKeys.PLAY);
   socket.removeEvent(eventKeys.PAUSE);
   socket.removeEvent(eventKeys.SEEK);
@@ -143,11 +143,11 @@ function setVideoSourceEvents(bufferType) {
   var bufferEvents = [];
 
   var bufferUpdate = onProgress.call(this, bufferType);
-  videoElement.addEventListener('timeupdate', bufferUpdate, false);
+  videoElement.addEventListener("timeupdate", bufferUpdate, false);
   bufferEvents.push(bufferUpdate);
 
   var bufferSeek = onSeek.call(this, bufferType);
-  videoElement.addEventListener('seeking', bufferSeek, false);
+  videoElement.addEventListener("seeking", bufferSeek, false);
   bufferEvents.push(bufferSeek);
 
   return bufferEvents;
@@ -155,15 +155,15 @@ function setVideoSourceEvents(bufferType) {
 
 function removeVideoSourceEvents(bufferType) {
   log.info(`Removing video events for buffer of type: ${bufferType}.`);
-  videoElement.removeEventListener('timeupdate', sourceEvents[bufferType][0]);
-  videoElement.removeEventListener('seeking', sourceEvents[bufferType][1]);
-  videoElement.removeEventListener('error', logVideoElementErrors.call(this));
+  videoElement.removeEventListener("timeupdate", sourceEvents[bufferType][0]);
+  videoElement.removeEventListener("seeking", sourceEvents[bufferType][1]);
+  videoElement.removeEventListener("error", logVideoElementErrors.call(this));
 }
 
 function onReset(eventId, metaManager) {
   var reset = function() {
     log.info(`Video reset.`);
-    videoElement.removeEventListener('timeupdate', videoPing, false);
+    videoElement.removeEventListener("timeupdate", videoPing, false);
     clearInterval(eventId);
 
     if(sourceEvents[metaManager.Enums.TYPES.VIDEO].length > 0) {
@@ -211,7 +211,7 @@ function videoPing() {
 function logVideoElementErrors() {
   var handleErrors = function() {
     log.error(videoElement.error.message, { errorCode: videoElement.error.code});
-    this.emit('media-error', videoElement.error.code);
+    this.emit("media-error", videoElement.error.code);
   }.bind(this);
   return handleErrors;
 }

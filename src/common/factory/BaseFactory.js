@@ -1,8 +1,8 @@
-const Promise   = require('bluebird');
+const Promise   = require("bluebird");
 
-const FUNCTIONS = 'Functions';
-const ENUMS     = 'Enums';
-const FACTORY   = 'factory';
+const FUNCTIONS = "Functions";
+const ENUMS     = "Enums";
+const FACTORY   = "factory";
 
 function BaseFactory() { }
 
@@ -17,7 +17,7 @@ var generateFunctionHeaders = function(imports) {
   for(let i in this.Enum) {
     let ObjectImport;
 
-    if(typeof imports[this.Enum[i]] === 'string') {
+    if(typeof imports[this.Enum[i]] === "string") {
       ObjectImport = require(imports[this.Enum[i]]);
     } else {
       ObjectImport = imports[this.Enum[i]];
@@ -51,7 +51,7 @@ var generateObject = function (ObjectImport, initFlag) {
       generateObjectInfo(ObjectImport, ObjectImport);
     }
 
-    if(typeof object.initialize !== 'undefined') {
+    if(typeof object.initialize !== "undefined") {
       var result = object.initialize(initFlag);
       if(result instanceof Promise) {
         object = result;
@@ -65,7 +65,7 @@ var generateObject = function (ObjectImport, initFlag) {
 };
 
 var generateObjectInfo = function (Import, Info) {
-  if(typeof Import.prototype !== 'undefined' && !Import.prototype[FUNCTIONS]) {
+  if(typeof Import.prototype !== "undefined" && !Import.prototype[FUNCTIONS]) {
     Object.defineProperty(Import.prototype, FUNCTIONS, {
       enumerable: false,
       writeable: false,
@@ -73,7 +73,7 @@ var generateObjectInfo = function (Import, Info) {
     });
   }
 
-  if(typeof Import.prototype !== 'undefined' && !Import.prototype[ENUMS]) {
+  if(typeof Import.prototype !== "undefined" && !Import.prototype[ENUMS]) {
     Object.defineProperty(Import.prototype, ENUMS, {
       enumerable: false,
       writeable: false,
@@ -85,7 +85,7 @@ var generateObjectInfo = function (Import, Info) {
 var generateObjectFunctionInfo = function(object) {
   var funcs = { };
   for (var property in object.prototype) {
-    if (typeof object.prototype[property] === 'function') {
+    if (typeof object.prototype[property] === "function") {
       funcs[property.toUpperCase()] = property;
     }
   }

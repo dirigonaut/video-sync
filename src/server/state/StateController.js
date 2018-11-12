@@ -1,11 +1,11 @@
-const Promise  = require('bluebird');
+const Promise  = require("bluebird");
 
 var media, schemaFactory, sanitizer, redisSocket, publisher, stateEngine, eventKeys, credentials, log;
 
 function StateController() { }
 
 StateController.prototype.initialize = function() {
-  if(typeof StateController.prototype.protoInit === 'undefined') {
+  if(typeof StateController.prototype.protoInit === "undefined") {
     StateController.prototype.protoInit = true;
     credentials     = this.factory.createCredentialManager();
     schemaFactory   = this.factory.createSchemaFactory();
@@ -23,7 +23,7 @@ StateController.prototype.initialize = function() {
 };
 
 StateController.prototype.attachSocket = function(socket) {
-  log.info('StateController.attachSocket');
+  log.info("StateController.attachSocket");
 
   socket.on(eventKeys.REQPLAY, Promise.coroutine(function* () {
     log.info(eventKeys.REQPLAY);
@@ -39,7 +39,7 @@ StateController.prototype.attachSocket = function(socket) {
 
         var handle = yield credentials.getHandle(socket);
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-          [new Date().toLocaleTimeString(), 'notify', 'state', `${handle} issued play.`]);
+          [new Date().toLocaleTimeString(), "notify", "state", `${handle} issued play.`]);
         yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
       }
     }
@@ -58,7 +58,7 @@ StateController.prototype.attachSocket = function(socket) {
 
         var handle = yield credentials.getHandle(socket);
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-          [new Date().toLocaleTimeString(), 'notify', 'state', `${handle} issued pause.`]);
+          [new Date().toLocaleTimeString(), "notify", "state", `${handle} issued pause.`]);
         yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
       }
     }
@@ -82,7 +82,7 @@ StateController.prototype.attachSocket = function(socket) {
 
           var handle = yield credentials.getHandle(socket);
           var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-            [new Date().toLocaleTimeString(), 'notify', 'state', `${handle} issued seek to ${request.timestamp}.`]);
+            [new Date().toLocaleTimeString(), "notify", "state", `${handle} issued seek to ${request.timestamp}.`]);
           yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
         }
       }
@@ -105,7 +105,7 @@ StateController.prototype.attachSocket = function(socket) {
 
     var handle = yield credentials.getHandle(socket);
     var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-      [new Date().toLocaleTimeString(), 'notify', 'state', `${handle} is syncing.`]);
+      [new Date().toLocaleTimeString(), "notify", "state", `${handle} is syncing.`]);
     yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
   }));
 
@@ -115,7 +115,7 @@ StateController.prototype.attachSocket = function(socket) {
 
     var handle = yield credentials.getHandle(socket);
     var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-      [new Date().toLocaleTimeString(), 'notify', 'state', `${handle} issued a sync all.`]);
+      [new Date().toLocaleTimeString(), "notify", "state", `${handle} issued a sync all.`]);
 
     yield redisSocket.broadcast.call(StateController.prototype, eventKeys.NOTIFICATION, response);
   }));
@@ -123,7 +123,7 @@ StateController.prototype.attachSocket = function(socket) {
   socket.on(eventKeys.PING, Promise.coroutine(function* (data, acknowledge) {
     log.silly(eventKeys.PING, data);
 
-    if(typeof acknowledge === 'function') {
+    if(typeof acknowledge === "function") {
       acknowledge(null, true);
     }
 
@@ -135,7 +135,7 @@ StateController.prototype.attachSocket = function(socket) {
 
       if(commands) {
         for(var i = 0; i < commands.length; ++i) {
-          log.debug('Ping command', commands[i]);
+          log.debug("Ping command", commands[i]);
           yield redisSocket.ping.apply(StateController.prototype, commands[i]);
         }
       }

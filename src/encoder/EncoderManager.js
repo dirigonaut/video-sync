@@ -1,12 +1,12 @@
-const Promise = require('bluebird');
-const Events  = require('events');
+const Promise = require("bluebird");
+const Events  = require("events");
 
 var plan, eventKeys, config, log;
 
 function EncoderManager() { }
 
 EncoderManager.prototype.initialize = function() {
-	if(typeof EncoderManager.prototype.protoInit === 'undefined') {
+	if(typeof EncoderManager.prototype.protoInit === "undefined") {
     EncoderManager.prototype.protoInit = true;
 		Object.setPrototypeOf(EncoderManager.prototype, Events.prototype);
 		config      		= this.factory.createConfig();
@@ -23,7 +23,9 @@ EncoderManager.prototype.encode = function(encodingPlan) {
 	log.debug("EncodingManager.encode");
 	if(plan === undefined) {
 		plan = encodingPlan;
-		this.emit('processed');
+		this.emit("processed");
+	} else {
+		throw new Error("There is a plan already being processed.");
 	}
 };
 
@@ -36,7 +38,7 @@ module.exports = EncoderManager;
 function processedEvent() {
 	var pointer = 0;
 
-	this.on('processed', function () {
+	this.on("processed", function () {
 		if(plan && plan.processes.hasOwnProperty(pointer)) {
 			var encodeProcess = plan.processes[pointer];
 			attachEvents.apply(this, encodeProcess);
@@ -45,19 +47,20 @@ function processedEvent() {
 			encodeProcess[1].execute()
 			.catch(function(error) {
 				log.error(error);
-				this.emit('processed');
+				this.emit("processed");
 			}.bind(this));
 		} else if(plan && pointer >= plan.processes.length) {
-			this.emit('finished', plan);
+
+			this.emit("finished", plan);
 			plan = undefined;
 		}
 	}.bind(this));
 }
 
 function attachEvents(id, encodeProcess) {
-	encodeProcess.on('start', function(pid) {
-		plan.statuses[id] = {};
-	}).on('data', function(cur, dur) {
+	encodeProcess.on("start", function(pid) {
+		plan.statuses[id] =	{};
+	}).on("data", function(cur, dur) {
 		if(cur) {
 			plan.statuses[id].encodedTo = cur;
 		}
@@ -65,11 +68,12 @@ function attachEvents(id, encodeProcess) {
 		if(dur) {
 			plan.statuses[id].duration = dur;
 		}
-	}).on('exit', function(exitCode) {
+	}).on("exit", function(exitCode) {
 		plan.statuses[id].exitCode = exitCode;
 		removeEvents(encodeProcess);
-		this.emit('processed');
-	}.bind(this)).on('error', function(error) {
+
+		this.emit("processed");
+	}.bind(this)).on("error", function(error) {
 		if(!plan.statuses[id].errors) {
 			plan.statuses[id].errors = [];
 		}

@@ -1,12 +1,12 @@
-const Promise = require('bluebird');
-const Redis   = require('redis');
+const Promise = require("bluebird");
+const Redis   = require("redis");
 
 var adapter, playerManager, subscriber, stateEngine, log;
 
 function StateSubscriber() { };
 
 StateSubscriber.prototype.initialize = function(force) {
-  if(typeof StateSubscriber.prototype.protoInit === 'undefined') {
+  if(typeof StateSubscriber.prototype.protoInit === "undefined") {
     StateSubscriber.prototype.protoInit = true;
     var config      = this.factory.createConfig();
 
@@ -25,17 +25,17 @@ StateSubscriber.prototype.initialize = function(force) {
 
 StateSubscriber.prototype.cleanUp = Promise.coroutine(function* () {
   log.debug("StateSubscriber.cleanUp");
-  if(typeof subscriber !== 'undefined' && subscriber) {
-    log.info('sub unscribe');
+  if(typeof subscriber !== "undefined" && subscriber) {
+    log.info("sub unscribe");
     yield subscriber.unsubscribeAsync("database");
     yield subscriber.unsubscribeAsync("state");
     yield subscriber.unsubscribeAsync("player");
     yield subscriber.unsubscribeAsync("media");
 
-    log.info('sub unref');
+    log.info("sub unref");
     subscriber.unref();
 
-    log.info('sub unlisten');
+    log.info("sub unlisten");
     subscriber.removeAllListeners("message");
     subscriber.removeAllListeners("subscribe");
     subscriber.removeAllListeners("connect");

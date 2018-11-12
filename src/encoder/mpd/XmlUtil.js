@@ -1,11 +1,11 @@
-const DOMParser  = require('xmldom').DOMParser;
+const DOMParser  = require("xmldom").DOMParser;
 
 var xmlFactory, log;
 
 function XmlUtil() { }
 
 XmlUtil.prototype.initialize = function() {
-	if(typeof XmlUtil.prototype.protoInit === 'undefined') {
+	if(typeof XmlUtil.prototype.protoInit === "undefined") {
     XmlUtil.prototype.protoInit = true;
 		xmlFactory 			= this.factory.createXmlFactory();
     var logManager  = this.factory.createLogManager();

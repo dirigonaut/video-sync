@@ -7,7 +7,7 @@ const FactoryManager  = require('./src/server/factory/FactoryManager');
 
 var encoder, factoryManager;
 
-const PARAMS = { CONFIG : "-c", ENCODE_DIR : "-d", TEMPLATES : "-t", DRY_RUN : "-dry" };
+const PARAMS = { CONFIG : "-c", ENCODE_DIR : "-d", TEMPLATES : "-t", DRY_RUN : "-dry", PLAN: "-p" };
 args = { };
 process.argv.forEach(function (val, index, array) {
   switch(val) {
@@ -44,15 +44,25 @@ process.argv.forEach(function (val, index, array) {
     case PARAMS.DRY_RUN:
       args[PARAMS.DRY_RUN] = true;
       break;
+    case PARAMS.PLAN:
+      if(Path.isAbsolute(array[index + 1])){
+        args[PARAMS.PLAN] = array[index + 1];
+      } else {
+        throw new Error("The argument -p (plan) is expected to be an absolute path to the plan it should run with.", args);
+      }
+      break;
   }
 });
 
 try {
   Assert.notEqual(args[PARAMS.CONFIG], undefined);
-  Assert.notEqual(args[PARAMS.TEMPLATES], undefined);
+
+  if(!args[PARAMS.PLAN]) {
+    Assert.notEqual(args[PARAMS.TEMPLATES], undefined);
+  }
 
   console.log(`Running with commands: ${Util.inspect(args)}`);
-  var start = Promise.coroutine(function* (configPath, inDir, templateIds, dryRun) {
+  var start = Promise.coroutine(function* (configPath, inDir, templateIds, dryRun, planPath) {
     factoryManager = Object.create(FactoryManager.prototype);
     var factory = yield factoryManager.initialize();
 
@@ -74,12 +84,30 @@ try {
                    inDir ? inDir : config.getConfig().dirs.encodeDir,
                    config.getConfig().dirs.mediaDir, dryRun];
 
-      yield encoder.start.apply(encoder, codecArgs);
+      var plan;
+      var planName;
+      if(typeof planPath === "undefined") {
+        plan = yield encoder.createPlan.apply(encoder, codecArgs);
+        planName = `Plan-${process.pid}.txt`;
+        yield encoder.savePlan(plan, planName);
+      } else {
+        plan = yield encoder.loadPlan(planPath);
+        planName = planPath.split(Path.sep);
+        planName = planName[planName.length - 1];
+      }
+
+      if(!dryRun) {
+        if(plan) {
+          yield encoder.runPlan(plan, planName);
+        } else {
+          throw new Error("The plan is not defined to be able to encode it.");
+        }
+      }
     });
 
     //If locking is enabled then grab file lock
     if(typeof config.getConfig().serverInfo.lockDir !== "undefined") {
-      process.on('exit', (code) => {
+      process.on("exit", (code) => {
         LockFile.unlock(Path.join(config.getConfig().serverInfo.lockDir, "video-sync-encode.lock"), console.log);
       });
 
@@ -93,7 +121,8 @@ try {
           args[PARAMS.CONFIG],
           args[PARAMS.ENCODE_DIR],
           args[PARAMS.TEMPLATES],
-          args[PARAMS.DRY_RUN] ? true : false);
+          args[PARAMS.DRY_RUN] ? true : false,
+          args[PARAMS.PLAN]);
 
 } catch(e) {
   console.log("Missing required options.");

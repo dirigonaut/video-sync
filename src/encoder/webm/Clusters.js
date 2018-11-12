@@ -3,7 +3,7 @@ var log;
 function Clusters() { }
 
 Clusters.prototype.initialize = function() {
-	if(typeof Clusters.prototype.protoInit === 'undefined') {
+	if(typeof Clusters.prototype.protoInit === "undefined") {
     Clusters.prototype.protoInit = true;
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.ENCODING);
@@ -19,24 +19,24 @@ Clusters.prototype.createCluster = function() {
 };
 
 Clusters.prototype.prime = function(path, init) {
-  log.debug('Clusters.prime', path);
+  log.debug("Clusters.prime", path);
   this.path = path;
   this.init = init;
   this.linkedClusters;
 }
 
 Clusters.prototype.setTimecodeScale = function(timecodeScale) {
-  log.silly('Clusters.setTimecodeScale', timecodeScale);
+  log.silly("Clusters.setTimecodeScale", timecodeScale);
   this.timecodeScale = timecodeScale;
 };
 
 Clusters.prototype.setDuration = function(duration) {
-  log.silly('Clusters.setDuration', duration);
+  log.silly("Clusters.setDuration", duration);
   this.duration = duration;
 };
 
 Clusters.prototype.addCluster = function(cluster) {
-  log.silly('Clusters.addCluster', cluster);
+  log.silly("Clusters.addCluster", cluster);
   var linkedCluster = createLinkedCluster();
   linkedCluster.cluster = cluster;
 
@@ -49,7 +49,7 @@ Clusters.prototype.addCluster = function(cluster) {
   }
 
 	if(!last && !this.linkedClusters) {
-		linkedCluster.prev = 'head';
+		linkedCluster.prev = "head";
 		this.linkedClusters = linkedCluster;
 	} else if(last) {
 		linkedCluster.prev = last;
@@ -71,7 +71,7 @@ Clusters.prototype.getCluster = function(position) {
 };
 
 Clusters.prototype.flatten = function() {
-  log.debug('Clusters.flatten');
+  log.debug("Clusters.flatten");
   var clusterList = [];
 
   for(var pointer = this.linkedClusters; pointer; pointer = pointer.next) {

@@ -1,5 +1,5 @@
-const Promise   = require('bluebird');
-const Redis     = require('redis');
+const Promise   = require("bluebird");
+const Redis     = require("redis");
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
@@ -8,7 +8,7 @@ var publisher, client, log;
 function RedisAdapter() { }
 
 RedisAdapter.prototype.initialize = function() {
-  if(typeof RedisAdapter.prototype.protoInit === 'undefined') {
+  if(typeof RedisAdapter.prototype.protoInit === "undefined") {
     RedisAdapter.prototype.protoInit = true;
     var config      = this.factory.createConfig();
     client          = Redis.createClient(config.getConfig().redisInfo.connection);
@@ -27,7 +27,7 @@ RedisAdapter.prototype.callFunction = Promise.coroutine(function* (object, messa
     var functionParams = message[1] ? message[1] : [];
 
     if(functionHandle) {
-      if(typeof object[functionHandle] === 'function') {
+      if(typeof object[functionHandle] === "function") {
         var response = object[functionHandle].apply(object, functionParams);
 
         if(response instanceof Promise) {

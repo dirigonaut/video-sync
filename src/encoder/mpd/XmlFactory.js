@@ -13,7 +13,7 @@ XmlFactory.prototype.buildSegmentList = function(timescale, duration) {
 };
 
 XmlFactory.prototype.buildSegmentListEnd = function() {
-  return '</SegmentList>';
+  return "</SegmentList>";
 };
 
 module.exports = XmlFactory;

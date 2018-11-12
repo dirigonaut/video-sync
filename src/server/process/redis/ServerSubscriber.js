@@ -1,6 +1,6 @@
-const Promise = require('bluebird');
-const Util    = require('util');
-const Redis   = require('redis');
+const Promise = require("bluebird");
+const Util    = require("util");
+const Redis   = require("redis");
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
@@ -9,7 +9,7 @@ var adapter, subscriber, log;
 function ServerSubscriber() { }
 
 ServerSubscriber.prototype.initialize = Promise.coroutine(function* () {
-  if(typeof ServerSubscriber.prototype.protoInit === 'undefined') {
+  if(typeof ServerSubscriber.prototype.protoInit === "undefined") {
     ServerSubscriber.prototype.protoInit = true;
     var config      = this.factory.createConfig();
     adapter         = this.factory.createRedisAdapter();
@@ -24,14 +24,14 @@ ServerSubscriber.prototype.initialize = Promise.coroutine(function* () {
 
 ServerSubscriber.prototype.cleanUp = Promise.coroutine(function* () {
   log.debug("ServerSubscriber.cleanUp");
-  if(typeof subscriber !== 'undefined' && subscriber) {
-    log.info('sub unscribe');
+  if(typeof subscriber !== "undefined" && subscriber) {
+    log.info("sub unscribe");
     yield subscriber.unsubscribeAsync("media");
 
-    log.info('sub unref');
+    log.info("sub unref");
     subscriber.unref();
 
-    log.info('sub unlisten');
+    log.info("sub unlisten");
     subscriber.removeAllListeners("message");
     subscriber.removeAllListeners("subscribe");
     subscriber.removeAllListeners("connect");

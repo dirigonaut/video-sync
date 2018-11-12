@@ -1,4 +1,4 @@
-const Imports = require('./Imports');
+const Imports = require("./Imports");
 
 var factory;
 
@@ -15,7 +15,7 @@ ClientFactoryManager.prototype.getFactory = function() {
 module.exports = ClientFactoryManager;
 
 function createFactory() {
-  if(typeof ClientFactoryManager.prototype.protoInit === 'undefined') {
+  if(typeof ClientFactoryManager.prototype.protoInit === "undefined") {
     ClientFactoryManager.prototype.protoInit = true;
     var imports   = Object.create(Object.prototype);
     Object.assign(imports, Imports);
@@ -30,6 +30,6 @@ function createFactory() {
 
     return factory;
   } else {
-    throw new Error('ClientFactoryManager has already been initialized.');
+    throw new Error("ClientFactoryManager has already been initialized.");
   }
 };

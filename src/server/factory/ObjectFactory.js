@@ -1,12 +1,12 @@
-const Promise   = require('bluebird');
-const Path      = require('path');
+const Promise   = require("bluebird");
+const Path      = require("path");
 
-const SERVER_DIR  = Path.join(__dirname, '../../server');
-const ENCODE_DIR  = Path.join(__dirname, '../../encoder');
-const COMMON_DIR  = Path.join(__dirname, '../../common');
+const SERVER_DIR  = Path.join(__dirname, "../../server");
+const ENCODE_DIR  = Path.join(__dirname, "../../encoder");
+const COMMON_DIR  = Path.join(__dirname, "../../common");
 
-const FACTORY_DIR = '/factory/';
-const SCHEMAS     = 'Schemas.js'
+const FACTORY_DIR = "/factory/";
+const SCHEMAS     = "Schemas.js"
 
 const REGEX       = /\.js$/;
 

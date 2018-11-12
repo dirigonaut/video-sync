@@ -12,7 +12,7 @@ Command.prototype.setArgs = function() {
 Command.prototype.format = function(index, input) {
   var i = 0;
   return this.command.replace(/{}/g, function () {
-    var value = i++ === index && typeof input != 'undefined' ? input : '{}';
+    var value = i++ === index && typeof input != "undefined" ? input : "{}";
     return value;
  });
 };
@@ -32,7 +32,7 @@ Command.prototype.getArgs = function() {
   for(var itter = regex.exec(this.command); itter; itter = regex.exec(this.command)) {
     lastIndex = regex.lastIndex;
     var value = itter[0];
-    value = value.replace(/\"/g, '');
+    value = value.replace(/\"/g, "");
 
     if(value.match(/{}/g)) {
       var replacement = formatArgs.shift();

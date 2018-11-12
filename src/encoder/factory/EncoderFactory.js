@@ -1,13 +1,12 @@
-const Promise = require('bluebird');
-const Path    = require('path');
-const Crypto  = require('crypto');
+const Promise   = require("bluebird");
+const Path      = require("path");
 
 var config, pathUtil, log;
 
 function EncoderFactory() { }
 
 EncoderFactory.prototype.initialize = function() {
-  if(typeof EncoderFactory.prototype.protoInit === 'undefined') {
+  if(typeof EncoderFactory.prototype.protoInit === "undefined") {
     EncoderFactory.prototype.protoInit = true;
 		config    = this.factory.createConfig();
     pathUtil  = this.factory.createPathUtil();
@@ -18,9 +17,9 @@ EncoderFactory.prototype.initialize = function() {
 };
 
 EncoderFactory.prototype.createPlan = Promise.coroutine(function* (templateIds, inDir, outDir) {
-  log.info('EncoderFactory.createPlan', arguments);
+  log.info("EncoderFactory.createPlan", arguments);
   var fileList = yield getAllFilesToEncode(inDir);
-  var plan = { processes : [], statuses: [] };
+  var plan = this.factory.createPlan();
 
   for(let id in templateIds) {
     if(config.getConfig().ffmpeg.templates[templateIds[id]]) {
@@ -34,7 +33,7 @@ EncoderFactory.prototype.createPlan = Promise.coroutine(function* (templateIds, 
           for(var entry of Object.entries(template[codec])) {
             var key = entry[0];
             var value = entry[1];
-            var hash = getHash(plan.processes);
+            var hash = undefined;
 
             switch (key) {
               case EncoderFactory.Enum.Types.VIDEO.toLowerCase():
@@ -43,6 +42,7 @@ EncoderFactory.prototype.createPlan = Promise.coroutine(function* (templateIds, 
 
                 commands = commands.concat(videos);
                 for(let i in videos) {
+                  hash = plan.getHash();
                   plan.processes.push([hash, createFfmpegProcess.call(this, videos[i], hash)]);
                 }
                 break;
@@ -52,6 +52,7 @@ EncoderFactory.prototype.createPlan = Promise.coroutine(function* (templateIds, 
 
                 commands = commands.concat(audios);
                 for(let i in audios) {
+                  hash = plan.getHash();
                   plan.processes.push([hash, createFfmpegProcess.call(this, audios[i], hash)]);
                 }
                 break;
@@ -63,6 +64,7 @@ EncoderFactory.prototype.createPlan = Promise.coroutine(function* (templateIds, 
                                     file, inDir, outDir);
 
                   for(let i in subtitles) {
+                    hash = plan.getHash();
                     plan.processes.push([hash, createFfmpegProcess.call(this, subtitles[i], hash)]);
                   }
                 }
@@ -70,12 +72,12 @@ EncoderFactory.prototype.createPlan = Promise.coroutine(function* (templateIds, 
             }
           }
 
-          var hash = getHash(plan.processes);
+          var hash = plan.getHash();
           var manifestProcess = createFfmpegProcess.call(this, this.createManifestCommand(codec, templateIds[id], commands, file, inDir, outDir), hash);
           plan.processes.push([hash, manifestProcess]);
 
           if(codec === EncoderFactory.Enum.Codecs.WEBM) {
-            var hash = getHash(plan.processes);
+            var hash = plan.getHash();
             var mpdPath = manifestProcess.command[manifestProcess.command.length - 1];
             plan.processes.push([hash, createClusterProcess.call(this, mpdPath)]);
           }
@@ -90,7 +92,7 @@ EncoderFactory.prototype.createPlan = Promise.coroutine(function* (templateIds, 
 });
 
 EncoderFactory.prototype.createMediaCommands = function(codec, type, templates, input, inDir, outDir) {
-  log.info('EncoderFactory.createMediaCommands', arguments);
+  log.info("EncoderFactory.createMediaCommands", arguments);
   var commands = [];
 
   for(var entry of Object.entries(templates)) {
@@ -104,7 +106,7 @@ EncoderFactory.prototype.createMediaCommands = function(codec, type, templates, 
 };
 
 EncoderFactory.prototype.createSubtitleCommands = function(codec, id, tracks, input, inDir, outDir) {
-  log.info('EncoderFactory.createSubtitleCommands', arguments);
+  log.info("EncoderFactory.createSubtitleCommands", arguments);
   var subtitle = config.getConfig().ffmpeg.templates[id][codec].subtitle;
   var commands = [];
 
@@ -117,7 +119,7 @@ EncoderFactory.prototype.createSubtitleCommands = function(codec, id, tracks, in
 };
 
 EncoderFactory.prototype.createManifestCommand = function(codec, id, commands, input, inDir, outDir) {
-  log.info('EncoderFactory.createManifestCommand', arguments);
+  log.info("EncoderFactory.createManifestCommand", arguments);
   var command = this.factory.createCommand();
   var manifest = config.getConfig().ffmpeg.templates[id][codec].manifest;
 
@@ -134,7 +136,7 @@ EncoderFactory.prototype.createManifestCommand = function(codec, id, commands, i
 };
 
 EncoderFactory.prototype.createFfprobeCommand = function(input) {
-  log.info('EncoderFactory.createFfprobeCommand', arguments);
+  log.info("EncoderFactory.createFfprobeCommand", arguments);
   var command = this.factory.createCommand();
 
   command.setTemplate(config.getConfig().ffmpeg.ffprobe);
@@ -143,11 +145,18 @@ EncoderFactory.prototype.createFfprobeCommand = function(input) {
   return command;
 };
 
+EncoderFactory.prototype.parse = function(data) {
+  var plan = this.factory.createPlan();
+  plan.setPlan(data);
+  plan.parse();
+  return plan;
+}
+
 module.exports = EncoderFactory;
 
 EncoderFactory.Enum        = { };
-EncoderFactory.Enum.Types  = { VIDEO: 'VIDEO', AUDIO: 'AUDIO', SUBTITLE: 'SUBTITLE', MANIFEST: 'MANIFEST' };
-EncoderFactory.Enum.Codecs = { WEBM: 'webm' };
+EncoderFactory.Enum.Types  = { VIDEO: "VIDEO", AUDIO: "AUDIO", SUBTITLE: "SUBTITLE", MANIFEST: "MANIFEST" };
+EncoderFactory.Enum.Codecs = { WEBM: "webm" };
 
 var getWebmManifestArgs = function(manifest, manCommand, codec, commands, output) {
   var maps = [];
@@ -162,12 +171,12 @@ var getWebmManifestArgs = function(manifest, manCommand, codec, commands, output
   for(let i = 0; i < commands.length; ++i) {
     var args = commands[i].getArgs();
 
-    if(args.indexOf('NUL') === -1 && args.indexOf('/dev/null') === -1) {
+    if(args.indexOf("NUL") === -1 && args.indexOf("/dev/null") === -1) {
       ++trackIndex;
 
-      if(args.indexOf('-c:v') > -1) {
+      if(args.indexOf("-c:v") > -1) {
         vSet.push(trackIndex);
-      } else if(args.indexOf('-c:a') > -1) {
+      } else if(args.indexOf("-c:a") > -1) {
         aSet.push(trackIndex);
       }
 
@@ -190,11 +199,11 @@ var getWebmManifestArgs = function(manifest, manCommand, codec, commands, output
 var getOutputPath = function(codec, id, input, inDir, outDir) {
   var subPath = input.substring(inDir.length + 1, input.length);
   var splitPath = subPath.split(/[/\\]+/);
-  var splitType = splitPath.pop().split('.');
+  var splitType = splitPath.pop().split(".");
 
   var dirName = decodeURI(Path.basename(input, `.${splitType.pop()}`))
   return Path.join(outDir, Path.join.apply(null, splitPath), dirName.trim(),
-      `${splitType.join('.')}_${id}.${codec}`);
+      `${splitType.join(".")}_${id}.${codec}`);
 };
 
 var getAllFilesToEncode = Promise.coroutine(function* (dir) {
@@ -222,16 +231,6 @@ var getSubtitleTracks = Promise.coroutine(function* (path) {
 
   return tracks;
 });
-
-var getHash = function(object) {
-  while(true) {
-    hash = Crypto.randomBytes(32).toString('hex');
-    if(!object[hash]) {
-      return hash;
-    }
-    continue;
-  }
-};
 
 var createFfmpegProcess = function(command, id) {
   var ffmpeg = this.factory.createFfmpegProcess();

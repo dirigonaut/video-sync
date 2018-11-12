@@ -1,12 +1,12 @@
-const Promise   = require('bluebird');
-const XmlParser = Promise.promisifyAll(require('xml2js').Parser());
+const Promise   = require("bluebird");
+const XmlParser = Promise.promisifyAll(require("xml2js").Parser());
 
 var log;
 
 function MpdMeta() { }
 
 MpdMeta.prototype.initialize = function() {
-  if(typeof MpdMeta.prototype.protoInit === 'undefined') {
+  if(typeof MpdMeta.prototype.protoInit === "undefined") {
     MpdMeta.prototype.protoInit = true;
     var logManager  = this.factory.createClientLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.VIDEO);
@@ -43,7 +43,7 @@ MpdMeta.prototype.setTrackQuality = function(typeId, index) {
 };
 
 MpdMeta.prototype.getInit = function(typeId) {
-  log.debug('MpdMeta.getInit ' + typeId);
+  log.debug("MpdMeta.getInit " + typeId);
   var active = this.activeMeta.get(typeId);
   var range = this.parserUtil.getInit(this.metaData, typeId, active.trackIndex).split("-");
   var segment = [range[0], range[1]];
@@ -112,7 +112,7 @@ MpdMeta.prototype.getSegmentTimeCode = function(typeId, index) {
 };
 
 MpdMeta.prototype.updateActiveMeta = function(typeId, segmentIndex) {
-  log.info('MpdMeta.updateActiveMeta', typeId);
+  log.info("MpdMeta.updateActiveMeta", typeId);
   this.activeMeta.get(typeId).bufferIndex = segmentIndex;
 };
 

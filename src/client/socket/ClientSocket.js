@@ -1,6 +1,6 @@
-const Promise = require('bluebird');
-const Io 			= require('socket.io-client');
-const Events  = require('events');
+const Promise = require("bluebird");
+const Io 			= require("socket.io-client");
+const Events  = require("events");
 
 const TIMEOUT = 5000;
 
@@ -9,7 +9,7 @@ var socket, wrapper, eventKeys, log;
 function ClientSocket() { }
 
 ClientSocket.prototype.initialize = function() {
-	if(typeof ClientSocket.prototype.protoInit === 'undefined') {
+	if(typeof ClientSocket.prototype.protoInit === "undefined") {
 		ClientSocket.prototype.protoInit 	= true;
 		ClientSocket.prototype.events 		=  Object.create(Events.prototype);
 
@@ -26,7 +26,7 @@ ClientSocket.prototype.initialize = function() {
 ClientSocket.prototype.connectAsync = function(serverUrl, authToken) {
 	if(!socket) {
 		log.info(`Socket connecting to: ${serverUrl} with token: `, authToken);
-		authToken = typeof authToken === 'object' ? JSON.stringify(authToken) : authToken;
+		authToken = typeof authToken === "object" ? JSON.stringify(authToken) : authToken;
 
 		socket = Io.connect(`${serverUrl}`, {
 			rejectUnauthorized: true,
@@ -110,7 +110,7 @@ ClientSocket.prototype.removeEvent = function(event, callback) {
 module.exports = ClientSocket;
 
 ClientSocket.Enum = { };
-ClientSocket.Enum.Events = { DISCONNECT: 'socket-disconnect', RECONNECT: 'socket-reconnect', ERROR: 'socket-error'};
+ClientSocket.Enum.Events = { DISCONNECT: "socket-disconnect", RECONNECT: "socket-reconnect", ERROR: "socket-error"};
 
 function Wrapper() { }
 
@@ -134,7 +134,7 @@ Wrapper.prototype.setEvent = function(event, callback) {
 };
 
 Wrapper.prototype.removeEvent = function(event, callback) {
-	if(typeof callback === 'function') {
+	if(typeof callback === "function") {
 		this.removeListener(event, callback);
 	} else {
 		this.removeAllListeners(event);
