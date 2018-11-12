@@ -1,13 +1,13 @@
-const Promise   = require('bluebird');
-const XmlDom    = require('xmldom');
-const Fs        = Promise.promisifyAll(require('fs'));
+const Promise   = require("bluebird");
+const XmlDom    = require("xmldom");
+const Fs        = Promise.promisifyAll(require("fs"));
 
 var fileSystemUtils, log;
 
 function MpdUtil() { }
 
 MpdUtil.prototype.initialize = function() {
-	if(typeof MpdUtil.prototype.protoInit === 'undefined') {
+	if(typeof MpdUtil.prototype.protoInit === "undefined") {
     MpdUtil.prototype.protoInit = true;
 		fileSystemUtils = this.factory.createFileSystemUtils();
     var logManager  = this.factory.createLogManager();
@@ -16,7 +16,7 @@ MpdUtil.prototype.initialize = function() {
 };
 
 MpdUtil.prototype.addSegmentsToMpd = Promise.coroutine(function* (path, metaMap) {
-  log.debug('MpdUtil.addSegmentsToMpd', metaMap);
+  log.debug("MpdUtil.addSegmentsToMpd", metaMap);
   var rawMpd = yield Fs.readFileAsync(path);
 
   if(!rawMpd) {
@@ -39,15 +39,15 @@ module.exports = MpdUtil;
 
 var insertMetaData = function(mpd, metaData) {
   log.debug("MpdUtil.insertMetaData", metaData);
-  var adaptionSets = mpd.documentElement.getElementsByTagName('AdaptationSet');
+  var adaptionSets = mpd.documentElement.getElementsByTagName("AdaptationSet");
   var representationMap = new Map();
 
   for(var i = 0; i < adaptionSets.length; ++i) {
-    var representationSets = adaptionSets[i].getElementsByTagName('Representation');
+    var representationSets = adaptionSets[i].getElementsByTagName("Representation");
 
     for(var j = 0; j < representationSets.length; ++j) {
-      var id = representationSets.item(j).getElementsByTagName('BaseURL').item(0).childNodes.item(0).data;
-      var base = representationSets.item(j).getElementsByTagName('SegmentBase').item(0);
+      var id = representationSets.item(j).getElementsByTagName("BaseURL").item(0).childNodes.item(0).data;
+      var base = representationSets.item(j).getElementsByTagName("SegmentBase").item(0);
 
       if(base) {
         representationSets.item(j).removeChild(base);
@@ -67,15 +67,15 @@ var insertMetaData = function(mpd, metaData) {
 };
 
 var cleanMpdPaths = function(mpd) {
-  log.debug('MpdUtil.cleanMpdPaths');
-  var adaptionSets = mpd.documentElement.getElementsByTagName('AdaptationSet');
+  log.debug("MpdUtil.cleanMpdPaths");
+  var adaptionSets = mpd.documentElement.getElementsByTagName("AdaptationSet");
   var representationMap = new Map();
 
   for(var i = 0; i < adaptionSets.length; ++i) {
-    var representationSets = adaptionSets[i].getElementsByTagName('Representation');
+    var representationSets = adaptionSets[i].getElementsByTagName("Representation");
 
     for(var j = 0; j < representationSets.length; ++j) {
-      var baseUrlData = representationSets.item(j).getElementsByTagName('BaseURL').item(0).childNodes.item(0)
+      var baseUrlData = representationSets.item(j).getElementsByTagName("BaseURL").item(0).childNodes.item(0)
       var name = `${fileSystemUtils.splitNameFromPath(baseUrlData.data)}.${fileSystemUtils.splitExtensionFromPath(baseUrlData.data)}`;
       baseUrlData.data = name;
       baseUrlData.nodeValue = name;

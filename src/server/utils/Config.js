@@ -1,14 +1,14 @@
-const Promise   = require('bluebird');
-const Yaml      = require('js-yaml');
-const Path      = require('path');
-const Fs        = Promise.promisifyAll(require('fs'));
+const Promise   = require("bluebird");
+const Yaml      = require("js-yaml");
+const Path      = require("path");
+const Fs        = Promise.promisifyAll(require("fs"));
 
 var config;
 
 function Config() { }
 
 Config.prototype.initialize = function() {
-  if(typeof Config.prototype.protoInit === 'undefined') {
+  if(typeof Config.prototype.protoInit === "undefined") {
     Config.prototype.protoInit = true;
   }
 };

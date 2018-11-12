@@ -1,12 +1,12 @@
-const Promise = require('bluebird');
-const Events  = require('events');
+const Promise = require("bluebird");
+const Events  = require("events");
 
 var eventKeys, log;
 
 function Subtitles() { }
 
 Subtitles.prototype.initialize = function(force) {
-  if(typeof Subtitles.prototype.protoInit === 'undefined') {
+  if(typeof Subtitles.prototype.protoInit === "undefined") {
     Subtitles.prototype.protoInit = true;
     Object.setPrototypeOf(Subtitles.prototype, Events.prototype);
 
@@ -17,7 +17,7 @@ Subtitles.prototype.initialize = function(force) {
 };
 
 Subtitles.prototype.setup = function(videoElement) {
-  log.debug('Subtitles.setup');
+  log.debug("Subtitles.setup");
   var onLoad = Promise.coroutine(function*() {
     yield onReady.call(this, videoElement);
   }.bind(this));
@@ -30,7 +30,7 @@ Subtitles.prototype.setup = function(videoElement) {
 module.exports = Subtitles;
 
 var onReady = Promise.coroutine(function* (videoElement) {
-  log.debug('Subtitles._onReady');
+  log.debug("Subtitles._onReady");
   var fileBuffer = this.factory.createFileBuffer();
   var files = yield fileBuffer.requestFilesAsync(eventKeys.SUBTITLES);
 
@@ -40,12 +40,12 @@ var onReady = Promise.coroutine(function* (videoElement) {
     }
   }
 
-  this.emit('subtitle-loaded');
+  this.emit("subtitle-loaded");
 });
 
 var onReset = function(videoElement, onLoad) {
   var reset = function() {
-    log.debug('Subtitles._onReset');
+    log.debug("Subtitles._onReset");
     for(var i = 0; i < videoElement.textTracks.length; ++i) {
       var track = videoElement.textTracks[i];
       var cues = videoElement.textTracks[i].cues;
@@ -56,7 +56,7 @@ var onReset = function(videoElement, onLoad) {
       }
     }
 
-    videoElement.removeEventListener('loadedmetadata', onLoad);
+    videoElement.removeEventListener("loadedmetadata", onLoad);
   }.bind(this);
 
   return reset;
@@ -67,14 +67,14 @@ var initTrack = function(videoElement, name, file) {
 
   if(videoElement.textTracks.length > 0) {
     for(let i = 0; i < videoElement.textTracks.length; ++i) {
-      if(videoElement.textTracks[i].mode === 'disabled') {
+      if(videoElement.textTracks[i].mode === "disabled") {
         track = videoElement.textTracks[i];
         track.label = name;
         track.mode = "hidden";
       }
     }
   } else {
-    track = videoElement.addTextTrack('subtitles', name, 'en');
+    track = videoElement.addTextTrack("subtitles", name, "en");
     track.mode = "hidden";
   }
 
@@ -88,7 +88,7 @@ var initTrack = function(videoElement, name, file) {
 
 var createCues = function(file) {
   var regex = /[\d+:]*\d+.\d+\s-->\s[\d+:]*\d+.\d+/g;
-  var cueBlocks = file.split('\n\n');
+  var cueBlocks = file.split("\n\n");
   var results = [];
 
   for(var i = 0; i < cueBlocks.length; ++i) {
@@ -98,9 +98,9 @@ var createCues = function(file) {
     if(block) {
       var value = block.match(regex);
       if(value) {
-        var splitTime = value[0].split('-->');
+        var splitTime = value[0].split("-->");
         cueData.range = {start: convertToSeconds(splitTime[0]), end: convertToSeconds(splitTime[1])};
-        cueData.text = block.substring(block.indexOf('\n')).trim();
+        cueData.text = block.substring(block.indexOf("\n")).trim();
       }
     }
 

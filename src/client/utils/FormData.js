@@ -1,12 +1,12 @@
-const Promise  = require('bluebird');
-const Events   = require('events');
+const Promise  = require("bluebird");
+const Events   = require("events");
 
 var formEvents, formList, socket, eventKeys, log;
 
 function FormData() { }
 
 FormData.prototype.initialize = function(init) {
-  if(typeof FormData.prototype.protoInit === 'undefined' && typeof init !== 'undefined' ? init : false) {
+  if(typeof FormData.prototype.protoInit === "undefined" && typeof init !== "undefined" ? init : false) {
     FormData.prototype.protoInit = true;
     Object.setPrototypeOf(FormData.prototype, Events.prototype);
 
@@ -46,7 +46,7 @@ FormData.prototype.clean = function() {
 module.exports = FormData;
 
 FormData.Enum = {};
-FormData.Enum.Forms = { TOKENS: 'tokens', MEDIA_DIRS: 'mediaDirs', ENCODE_DIRS: 'encodeDirs' };
+FormData.Enum.Forms = { TOKENS: "tokens", MEDIA_DIRS: "mediaDirs", ENCODE_DIRS: "encodeDirs" };
 
 function setSocketEvents(events) {
   log.debug("FormData.setSocketEvents");

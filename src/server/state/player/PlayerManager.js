@@ -3,7 +3,7 @@ var players, redisSocket, eventKeys, log;
 function PlayerManager () { };
 
 PlayerManager.prototype.initialize = function() {
-  if(typeof PlayerManager.prototype.protoInit === 'undefined') {
+  if(typeof PlayerManager.prototype.protoInit === "undefined") {
     PlayerManager.prototype.protoInit = true;
     redisSocket     = this.factory.createRedisSocket();
     eventKeys       = this.factory.createKeys();
@@ -24,11 +24,11 @@ PlayerManager.prototype.createPlayer = function(id) {
 PlayerManager.prototype.getPlayer = function(id) {
   log.silly(`PlayerManager.getPlayer ${id}`);
   var player = players.get(id);
-  return player ? player : players.get('/#' + id);
+  return player ? player : players.get("/#" + id);
 };
 
 PlayerManager.prototype.getPlayers = function() {
-  log.silly('PlayerManager.getPlayers');
+  log.silly("PlayerManager.getPlayers");
   return players;
 };
 
@@ -40,7 +40,7 @@ PlayerManager.prototype.getOtherPlayers = function(id) {
 };
 
 PlayerManager.prototype.initPlayers = function() {
-  log.debug('PlayerManager.initPlayers');
+  log.debug("PlayerManager.initPlayers");
   for(var p of players.values()) {
     p.reset();
   }
@@ -53,7 +53,7 @@ PlayerManager.prototype.removePlayer = function(id) {
   var player = players.get(id);
 
   if(!player) {
-    player = players.delete('/#' + id);
+    player = players.delete("/#" + id);
   }
 };
 

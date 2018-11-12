@@ -14,9 +14,9 @@ FileSystemUtils.prototype.splitNameFromPath = function(path) {
   var splitPath = this.splitPath(path);
 
   var parsedPath = splitPath[splitPath.length - 1];
-  parsedPath = parsedPath.split('.');
+  parsedPath = parsedPath.split(".");
   parsedPath.pop();
-  return parsedPath.join('.');
+  return parsedPath.join(".");
 };
 
 FileSystemUtils.prototype.splitDirFromPath = function(path) {
@@ -26,13 +26,13 @@ FileSystemUtils.prototype.splitDirFromPath = function(path) {
 
 FileSystemUtils.prototype.splitExtensionFromPath = function(path) {
   var splitPath = this.splitPath(path);
-  return splitPath[splitPath.length - 1].split('.').pop();
+  return splitPath[splitPath.length - 1].split(".").pop();
 };
 
 FileSystemUtils.prototype.ensureEOL = function(string) {
   var lastChar = string.slice(-1);
-  if(lastChar !== '/' && lastChar !== '\\') {
-    string = process.platform === 'win32' ? string + '\\' : string + '/';
+  if(lastChar !== "/" && lastChar !== "\\") {
+    string = process.platform === "win32" ? string + "\\" : string + "/";
   }
   return string;
 }

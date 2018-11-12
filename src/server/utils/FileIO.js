@@ -1,6 +1,6 @@
-const Promise     = require('bluebird');
-const Fs          = Promise.promisifyAll(require('fs'));
-const Path        = require('path');
+const Promise     = require("bluebird");
+const Fs          = Promise.promisifyAll(require("fs"));
+const Path        = require("path");
 
 const DIR_MASK = 464;
 
@@ -9,7 +9,7 @@ var log;
 function FileIO() { }
 
 FileIO.prototype.initialize = function(init) {
-  if(typeof FileIO.prototype.protoInit === 'undefined' && typeof init !== 'undefined' ? init : true) {
+  if(typeof FileIO.prototype.protoInit === "undefined" && typeof init !== "undefined" ? init : true) {
     FileIO.prototype.protoInit = true;
     var logManager  = this.factory.createLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.UTILS);
@@ -17,34 +17,34 @@ FileIO.prototype.initialize = function(init) {
 };
 
 FileIO.prototype.read = function(path, options, onData, onFinish) {
-  log.debug('FileIO.read', path);
+  log.debug("FileIO.read", path);
   var readStream  = Fs.createReadStream(path, options);
   var index = 0;
 
-  readStream.on('error', function(e) {
+  readStream.on("error", function(e) {
     log.error("FileIO.read, Server: Error: " + e);
   });
 
-  readStream.on('close', function() {
+  readStream.on("close", function() {
     log.debug("FileIO.read, Server: Finished reading.");
     if(onFinish) {
       onFinish(index);
     }
 	});
 
-  readStream.on('data', function(chunk) {
+  readStream.on("data", function(chunk) {
     onData(chunk, index);
     index += 1;
   });
 };
 
 FileIO.prototype.readDirAsync = Promise.coroutine(function* (path, extType) {
-  FileIO.prototype.protoInit ? log.debug('FileIO.readDirAsync ' + path + ' ' + extType)
-                             : console.log('FileIO.readDirAsync ' + path + ' ' + extType);
+  FileIO.prototype.protoInit ? log.debug("FileIO.readDirAsync " + path + " " + extType)
+                             : console.log("FileIO.readDirAsync " + path + " " + extType);
   var files = yield Fs.readdirAsync(path);
 
   var matchingFiles = [];
-  if(typeof files !== 'undefined' && files) {
+  if(typeof files !== "undefined" && files) {
     for(let i = 0; i < files.length; ++i) {
       if(!extType || Path.extname(files[i]).includes(extType)) {
         matchingFiles.push(files[i]);
@@ -61,8 +61,8 @@ FileIO.prototype.isDir = Promise.coroutine(function* (path) {
 });
 
 FileIO.prototype.ensureDirExistsAsync = function(path, mask) {
-  FileIO.prototype.protoInit ? log.debug('FileIO.ensureDirExistsAsync', arguments)
-                             : console.log('FileIO.ensureDirExistsAsync', arguments);
+  FileIO.prototype.protoInit ? log.debug("FileIO.ensureDirExistsAsync", arguments)
+                             : console.log("FileIO.ensureDirExistsAsync", arguments);
   if(!mask) {
     mask = DIR_MASK;
   }
@@ -73,7 +73,7 @@ FileIO.prototype.ensureDirExistsAsync = function(path, mask) {
     for(var i = 0; i <= splitDir.length; ++i) {
       yield Fs.mkdirAsync(Path.join.apply(null, splitDir.slice(0,i)).trim(), mask)
         .catch(function(err) {
-          if (err.code !== 'EEXIST') {
+          if (err.code !== "EEXIST") {
             reject(new Error(err));
           }
       });
@@ -84,19 +84,19 @@ FileIO.prototype.ensureDirExistsAsync = function(path, mask) {
 };
 
 FileIO.prototype.dirExists = function(path) {
-  log.debug('FileIO.dirExists', path);
+  log.debug("FileIO.dirExists", path);
   return Fs.statAsync(path).then(function(stats) {
     var isDir = false;
 
     if(stats.isDirectory()) {
       isDir = true;
     } else {
-      log.error('FileIO.dirExists is not dir', path);
+      log.error("FileIO.dirExists is not dir", path);
     }
 
     return isDir;
   }).catch(function(err) {
-    log.error('FileIO.dirExists is not dir', path);
+    log.error("FileIO.dirExists is not dir", path);
 
     return false;
   });

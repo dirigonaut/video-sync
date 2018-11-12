@@ -1,11 +1,11 @@
-const Promise = require('bluebird');
+const Promise = require("bluebird");
 
 var cache, media, fileIO, encoderManager, fileSystemUtils, schemaFactory, sanitizer, eventKeys, log;
 
 function VideoController() { }
 
 VideoController.prototype.initialize = function() {
-  if(typeof VideoController.prototype.protoInit === 'undefined') {
+  if(typeof VideoController.prototype.protoInit === "undefined") {
     VideoController.prototype.protoInit = true;
     fileSystemUtils = this.factory.createFileSystemUtils();
     schemaFactory   = this.factory.createSchemaFactory();
@@ -76,9 +76,9 @@ var getFiles = Promise.coroutine(function* (socket, request, fileType) {
     if(files && files.length > 0) {
       for(let i = 0; i < files.length; ++i) {
         var header = { };
-        var splitName = files[i].split('.');
+        var splitName = files[i].split(".");
         splitName.pop();
-        splitName = splitName.join('.').split("_");
+        splitName = splitName.join(".").split("_");
         header.type = splitName.pop();
 
         let result = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.IDRESPONSE, [request.data, header]);
@@ -97,7 +97,7 @@ var getFiles = Promise.coroutine(function* (socket, request, fileType) {
         });
       }
     } else {
-      var result = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.IDRESPONSE, [request.data, '']);
+      var result = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.IDRESPONSE, [request.data, ""]);
       socket.emit(eventKeys.NOFILES, result);
     }
   }

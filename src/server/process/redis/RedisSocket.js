@@ -1,5 +1,5 @@
-const Promise     = require('bluebird');
-const Redis       = require('redis');
+const Promise     = require("bluebird");
+const Redis       = require("redis");
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
@@ -8,7 +8,7 @@ var publisher, subscriber, io, schemaFactory, log;
 function RedisSocket() { }
 
 RedisSocket.prototype.initialize = function() {
-  if(typeof RedisSocket.prototype.protoInit === 'undefined') {
+  if(typeof RedisSocket.prototype.protoInit === "undefined") {
     RedisSocket.prototype.protoInit = true;
     var config    = this.factory.createConfig();
     publisher     = Redis.createClient(config.getConfig().redisInfo.connection);
@@ -42,7 +42,7 @@ RedisSocket.prototype.disconnect = Promise.coroutine(function* (id) {
 });
 
 RedisSocket.Enum = {};
-RedisSocket.Enum.Key = { BROADCAST: 'redisSocketBroadcast', PING: 'redisSocketPing', DISCONNECT: 'redisDisconnect' };
+RedisSocket.Enum.Key = { BROADCAST: "redisSocketBroadcast", PING: "redisSocketPing", DISCONNECT: "redisDisconnect" };
 
 module.exports = RedisSocket;
 

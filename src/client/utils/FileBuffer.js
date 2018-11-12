@@ -1,5 +1,5 @@
-const Promise  = require('bluebird');
-const Events   = require('events');
+const Promise  = require("bluebird");
+const Events   = require("events");
 
 const TIMEOUT  = 6000;
 
@@ -8,7 +8,7 @@ var fileRequests, buffers, trigger, socket, schemaFactory, eventKeys, log;
 function FileBuffer() { }
 
 FileBuffer.prototype.initialize = function(init) {
-  if(typeof FileBuffer.prototype.protoInit === 'undefined' || typeof init !== 'undefined' ? init : false) {
+  if(typeof FileBuffer.prototype.protoInit === "undefined" || typeof init !== "undefined" ? init : false) {
     FileBuffer.prototype.protoInit = true;
     eventKeys       = this.factory.createKeys();
     schemaFactory   = this.factory.createSchemaFactory();
@@ -25,7 +25,7 @@ FileBuffer.prototype.initialize = function(init) {
 };
 
 FileBuffer.prototype.requestFilesAsync = function(key) {
-  log.info('FileBuffer.registerRequest');
+  log.info("FileBuffer.registerRequest");
   var requestInfo       = { };
   requestInfo.requestId = "r" + genId();
   requestInfo.buffCount = 0;
@@ -62,7 +62,7 @@ function genId() {
 }
 
 function registerResponse(requestId, header, serverCallback) {
-  log.info('FileBuffer._registerResponse');
+  log.info("FileBuffer._registerResponse");
   var fileRequest = fileRequests.get(requestId);
   fileRequest.buffCount++;
 
@@ -78,7 +78,7 @@ function registerResponse(requestId, header, serverCallback) {
 }
 
 function onData(bufferId, data) {
-  log.info('FileBuffer._onData');
+  log.info("FileBuffer._onData");
   var buffer = buffers.get(bufferId);
 
   if(buffer && data) {
@@ -92,7 +92,7 @@ function onData(bufferId, data) {
 }
 
 function onFinish(bufferId) {
-  log.info('FileBuffer._onFinish');
+  log.info("FileBuffer._onFinish");
   var buffer = buffers.get(bufferId);
   var fileRequest = fileRequests.get(buffer.requestId);
 

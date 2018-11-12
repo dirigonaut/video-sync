@@ -1,13 +1,13 @@
-const Util = require('util');
+const Util = require("util");
 
 var schemas;
 
 function SchemaFactory() { }
 
 SchemaFactory.prototype.initialize = function () {
-  if(typeof SchemaFactory.prototype.protoInit === 'undefined') {
+  if(typeof SchemaFactory.prototype.protoInit === "undefined") {
     SchemaFactory.prototype.protoInit = true;
-    schemas = require('./Schemas');
+    schemas = require("./Schemas");
 
     var legend = {};
     var keys = Object.keys(schemas)

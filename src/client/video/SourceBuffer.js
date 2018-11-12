@@ -1,5 +1,5 @@
-const Promise = require('bluebird');
-const Events  = require('events');
+const Promise = require("bluebird");
+const Events  = require("events");
 
 const MAX_LOG_LENGTH = 250;
 
@@ -8,7 +8,7 @@ var metaManager, socket, schemaFactory, eventKeys, log;
 function SourceBuffer() { }
 
 SourceBuffer.prototype.initialize = function(force) {
-  if(typeof SourceBuffer.prototype.protoInit === 'undefined') {
+  if(typeof SourceBuffer.prototype.protoInit === "undefined") {
     SourceBuffer.prototype.protoInit = true;
     Object.setPrototypeOf(SourceBuffer.prototype, Events.prototype);
 
@@ -24,7 +24,7 @@ SourceBuffer.prototype.initialize = function(force) {
 
 SourceBuffer.prototype.setup = Promise.coroutine(function* (bufferType, mediaSource, video) {
   log.info(`SourceBuffer.initialize type: ${bufferType}`);
-  if(typeof bufferType !== 'undefined' && mediaSource) {
+  if(typeof bufferType !== "undefined" && mediaSource) {
     this.bufferLog = [];
     this.type = bufferType;
     this.sourceBuffer;
@@ -44,8 +44,8 @@ SourceBuffer.prototype.setup = Promise.coroutine(function* (bufferType, mediaSou
     var metaData = metaManager.getActiveMetaData();
     var spec     = metaData.getMimeType(this.type);
 
-    video.on('get-init', events.init);
-    video.on('get-segment', events.getSegment);
+    video.on("get-init", events.init);
+    video.on("get-segment", events.getSegment);
 
     socket.setEvent(eventKeys.SEGMENTCHUNK, events.onSegment);
 
@@ -54,33 +54,33 @@ SourceBuffer.prototype.setup = Promise.coroutine(function* (bufferType, mediaSou
         log.info("SourceBuffer attached to MediaSource.");
         try {
           this.sourceBuffer = mediaSource.addSourceBuffer(spec);
-          this.sourceBuffer.addEventListener('error', logBufferEntries.call(this));
-          this.sourceBuffer.addEventListener('abort', log.error);
-          this.sourceBuffer.addEventListener('update', events.ready);
+          this.sourceBuffer.addEventListener("error", logBufferEntries.call(this));
+          this.sourceBuffer.addEventListener("abort", log.error);
+          this.sourceBuffer.addEventListener("update", events.ready);
           resolve();
         } catch(err) {
-          throw new Error('SourceBuffer.onSourceOpen spec mimeType is not defined.', err);
+          throw new Error("SourceBuffer.onSourceOpen spec mimeType is not defined.", err);
         }
 
-        mediaSource.removeEventListener('sourceopen', onSourceOpen);
-        mediaSource.removeEventListener('error', onReject);
+        mediaSource.removeEventListener("sourceopen", onSourceOpen);
+        mediaSource.removeEventListener("error", onReject);
       }.bind(this);
 
       var onReject = function(err) {
-        mediaSource.removeEventListener('sourceopen', onSourceOpen);
-        mediaSource.removeEventListener('error', onReject);
+        mediaSource.removeEventListener("sourceopen", onSourceOpen);
+        mediaSource.removeEventListener("error", onReject);
         reject(err);
       };
 
-      mediaSource.addEventListener('sourceopen', onSourceOpen);
-      mediaSource.addEventListener('error', onReject);
+      mediaSource.addEventListener("sourceopen", onSourceOpen);
+      mediaSource.addEventListener("error", onReject);
     }.bind(this));
 
     yield sourceOpened
 
     return new Promise.resolve(onReset.call(this, video, mediaSource, events));
   } else {
-    throw new Error('enumType and/or mediaSource is not defined.');
+    throw new Error("enumType and/or mediaSource is not defined.");
   }
 });
 
@@ -105,7 +105,7 @@ function onInit() {
 function onGetSegment() {
   var getSegment = function(typeId, timestamp) {
     if(typeId == this.type) {
-      log.info('segment', [typeId, timestamp]);
+      log.info("segment", [typeId, timestamp]);
       if(!isTimeRangeBuffered.call(this, timestamp)) {
         var segmentInfo = metaManager.getActiveMetaData().getSegment(this.type, timestamp);
         if(segmentInfo) {
@@ -148,7 +148,7 @@ function bufferSegment() {
 
     if(!this.hasInitSeg) {
       this.hasInitSeg = true;
-      this.emit('init');
+      this.emit("init");
     }
   }.bind(this);
   return buffer;
@@ -160,7 +160,7 @@ function onReady() {
     log.debug(`SourceBuffer isReadyForNextSegment ${this.type}`);
 
     if(this.sourceBuffer && !this.sourceBuffer.updating) {
-      if(typeof this.loadingSegment === 'undefined' && !this.forceStop) {
+      if(typeof this.loadingSegment === "undefined" && !this.forceStop) {
         if(this.segmentsToBuffer.size > 0) {
           this.loadingSegment = this.segmentsToBuffer.keys().next().value;
           this.bufferLog.push(`Set loadingSegment to ${this.loadingSegment} and continuing`);
@@ -168,7 +168,7 @@ function onReady() {
       }
 
       var mapQueue = this.segmentsToBuffer.get(this.loadingSegment);
-      log.debug(`For buffer ${this.type} with key: ${this.loadingSegment}: ${mapQueue ? Array.from(mapQueue.keys()) : 'undefined'}.length(${mapQueue ? mapQueue.size : 'undefined'}) > ${this.index} which is null: ${mapQueue ? mapQueue.get(this.index) === null : 'mapQueue is undefined'}`);
+      log.debug(`For buffer ${this.type} with key: ${this.loadingSegment}: ${mapQueue ? Array.from(mapQueue.keys()) : "undefined"}.length(${mapQueue ? mapQueue.size : "undefined"}) > ${this.index} which is null: ${mapQueue ? mapQueue.get(this.index) === null : "mapQueue is undefined"}`);
       if(mapQueue && mapQueue.size > this.index) {
         var segment = mapQueue.get(this.index);
 
@@ -183,7 +183,7 @@ function onReady() {
             this.index = 0;
 
             logBuffer(err);
-            this.emit('error');
+            this.emit("error");
           }
         } else if(segment === null) {
           this.bufferLog.push(`Deleting segments: ${Array.from(this.segmentsToBuffer.get(this.loadingSegment).keys())} for key: ${this.loadingSegment}`);
@@ -206,8 +206,8 @@ function onReady() {
 function onReset(video, mediaSource, events) {
   var reset = function() {
     log.info(`SourceBuffer.reset: ${this.type}`);
-    video.removeListener('get-init', events.init);
-    video.removeListener('get-segment', events.getSegment);
+    video.removeListener("get-init", events.init);
+    video.removeListener("get-segment", events.getSegment);
 
     socket.removeEvent(eventKeys.SEGMENTCHUNK, events.onSegment);
     mediaSource.removeSourceBuffer(this.sourceBuffer);
@@ -222,7 +222,7 @@ var requestVideoData = function(requestDetails) {
 
 var isTimeRangeBuffered = function(timestamp) {
   var buffered = false;
-  if(typeof this.sourceBuffer !== 'undefined') {
+  if(typeof this.sourceBuffer !== "undefined") {
     var timeRanges = this.sourceBuffer.buffered;
 
     for(var i = 0; i < timeRanges.length; ++i) {

@@ -1,12 +1,12 @@
-const Util    = require('util');
-const Events  = require('events');
+const Util    = require("util");
+const Events  = require("events");
 
 var emitter, eventKeys, logs;
 
 function ClientLogManager() { }
 
 ClientLogManager.prototype.initialize = function() {
-	if(typeof ClientLogManager.prototype.protoInit === 'undefined') {
+	if(typeof ClientLogManager.prototype.protoInit === "undefined") {
 		ClientLogManager.prototype.protoInit 	= true;
 		ClientLogManager.prototype.events 		= Object.create(Events.prototype);
 
@@ -19,7 +19,7 @@ ClientLogManager.prototype.createLoggers = function() {
 
   var keys = Object.keys(ClientLogManager.Enum.Logs);
   for(var i of keys) {
-    var logger = buildUILogger(ClientLogManager.Enum.Logs[i], 'info');
+    var logger = buildUILogger(ClientLogManager.Enum.Logs[i], "info");
     logs[ClientLogManager.Enum.Logs[i]] = logger;
   }
 };
@@ -35,7 +35,7 @@ ClientLogManager.prototype.setLevel = function(id, level) {
 module.exports = ClientLogManager;
 
 ClientLogManager.Enum = {};
-ClientLogManager.Enum.Logs = { FACTORY: 'factory', GENERAL: 'general', SOCKET: 'socket', VIDEO: 'video' };
+ClientLogManager.Enum.Logs = { FACTORY: "factory", GENERAL: "general", SOCKET: "socket", VIDEO: "video" };
 ClientLogManager.Enum.Levels = { ui: 0, error: 1, warn: 2, info: 3, debug: 4 };
 
 var buildUILogger = function(label, level) {
@@ -64,7 +64,7 @@ function log(level, message, meta) {
     level: level,
     label: this.label,
     data: message ? message : meta,
-    meta: message && meta ? meta : ''
+    meta: message && meta ? meta : ""
   };
 
   if(ClientLogManager.Enum.Levels[level] <= ClientLogManager.Enum.Levels[this.level]) {

@@ -1,13 +1,13 @@
-const Promise = require('bluebird');
-const Util    = require('util');
-const Events  = require('events');
+const Promise = require("bluebird");
+const Util    = require("util");
+const Events  = require("events");
 
 var metaDataList, activeMetaData, socket, eventKeys, schemaFactory, log;
 
 function MetaManager() { }
 
 MetaManager.prototype.initialize = function(force) {
-  if(typeof MetaManager.prototype.protoInit === 'undefined') {
+  if(typeof MetaManager.prototype.protoInit === "undefined") {
     MetaManager.prototype.protoInit = true;
     var logManager  = this.factory.createClientLogManager();
     log             = logManager.getLog(logManager.Enums.LOGS.VIDEO);
@@ -19,7 +19,7 @@ MetaManager.prototype.initialize = function(force) {
 };
 
 MetaManager.prototype.requestMetaData = Promise.coroutine(function* () {
-  log.debug('MetaManager.requestMetaData');
+  log.debug("MetaManager.requestMetaData");
   var fileBuffer = this.factory.createFileBuffer();
   var files = yield fileBuffer.requestFilesAsync(eventKeys.FILES);
   activeMetaData = undefined;
@@ -31,9 +31,9 @@ MetaManager.prototype.requestMetaData = Promise.coroutine(function* () {
       var binary = files[i][1];
       var util;
 
-      if(type === 'webm') {
+      if(type === "webm") {
         util = this.factory.createWebmParser();
-      } else if(type === 'mp4') {
+      } else if(type === "mp4") {
         util = this.factory.createMp4Parser();
       }
 
@@ -42,7 +42,7 @@ MetaManager.prototype.requestMetaData = Promise.coroutine(function* () {
       yield mpdMeta.setMpd(binary.toString());
       metaDataList.set(type, mpdMeta);
 
-      if(!activeMetaData && type === 'webm') {
+      if(!activeMetaData && type === "webm") {
         var trackInfo = this.getTrackInfo().get(type);
         var videoIndex = trackInfo.video && trackInfo.video.length > 0 ? trackInfo.video[0].index : undefined;
         var audioIndex = trackInfo.audio && trackInfo.audio.length > 0 ? trackInfo.audio[0].index : undefined;
@@ -55,7 +55,7 @@ MetaManager.prototype.requestMetaData = Promise.coroutine(function* () {
 });
 
 MetaManager.prototype.setActiveMetaData = function(metaInfo) {
-  log.debug('MetaManager.setActiveMetaData');
+  log.debug("MetaManager.setActiveMetaData");
   var metaData = metaDataList.get(metaInfo.key);
 
   if(metaInfo.video) {
@@ -72,7 +72,7 @@ MetaManager.prototype.setActiveMetaData = function(metaInfo) {
 };
 
 MetaManager.prototype.setBufferThreshold = function(threshold) {
-  log.debug('MetaManager.setBufferThreshold', threshold);
+  log.debug("MetaManager.setBufferThreshold", threshold);
   if(metaDataList) {
     for(var meta of metaDataList) {
       meta[1].setThreshold(threshold);
@@ -85,7 +85,7 @@ MetaManager.prototype.getActiveMetaData = function() {
 };
 
 MetaManager.prototype.getTrackInfo = function() {
-  log.debug('MetaManager.getTrackInfo');
+  log.debug("MetaManager.getTrackInfo");
   var tracks = new Map();
   var activeKeys;
 
@@ -95,14 +95,14 @@ MetaManager.prototype.getTrackInfo = function() {
 
     var rawTracks = meta[1].getTracks();
     for(var i in rawTracks) {
-      var trackNameSplit = rawTracks[i].url.split('.');
+      var trackNameSplit = rawTracks[i].url.split(".");
       trackNameSplit.pop();
-      trackNameSplit = trackNameSplit.join('.').split('_');
-      var track = { 'index' : rawTracks[i].index, 'quality' : trackNameSplit.pop()};
+      trackNameSplit = trackNameSplit.join(".").split("_");
+      var track = { "index" : rawTracks[i].index, "quality" : trackNameSplit.pop()};
 
-      if(rawTracks[i].type === 'video') {
+      if(rawTracks[i].type === "video") {
         videoTracks.push(track);
-      } else if(rawTracks[i].type === 'audio') {
+      } else if(rawTracks[i].type === "audio") {
         audioTracks.push(track);
       }
     }
@@ -114,11 +114,11 @@ MetaManager.prototype.getTrackInfo = function() {
       activeKeys.audio = trackInfo && trackInfo.get(MetaManager.Enum.Types.AUDIO) ? trackInfo.get(MetaManager.Enum.Types.AUDIO).getTrackIndex() : undefined;
     }
 
-    var trackSet = { 'video' : videoTracks, 'audio': audioTracks };
+    var trackSet = { "video" : videoTracks, "audio": audioTracks };
     tracks.set(meta[0], trackSet);
   }
 
-  tracks.set('active', activeKeys);
+  tracks.set("active", activeKeys);
   return tracks;
 };
 

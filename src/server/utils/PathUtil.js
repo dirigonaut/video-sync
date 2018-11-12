@@ -1,10 +1,10 @@
-const Promise   = require('bluebird');
-const Events    = require('events');
-const Find      = require('find');
-const Path      = require('path');
-const Crypto    = require('crypto');
+const Promise   = require("bluebird");
+const Events    = require("events");
+const Find      = require("find");
+const Path      = require("path");
+const Crypto    = require("crypto");
 
-const FileUtils = require('./FileSystemUtils');
+const FileUtils = require("./FileSystemUtils");
 
 function PathUtil() { }
 
@@ -33,15 +33,15 @@ PathUtil.prototype.getAllPaths = function(path, excludes, regex, uniqueKeys) {
       }
     })
     .end(function() {
-      asyncEmitter.emit('finished', files);
+      asyncEmitter.emit("finished", files);
     })
     .error(function(err) {
-      asyncEmitter.emit('error', err);
+      asyncEmitter.emit("error", err);
     });
 
     return new Promise(function(resolve, reject) {
-      asyncEmitter.once('finished', resolve);
-      asyncEmitter.once('error', reject);
+      asyncEmitter.once("finished", resolve);
+      asyncEmitter.once("error", reject);
     });
   } else {
     throw new Error(`${path} is not a valid path.`);
@@ -63,7 +63,7 @@ module.exports = PathUtil;
 
 var getHash = function(object) {
   while(true) {
-    hash = Crypto.randomBytes(32).toString('hex');
+    hash = Crypto.randomBytes(32).toString("hex");
     if(!object[hash]) {
       return hash;
     }

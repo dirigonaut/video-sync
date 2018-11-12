@@ -1,4 +1,4 @@
-const Promise = require('bluebird');
+const Promise = require("bluebird");
 
 const METRICSINTERVAL = 500;
 const DEFAULTMEDIARULE = 3;
@@ -9,7 +9,7 @@ var publisher, stateLeader, schemaFactory, redisSocket, metricInterval,
 function StateEngine() { };
 
 StateEngine.prototype.initialize = function() {
-  if(typeof StateEngine.prototype.protoInit === 'undefined') {
+  if(typeof StateEngine.prototype.protoInit === "undefined") {
     StateEngine.prototype.protoInit = true;
     playerManager   = this.factory.createPlayerManager();
     media           = this.factory.createMedia();
@@ -57,7 +57,7 @@ StateEngine.prototype.play = Promise.coroutine(function* () {
 
     if(Math.abs(results.max - results.min) > rule) {
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-        [new Date().toLocaleTimeString(), 'notify', 'state', `Play request failed.`]);
+        [new Date().toLocaleTimeString(), "notify", "state", `Play request failed.`]);
       yield redisSocket.broadcast.call(StateEngine.prototype, eventKeys.NOTIFICATION, response);
 
       delete commands;
@@ -132,13 +132,13 @@ StateEngine.prototype.syncingPing = Promise.coroutine(function* (id, data) {
 
     if(player) {
       if(data) {
-        if(typeof data.state !== 'undefined') {
+        if(typeof data.state !== "undefined") {
           player.state = data.state ? playerInfo.Enums.STATE.PLAY : playerInfo.Enums.STATE.PAUSE;
         }
-        if(typeof data.timestamp !== 'undefined') {
+        if(typeof data.timestamp !== "undefined") {
           player.timestamp = data.timestamp;
         }
-        if(typeof data.buffered !== 'undefined') {
+        if(typeof data.buffered !== "undefined") {
           player.buffer = data.buffered;
         }
       }
@@ -195,7 +195,7 @@ var mediaStarted = Promise.coroutine(function* () {
 
   if(!mediaStarted) {
     yield media.setMediaStarted(true);
-    metricInterval !== 'undefined' ? clearInterval(metricInterval) : undefined;
+    metricInterval !== "undefined" ? clearInterval(metricInterval) : undefined;
     metricInterval = createMetricInterval.call(this);
     return true;
   }
@@ -217,7 +217,7 @@ var createMetricInterval = function() {
 
     if(stats.difference > rule && isPlaying) {
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-        [new Date().toLocaleTimeString(), 'notify', 'state', `Auto Sync issued pause.`]);
+        [new Date().toLocaleTimeString(), "notify", "state", `Auto Sync issued pause.`]);
       yield redisSocket.broadcast.call(StateEngine.prototype, eventKeys.NOTIFICATION, response);
       yield redisSocket.broadcast.call(this, eventKeys.PAUSE);
     }

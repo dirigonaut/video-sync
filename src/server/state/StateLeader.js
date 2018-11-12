@@ -1,11 +1,11 @@
-const Events  = require('events');
+const Events  = require("events");
 
 var elected, termStart, playerInfo, playerManager, log;
 
 function StateLeader() { }
 
 StateLeader.prototype.initialize = function() {
-  if(typeof StateLeader.prototype.protoInit === 'undefined') {
+  if(typeof StateLeader.prototype.protoInit === "undefined") {
     StateLeader.prototype.protoInit = true;
     playerInfo      = this.factory.getPlayerInfo();
     playerManager   = this.factory.createPlayerManager();

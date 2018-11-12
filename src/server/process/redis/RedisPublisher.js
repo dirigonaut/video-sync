@@ -1,8 +1,8 @@
-const Promise     = require('bluebird');
-const Crypto      = require('crypto');
-const Events      = require('events');
-const Util        = require('util');
-const Redis       = require('redis');
+const Promise     = require("bluebird");
+const Crypto      = require("crypto");
+const Events      = require("events");
+const Util        = require("util");
+const Redis       = require("redis");
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
@@ -13,7 +13,7 @@ var publisher, subscriber, redisSocket, requestMap, asyncEmitter, log;
 function RedisPublisher() { }
 
 RedisPublisher.prototype.initialize = function() {
-  if(typeof RedisPublisher.prototype.protoInit === 'undefined') {
+  if(typeof RedisPublisher.prototype.protoInit === "undefined") {
     RedisPublisher.prototype.protoInit = true;
     var config      = this.factory.createConfig();
 
@@ -57,8 +57,8 @@ RedisPublisher.prototype.publish = function(channel, args) {
 };
 
 RedisPublisher.Enum       = {};
-RedisPublisher.Enum.Key   = { STATE: 'state', PLAYER: 'player' };
-RedisPublisher.Enum.Resp  = { RESPONSE: 'stateRedisResponse' };
+RedisPublisher.Enum.Key   = { STATE: "state", PLAYER: "player" };
+RedisPublisher.Enum.Resp  = { RESPONSE: "stateRedisResponse" };
 
 module.exports = RedisPublisher;
 
@@ -112,7 +112,7 @@ var attachEvents = function() {
 };
 
 var createKey = function(seed) {
-  return `${seed}-${Crypto.randomBytes(24).toString('hex')}`;
+  return `${seed}-${Crypto.randomBytes(24).toString("hex")}`;
 };
 
 var getRedisData = function(key) {

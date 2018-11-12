@@ -1,9 +1,9 @@
-const Promise    = require('bluebird');
-const Cluster    = require('cluster');
-const Path       = require('path');
-const Winston    = require('winston');
-const Fs         = require('fs');
-const Util       = require('util');
+const Promise    = require("bluebird");
+const Cluster    = require("cluster");
+const Path       = require("path");
+const Winston    = require("winston");
+const Fs         = require("fs");
+const Util       = require("util");
 
 var config, eventKeys, schemaFactory, log;
 
@@ -14,7 +14,7 @@ const FILE_NAME = `${TYPE}-${process.env.index ? process.env.index : 0}.txt`;
 function LogManager() { }
 
 LogManager.prototype.initialize = function() {
-  if(typeof LogManager.prototype.protoInit === 'undefined') {
+  if(typeof LogManager.prototype.protoInit === "undefined") {
     config          = this.factory.createConfig();
     eventKeys       = this.factory.createKeys();
 
@@ -52,8 +52,8 @@ module.exports = LogManager;
 
 LogManager.Enum = {};
 LogManager.Enum.Levels  = { socket: 0, error: 1, warn: 2, info: 3, verbose: 4, debug: 5, silly: 6 };
-LogManager.Enum.Logs    = { GENERAL: 'general', ADMINISTRATION: 'administration', AUTHENTICATION: 'authentication',
-                        DATABASE: 'database', LOG: 'log', VIDEO: 'video', ENCODING: 'encoding', STATE: 'state', UTILS: "utils"};
+LogManager.Enum.Logs    = { GENERAL: "general", ADMINISTRATION: "administration", AUTHENTICATION: "authentication",
+                        DATABASE: "database", LOG: "log", VIDEO: "video", ENCODING: "encoding", STATE: "state", UTILS: "utils"};
 
 var buildFileTransport = function(path, label, level, handleExceptions) {
   var fileTransport = new (Winston.transports.File) ({
@@ -82,7 +82,7 @@ function createFormatter(label) {
       time: options.timestamp(),
       level: options.level,
       label: label,
-      text: options.message ? options.message : ''
+      text: options.message ? options.message : ""
     };
 
     if(options.meta && Object.keys(options.meta).length) {
@@ -102,7 +102,7 @@ function createFormatter(label) {
       credentials.getAdmin().then(function(admin) {
         if(admin && admin.id) {
           var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-            [logMessage.time, 'server', logMessage.label, logMessage.text, logMessage.meta]);
+            [logMessage.time, "server", logMessage.label, logMessage.text, logMessage.meta]);
           redisSocket.ping.call(this, admin.id, eventKeys.SERVERLOG, response);
         }
       });

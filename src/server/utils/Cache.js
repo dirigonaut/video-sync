@@ -1,17 +1,17 @@
-const Promise     = require('bluebird');
-const Redis       = require('redis');
-const Events      = require('events');
+const Promise     = require("bluebird");
+const Redis       = require("redis");
+const Events      = require("events");
 
 Promise.promisifyAll(Redis.RedisClient.prototype);
 
-const READID      = '-readRequest';
+const READID      = "-readRequest";
 
 var media, publisher, client, fileIO, fileUtils, schemaFactory, expire, log;
 
 function Cache() { }
 
 Cache.prototype.initialize = function() {
-  if(typeof Cache.prototype.protoInit === 'undefined') {
+  if(typeof Cache.prototype.protoInit === "undefined") {
     Cache.prototype.protoInit = true;
     Object.setPrototypeOf(Cache.prototype, Events.prototype);
 
@@ -58,12 +58,12 @@ Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback)
         }
 
         if(segment && !indexes.includes(segment.index)) {
-          if(typeof segment.name !== 'undefined' && segment.name) {
+          if(typeof segment.name !== "undefined" && segment.name) {
             if(segment.data === null) {
               lastIndex = segment.index;
             }
 
-            if(typeof segment.data !== 'undefined' && segment.data) {
+            if(typeof segment.data !== "undefined" && segment.data) {
               segment.data = new Buffer(new Uint8Array(segment.data.data));
             }
 
@@ -101,9 +101,9 @@ Cache.prototype.getSegment = Promise.coroutine(function* (requestData, callback)
 module.exports = Cache;
 
 var setSubscriber = function() {
-  client.on('message', function(channel, message) {
-    log.debug('Subscribers onMessage ', channel);
-    message = typeof message === 'string' ? JSON.parse(message) : message;
+  client.on("message", function(channel, message) {
+    log.debug("Subscribers onMessage ", channel);
+    message = typeof message === "string" ? JSON.parse(message) : message;
 
     if(channel.substring(channel.length - READID.length) === READID) {
       var key = channel.substring(0, channel.length - READID.length);
@@ -133,7 +133,7 @@ var readFile = Promise.coroutine(function* (key, requestData) {
       var options = {"start": parseInt(requestData.segment[0]), "end": parseInt(requestData.segment[1])};
 
       var onFinish = Promise.coroutine(function* (index) {
-        log.debug('Cache finished read: ', key);
+        log.debug("Cache finished read: ", key);
         var args = [requestData.typeId, key, null, index];
         var segment = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.VIDEORESPONSE, args);
 
@@ -148,7 +148,7 @@ var readFile = Promise.coroutine(function* (key, requestData) {
 var setCacheData = Promise.coroutine(function* (key, index, data) {
   log.silly(`setCacheData for key: ${key}:${index}`);
   var json = JSON.stringify(data);
-  yield publisher.setAsync(`${key}:${index}`, json, 'EX', expire);
+  yield publisher.setAsync(`${key}:${index}`, json, "EX", expire);
   yield publisher.publishAsync(key, index);
 });
 
@@ -164,6 +164,6 @@ var getCacheData = Promise.coroutine(function* (key) {
 });
 
 var registerFileRead = Promise.coroutine(function* (key) {
-  var result = yield publisher.setAsync(`${key}`, 'registered', 'NX', 'EX', expire);
-  return result === 'OK' ? true : false;
+  var result = yield publisher.setAsync(`${key}`, "registered", "NX", "EX", expire);
+  return result === "OK" ? true : false;
 });

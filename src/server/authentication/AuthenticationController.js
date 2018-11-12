@@ -1,4 +1,4 @@
-const Promise = require('bluebird');
+const Promise = require("bluebird");
 
 var publisher, schemaFactory, sanitizer, credentials,
       redisSocket, playerManager, media, eventKeys, log;
@@ -6,7 +6,7 @@ var publisher, schemaFactory, sanitizer, credentials,
 function AuthenticationController() { }
 
 AuthenticationController.prototype.initialize = function() {
-  if(typeof AuthenticationController.prototype.protoInit === 'undefined') {
+  if(typeof AuthenticationController.prototype.protoInit === "undefined") {
     AuthenticationController.prototype.protoInit = true;
     credentials     = this.factory.createCredentialManager();
     publisher       = this.factory.createRedisPublisher();
@@ -29,7 +29,7 @@ AuthenticationController.prototype.attachIO = function (io) {
     var token = decodeURIComponent(socket.handshake.query.token);
 
     try {
-      if(token !== 'undefined') {
+      if(token !== "undefined") {
         token = JSON.parse(token);
       }
     } catch(error) {
@@ -60,7 +60,7 @@ AuthenticationController.prototype.attachIO = function (io) {
                     : next(new Error(`${JSON.stringify(token)} has failed authentication with error: ${error}`));
   }.bind(this)));
 
-  io.on('connection', Promise.coroutine(function* (socket, data) {
+  io.on("connection", Promise.coroutine(function* (socket, data) {
     log.socket(`Socket has connected: ${socket.id} ip: ${socket.handshake.address}`);
     var admin = yield credentials.getAdmin(socket);
     let isAdmin = admin.id === socket.id;
@@ -76,7 +76,7 @@ AuthenticationController.prototype.attachIO = function (io) {
 
       var handle = yield credentials.getHandle(socket);
       var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-        [new Date().toLocaleTimeString(), 'notify', 'auth', `${handle} joined.`]);
+        [new Date().toLocaleTimeString(), "notify", "auth", `${handle} joined.`]);
       yield redisSocket.broadcast.call(AuthenticationController.prototype, eventKeys.NOTIFICATION, response);
     }));
 
@@ -88,7 +88,7 @@ AuthenticationController.prototype.attachIO = function (io) {
         var includes = yield credentials.includes(socket.id);
         var handle = yield credentials.getHandle(socket);
         var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-          [new Date().toLocaleTimeString(), 'notify', 'auth', `${handle} left.`]);
+          [new Date().toLocaleTimeString(), "notify", "auth", `${handle} left.`]);
 
         if(admin && admin.id === socket.id) {
           credentials.removeAdmin(socket);
@@ -113,8 +113,8 @@ AuthenticationController.prototype.attachIO = function (io) {
         log.info(eventKeys.SHUTDOWN, socket.id);
         socket.emit(eventKeys.CONFIRM, "Are you sure you wish to shutdown the Video-Sync server?", function(confirm) {
           if(confirm === true) {
-            log.info(eventKeys.SHUTDOWN, 'The shutdown command has been received and confirmed.');
-            process.send('master-process:shutdown');
+            log.info(eventKeys.SHUTDOWN, "The shutdown command has been received and confirmed.");
+            process.send("master-process:shutdown");
           }
         });
       });

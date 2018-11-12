@@ -1,16 +1,16 @@
-const Promise     = require('bluebird');
-const Path        = require('path');
-const Https       = require('https');
+const Promise     = require("bluebird");
+const Path        = require("path");
+const Https       = require("https");
 
-const Express     = require('express');
-const SocketIO    = require('socket.io');
+const Express     = require("express");
+const SocketIO    = require("socket.io");
 
 var app, io, server, serverSubscriber, logManager, log;
 
 function ServerProcess() { }
 
 ServerProcess.prototype.initialize = function(force) {
-  if(typeof ServerProcess.prototype.protoInit === 'undefined') {
+  if(typeof ServerProcess.prototype.protoInit === "undefined") {
     ServerProcess.prototype.protoInit = true;
     logManager = this.factory.createLogManager();
     log        = logManager.getLog(logManager.Enums.LOGS.GENERAL);
@@ -45,7 +45,7 @@ ServerProcess.prototype.start = Promise.coroutine(function* () {
   redisSocket.setIO(io);
 
   var staticFileDir = config.getConfig().serverInfo.staticDir;
-  app.use('/', Express.static(`${staticFileDir}/html`, {index: 'client.html'}));
+  app.use("/", Express.static(`${staticFileDir}/html`, {index: "client.html"}));
   app.use(Express.static(staticFileDir));
   server.listen(0);
 
