@@ -44,7 +44,7 @@ Plan.prototype.parse = function() {
       }
     }
   } else {
-    throw new Error('No plan is set to parse.');
+    throw new Error("No plan is set to parse.");
   }
 
   delete this.plan;
@@ -63,7 +63,7 @@ Plan.prototype.inspect = function() {
   });
 
   Object.keys(this.statuses).forEach((element) => {
-    statuses.push(`"${element}"`, Util.inspect(this.statuses[element], { showHidden: false, depth: null, maxArrayLength: null }));
+    statuses.push([`"${element}"`, JSON.stringify(this.statuses[element])]);
   });
 
   return `{ "processes" : [[${processes.join("], [")}]], "statuses": [[${statuses.join("], [")}]] }`;
