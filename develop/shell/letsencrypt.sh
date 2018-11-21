@@ -1,7 +1,6 @@
 #!/bin/bash
 DOMAIN=$1
-EMAIL=$2
-DRY=$3
+DRY=$2
 
 sudo add-apt-repository ppa:certbot/certbot -y
 sudo apt-get install certbot software-properties-common -y
