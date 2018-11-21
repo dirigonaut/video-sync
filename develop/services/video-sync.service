@@ -4,7 +4,7 @@ After=network.target
 StartLimitIntervalSec=0
 
 [Service]
-WorkingDirectory=/opt/video-sync/repo
+WorkingDirectory=/opt/video-sync
 Type=simple
 User=root
 Group=root
