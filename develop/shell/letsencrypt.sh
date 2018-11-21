@@ -1,5 +1,6 @@
 #!/bin/bash
 DOMAIN=$1
+DRY=$2
 
 sudo apt-get update
 sudo apt-get install software-properties-common
@@ -9,7 +10,9 @@ sudo apt-get install certbot
 
 sudo certbot certonly --staging --standalone --renew-by-default -d $DOMAIN
 
-if [[ $? == 0 ]]; then
+if [[ ! -z $DRY ]]; then
+  echo "Let's  encrypt dry run."
+elif [[ $? == 0 ]]; then
   echo "Staging trial worked getting offical certs now."
   sudo certbot certonly --standalone --renew-by-default -d $DOMAIN
   sudo certbot renew --dry-run

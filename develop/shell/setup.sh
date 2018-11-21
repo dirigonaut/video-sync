@@ -4,8 +4,6 @@ PASS=$1
 mkdir -p /etc/video-sync
 cp /opt/video-sync/configs/config.yml /etc/video-sync/config.yml
 
-sudo adduser --system --gecos "Video-Sync Service" --disabled-password --group --home /opt/video-sync video
-
 if [[ ! -z $PASS ]]; then
   sed -i "/ #remoteAdminPass:/c\ remoteAdminPass: '${PASS}'" /etc/video-sync/config.yml
 fi
