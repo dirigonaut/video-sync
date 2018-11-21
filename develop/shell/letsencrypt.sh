@@ -7,10 +7,11 @@ apt-get install certbot software-properties-common -y
 apt-get update
 
 certbot certonly --staging --standalone --agree-tos --preferred-challenges http --register-unsafely-without-email --renew-by-default -d $DOMAIN
+RC=$?
 
 if [[ ! -z $DRY ]]; then
   echo "Let's encrypt dry run."
-elif [[ $? == 0 ]]; then
+elif [[ $RC == 0 ]]; then
   echo "Staging trial worked getting offical certs now."
   certbot certonly --standalone --agree-tos --preferred-challenges http --register-unsafely-without-email --renew-by-default -d $DOMAIN
   certbot renew --dry-run
