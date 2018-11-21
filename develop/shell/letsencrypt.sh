@@ -2,11 +2,9 @@
 DOMAIN=$1
 DRY=$2
 
+sudo add-apt-repository ppa:certbot/certbot -y
+sudo apt-get install certbot software-properties-common -y
 sudo apt-get update
-sudo apt-get install software-properties-common
-sudo add-apt-repository ppa:certbot/certbot
-sudo apt-get update
-sudo apt-get install certbot
 
 sudo certbot certonly --staging --standalone --renew-by-default -d $DOMAIN
 
