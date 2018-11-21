@@ -1,15 +1,10 @@
 #!/bin/bash
 PASS=$1
 
-apt-get update
-apt-get install git nodejs npm -y
-
-cd /opt
-git clone https://github.com/dirigonaut/video-sync.git
-cd /opt/video-sync
-
 mkdir -p /etc/video-sync
 cp /opt/video-sync/configs/config.yml /etc/video-sync/config.yml
+
+sudo adduser --system --gecos "Video-Sync Service" --disabled-password --group --home /opt/video-sync video
 
 if [[ ! -z $PASS ]]; then
   sed -i "/ #remoteAdminPass:/c\ remoteAdminPass: '${PASS}'" /etc/video-sync/config.yml
