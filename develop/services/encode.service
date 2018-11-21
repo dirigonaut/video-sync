@@ -4,10 +4,11 @@ After=network.target
 StartLimitIntervalSec=0
 
 [Service]
-WorkingDirectory=/opt/video-sync
+WorkingDirectory=/opt/video-sync/repo
 Type=simple
 User=root
-ExecStart=/usr/bin/node /opt/video-sync/encode.js -c /etc/video-sync/config.yml -t default
+Group=root
+ExecStart=/usr/bin/node encode.js -c /etc/video-sync/config.yml -t default
 
 [Install]
 WantedBy=multi-user.target
