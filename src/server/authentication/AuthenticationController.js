@@ -60,7 +60,7 @@ AuthenticationController.prototype.attachIO = function (io) {
                     : next(new Error(`${JSON.stringify(token)} has failed authentication with error: ${error}`));
   }.bind(this)));
 
-  io.on("connection", Promise.coroutine(function* (socket, data) {
+  io.on("connection", Promise.coroutine(function* (socket) {
     log.socket(`Socket has connected: ${socket.id} ip: ${socket.handshake.address}`);
     var admin = yield credentials.getAdmin(socket);
     let isAdmin = admin.id === socket.id;
@@ -80,8 +80,8 @@ AuthenticationController.prototype.attachIO = function (io) {
       yield redisSocket.broadcast.call(AuthenticationController.prototype, eventKeys.NOTIFICATION, response);
     }));
 
-    socket.on(eventKeys.DISCONNECT, Promise.coroutine(function* () {
-      log.info(eventKeys.DISCONNECT, socket.id);
+    var disconnect = Promise.coroutine(function* () {
+      log.info(eventKeys.DISCONNECT, socket ? socket.id : undefined);
 
       if(socket && socket.id) {
         var admin = yield credentials.getAdmin();
@@ -106,7 +106,13 @@ AuthenticationController.prototype.attachIO = function (io) {
 
         yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.Functions.REMOVEPLAYER, [socket.id]]);
       }
-    }));
+    });
+
+    if(typeof socket === "undefined" || !socket.connected) {
+      yield disconnect();
+    } else {
+      socket.on(eventKeys.DISCONNECT, disconnect);
+    }
 
     if(isAdmin) {
       socket.on(eventKeys.SHUTDOWN, function() {
@@ -128,10 +134,10 @@ var isAdministrator = Promise.coroutine(function* (socket, request) {
   var admin = yield credentials.getAdmin();
 
   if(!admin) {
-    var isAdmin = credentials.isAdmin(socket, request ? request.id : undefined);
+    var isAdmin = credentials.isAdmin(socket, request ? request.data : undefined);
 
     if(isAdmin) {
-      yield credentials.setAdmin(socket, request);
+      yield credentials.setAdmin(socket, request.id);
 
       var adminController       = this.factory.createAdminController();
       var credentialController  = this.factory.createCredentialController();

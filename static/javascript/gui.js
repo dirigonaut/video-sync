@@ -120,16 +120,26 @@ function initGui(client, isAdmin) {
   });
 
   $('#control-button-full').click(function(e) {
-    if(document.fullScreen || document.webkitIsFullScreen) {
-      document.webkitExitFullscreen();
+    if(document.fullscreen || document.webkitIsFullScreen) {
+      try {
+        document.webkitExitFullscreen();
+      } catch (e) {
+        document.mozCancelFullScreen();
+      }
+
       $('.control-full').addClass("control");
       $('.control-full').removeClass("control-full");
       $('.flaticon-minus').addClass('flaticon-plus')
       $('.flaticon-plus').removeClass('flaticon-minus');
       toggleOverlays();
     } else {
+      try {
+        $('#fullscreen')[0].webkitRequestFullScreen();
+      } catch (e) {
+        $('#fullscreen')[0].mozRequestFullScreen();
+      }
+
       $(document).trigger('togglePanel', [true]);
-      $('#fullscreen')[0].webkitRequestFullScreen();
       $('.control').addClass("control-full");
       $('.control').removeClass("control");
       $('.flaticon-plus').addClass('flaticon-minus')
