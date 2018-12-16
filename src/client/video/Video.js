@@ -71,7 +71,7 @@ module.exports = Video;
 
 function play() {
   log.debug("Video.play");
-  if(videoElement.readyState === 4) {
+  if([3,4].indexOf(videoElement.readyState) > -1) {
     log.debug("Set video to play");
     videoElement.play().catch(function(e) {
       log.error(e);

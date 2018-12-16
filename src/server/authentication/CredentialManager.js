@@ -38,10 +38,10 @@ CredentialManager.prototype.isAdmin = function(socket, password) {
   return socket.handshake.address.includes("127.0.0.1") || config.getConfig().serverInfo.remoteAdminPass === password;
 };
 
-CredentialManager.prototype.setAdmin = Promise.coroutine(function* (socket, request) {
+CredentialManager.prototype.setAdmin = Promise.coroutine(function* (socket, handle) {
   var entry = {
     id: socket.id,
-    handle: request.data ? request.data : "Admin",
+    handle: handle ? handle : "Admin",
     level: CredentialManager.Enum.Level.CONTROLS
   };
 
@@ -120,7 +120,7 @@ CredentialManager.prototype.getHandle = Promise.coroutine(function* (socket) {
     }
   } else {
     var token = yield getUserData(CredentialManager.Enum.User.ADMIN);
-    return token.handle ? token.handle : "Admin";
+    return token && token.handle ? token.handle : "Admin";
   }
 });
 
@@ -181,7 +181,7 @@ CredentialManager.prototype.getTokenLevel = Promise.coroutine(function* (key) {
   return user !== undefined ? user.level : CredentialManager.Enum.Level.NONE
 });
 
-CredentialManager.prototype.authenticateToken = Promise.coroutine(function* (socketId, key, handle) {
+CredentialManager.prototype.authenticateToken = Promise.coroutine(function* (socketId, handle, key) {
   var entries = yield getUserData(CredentialManager.Enum.User.CLIENT);
 
   if(entries) {

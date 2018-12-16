@@ -23,7 +23,17 @@ function setupClient() {
     }
 
     if(!isSupported) {
-      $('#browser-error').html(`<p>Only the following browsers are supported: ${supported.join(', ')}</p>`);
+      $('#browser-error').html(`
+          <div class="flex-v flex-element flex-center-h">
+            <p>Only the following browsers are supported: ${supported.join(', ')}</p>
+            <button type="button" id="login-bypass" class="flex-button flex-right">Try Anyways</button>
+          </div>`);
+
+      $("#login-bypass").click(function() {
+        $('#browser-error').empty();
+        $('#login-form').show();
+        initialize();
+      });
     } else {
       initialize();
     }

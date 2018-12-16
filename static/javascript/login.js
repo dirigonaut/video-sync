@@ -2,7 +2,7 @@ function initializeLogin(schemaFactory, keys) {
   $('#login-submit').click(function() {
     var handle	= $('#login-handle').val();
     var token	  = $('#login-token').val();
-    var request = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.PAIR, [token, handle]);
+    var request = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.PAIR, [handle, token]);
 
     if(request) {
       cookie.set('creds', JSON.stringify(request), cookie.getExpiration(cookie.Enums.EXPIRES.DAY));
