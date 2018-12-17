@@ -37,51 +37,8 @@ AuthenticationController.prototype.attachIO = function (io) {
       token = undefined;
     }
 
-    var schema  = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
-    var request = sanitizer.sanitize(token, schema, Object.values(schema.Enum));
-
-    if(!(request instanceof Error)) {
-      var isAdmin = yield isAdministrator.call(this, socket, request);
-      var isUser;
-
-      if(!isAdmin) {
-        isUser = yield isValidUser.call(this, socket, request);
-      }
-    }
-
-    var error;
-    if(request instanceof Error) {
-      error = request.toString();
-    } else if(!isAdmin && !isUser) {
-      error = "Submitted token is not valid or is already in use.";
-    }
-
-    return isAdmin || isUser ? next(log.info(`${socket.id} has been authenticated.`))
-                    : next(new Error(`${JSON.stringify(token)} has failed authentication with error: ${error}`));
-  }.bind(this)));
-
-  io.on("connection", Promise.coroutine(function* (socket) {
-    log.socket(`Socket has connected: ${socket.id} ip: ${socket.handshake.address}`);
-    var admin = yield credentials.getAdmin(socket);
-    let isAdmin = admin.id === socket.id;
-
-    socket.emit(eventKeys.AUTHENTICATED, isAdmin, Promise.coroutine(function* () {
-      log.info(`Socket: ${socket.id} has acknowledged the handshake.`);
-      yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.Functions.CREATEPLAYER, [socket.id]]);
-
-      var mediaPath = yield media.getMediaPath();
-      if(mediaPath && mediaPath.length > 0) {
-        socket.emit(eventKeys.MEDIAREADY);
-      }
-
-      var handle = yield credentials.getHandle(socket);
-      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
-        [new Date().toLocaleTimeString(), "notify", "auth", `${handle} joined.`]);
-      yield redisSocket.broadcast.call(AuthenticationController.prototype, eventKeys.NOTIFICATION, response);
-    }));
-
-    var disconnect = Promise.coroutine(function* () {
-      log.info(eventKeys.DISCONNECT, socket ? socket.id : undefined);
+    socket.on(eventKeys.DISCONNECT, Promise.coroutine(function* () {
+      log.info(eventKeys.DISCONNECT, socket.id);
 
       if(socket && socket.id) {
         var admin = yield credentials.getAdmin();
@@ -106,13 +63,54 @@ AuthenticationController.prototype.attachIO = function (io) {
 
         yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.Functions.REMOVEPLAYER, [socket.id]]);
       }
-    });
+    }.bind(this)));
 
-    if(typeof socket === "undefined" || !socket.connected) {
-      yield disconnect();
-    } else {
-      socket.on(eventKeys.DISCONNECT, disconnect);
+    var schema  = schemaFactory.createDefinition(schemaFactory.Enums.SCHEMAS.PAIR);
+    var request = sanitizer.sanitize(token, schema, Object.values(schema.Enum));
+
+    if(!(request instanceof Error)) {
+      var isAdmin = yield isAdministrator.call(this, socket, request);
+      var isUser;
+
+      if(!isAdmin) {
+        isUser = yield isValidUser.call(this, socket, request);
+      }
     }
+
+    var error;
+    if(request instanceof Error) {
+      error = request.toString();
+    } else if(!isAdmin && !isUser) {
+      error = "Submitted token is not valid or is already in use.";
+    }
+
+    if(isAdmin || isUser) {
+      log.info(`${socket.id} has been authenticated.`)
+      return next();
+    } else {
+      next(new Error(`${token.id} has failed authentication with error: ${error}`));
+    }
+  }.bind(this)));
+
+  io.on("connection", Promise.coroutine(function* (socket) {
+    log.socket(`Socket has connected: ${socket.id} ip: ${socket.handshake.address}`);
+    var admin = yield credentials.getAdmin(socket);
+    let isAdmin = admin ? admin.id === socket.id : undefined;
+
+    socket.emit(eventKeys.AUTHENTICATED, isAdmin, Promise.coroutine(function* () {
+      log.info(`Socket: ${socket.id} has acknowledged the handshake.`);
+      yield publisher.publishAsync(publisher.Enums.KEY.PLAYER, [playerManager.Functions.CREATEPLAYER, [socket.id]]);
+
+      var mediaPath = yield media.getMediaPath();
+      if(mediaPath && mediaPath.length > 0) {
+        socket.emit(eventKeys.MEDIAREADY);
+      }
+
+      var handle = yield credentials.getHandle(socket);
+      var response = schemaFactory.createPopulatedSchema(schemaFactory.Enums.SCHEMAS.LOGRESPONSE,
+        [new Date().toLocaleTimeString(), "notify", "auth", `${handle} joined.`]);
+      yield redisSocket.broadcast.call(AuthenticationController.prototype, eventKeys.NOTIFICATION, response);
+    }));
 
     if(isAdmin) {
       socket.on(eventKeys.SHUTDOWN, function() {
@@ -125,7 +123,7 @@ AuthenticationController.prototype.attachIO = function (io) {
         });
       });
     }
-  }));
+  }.bind(this)));
 };
 
 module.exports = AuthenticationController;
@@ -138,14 +136,7 @@ var isAdministrator = Promise.coroutine(function* (socket, request) {
 
     if(isAdmin) {
       yield credentials.setAdmin(socket, request.id);
-
-      var adminController       = this.factory.createAdminController();
-      var credentialController  = this.factory.createCredentialController();
-
-      adminController.attachSocket(socket);
-      credentialController.attachSocket(socket);
-
-      userAuthorized.call(this, socket);
+      adminAuthorized.call(this, socket);
     }
   }
 
@@ -161,6 +152,16 @@ var isValidUser = Promise.coroutine(function* (socket, request) {
 
   return isAuth;
 });
+
+var adminAuthorized = function(socket) {
+  var adminController       = this.factory.createAdminController();
+  var credentialController  = this.factory.createCredentialController();
+
+  adminController.attachSocket(socket);
+  credentialController.attachSocket(socket);
+
+  userAuthorized.call(this, socket);
+};
 
 var userAuthorized = function(socket) {
   var videoController = this.factory.createVideoController();
