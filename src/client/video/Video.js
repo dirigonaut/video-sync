@@ -108,26 +108,29 @@ function setSocketEvents() {
   var interval;
   socket.setEvent(eventKeys.SEEK, function(command) {
     log.debug(eventKeys.SEEK, command);
-    if(!command.play) {
-      pause();
-    } else {
-      play();
-    }
 
-    videoElement.currentTime = parseFloat(command.time);
-    videoPing();
-
-    if(interval) {
-      clearInterval(interval);
-    }
-
-    interval = setInterval(function() {
-      if(videoElement.readyState < 2) {
-        videoElement.currentTime = parseFloat(command.time);
+    if (isFinite( parseFloat(command.time))) {
+      if(!command.play) {
+        pause();
       } else {
+        play();
+      }
+
+      videoElement.currentTime = parseFloat(command.time);
+      videoPing();
+
+      if(interval) {
         clearInterval(interval);
       }
-    }, 2500);
+
+      interval = setInterval(function() {
+        if(videoElement.readyState < 2) {
+          videoElement.currentTime = parseFloat(command.time);
+        } else {
+          clearInterval(interval);
+        }
+      }, 2500);
+    }
   });
 }
 
