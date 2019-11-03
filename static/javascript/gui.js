@@ -96,7 +96,7 @@ function initGui(client, isAdmin) {
   $('#control-current').on('change', function(e) {
     var time = toSeconds($(e.currentTarget).val());
 
-    if(time === time) {
+    if (isFinite(time)) {
       client.log.info(`Requesting ${client.keys.REQSEEK} at ${time}`);
       client.socket.request(client.keys.REQSEEK,
         client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STATE, [time]));
@@ -108,11 +108,13 @@ function initGui(client, isAdmin) {
     var length  = $('#video')[0].duration;
     var time = Math.round(length * (percent / 100));
 
-    client.log.info(`Requesting ${client.keys.REQSEEK} at ${time}`);
-    client.socket.request(client.keys.REQSEEK,
-      client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STATE, [time]));
+    if (isFinite(time)) {
+      client.log.info(`Requesting ${client.keys.REQSEEK} at ${time}`);
+      client.socket.request(client.keys.REQSEEK,
+        client.schema.createPopulatedSchema(client.schema.Enums.SCHEMAS.STATE, [time]));
 
-    $("video").on("timeupdate", updateProgressBar);
+      $("video").on("timeupdate", updateProgressBar);
+    }
   });
 
   $('#currently-at').on('mousedown', function() {
@@ -446,7 +448,7 @@ function initGui(client, isAdmin) {
       $(`<div class="flex-h flex-center-h flex-element primary-color-invert margin">
           <div>${logs[key]}</div>
           <form id="log-${logs[key]}" class="flex-right">
-            <select name="${logs[key]}">
+            <select name="${logs[key]}" onchange="$(document).trigger('log-level', [$(event.currentTarget)])">
               <option value=${levels.error}>Error</option>
               <option value=${levels.warn}>Warn</option>
               <option value=${levels.info} selected="selected">Info</option>
@@ -455,14 +457,15 @@ function initGui(client, isAdmin) {
           </form>
       </div>`).appendTo(`#log-levels`);
     }
-
-    $('#log-levels > select').on('change', function(e) {
-      var id = $(e.currentTarget).attr('name');
-      var value = this.value;
-      value = Object.keys(client.logMan.Enums.LEVELS)[value];
-      client.logMan.setLevel(id, value);
-    });
   }();
+
+  $(document).on('log-level', function(e, element) {
+    client.log.info($(element).val());
+    var id = $(element).attr('name');
+    var value = $(element).val();
+    value = Object.keys(client.logMan.Enums.LEVELS)[value];
+    client.logMan.setLevel(id, value);
+  });
 
   var logDelete = function(e, element, key) {
     if(element === 'all') {
