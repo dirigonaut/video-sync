@@ -1,6 +1,6 @@
 # Video-Sync
 
-Note: page is under construction and needs to be updated after the most recent overhaul.
+## This Project is Midnighted!
 
 ---
 ### Table of Contents
